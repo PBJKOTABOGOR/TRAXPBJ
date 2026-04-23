@@ -313,8 +313,8 @@ function renderStats(filteredRaw, filteredScore) {
 
   EL.statJumlahOpd.textContent = formatNumber(jumlahOpd);
   EL.statJumlahPaket.textContent = formatNumber(jumlahPaket);
-  EL.statTotalRup.textContent = formatCurrency(totalRup);
-  EL.statTotalKomitmen.textContent = formatCurrency(totalKomitmen);
+EL.statTotalRup.textContent = formatShortCurrency(totalRup);
+EL.statTotalKomitmen.textContent = formatShortCurrency(totalKomitmen);
   EL.statAvgPersen.textContent = `${formatPercent(avgPersen)}%`;
   EL.statAvgItkp.textContent = formatDecimal(avgItkp);
 }
@@ -624,6 +624,33 @@ function formatNumber(value) {
 
 function formatCurrency(value) {
   return 'Rp' + Number(value || 0).toLocaleString('id-ID');
+}
+
+function formatShortCurrency(value) {
+  const num = Number(value || 0);
+
+  if (num >= 1_000_000_000_000) {
+    return 'Rp' + (num / 1_000_000_000_000).toLocaleString('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }) + ' T';
+  }
+
+  if (num >= 1_000_000_000) {
+    return 'Rp' + (num / 1_000_000_000).toLocaleString('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }) + ' M';
+  }
+
+  if (num >= 1_000_000) {
+    return 'Rp' + (num / 1_000_000).toLocaleString('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }) + ' Jt';
+  }
+
+  return 'Rp' + num.toLocaleString('id-ID');
 }
 
 function formatPercent(value) {
