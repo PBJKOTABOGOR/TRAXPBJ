@@ -16,57 +16,64 @@ const APP_STATE = {
   selectedOpd: '',
   selectedRawRows: [],
   rekapPage: 1,
-  detailPage: 1
+  detailPage: 1,
+  initialized: false,
+  destroyed: false
 };
 
-const EL = {
-  loadingBox: document.getElementById('loadingBox'),
-  loadingText: document.getElementById('loadingText'),
-  errorBox: document.getElementById('errorBox'),
-  globalLoadingOverlay: document.getElementById('globalLoadingOverlay'),
-  globalLoadingText: document.getElementById('globalLoadingText'),
+function getElements() {
+  return {
+    loadingBox: document.getElementById('loadingBox'),
+    loadingText: document.getElementById('loadingText'),
+    errorBox: document.getElementById('errorBox'),
+    globalLoadingOverlay: document.getElementById('globalLoadingOverlay'),
+    globalLoadingText: document.getElementById('globalLoadingText'),
 
-  filterOpd: document.getElementById('filterOpd'),
-  filterMetode: document.getElementById('filterMetode'),
-  filterSumberDana: document.getElementById('filterSumberDana'),
-  filterWaktu: document.getElementById('filterWaktu'),
-  searchPaket: document.getElementById('searchPaket'),
+    filterOpd: document.getElementById('filterOpd'),
+    filterMetode: document.getElementById('filterMetode'),
+    filterSumberDana: document.getElementById('filterSumberDana'),
+    filterWaktu: document.getElementById('filterWaktu'),
+    searchPaket: document.getElementById('searchPaket'),
 
-  rekapTableBody: document.getElementById('rekapTableBody'),
-  rekapPagination: document.getElementById('rekapPagination'),
-  rekapPaginationInfo: document.getElementById('rekapPaginationInfo'),
+    rekapTableBody: document.getElementById('rekapTableBody'),
+    rekapPagination: document.getElementById('rekapPagination'),
+    rekapPaginationInfo: document.getElementById('rekapPaginationInfo'),
 
-  detailContent: document.getElementById('detailContent'),
-  detailTitle: document.getElementById('detailTitle'),
-  detailSubtitle: document.getElementById('detailSubtitle'),
-  detailPagination: document.getElementById('detailPagination'),
-  detailPaginationInfo: document.getElementById('detailPaginationInfo'),
+    detailContent: document.getElementById('detailContent'),
+    detailTitle: document.getElementById('detailTitle'),
+    detailSubtitle: document.getElementById('detailSubtitle'),
+    detailPagination: document.getElementById('detailPagination'),
+    detailPaginationInfo: document.getElementById('detailPaginationInfo'),
 
-  btnResetFilter: document.getElementById('btnResetFilter'),
-  btnExportRekap: document.getElementById('btnExportRekap'),
-  btnExportDetail: document.getElementById('btnExportDetail'),
-  btnExportCurrentDetail: document.getElementById('btnExportCurrentDetail'),
-  btnRefresh: document.getElementById('btnRefresh'),
-  btnClearSelected: document.getElementById('btnClearSelected'),
+    btnResetFilter: document.getElementById('btnResetFilter'),
+    btnExportRekap: document.getElementById('btnExportRekap'),
+    btnExportDetail: document.getElementById('btnExportDetail'),
+    btnExportCurrentDetail: document.getElementById('btnExportCurrentDetail'),
+    btnRefresh: document.getElementById('btnRefresh'),
+    btnClearSelected: document.getElementById('btnClearSelected'),
 
-  statJumlahOpd: document.getElementById('statJumlahOpd'),
-  statJumlahPaket: document.getElementById('statJumlahPaket'),
-  statTotalRup: document.getElementById('statTotalRup'),
-  statTotalKomitmen: document.getElementById('statTotalKomitmen'),
-  statAvgPersen: document.getElementById('statAvgPersen'),
-  statAvgItkp: document.getElementById('statAvgItkp'),
-  statJumlahOpdNote: document.getElementById('statJumlahOpdNote'),
-  statJumlahPaketNote: document.getElementById('statJumlahPaketNote'),
-  statTotalRupNote: document.getElementById('statTotalRupNote'),
-  statTotalKomitmenNote: document.getElementById('statTotalKomitmenNote'),
+    statJumlahOpd: document.getElementById('statJumlahOpd'),
+    statJumlahPaket: document.getElementById('statJumlahPaket'),
+    statTotalRup: document.getElementById('statTotalRup'),
+    statTotalKomitmen: document.getElementById('statTotalKomitmen'),
+    statAvgPersen: document.getElementById('statAvgPersen'),
+    statAvgItkp: document.getElementById('statAvgItkp'),
+    statJumlahOpdNote: document.getElementById('statJumlahOpdNote'),
+    statJumlahPaketNote: document.getElementById('statJumlahPaketNote'),
+    statTotalRupNote: document.getElementById('statTotalRupNote'),
+    statTotalKomitmenNote: document.getElementById('statTotalKomitmenNote'),
 
-  insightTopOpd: document.getElementById('insightTopOpd'),
-  insightTopNote: document.getElementById('insightTopNote'),
-  insightLowOpd: document.getElementById('insightLowOpd'),
-  insightLowNote: document.getElementById('insightLowNote'),
-  insightMetode: document.getElementById('insightMetode'),
-  insightMetodeNote: document.getElementById('insightMetodeNote')
-};
+    insightTopOpd: document.getElementById('insightTopOpd'),
+    insightTopNote: document.getElementById('insightTopNote'),
+    insightLowOpd: document.getElementById('insightLowOpd'),
+    insightLowNote: document.getElementById('insightLowNote'),
+    insightMetode: document.getElementById('insightMetode'),
+    insightMetodeNote: document.getElementById('insightMetodeNote')
+  };
+}
+
+let EL = getElements();
+let cleanupResizeHandler = null;
 
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -80,13 +87,34 @@ function nextPaint() {
   });
 }
 
+function safeBind(el, eventName, handler) {
+  if (el) {
+    el.addEventListener(eventName, handler);
+  }
+}
+
+function safeSetText(el, value) {
+  if (el) el.textContent = value;
+}
+
+function resetUiState() {
+  EL = getElements();
+
+  if (EL.loadingBox) EL.loadingBox.classList.remove('show');
+  if (EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.remove('show');
+  if (EL.errorBox) {
+    EL.errorBox.textContent = '';
+    EL.errorBox.classList.remove('show');
+  }
+}
+
 function buildCsvUrl(gid) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.spreadsheetId}/export?format=csv&gid=${gid}`;
 }
 
 function setLoading(message, useOverlay = false) {
-  if (EL.loadingText) EL.loadingText.textContent = message;
-  if (EL.globalLoadingText) EL.globalLoadingText.textContent = message;
+  safeSetText(EL.loadingText, message);
+  safeSetText(EL.globalLoadingText, message);
 
   if (EL.loadingBox) EL.loadingBox.classList.add('show');
   if (useOverlay && EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.add('show');
@@ -107,97 +135,40 @@ function clearLoading() {
   if (EL.btnExportCurrentDetail) EL.btnExportCurrentDetail.disabled = false;
 }
 
-async function initMonitoringSirup() {
-  const startedAt = Date.now();
+async function fetchCsv(url, retries = 2) {
+  let lastError;
 
-  try {
-    showError('');
-    setLoading('Menghubungkan ke Google Sheet...', true);
-    await nextPaint();
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store'
+      });
 
-    const rawUrl = buildCsvUrl(SHEET_CONFIG.rawGid);
-    const scoreUrl = buildCsvUrl(SHEET_CONFIG.scoreGid);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} saat mengambil ${url}`);
+      }
 
-    setLoading('Mengambil data RAW_SIRUP dan SCORE_ITKP_SIRUP...', true);
-    await nextPaint();
+      const text = await response.text();
 
-    const [rawResult, scoreResult] = await Promise.allSettled([
-      fetchCsv(rawUrl),
-      fetchCsv(scoreUrl)
-    ]);
+      if (!text || !text.trim()) {
+        throw new Error(`CSV kosong dari ${url}`);
+      }
 
-    let rawRows = [];
-    let scoreRows = [];
-    const errors = [];
+      if (/<!doctype html>|<html/i.test(text)) {
+        throw new Error(`Response bukan CSV, kemungkinan akses sheet masih tertutup: ${url}`);
+      }
 
-    if (rawResult.status === 'fulfilled') {
-      rawRows = csvToObjects(rawResult.value);
-    } else {
-      errors.push('RAW_SIRUP gagal dimuat');
-      console.error(rawResult.reason);
+      return text;
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries) {
+        await wait(500 + (attempt * 700));
+      }
     }
-
-    if (scoreResult.status === 'fulfilled') {
-      scoreRows = csvToObjects(scoreResult.value);
-    } else {
-      errors.push('SCORE_ITKP_SIRUP gagal dimuat');
-      console.error(scoreResult.reason);
-    }
-
-    setLoading('Menyesuaikan header dan format data...', true);
-    await nextPaint();
-
-    APP_STATE.rawSirup = normalizeRawSirup(rawRows);
-    APP_STATE.scoreSirup = normalizeScoreSirup(scoreRows);
-    APP_STATE.rekapPage = 1;
-    APP_STATE.detailPage = 1;
-    APP_STATE.selectedOpd = '';
-    APP_STATE.selectedRawRows = [];
-
-    setLoading('Menyusun filter dan tabel...', true);
-    await nextPaint();
-
-    buildFilterOptions();
-    applyFilters();
-
-    if (errors.length) {
-      showError(errors.join(' + ') + '. Sebagian data berhasil dimuat, sebagian gagal.');
-    }
-  } catch (error) {
-    console.error(error);
-    showError(
-      `Data gagal dimuat. Detail: ${error.message}. Pastikan sheet bisa diakses browser portal ini. Kalau masih private, ubah sharing minimal Viewer atau publish sheet terkait.`
-    );
-  } finally {
-    const elapsed = Date.now() - startedAt;
-    if (elapsed < MIN_LOADING_MS) {
-      await wait(MIN_LOADING_MS - elapsed);
-    }
-    clearLoading();
-  }
-}
-
-async function fetchCsv(url) {
-  const response = await fetch(url, {
-    method: 'GET',
-    cache: 'no-store'
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} saat mengambil ${url}`);
   }
 
-  const text = await response.text();
-
-  if (!text || !text.trim()) {
-    throw new Error(`CSV kosong dari ${url}`);
-  }
-
-  if (/<!doctype html>|<html/i.test(text)) {
-    throw new Error(`Response bukan CSV, kemungkinan akses sheet masih tertutup: ${url}`);
-  }
-
-  return text;
+  throw lastError;
 }
 
 function csvToObjects(csvText) {
@@ -266,6 +237,15 @@ function normalizeHeader(header) {
     .replace(/__+/g, '_');
 }
 
+function pick(obj, keys) {
+  for (const key of keys) {
+    if (obj[key] != null && String(obj[key]).trim() !== '') {
+      return String(obj[key]).trim();
+    }
+  }
+  return '';
+}
+
 function normalizeRawSirup(rows) {
   return rows.map(row => ({
     satuan_kerja: pick(row, ['satuan_kerja']),
@@ -298,16 +278,8 @@ function normalizeScoreSirup(rows) {
   .filter(row => row.satuan_kerja);
 }
 
-function pick(obj, keys) {
-  for (const key of keys) {
-    if (obj[key] != null && String(obj[key]).trim() !== '') {
-      return String(obj[key]).trim();
-    }
-  }
-  return '';
-}
-
 function showError(message) {
+  if (!EL.errorBox) return;
   EL.errorBox.textContent = message || '';
   EL.errorBox.classList.toggle('show', !!message);
 }
@@ -339,6 +311,8 @@ function buildFilterOptions() {
 }
 
 function populateSelect(selectEl, items, placeholder) {
+  if (!selectEl) return;
+
   const currentValue = selectEl.value;
   selectEl.innerHTML = `<option value="">${placeholder}</option>`;
 
@@ -355,17 +329,17 @@ function populateSelect(selectEl, items, placeholder) {
 }
 
 function applyFilters() {
-  const selectedOpdFilter = EL.filterOpd.value.trim();
-  const selectedMetode = EL.filterMetode.value.trim().toLowerCase();
-  const selectedSumberDana = EL.filterSumberDana.value.trim().toLowerCase();
-  const selectedWaktu = EL.filterWaktu.value.trim().toLowerCase();
-  const keyword = EL.searchPaket.value.trim().toLowerCase();
+  const selectedOpdFilter = EL.filterOpd?.value.trim() || '';
+  const selectedMetode = EL.filterMetode?.value.trim().toLowerCase() || '';
+  const selectedSumberDana = EL.filterSumberDana?.value.trim().toLowerCase() || '';
+  const selectedWaktu = EL.filterWaktu?.value.trim().toLowerCase() || '';
+  const keyword = EL.searchPaket?.value.trim().toLowerCase() || '';
 
   APP_STATE.rekapPage = 1;
   APP_STATE.detailPage = 1;
 
   APP_STATE.filteredRawGlobal = APP_STATE.rawSirup.filter(row => {
-    const matchOpd = !selectedOpdFilter || row.satuan_kerja === selectedOpdFilter;
+    const matchOpd = !selectedOpdFilter || normalizeOpdName(row.satuan_kerja) === normalizeOpdName(selectedOpdFilter);
     const matchMetode = !selectedMetode || row.metode_pemilihan.toLowerCase() === selectedMetode;
     const matchDana = !selectedSumberDana || row.sumber_dana.toLowerCase() === selectedSumberDana;
     const matchWaktu = !selectedWaktu || row.waktu_pemilihan.toLowerCase() === selectedWaktu;
@@ -383,15 +357,15 @@ function applyFilters() {
     return matchOpd && matchMetode && matchDana && matchWaktu && matchKeyword;
   });
 
-APP_STATE.filteredScore = APP_STATE.scoreSirup.filter(row => {
-  if (
-    selectedOpdFilter &&
-    normalizeOpdName(row.satuan_kerja) !== normalizeOpdName(selectedOpdFilter)
-  ) {
-    return false;
-  }
-  return true;
-});
+  APP_STATE.filteredScore = APP_STATE.scoreSirup.filter(row => {
+    if (
+      selectedOpdFilter &&
+      normalizeOpdName(row.satuan_kerja) !== normalizeOpdName(selectedOpdFilter)
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   renderStats(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
   renderInsights(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
@@ -416,27 +390,27 @@ function renderStats(filteredRaw, filteredScore) {
     ? sum(filteredScore.map(x => x.nilai_itkp)) / filteredScore.length
     : 0;
 
-  EL.statJumlahOpd.textContent = formatNumber(jumlahOpd);
-  EL.statJumlahPaket.textContent = formatNumber(jumlahPaket);
-  EL.statTotalRup.textContent = formatShortCurrency(totalRup);
-  EL.statTotalKomitmen.textContent = formatShortCurrency(totalKomitmen);
-  EL.statAvgPersen.textContent = `${formatPercent(avgPersen)}%`;
-  EL.statAvgItkp.textContent = formatDecimal(avgItkp);
+  safeSetText(EL.statJumlahOpd, formatNumber(jumlahOpd));
+  safeSetText(EL.statJumlahPaket, formatNumber(jumlahPaket));
+  safeSetText(EL.statTotalRup, formatShortCurrency(totalRup));
+  safeSetText(EL.statTotalKomitmen, formatShortCurrency(totalKomitmen));
+  safeSetText(EL.statAvgPersen, `${formatPercent(avgPersen)}%`);
+  safeSetText(EL.statAvgItkp, formatDecimal(avgItkp));
 
-  EL.statJumlahOpdNote.textContent = 'Total satuan kerja pada data rekap';
-  EL.statJumlahPaketNote.textContent = 'Total paket pada RAW SIRUP';
-  EL.statTotalRupNote.textContent = formatCurrency(totalRup);
-  EL.statTotalKomitmenNote.textContent = formatCurrency(totalKomitmen);
+  safeSetText(EL.statJumlahOpdNote, 'Total satuan kerja pada data rekap');
+  safeSetText(EL.statJumlahPaketNote, 'Total paket pada RAW SIRUP');
+  safeSetText(EL.statTotalRupNote, formatCurrency(totalRup));
+  safeSetText(EL.statTotalKomitmenNote, formatCurrency(totalKomitmen));
 }
 
 function renderInsights(filteredRaw, filteredScore) {
   if (!filteredScore.length) {
-    EL.insightTopOpd.textContent = '-';
-    EL.insightTopNote.textContent = 'Belum ada data';
-    EL.insightLowOpd.textContent = '-';
-    EL.insightLowNote.textContent = 'Belum ada data';
-    EL.insightMetode.textContent = '-';
-    EL.insightMetodeNote.textContent = 'Belum ada data';
+    safeSetText(EL.insightTopOpd, '-');
+    safeSetText(EL.insightTopNote, 'Belum ada data');
+    safeSetText(EL.insightLowOpd, '-');
+    safeSetText(EL.insightLowNote, 'Belum ada data');
+    safeSetText(EL.insightMetode, '-');
+    safeSetText(EL.insightMetodeNote, 'Belum ada data');
     return;
   }
 
@@ -448,22 +422,22 @@ function renderInsights(filteredRaw, filteredScore) {
   const dominantEntry = Object.entries(metodeCounts).sort((a, b) => b[1] - a[1])[0];
 
   if (dominantEntry) {
-    EL.insightMetode.textContent = dominantEntry[0];
-    EL.insightMetodeNote.textContent = `${formatNumber(dominantEntry[1])} paket`;
+    safeSetText(EL.insightMetode, dominantEntry[0]);
+    safeSetText(EL.insightMetodeNote, `${formatNumber(dominantEntry[1])} paket`);
   } else {
-    EL.insightMetode.textContent = '-';
-    EL.insightMetodeNote.textContent = 'Belum ada data';
+    safeSetText(EL.insightMetode, '-');
+    safeSetText(EL.insightMetodeNote, 'Belum ada data');
   }
 
   const uniqueItkp = [...new Set(filteredScore.map(x => Number(x.nilai_itkp || 0)))];
   const uniquePersen = [...new Set(filteredScore.map(x => Number(x.prosentase || 0)))];
 
   if (uniqueItkp.length === 1 && uniquePersen.length === 1) {
-    EL.insightTopOpd.textContent = 'Semua OPD Setara';
-    EL.insightTopNote.textContent = `Nilai ITKP ${formatDecimal(uniqueItkp[0])} | ${formatPercent(uniquePersen[0])}%`;
+    safeSetText(EL.insightTopOpd, 'Semua OPD Setara');
+    safeSetText(EL.insightTopNote, `Nilai ITKP ${formatDecimal(uniqueItkp[0])} | ${formatPercent(uniquePersen[0])}%`);
 
-    EL.insightLowOpd.textContent = 'Semua OPD Setara';
-    EL.insightLowNote.textContent = `Nilai ITKP ${formatDecimal(uniqueItkp[0])} | ${formatPercent(uniquePersen[0])}%`;
+    safeSetText(EL.insightLowOpd, 'Semua OPD Setara');
+    safeSetText(EL.insightLowNote, `Nilai ITKP ${formatDecimal(uniqueItkp[0])} | ${formatPercent(uniquePersen[0])}%`);
     return;
   }
 
@@ -475,11 +449,11 @@ function renderInsights(filteredRaw, filteredScore) {
   const top = sortedByItkp[0];
   const low = sortedByItkp[sortedByItkp.length - 1];
 
-  EL.insightTopOpd.textContent = top.satuan_kerja;
-  EL.insightTopNote.textContent = `Nilai ITKP ${formatDecimal(top.nilai_itkp)} | ${formatPercent(top.prosentase)}%`;
+  safeSetText(EL.insightTopOpd, top.satuan_kerja);
+  safeSetText(EL.insightTopNote, `Nilai ITKP ${formatDecimal(top.nilai_itkp)} | ${formatPercent(top.prosentase)}%`);
 
-  EL.insightLowOpd.textContent = low.satuan_kerja;
-  EL.insightLowNote.textContent = `Nilai ITKP ${formatDecimal(low.nilai_itkp)} | ${formatPercent(low.prosentase)}%`;
+  safeSetText(EL.insightLowOpd, low.satuan_kerja);
+  safeSetText(EL.insightLowNote, `Nilai ITKP ${formatDecimal(low.nilai_itkp)} | ${formatPercent(low.prosentase)}%`);
 }
 
 function renderRekapTable(rows) {
@@ -493,6 +467,8 @@ function renderRekapTable(rows) {
   const startIndex = (APP_STATE.rekapPage - 1) * PAGE_SIZE_REKAP;
   const endIndex = startIndex + PAGE_SIZE_REKAP;
   const pageRows = rows.slice(startIndex, endIndex);
+
+  if (!EL.rekapTableBody) return;
 
   if (!pageRows.length) {
     EL.rekapTableBody.innerHTML = `
@@ -550,8 +526,8 @@ function renderDetailForOpd(opdName) {
 
   APP_STATE.selectedRawRows = rows;
 
-  EL.detailTitle.textContent = `Detail Paket SIRUP - ${opdName}`;
-  EL.detailSubtitle.textContent = `${formatNumber(rows.length)} paket ditampilkan sesuai filter aktif.`;
+  safeSetText(EL.detailTitle, `Detail Paket SIRUP - ${opdName}`);
+  safeSetText(EL.detailSubtitle, `${formatNumber(rows.length)} paket ditampilkan sesuai filter aktif.`);
 
   const totalRows = rows.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE_DETAIL));
@@ -563,6 +539,8 @@ function renderDetailForOpd(opdName) {
   const startIndex = (APP_STATE.detailPage - 1) * PAGE_SIZE_DETAIL;
   const endIndex = startIndex + PAGE_SIZE_DETAIL;
   const pageRows = rows.slice(startIndex, endIndex);
+
+  if (!EL.detailContent) return;
 
   if (!pageRows.length) {
     EL.detailContent.innerHTML = `
@@ -624,38 +602,7 @@ function renderDetailForOpd(opdName) {
     </div>
   `;
 
-  const topScrollWrap = document.getElementById('topScrollWrap');
-  const topScrollInner = document.getElementById('topScrollInner');
-  const detailTableWrap = document.getElementById('detailTableWrap');
-  const detailTable = document.getElementById('detailTable');
-
-  if (topScrollWrap && topScrollInner && detailTableWrap && detailTable) {
-    const syncWidths = () => {
-      topScrollInner.style.width = `${detailTable.scrollWidth}px`;
-      topScrollWrap.scrollLeft = detailTableWrap.scrollLeft;
-    };
-
-    syncWidths();
-
-    let syncingFromTop = false;
-    let syncingFromBottom = false;
-
-    topScrollWrap.addEventListener('scroll', () => {
-      if (syncingFromBottom) return;
-      syncingFromTop = true;
-      detailTableWrap.scrollLeft = topScrollWrap.scrollLeft;
-      syncingFromTop = false;
-    });
-
-    detailTableWrap.addEventListener('scroll', () => {
-      if (syncingFromTop) return;
-      syncingFromBottom = true;
-      topScrollWrap.scrollLeft = detailTableWrap.scrollLeft;
-      syncingFromBottom = false;
-    });
-
-    window.requestAnimationFrame(syncWidths);
-  }
+  setupDetailHorizontalScroll();
 
   renderPagination(EL.detailPagination, EL.detailPaginationInfo, totalRows, APP_STATE.detailPage, PAGE_SIZE_DETAIL, (page) => {
     APP_STATE.detailPage = page;
@@ -671,18 +618,64 @@ function renderDetailForOpd(opdName) {
   }
 }
 
+function setupDetailHorizontalScroll() {
+  const topScrollWrap = document.getElementById('topScrollWrap');
+  const topScrollInner = document.getElementById('topScrollInner');
+  const detailTableWrap = document.getElementById('detailTableWrap');
+  const detailTable = document.getElementById('detailTable');
+
+  if (!topScrollWrap || !topScrollInner || !detailTableWrap || !detailTable) {
+    return;
+  }
+
+  const syncWidths = () => {
+    topScrollInner.style.width = `${detailTable.scrollWidth}px`;
+    topScrollWrap.scrollLeft = detailTableWrap.scrollLeft;
+  };
+
+  syncWidths();
+
+  let syncingFromTop = false;
+  let syncingFromBottom = false;
+
+  topScrollWrap.addEventListener('scroll', () => {
+    if (syncingFromBottom) return;
+    syncingFromTop = true;
+    detailTableWrap.scrollLeft = topScrollWrap.scrollLeft;
+    syncingFromTop = false;
+  });
+
+  detailTableWrap.addEventListener('scroll', () => {
+    if (syncingFromTop) return;
+    syncingFromBottom = true;
+    topScrollWrap.scrollLeft = detailTableWrap.scrollLeft;
+    syncingFromBottom = false;
+  });
+
+  if (cleanupResizeHandler) {
+    window.removeEventListener('resize', cleanupResizeHandler);
+  }
+
+  cleanupResizeHandler = syncWidths;
+  window.addEventListener('resize', cleanupResizeHandler);
+  window.requestAnimationFrame(syncWidths);
+}
+
 function renderEmptyDetail() {
   APP_STATE.selectedRawRows = [];
   APP_STATE.detailPage = 1;
 
-  EL.detailTitle.textContent = 'Detail Paket SIRUP';
-  EL.detailSubtitle.textContent = 'Pilih salah satu OPD pada tabel rekap untuk melihat detail paket.';
-  EL.detailContent.innerHTML = `
-    <div class="empty-state">
-      Detail paket belum ditampilkan.<br>
-      Klik tombol <strong>Lihat Paket</strong> pada salah satu OPD.
-    </div>
-  `;
+  safeSetText(EL.detailTitle, 'Detail Paket SIRUP');
+  safeSetText(EL.detailSubtitle, 'Pilih salah satu OPD pada tabel rekap untuk melihat detail paket.');
+
+  if (EL.detailContent) {
+    EL.detailContent.innerHTML = `
+      <div class="empty-state">
+        Detail paket belum ditampilkan.<br>
+        Klik tombol <strong>Lihat Paket</strong> pada salah satu OPD.
+      </div>
+    `;
+  }
 
   renderPagination(EL.detailPagination, EL.detailPaginationInfo, 0, 1, PAGE_SIZE_DETAIL, () => {});
 }
@@ -832,11 +825,12 @@ function handleExportCurrentDetail() {
 }
 
 function resetFilters() {
-  EL.filterOpd.value = '';
-  EL.filterMetode.value = '';
-  EL.filterSumberDana.value = '';
-  EL.filterWaktu.value = '';
-  EL.searchPaket.value = '';
+  if (EL.filterOpd) EL.filterOpd.value = '';
+  if (EL.filterMetode) EL.filterMetode.value = '';
+  if (EL.filterSumberDana) EL.filterSumberDana.value = '';
+  if (EL.filterWaktu) EL.filterWaktu.value = '';
+  if (EL.searchPaket) EL.searchPaket.value = '';
+
   APP_STATE.selectedOpd = '';
   APP_STATE.rekapPage = 1;
   APP_STATE.detailPage = 1;
@@ -965,32 +959,128 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
-EL.filterOpd.addEventListener('change', applyFilters);
-EL.filterMetode.addEventListener('change', applyFilters);
-EL.filterSumberDana.addEventListener('change', applyFilters);
-EL.filterWaktu.addEventListener('change', applyFilters);
-EL.searchPaket.addEventListener('input', applyFilters);
+async function initMonitoringSirup() {
+  const startedAt = Date.now();
 
-EL.btnResetFilter.addEventListener('click', resetFilters);
-EL.btnExportRekap.addEventListener('click', handleExportRekap);
-EL.btnExportDetail.addEventListener('click', handleExportDetail);
-EL.btnExportCurrentDetail.addEventListener('click', handleExportCurrentDetail);
-EL.btnClearSelected.addEventListener('click', () => {
-  APP_STATE.selectedOpd = '';
-  renderEmptyDetail();
-});
-EL.btnRefresh.addEventListener('click', initMonitoringSirup);
+  try {
+    EL = getElements();
+    resetUiState();
+    showError('');
+    setLoading('Menghubungkan ke Google Sheet...', true);
+    await nextPaint();
+
+    const rawUrl = buildCsvUrl(SHEET_CONFIG.rawGid);
+    const scoreUrl = buildCsvUrl(SHEET_CONFIG.scoreGid);
+
+    setLoading('Mengambil data RAW_SIRUP dan SCORE_ITKP_SIRUP...', true);
+    await nextPaint();
+
+    const [rawResult, scoreResult] = await Promise.allSettled([
+      fetchCsv(rawUrl, 2),
+      fetchCsv(scoreUrl, 2)
+    ]);
+
+    if (APP_STATE.destroyed) return;
+
+    let rawRows = [];
+    let scoreRows = [];
+    const errors = [];
+
+    if (rawResult.status === 'fulfilled') {
+      rawRows = csvToObjects(rawResult.value);
+    } else {
+      errors.push('RAW_SIRUP gagal dimuat');
+      console.error('RAW_SIRUP error:', rawResult.reason);
+    }
+
+    if (scoreResult.status === 'fulfilled') {
+      scoreRows = csvToObjects(scoreResult.value);
+    } else {
+      errors.push('SCORE_ITKP_SIRUP gagal dimuat');
+      console.error('SCORE_ITKP_SIRUP error:', scoreResult.reason);
+    }
+
+    setLoading('Menyesuaikan header dan format data...', true);
+    await nextPaint();
+
+    APP_STATE.rawSirup = normalizeRawSirup(rawRows);
+    APP_STATE.scoreSirup = normalizeScoreSirup(scoreRows);
+    APP_STATE.rekapPage = 1;
+    APP_STATE.detailPage = 1;
+
+    if (APP_STATE.selectedOpd) {
+      const stillExists = APP_STATE.scoreSirup.some(row =>
+        normalizeOpdName(row.satuan_kerja) === normalizeOpdName(APP_STATE.selectedOpd)
+      );
+
+      if (!stillExists) {
+        APP_STATE.selectedOpd = '';
+        APP_STATE.selectedRawRows = [];
+      }
+    }
+
+    setLoading('Menyusun filter dan tabel...', true);
+    await nextPaint();
+
+    buildFilterOptions();
+    applyFilters();
+
+    if (errors.length) {
+      showError(errors.join(' + ') + '. Sebagian data berhasil dimuat, sebagian gagal.');
+    }
+  } catch (error) {
+    console.error('initMonitoringSirup error:', error);
+    showError(`Data gagal dimuat. Detail: ${error.message}`);
+  } finally {
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < MIN_LOADING_MS) {
+      await wait(MIN_LOADING_MS - elapsed);
+    }
+
+    if (!APP_STATE.destroyed) {
+      clearLoading();
+    }
+  }
+}
+
+function bindEventsOnce() {
+  if (APP_STATE.initialized) return;
+  APP_STATE.initialized = true;
+
+  safeBind(EL.filterOpd, 'change', applyFilters);
+  safeBind(EL.filterMetode, 'change', applyFilters);
+  safeBind(EL.filterSumberDana, 'change', applyFilters);
+  safeBind(EL.filterWaktu, 'change', applyFilters);
+  safeBind(EL.searchPaket, 'input', applyFilters);
+
+  safeBind(EL.btnResetFilter, 'click', resetFilters);
+  safeBind(EL.btnExportRekap, 'click', handleExportRekap);
+  safeBind(EL.btnExportDetail, 'click', handleExportDetail);
+  safeBind(EL.btnExportCurrentDetail, 'click', handleExportCurrentDetail);
+  safeBind(EL.btnClearSelected, 'click', () => {
+    APP_STATE.selectedOpd = '';
+    APP_STATE.selectedRawRows = [];
+    APP_STATE.detailPage = 1;
+    renderEmptyDetail();
+  });
+  safeBind(EL.btnRefresh, 'click', () => {
+    initMonitoringSirup();
+  });
+}
 
 window.__moduleInit = function () {
-  let destroyed = false;
+  APP_STATE.destroyed = false;
+  EL = getElements();
 
-  function destroy() {
-    destroyed = true;
-  }
+  bindEventsOnce();
+  initMonitoringSirup();
 
-  if (!destroyed) {
-    initMonitoringSirup();
-  }
+  return function destroy() {
+    APP_STATE.destroyed = true;
 
-  return destroy;
+    if (cleanupResizeHandler) {
+      window.removeEventListener('resize', cleanupResizeHandler);
+      cleanupResizeHandler = null;
+    }
+  };
 };
