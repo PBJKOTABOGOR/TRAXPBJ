@@ -37,6 +37,10 @@ const EL = {
   statTotalKomitmen: document.getElementById('statTotalKomitmen'),
   statAvgPersen: document.getElementById('statAvgPersen'),
   statAvgItkp: document.getElementById('statAvgItkp'),
+  statJumlahOpdNote: document.getElementById('statJumlahOpdNote'),
+  statJumlahPaketNote: document.getElementById('statJumlahPaketNote'),
+  statTotalRupNote: document.getElementById('statTotalRupNote'),
+  statTotalKomitmenNote: document.getElementById('statTotalKomitmenNote'),
   insightTopOpd: document.getElementById('insightTopOpd'),
   insightTopNote: document.getElementById('insightTopNote'),
   insightLowOpd: document.getElementById('insightLowOpd'),
@@ -313,10 +317,15 @@ function renderStats(filteredRaw, filteredScore) {
 
   EL.statJumlahOpd.textContent = formatNumber(jumlahOpd);
   EL.statJumlahPaket.textContent = formatNumber(jumlahPaket);
-EL.statTotalRup.textContent = formatShortCurrency(totalRup);
-EL.statTotalKomitmen.textContent = formatShortCurrency(totalKomitmen);
+  EL.statTotalRup.textContent = formatShortCurrency(totalRup);
+  EL.statTotalKomitmen.textContent = formatShortCurrency(totalKomitmen);
   EL.statAvgPersen.textContent = `${formatPercent(avgPersen)}%`;
   EL.statAvgItkp.textContent = formatDecimal(avgItkp);
+
+  EL.statJumlahOpdNote.textContent = 'Total satuan kerja pada data rekap';
+  EL.statJumlahPaketNote.textContent = 'Total paket pada RAW SIRUP';
+  EL.statTotalRupNote.textContent = formatCurrency(totalRup);
+  EL.statTotalKomitmenNote.textContent = formatCurrency(totalKomitmen);
 }
 
 function renderInsights(filteredRaw, filteredScore) {
@@ -418,79 +427,95 @@ function renderDetailForOpd(opdName) {
   EL.detailSubtitle.textContent = `${formatNumber(rows.length)} paket ditampilkan sesuai filter aktif.`;
 
   if (!rows.length) {
-EL.detailContent.innerHTML = `
-  <div class="top-scroll-wrap" id="topScrollWrap">
-    <div class="top-scroll-inner" id="topScrollInner"></div>
-  </div>
+    EL.detailContent.innerHTML = `
+      <div class="empty-state">
+        Tidak ada detail paket untuk OPD ini sesuai filter yang dipilih.
+      </div>
+    `;
+    return;
+  }
 
-  <div class="detail-content-wrap" id="detailTableWrap">
-    <table id="detailTable">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>Kode RUP</th>
-          <th>Nama Paket</th>
-          <th>Program</th>
-          <th>Kegiatan</th>
-          <th>Sub Kegiatan</th>
-          <th>Pagu</th>
-          <th>Cara Pengadaan</th>
-          <th>Metode</th>
-          <th>Jenis</th>
-          <th>PDN</th>
-          <th>Sumber Dana</th>
-          <th>Waktu</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows.map((row, index) => `
+  EL.detailContent.innerHTML = `
+    <div class="top-scroll-wrap" id="topScrollWrap">
+      <div class="top-scroll-inner" id="topScrollInner"></div>
+    </div>
+
+    <div class="detail-content-wrap" id="detailTableWrap">
+      <table id="detailTable">
+        <thead>
           <tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(row.kode_rup)}</td>
-            <td class="cell-strong">${escapeHtml(row.nama_paket)}</td>
-            <td class="cell-muted">${escapeHtml(row.program)}</td>
-            <td class="cell-muted">${escapeHtml(row.kegiatan)}</td>
-            <td class="cell-muted">${escapeHtml(row.sub_kegiatan)}</td>
-            <td>${formatCurrency(row.pagu_anggaran)}</td>
-            <td>${escapeHtml(row.cara_pengadaan)}</td>
-            <td>${renderBlueBadge(row.metode_pemilihan)}</td>
-            <td>${escapeHtml(row.jenis_pengadaan)}</td>
-            <td>${renderPdnBadge(row.pdn)}</td>
-            <td>${escapeHtml(row.sumber_dana)}</td>
-            <td>${escapeHtml(row.waktu_pemilihan)}</td>
+            <th>No</th>
+            <th>Kode RUP</th>
+            <th>Nama Paket</th>
+            <th>Program</th>
+            <th>Kegiatan</th>
+            <th>Sub Kegiatan</th>
+            <th>Pagu</th>
+            <th>Cara Pengadaan</th>
+            <th>Metode</th>
+            <th>Jenis</th>
+            <th>PDN</th>
+            <th>Sumber Dana</th>
+            <th>Waktu</th>
           </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  </div>
-`;
+        </thead>
+        <tbody>
+          ${rows.map((row, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${escapeHtml(row.kode_rup)}</td>
+              <td class="cell-strong">${escapeHtml(row.nama_paket)}</td>
+              <td class="cell-muted">${escapeHtml(row.program)}</td>
+              <td class="cell-muted">${escapeHtml(row.kegiatan)}</td>
+              <td class="cell-muted">${escapeHtml(row.sub_kegiatan)}</td>
+              <td>${formatCurrency(row.pagu_anggaran)}</td>
+              <td>${escapeHtml(row.cara_pengadaan)}</td>
+              <td>${renderBlueBadge(row.metode_pemilihan)}</td>
+              <td>${escapeHtml(row.jenis_pengadaan)}</td>
+              <td>${renderPdnBadge(row.pdn)}</td>
+              <td>${escapeHtml(row.sumber_dana)}</td>
+              <td>${escapeHtml(row.waktu_pemilihan)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
 
-const topScrollWrap = document.getElementById('topScrollWrap');
-const topScrollInner = document.getElementById('topScrollInner');
-const detailTableWrap = document.getElementById('detailTableWrap');
-const detailTable = document.getElementById('detailTable');
+  const topScrollWrap = document.getElementById('topScrollWrap');
+  const topScrollInner = document.getElementById('topScrollInner');
+  const detailTableWrap = document.getElementById('detailTableWrap');
+  const detailTable = document.getElementById('detailTable');
 
-if (topScrollWrap && topScrollInner && detailTableWrap && detailTable) {
-  topScrollInner.style.width = `${detailTable.scrollWidth}px`;
+  if (topScrollWrap && topScrollInner && detailTableWrap && detailTable) {
+    const syncWidths = () => {
+      topScrollInner.style.width = `${detailTable.scrollWidth}px`;
+      topScrollWrap.scrollLeft = detailTableWrap.scrollLeft;
+    };
 
-  let syncingFromTop = false;
-  let syncingFromBottom = false;
+    syncWidths();
 
-  topScrollWrap.addEventListener('scroll', () => {
-    if (syncingFromBottom) return;
-    syncingFromTop = true;
-    detailTableWrap.scrollLeft = topScrollWrap.scrollLeft;
-    syncingFromTop = false;
-  });
+    let syncingFromTop = false;
+    let syncingFromBottom = false;
 
-  detailTableWrap.addEventListener('scroll', () => {
-    if (syncingFromTop) return;
-    syncingFromBottom = true;
-    topScrollWrap.scrollLeft = detailTableWrap.scrollLeft;
-    syncingFromBottom = false;
-  });
-}
-    
+    topScrollWrap.addEventListener('scroll', () => {
+      if (syncingFromBottom) return;
+      syncingFromTop = true;
+      detailTableWrap.scrollLeft = topScrollWrap.scrollLeft;
+      syncingFromTop = false;
+    });
+
+    detailTableWrap.addEventListener('scroll', () => {
+      if (syncingFromTop) return;
+      syncingFromBottom = true;
+      topScrollWrap.scrollLeft = detailTableWrap.scrollLeft;
+      syncingFromBottom = false;
+    });
+
+    window.requestAnimationFrame(syncWidths);
+    window.addEventListener('resize', syncWidths, { once: true });
+  }
+
   const detailSection = document.querySelector('.detail-panel');
   if (detailSection) {
     detailSection.scrollIntoView({
