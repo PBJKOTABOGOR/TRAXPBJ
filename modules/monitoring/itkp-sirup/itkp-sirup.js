@@ -981,4 +981,16 @@ EL.btnClearSelected.addEventListener('click', () => {
 });
 EL.btnRefresh.addEventListener('click', initMonitoringSirup);
 
-initMonitoringSirup();
+window.__moduleInit = function () {
+  let destroyed = false;
+
+  function destroy() {
+    destroyed = true;
+  }
+
+  if (!destroyed) {
+    initMonitoringSirup();
+  }
+
+  return destroy;
+};
