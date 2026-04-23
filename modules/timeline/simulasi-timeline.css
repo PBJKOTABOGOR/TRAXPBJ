@@ -975,9 +975,39 @@ body{
 }
 
 
-/* override saat modul dipanggil dari portal TRAXPBJ */
+
+/* ==== TRAXPBJ native module override ==== */
+html,
+body{
+  background:transparent !important;
+}
+
+body{
+  min-height:auto !important;
+}
+
 .timeline-module{
   width:100%;
+  margin:0;
+  padding:0;
+}
+
+.timeline-module .app.no-sidebar{
+  display:block;
+  min-height:auto;
+  width:100%;
+}
+
+.timeline-module .app.no-sidebar .main{
+  display:block;
+  width:100%;
+  max-width:none;
+  min-width:0;
+}
+
+.timeline-module .app.no-sidebar .content{
+  width:100%;
+  max-width:none;
   margin:0;
   padding:0;
 }
@@ -986,20 +1016,28 @@ body{
   display:none !important;
 }
 
-.timeline-module .content{
-  padding:0 !important;
-  max-width:none !important;
-}
-
 .timeline-module .hero{
-  margin-top:0 !important;
+  margin:0 0 18px 0;
 }
 
-.timeline-module .app.no-sidebar,
-.timeline-module .app.no-sidebar .main{
-  min-height:auto !important;
+.timeline-module .grid{
+  gap:16px;
 }
 
 .timeline-module .card{
-  margin-top:0;
+  box-shadow:none;
+}
+
+.timeline-module .right-panel{
+  gap:16px;
+}
+
+.timeline-module .right-panel .card:last-child{
+  margin-bottom:0;
+}
+
+@media (max-width:1200px){
+  .timeline-module .grid{
+    grid-template-columns:1fr;
+  }
 }
