@@ -1,6 +1,6 @@
 const APP_ROUTES = {
   dashboard: {
-    title: 'Dashboard SIPPBJ',
+    title: 'Dashboard TRAXPBJ',
     subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
@@ -49,13 +49,13 @@ const APP_ROUTES = {
   'simulasi-timeline': {
     title: 'Simulasi Timeline Pengadaan',
     subtitle: 'Simulasi penyusunan timeline pengadaan barang dan jasa.',
-    type: 'iframe',
+    type: 'local',
     url: 'modules/timeline/simulasi-timeline.html'
   },
   'simulasi-nontender': {
     title: 'Pencatatan Non Tender',
     subtitle: 'Simulasi PPK untuk pencatatan paket non tender.',
-    type: 'local',
+    type: 'iframe',
     url: 'https://pbjkotabogor.github.io/SIMPPK/login.html'
   }
 };
@@ -69,7 +69,7 @@ const sidebar = document.getElementById('sidebar');
 function renderDashboard() {
   contentArea.innerHTML = `
     <section class="hero-card">
-      <h3>Selamat datang di SIPPBJ</h3>
+      <h3>Selamat datang di TRAXPBJ</h3>
       <p>Ringkasan utama untuk monitoring, analisis, simulasi, dan pelaporan pengadaan barang/jasa.</p>
 
       <div class="stats-grid">
@@ -158,7 +158,7 @@ function renderDashboard() {
       ${renderQuickCard('✍️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Pencatatan Non Tender', 'Catat dan kelola paket pengadaan non tender.', 'simulasi-nontender')}
     </section>
 
-    <div class="footer-note">© 2026 SIPPBJ - Simulasi & Monitoring Pengadaan Barang/Jasa</div>
+    <div class="footer-note">© 2026 TRAXPBJ - Simulasi & Monitoring Pengadaan Barang/Jasa</div>
   `;
 
   contentArea.querySelectorAll('[data-quick]').forEach((item) => {
@@ -172,7 +172,28 @@ function renderIframePage(page) {
       <h3>${page.title}</h3>
       <div class="page-note">Halaman dimuat dari project/modul yang sudah ada. Jika tinggi iframe dirasa kurang, tinggal ubah CSS pada <b>.embed-frame</b>.</div>
       <div class="embed-frame-wrap">
-        <iframe class="embed-frame" src="${page.url}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <iframe
+          class="embed-frame"
+          src="${page.url}"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+    </section>
+  `;
+}
+
+function renderLocalPage(page) {
+  contentArea.innerHTML = `
+    <section class="embed-card">
+      <h3>${page.title}</h3>
+      <div class="page-note">Halaman dimuat dari file lokal dalam project TRAXPBJ.</div>
+      <div class="embed-frame-wrap">
+        <iframe
+          class="embed-frame"
+          src="${page.url}"
+          loading="lazy">
+        </iframe>
       </div>
     </section>
   `;
@@ -189,7 +210,7 @@ function renderPlaceholderPage(pageKey, page) {
         </div>
         <div class="placeholder-box">
           <h4>Langkah berikutnya</h4>
-          <p>Cari route <b>${pageKey}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> dan isi <b>url</b> halaman GitHub Pages milik kamu.</p>
+          <p>Cari route <b>${pageKey}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>local</b> dan isi <b>url</b> halaman milik kamu.</p>
         </div>
       </div>
     </section>
@@ -254,6 +275,8 @@ function loadPage(key) {
 
   if (page.type === 'iframe') {
     renderIframePage(page);
+  } else if (page.type === 'local') {
+    renderLocalPage(page);
   } else if (page.type === 'placeholder') {
     renderPlaceholderPage(key, page);
   } else {
