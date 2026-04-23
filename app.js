@@ -23,11 +23,12 @@ const APP_ROUTES = {
     type: 'placeholder'
   },
 
-  'monitoring-sirup': {
-    title: 'Monitoring SiRUP',
-    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan SiRUP.',
-    type: 'placeholder'
-  },
+'monitoring-sirup': {
+  title: 'Monitoring SiRUP',
+  subtitle: 'Monitoring indikator pemanfaatan SiRUP dan detail paket per OPD.',
+  type: 'module',
+  html: 'modules/monitoring/itkp-sirup/itkp-sirup.html'
+},
 
   'monitoring-ekatalog': {
     title: 'Monitoring eKatalog',
