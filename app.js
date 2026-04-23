@@ -1,6 +1,6 @@
 const APP_ROUTES = {
   dashboard: {
-    title: 'Dashboard TRAXPBJ',
+    title: 'Dashboard SIPPBJ',
     subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
@@ -87,7 +87,7 @@ let activeFlyout = null;
 function renderDashboard() {
   contentArea.innerHTML = `
     <section class="hero-card">
-      <h3>Selamat datang di TRAXPBJ</h3>
+      <h3>Dashboard SIPPB</h3>
       <p>Ringkasan utama untuk monitoring, analisis, simulasi, dan pelaporan pengadaan barang/jasa.</p>
 
       <div class="stats-grid">
@@ -176,7 +176,7 @@ function renderDashboard() {
       ${renderQuickCard('✍️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Pencatatan Non Tender', 'Catat dan kelola paket pengadaan non tender.', 'simulasi-nontender')}
     </section>
 
-    <div class="footer-note">© 2026 TRAXPBJ - Simulasi & Monitoring Pengadaan Barang/Jasa</div>
+    <div class="footer-note">© 2026 TRAXPBJ - BenRama</div>
   `;
 
   contentArea.querySelectorAll('[data-quick]').forEach((item) => {
