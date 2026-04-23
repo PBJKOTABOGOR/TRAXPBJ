@@ -4,6 +4,8 @@ const SHEET_CONFIG = {
   scoreGid: '468989223'
 };
 
+const MIN_LOADING_MS = 700;
+
 const APP_STATE = {
   rawSirup: [],
   scoreSirup: [],
@@ -52,6 +54,18 @@ const EL = {
   insightMetodeNote: document.getElementById('insightMetodeNote')
 };
 
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function nextPaint() {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+}
+
 function buildCsvUrl(gid) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.spreadsheetId}/export?format=csv&gid=${gid}`;
 }
@@ -59,19 +73,33 @@ function buildCsvUrl(gid) {
 function setLoading(message, useOverlay = false) {
   if (EL.loadingText) EL.loadingText.textContent = message;
   if (EL.globalLoadingText) EL.globalLoadingText.textContent = message;
+
   if (EL.loadingBox) EL.loadingBox.classList.add('show');
   if (useOverlay && EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.add('show');
+
+  if (EL.btnRefresh) EL.btnRefresh.disabled = true;
+  if (EL.btnExportRekap) EL.btnExportRekap.disabled = true;
+  if (EL.btnExportDetail) EL.btnExportDetail.disabled = true;
+  if (EL.btnExportCurrentDetail) EL.btnExportCurrentDetail.disabled = true;
 }
 
 function clearLoading() {
   if (EL.loadingBox) EL.loadingBox.classList.remove('show');
   if (EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.remove('show');
+
+  if (EL.btnRefresh) EL.btnRefresh.disabled = false;
+  if (EL.btnExportRekap) EL.btnExportRekap.disabled = false;
+  if (EL.btnExportDetail) EL.btnExportDetail.disabled = false;
+  if (EL.btnExportCurrentDetail) EL.btnExportCurrentDetail.disabled = false;
 }
 
 async function initMonitoringSirup() {
+  const startedAt = Date.now();
+
   try {
     showError('');
     setLoading('Menghubungkan ke Google Sheet...', true);
+    await nextPaint();
 
     const rawUrl = buildCsvUrl(SHEET_CONFIG.rawGid);
     const scoreUrl = buildCsvUrl(SHEET_CONFIG.scoreGid);
@@ -85,24 +113,33 @@ async function initMonitoringSirup() {
     const [rawCsv, scoreCsv] = await Promise.all([rawCsvPromise, scoreCsvPromise]);
 
     setLoading('Memproses data CSV...', true);
+    await nextPaint();
+
     const rawRows = csvToObjects(rawCsv);
     const scoreRows = csvToObjects(scoreCsv);
 
     setLoading('Menyesuaikan header dan format data...', true);
+    await nextPaint();
+
     APP_STATE.rawSirup = normalizeRawSirup(rawRows);
     APP_STATE.scoreSirup = normalizeScoreSirup(scoreRows);
 
     setLoading('Menyusun filter dan tabel...', true);
+    await nextPaint();
+
     buildFilterOptions();
     applyFilters();
-
-    clearLoading();
   } catch (error) {
     console.error(error);
-    clearLoading();
     showError(
       `Data gagal dimuat. Detail: ${error.message}. Pastikan sheet bisa diakses browser portal ini. Kalau masih private, ubah sharing minimal Viewer atau publish sheet terkait.`
     );
+  } finally {
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < MIN_LOADING_MS) {
+      await wait(MIN_LOADING_MS - elapsed);
+    }
+    clearLoading();
   }
 }
 
