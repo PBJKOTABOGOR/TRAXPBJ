@@ -90,6 +90,14 @@
   padding:14px;
 }
 
+.itkp-sirup-page .section-head-inline{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+
 .itkp-sirup-page .section-title{
   margin:0;
   font-size:16px;
@@ -215,6 +223,12 @@
   transform:translateY(-1px);
 }
 
+.itkp-sirup-page .btn-sm{
+  min-height:34px;
+  padding:0 12px;
+  font-size:11px;
+}
+
 .itkp-sirup-page .stats{
   display:grid;
   grid-template-columns:repeat(6,minmax(0,1fr));
@@ -290,7 +304,7 @@
 
 .itkp-sirup-page .table-wrap{
   overflow:auto;
-  border:1px solid var(--line);
+  border:1px solid #d7e3f0;
   border-radius:16px;
   background:#fff;
 }
@@ -305,15 +319,23 @@
 .itkp-sirup-page thead th{
   position:sticky;
   top:0;
-  z-index:1;
-  background:#f5f9ff;
-  color:var(--navy);
+  z-index:2;
+  background:linear-gradient(180deg,#2b5aa7 0%, #234a87 100%);
+  color:#ffffff;
   font-size:11px;
   font-weight:900;
   text-align:left;
   padding:10px 10px;
-  border-bottom:1px solid var(--line);
+  border-bottom:1px solid #1d3f77;
   white-space:nowrap;
+}
+
+.itkp-sirup-page thead th:first-child{
+  border-top-left-radius:16px;
+}
+
+.itkp-sirup-page thead th:last-child{
+  border-top-right-radius:16px;
 }
 
 .itkp-sirup-page tbody td{
@@ -325,7 +347,7 @@
 }
 
 .itkp-sirup-page tbody tr:hover td{
-  background:#fbfdff;
+  background:#f4f8ff;
 }
 
 .itkp-sirup-page tbody tr:last-child td{
@@ -404,19 +426,23 @@
 
 .itkp-sirup-page .detail-content-wrap{
   overflow:auto;
-  border:1px solid var(--line);
+  border:1px solid #d7e3f0;
   border-top:none;
   border-radius:0 0 16px 16px;
   background:#fff;
 }
 
+.itkp-sirup-page .detail-content-wrap table{
+  min-width:1450px;
+}
+
 .itkp-sirup-page .top-scroll-wrap{
   overflow-x:auto;
   overflow-y:hidden;
-  border:1px solid var(--line);
+  border:1px solid #d7e3f0;
   border-bottom:none;
   border-radius:16px 16px 0 0;
-  background:#f8fbff;
+  background:#2b5aa7;
   height:18px;
 }
 
@@ -548,12 +574,19 @@
   flex-wrap:wrap;
 }
 
+.itkp-sirup-page .pagination-left{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:700;
+}
+
 .itkp-sirup-page .pagination-info{
   font-size:12px;
   color:var(--muted);
   font-weight:700;
 }
 
+.itkp-sirup-page .pagination-right,
 .itkp-sirup-page .pagination-buttons{
   display:flex;
   align-items:center;
