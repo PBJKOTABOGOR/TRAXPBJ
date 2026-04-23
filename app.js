@@ -78,11 +78,8 @@ const APP_ROUTES = {
 };
 
 const contentArea = document.getElementById('contentArea');
-const pageTitle = document.getElementById('pageTitle');
-const pageSubtitle = document.getElementById('pageSubtitle');
-const menuButton = document.getElementById('menuButton');
 const sidebar = document.getElementById('sidebar');
-const portalPageHeader = document.getElementById('portalPageHeader');
+const sidebarToggleButton = document.getElementById('sidebarToggleButton');
 
 let activeModuleToken = 0;
 
@@ -190,7 +187,7 @@ function renderIframePage(page) {
   contentArea.innerHTML = `
     <section class="embed-card">
       <h3>${page.title}</h3>
-      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada. Jika tinggi iframe dirasa kurang, tinggal ubah CSS pada <b>.embed-frame</b>.</div>
+      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
       <div class="embed-frame-wrap">
         <iframe
           class="embed-frame"
@@ -210,7 +207,7 @@ function renderPlaceholderPage(pageKey, page) {
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Modul belum dihubungkan</h4>
-          <p>Halaman ini sudah disiapkan di portal utama. Nanti saat project GitHub/halaman monitoring selesai, tinggal isi URL atau module path di file <b>app.js</b>.</p>
+          <p>Halaman ini sudah disiapkan di portal utama.</p>
         </div>
         <div class="placeholder-box">
           <h4>Langkah berikutnya</h4>
@@ -286,13 +283,12 @@ function cleanupDynamicModule() {
 
 function loadExternalScriptOnce(src) {
   return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[data-dynamic-external-script="true"][src^="${src}"]`);
+    const existing = document.querySelector(`script[data-dynamic-external-script="true"][src="${src}"]`);
     if (existing) {
       if (existing.dataset.loaded === 'true') {
         resolve();
         return;
       }
-
       existing.addEventListener('load', () => resolve(), { once: true });
       existing.addEventListener('error', () => reject(new Error(`Gagal memuat ${src}`)), { once: true });
       return;
@@ -379,22 +375,10 @@ async function renderModulePage(page) {
 async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
 
-  if (pageTitle) {
-    pageTitle.textContent = page.title || '';
-  }
-
-  if (pageSubtitle) {
-    pageSubtitle.textContent = page.subtitle || '';
-  }
-
   updateActiveMenu(key);
 
   if (page.type !== 'module') {
     cleanupDynamicModule();
-  }
-
-  if (portalPageHeader) {
-    portalPageHeader.style.display = page.type === 'module' ? 'none' : '';
   }
 
   if (page.type === 'module') {
@@ -426,18 +410,17 @@ function bindMenu() {
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
     button.addEventListener('click', () => {
       const group = document.querySelector(`.nav-group[data-group="${button.dataset.toggleGroup}"]`);
-      if (group) {
+      if (group && !sidebar.classList.contains('collapsed')) {
         group.classList.toggle('open');
       }
     });
   });
 
-  if (menuButton && sidebar) {
-    menuButton.addEventListener('click', () => {
+  if (sidebarToggleButton && sidebar) {
+    sidebarToggleButton.addEventListener('click', () => {
       if (window.innerWidth <= 980) {
         sidebar.classList.toggle('mobile-open');
       } else {
-        document.body.classList.toggle('sidebar-collapsed');
         sidebar.classList.toggle('collapsed');
       }
     });
