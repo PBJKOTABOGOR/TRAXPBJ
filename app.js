@@ -1,6 +1,6 @@
 const APP_ROUTES = {
   dashboard: {
-    title: 'Dashboard SIPPBJ ',
+    title: 'Dashboard SIPPBJ',
     subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
@@ -87,7 +87,7 @@ let activeFlyout = null;
 function renderDashboard() {
   contentArea.innerHTML = `
     <section class="hero-card">
-      <h3>Dashboard SIPPB</h3>
+      <h3>Dashboard SIPPBJ</h3>
       <p>Ringkasan utama untuk monitoring, analisis, simulasi, dan pelaporan pengadaan barang/jasa.</p>
 
       <div class="stats-grid">
