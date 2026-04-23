@@ -14,8 +14,11 @@ const APP_STATE = {
 };
 
 const EL = {
+  loadingBox: document.getElementById('loadingBox'),
   loadingText: document.getElementById('loadingText'),
   errorBox: document.getElementById('errorBox'),
+  globalLoadingOverlay: document.getElementById('globalLoadingOverlay'),
+  globalLoadingText: document.getElementById('globalLoadingText'),
   filterOpd: document.getElementById('filterOpd'),
   filterMetode: document.getElementById('filterMetode'),
   filterSumberDana: document.getElementById('filterSumberDana'),
@@ -53,31 +56,53 @@ function buildCsvUrl(gid) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.spreadsheetId}/export?format=csv&gid=${gid}`;
 }
 
+function setLoading(message, useOverlay = false) {
+  if (EL.loadingText) EL.loadingText.textContent = message;
+  if (EL.globalLoadingText) EL.globalLoadingText.textContent = message;
+  if (EL.loadingBox) EL.loadingBox.classList.add('show');
+  if (useOverlay && EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.add('show');
+}
+
+function clearLoading() {
+  if (EL.loadingBox) EL.loadingBox.classList.remove('show');
+  if (EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.remove('show');
+}
+
 async function initMonitoringSirup() {
   try {
-    showLoading(true);
     showError('');
+    setLoading('Menghubungkan ke Google Sheet...', true);
 
-    const [rawCsv, scoreCsv] = await Promise.all([
-      fetchCsv(buildCsvUrl(SHEET_CONFIG.rawGid)),
-      fetchCsv(buildCsvUrl(SHEET_CONFIG.scoreGid))
-    ]);
+    const rawUrl = buildCsvUrl(SHEET_CONFIG.rawGid);
+    const scoreUrl = buildCsvUrl(SHEET_CONFIG.scoreGid);
 
+    setLoading('Mengambil data RAW_SIRUP...', true);
+    const rawCsvPromise = fetchCsv(rawUrl);
+
+    setLoading('Mengambil data SCORE_ITKP_SIRUP...', true);
+    const scoreCsvPromise = fetchCsv(scoreUrl);
+
+    const [rawCsv, scoreCsv] = await Promise.all([rawCsvPromise, scoreCsvPromise]);
+
+    setLoading('Memproses data CSV...', true);
     const rawRows = csvToObjects(rawCsv);
     const scoreRows = csvToObjects(scoreCsv);
 
+    setLoading('Menyesuaikan header dan format data...', true);
     APP_STATE.rawSirup = normalizeRawSirup(rawRows);
     APP_STATE.scoreSirup = normalizeScoreSirup(scoreRows);
 
+    setLoading('Menyusun filter dan tabel...', true);
     buildFilterOptions();
     applyFilters();
+
+    clearLoading();
   } catch (error) {
     console.error(error);
+    clearLoading();
     showError(
-      'Data gagal dimuat dari Google Sheet. Pastikan sheet bisa diakses browser portal ini. Kalau masih private, ubah sharing minimal Viewer atau publish sheet terkait.'
+      `Data gagal dimuat. Detail: ${error.message}. Pastikan sheet bisa diakses browser portal ini. Kalau masih private, ubah sharing minimal Viewer atau publish sheet terkait.`
     );
-  } finally {
-    showLoading(false);
   }
 }
 
@@ -91,7 +116,17 @@ async function fetchCsv(url) {
     throw new Error(`HTTP ${response.status} saat mengambil ${url}`);
   }
 
-  return await response.text();
+  const text = await response.text();
+
+  if (!text || !text.trim()) {
+    throw new Error(`CSV kosong dari ${url}`);
+  }
+
+  if (/<!doctype html>|<html/i.test(text)) {
+    throw new Error(`Response bukan CSV, kemungkinan akses sheet masih tertutup: ${url}`);
+  }
+
+  return text;
 }
 
 function csvToObjects(csvText) {
@@ -199,10 +234,6 @@ function pick(obj, keys) {
     }
   }
   return '';
-}
-
-function showLoading(isLoading) {
-  EL.loadingText.classList.toggle('show', !!isLoading);
 }
 
 function showError(message) {
