@@ -383,12 +383,15 @@ function applyFilters() {
     return matchOpd && matchMetode && matchDana && matchWaktu && matchKeyword;
   });
 
-  APP_STATE.filteredScore = APP_STATE.scoreSirup.filter(row => {
-    if (selectedOpdFilter && row.satuan_kerja !== selectedOpdFilter) {
-      return false;
-    }
-    return true;
-  });
+APP_STATE.filteredScore = APP_STATE.scoreSirup.filter(row => {
+  if (
+    selectedOpdFilter &&
+    normalizeOpdName(row.satuan_kerja) !== normalizeOpdName(selectedOpdFilter)
+  ) {
+    return false;
+  }
+  return true;
+});
 
   renderStats(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
   renderInsights(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
@@ -539,7 +542,12 @@ function renderRekapTable(rows) {
 }
 
 function renderDetailForOpd(opdName) {
-  const rows = APP_STATE.filteredRawGlobal.filter(row => row.satuan_kerja === opdName);
+  const opdKey = normalizeOpdName(opdName);
+
+  const rows = APP_STATE.filteredRawGlobal.filter(row =>
+    normalizeOpdName(row.satuan_kerja) === opdKey
+  );
+
   APP_STATE.selectedRawRows = rows;
 
   EL.detailTitle.textContent = `Detail Paket SIRUP - ${opdName}`;
@@ -938,6 +946,14 @@ function formatDecimal(value) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2
   });
+}
+
+function normalizeOpdName(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s]/g, '');
 }
 
 function escapeHtml(value) {
