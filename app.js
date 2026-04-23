@@ -1,13 +1,16 @@
-
 const APP_ROUTES = {
   dashboard: {
+    title: 'Dashboard TRAXPBJ',
+    subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
   'monitoring-perencanaan': {
     title: 'Monitoring Perencanaan',
     subtitle: 'Pemantauan progres perencanaan pengadaan perangkat daerah.',
-    type: 'iframe',
-    url: 'https://pbjkotabogor.github.io/dev-raporpbj26/monitoring.html'
+    type: 'module',
+    html: 'modules/monitoring/perencanaan/monitoring.html',
+    css: 'modules/monitoring/perencanaan/monitoring.css',
+    js: 'modules/monitoring/perencanaan/monitoring.js'
   },
   'monitoring-konsolidasi': {
     title: 'Monitoring Paket Konsolidasi',
@@ -62,8 +65,11 @@ const APP_ROUTES = {
 };
 
 const contentArea = document.getElementById('contentArea');
+const pageTitle = document.getElementById('pageTitle');
+const pageSubtitle = document.getElementById('pageSubtitle');
+const menuButton = document.getElementById('menuButton');
 const sidebar = document.getElementById('sidebar');
-const sidebarToggleButton = document.getElementById('sidebarToggleButton');
+const portalPageHeader = document.getElementById('portalPageHeader');
 
 function renderDashboard() {
   contentArea.innerHTML = `
@@ -168,12 +174,8 @@ function renderDashboard() {
 function renderIframePage(page) {
   contentArea.innerHTML = `
     <section class="embed-card">
-      <div class="embed-card-head">
-        <div>
-          <h3>${page.title}</h3>
-          <p>${page.subtitle || ''}</p>
-        </div>
-      </div>
+      <h3>${page.title}</h3>
+      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada. Jika tinggi iframe dirasa kurang, tinggal ubah CSS pada <b>.embed-frame</b>.</div>
       <div class="embed-frame-wrap">
         <iframe
           class="embed-frame"
@@ -285,8 +287,6 @@ async function renderModulePage(page) {
       </section>
     `;
 
-    contentArea.classList.add('module-mode');
-
     if (page.css) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -316,14 +316,16 @@ async function renderModulePage(page) {
 
 async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
+  pageTitle.textContent = page.title;
+  pageSubtitle.textContent = page.subtitle;
   updateActiveMenu(key);
 
   if (page.type !== 'module') {
     cleanupDynamicModule();
   }
 
-  if (page.type !== 'module') {
-    contentArea.classList.remove('module-mode');
+  if (portalPageHeader) {
+    portalPageHeader.style.display = page.type === 'module' ? 'none' : '';
   }
 
   if (page.type === 'iframe') {
@@ -341,11 +343,6 @@ async function loadPage(key) {
   }
 }
 
-function applySidebarState() {
-  const isCollapsed = localStorage.getItem('traxpbj-sidebar-collapsed') === '1';
-  document.body.classList.toggle('sidebar-collapsed', isCollapsed);
-}
-
 function bindMenu() {
   document.querySelectorAll('[data-page]').forEach((button) => {
     button.addEventListener('click', () => loadPage(button.dataset.page));
@@ -358,20 +355,14 @@ function bindMenu() {
     });
   });
 
-  sidebarToggleButton.addEventListener('click', () => {
+  menuButton.addEventListener('click', () => {
     if (window.innerWidth <= 980) {
       sidebar.classList.toggle('mobile-open');
-      return;
+    } else {
+      document.body.classList.toggle('sidebar-collapsed');
     }
-
-    document.body.classList.toggle('sidebar-collapsed');
-    localStorage.setItem(
-      'traxpbj-sidebar-collapsed',
-      document.body.classList.contains('sidebar-collapsed') ? '1' : '0'
-    );
   });
 }
 
-applySidebarState();
 bindMenu();
 loadPage('dashboard');
