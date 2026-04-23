@@ -464,6 +464,33 @@ EL.detailContent.innerHTML = `
     </table>
   </div>
 `;
+
+const topScrollWrap = document.getElementById('topScrollWrap');
+const topScrollInner = document.getElementById('topScrollInner');
+const detailTableWrap = document.getElementById('detailTableWrap');
+const detailTable = document.getElementById('detailTable');
+
+if (topScrollWrap && topScrollInner && detailTableWrap && detailTable) {
+  topScrollInner.style.width = `${detailTable.scrollWidth}px`;
+
+  let syncingFromTop = false;
+  let syncingFromBottom = false;
+
+  topScrollWrap.addEventListener('scroll', () => {
+    if (syncingFromBottom) return;
+    syncingFromTop = true;
+    detailTableWrap.scrollLeft = topScrollWrap.scrollLeft;
+    syncingFromTop = false;
+  });
+
+  detailTableWrap.addEventListener('scroll', () => {
+    if (syncingFromTop) return;
+    syncingFromBottom = true;
+    topScrollWrap.scrollLeft = detailTableWrap.scrollLeft;
+    syncingFromBottom = false;
+  });
+}
+    
   const detailSection = document.querySelector('.detail-panel');
   if (detailSection) {
     detailSection.scrollIntoView({
