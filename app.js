@@ -50,12 +50,12 @@ const APP_ROUTES = {
     title: 'Simulasi Timeline Pengadaan',
     subtitle: 'Simulasi penyusunan timeline pengadaan barang dan jasa.',
     type: 'iframe',
-    url: 'https://pbjkotabogor.github.io/timelinepbj/simulasi-timeline.html'
+    url: 'modules/timeline/simulasi-timeline.html'
   },
   'simulasi-nontender': {
     title: 'Pencatatan Non Tender',
     subtitle: 'Simulasi PPK untuk pencatatan paket non tender.',
-    type: 'iframe',
+    type: 'local',
     url: 'https://pbjkotabogor.github.io/SIMPPK/login.html'
   }
 };
