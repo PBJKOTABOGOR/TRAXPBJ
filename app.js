@@ -4,6 +4,7 @@ const APP_ROUTES = {
     subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
+
   'monitoring-perencanaan': {
     title: 'Monitoring Perencanaan',
     subtitle: 'Pemantauan progres perencanaan pengadaan perangkat daerah.',
@@ -15,42 +16,50 @@ const APP_ROUTES = {
       'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
     ]
   },
+
   'monitoring-konsolidasi': {
     title: 'Monitoring Paket Konsolidasi',
     subtitle: 'Halaman ini disiapkan untuk monitoring paket konsolidasi.',
     type: 'placeholder'
   },
+
   'monitoring-sirup': {
     title: 'Monitoring SiRUP',
     subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan SiRUP.',
     type: 'placeholder'
   },
+
   'monitoring-ekatalog': {
     title: 'Monitoring eKatalog',
     subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKatalog.',
     type: 'placeholder'
   },
+
   'monitoring-etendering': {
     title: 'Monitoring eTendering',
     subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eTendering.',
     type: 'placeholder'
   },
+
   'monitoring-nontender': {
     title: 'Monitoring Non Tender',
     subtitle: 'Halaman ini disiapkan untuk monitoring Non eTendering/Non ePurchasing.',
     type: 'placeholder'
   },
+
   'monitoring-ekontrak': {
     title: 'Monitoring eKontrak',
     subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKontrak.',
     type: 'placeholder'
   },
+
   'rapor-pbj': {
     title: 'Rapor PBJ',
     subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
     type: 'iframe',
     url: 'https://pbjkotabogor.github.io/raporpbj/'
   },
+
   'simulasi-timeline': {
     title: 'Simulasi Timeline Pengadaan',
     subtitle: 'Simulasi penyusunan timeline pengadaan barang dan jasa.',
@@ -59,6 +68,7 @@ const APP_ROUTES = {
     css: 'modules/timeline/simulasi-timeline.css',
     js: 'modules/timeline/simulasi-timeline.js'
   },
+
   'simulasi-nontender': {
     title: 'Pencatatan Non Tender',
     subtitle: 'Simulasi PPK untuk pencatatan paket non tender.',
@@ -72,19 +82,35 @@ const sidebar = document.getElementById('sidebar');
 const sidebarToggleButton = document.getElementById('sidebarToggleButton');
 
 let activeModuleToken = 0;
-let activeFlyoutGroup = null;
+let activeFlyout = null;
 
 function renderDashboard() {
   contentArea.innerHTML = `
     <section class="hero-card">
-      <span class="hero-eyebrow">TRAXPBJ</span>
       <h3>Selamat datang di TRAXPBJ</h3>
       <p>Ringkasan utama untuk monitoring, analisis, simulasi, dan pelaporan pengadaan barang/jasa.</p>
+
       <div class="stats-grid">
-        <div class="stat-card"><div class="label">ITKP</div><div class="value">86,42%</div><div class="desc">Tingkat kematangan PBJ</div></div>
-        <div class="stat-card"><div class="label">Konsolidasi</div><div class="value">128</div><div class="desc">Paket terkonsolidasi</div></div>
-        <div class="stat-card"><div class="label">Modul Monitoring</div><div class="value">7</div><div class="desc">Modul aktif dalam portal</div></div>
-        <div class="stat-card"><div class="label">Rapor PBJ</div><div class="value">44</div><div class="desc">Laporan rapor tersedia</div></div>
+        <div class="stat-card">
+          <div class="label">ITKP</div>
+          <div class="value">86,42%</div>
+          <div class="desc">Tingkat kematangan PBJ</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Konsolidasi</div>
+          <div class="value">128</div>
+          <div class="desc">Paket terkonsolidasi</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Modul Monitoring</div>
+          <div class="value">7</div>
+          <div class="desc">Modul aktif dalam portal</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Rapor PBJ</div>
+          <div class="value">44</div>
+          <div class="desc">Laporan rapor tersedia</div>
+        </div>
       </div>
     </section>
 
@@ -108,6 +134,7 @@ function renderDashboard() {
               ${renderDimension('Kelembagaan', 88.60)}
             </div>
           </div>
+
           <div class="mini-card">
             <h4>Konsolidasi</h4>
             <div class="donut-wrap">
@@ -148,19 +175,20 @@ function renderDashboard() {
       ${renderQuickCard('🗓️', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
       ${renderQuickCard('✍️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Pencatatan Non Tender', 'Catat dan kelola paket pengadaan non tender.', 'simulasi-nontender')}
     </section>
+
+    <div class="footer-note">© 2026 TRAXPBJ - Simulasi & Monitoring Pengadaan Barang/Jasa</div>
   `;
-  contentArea.querySelectorAll('[data-quick]').forEach((item) => item.addEventListener('click', () => loadPage(item.dataset.quick)));
+
+  contentArea.querySelectorAll('[data-quick]').forEach((item) => {
+    item.addEventListener('click', () => loadPage(item.dataset.quick));
+  });
 }
 
 function renderIframePage(page) {
-  closeFlyouts();
   contentArea.innerHTML = `
     <section class="embed-card">
-      <div class="module-header">
-        <div class="module-eyebrow">TRAXPBJ</div>
-        <h3>${page.title}</h3>
-        <p>${page.subtitle || ''}</p>
-      </div>
+      <h3>${page.title}</h3>
+      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
       <div class="embed-frame-wrap">
         <iframe class="embed-frame" src="${page.url}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
@@ -169,7 +197,6 @@ function renderIframePage(page) {
 }
 
 function renderPlaceholderPage(pageKey, page) {
-  closeFlyouts();
   contentArea.innerHTML = `
     <section class="card">
       <h3>${page.title}</h3>
@@ -188,27 +215,53 @@ function renderPlaceholderPage(pageKey, page) {
 }
 
 function renderDimension(name, value) {
-  return `<div class="dim-row"><div>${name}</div><div class="bar"><span style="width:${value}%"></span></div><div>${value.toFixed(2).replace('.', ',')}%</div></div>`;
+  return `
+    <div class="dim-row">
+      <div>${name}</div>
+      <div class="bar"><span style="width:${value}%"></span></div>
+      <div>${value.toFixed(2).replace('.', ',')}%</div>
+    </div>
+  `;
 }
 
 function renderActivity(color, icon, title, text, time) {
-  return `<div class="activity-item"><div class="activity-icon" style="background:${color}">${icon}</div><div><div class="activity-title">${title}</div><div class="activity-text">${text}</div></div><div class="activity-time">${time}</div></div>`;
+  return `
+    <div class="activity-item">
+      <div class="activity-icon" style="background:${color}">${icon}</div>
+      <div>
+        <div class="activity-title">${title}</div>
+        <div class="activity-text">${text}</div>
+      </div>
+      <div class="activity-time">${time}</div>
+    </div>
+  `;
 }
 
 function renderQuickCard(icon, bg, title, text, route) {
-  return `<button class="quick-card" type="button" data-quick="${route}"><div class="quick-icon" style="background:${bg}">${icon}</div><div><div class="quick-title">${title}</div><div class="quick-text">${text}</div></div><div class="quick-arrow">›</div></button>`;
+  return `
+    <button class="quick-card" type="button" data-quick="${route}">
+      <div class="quick-icon" style="background:${bg}">${icon}</div>
+      <div>
+        <div class="quick-title">${title}</div>
+        <div class="quick-text">${text}</div>
+      </div>
+      <div class="quick-arrow">›</div>
+    </button>
+  `;
 }
 
 function updateActiveMenu(key) {
   document.querySelectorAll('.nav-link, .submenu-link').forEach((el) => el.classList.remove('active'));
+
   const directButton = document.querySelector(`.nav-link[data-page="${key}"]`);
-  const subButtons = document.querySelectorAll(`.submenu-link[data-page="${key}"]`);
+  const subButton = document.querySelector(`.submenu-link[data-page="${key}"]`);
+
   if (directButton) directButton.classList.add('active');
-  subButtons.forEach((btn) => btn.classList.add('active'));
-  const firstSub = document.querySelector(`.nav-group .submenu-link[data-page="${key}"]`);
-  if (firstSub) {
-    const group = firstSub.closest('.nav-group');
-    if (group && !sidebar.classList.contains('collapsed')) group.classList.add('open');
+
+  if (subButton) {
+    subButton.classList.add('active');
+    const group = subButton.closest('.nav-group');
+    if (group) group.classList.add('open');
   }
 }
 
@@ -222,17 +275,26 @@ function loadExternalScriptOnce(src) {
   return new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[data-dynamic-external-script="true"][src="${src}"]`);
     if (existing) {
-      if (existing.dataset.loaded === 'true') return resolve();
+      if (existing.dataset.loaded === 'true') {
+        resolve();
+        return;
+      }
       existing.addEventListener('load', () => resolve(), { once: true });
       existing.addEventListener('error', () => reject(new Error(`Gagal memuat ${src}`)), { once: true });
       return;
     }
+
     const script = document.createElement('script');
     script.src = src;
     script.async = false;
     script.dataset.dynamicExternalScript = 'true';
     script.dataset.loaded = 'false';
-    script.onload = () => { script.dataset.loaded = 'true'; resolve(); };
+
+    script.onload = () => {
+      script.dataset.loaded = 'true';
+      resolve();
+    };
+
     script.onerror = () => reject(new Error(`Gagal memuat ${src}`));
     document.body.appendChild(script);
   });
@@ -244,20 +306,34 @@ async function renderModulePage(page) {
 
   try {
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
-      for (const src of page.externalScripts) await loadExternalScriptOnce(src);
+      for (const src of page.externalScripts) {
+        await loadExternalScriptOnce(src);
+      }
     }
 
     const response = await fetch(page.html, { cache: 'no-cache' });
-    if (!response.ok) throw new Error(`HTTP ${response.status} saat memuat ${page.html}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} saat memuat ${page.html}`);
+    }
 
     const rawHtml = await response.text();
     if (token !== activeModuleToken) return;
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawHtml, 'text/html');
-    const moduleContent = (doc.body && doc.body.innerHTML.trim()) ? doc.body.innerHTML : rawHtml;
 
-    contentArea.innerHTML = `<section class="module-page module-page--native">${moduleContent}</section>`;
+    let moduleContent = '';
+    if (doc.body && doc.body.innerHTML.trim()) {
+      moduleContent = doc.body.innerHTML;
+    } else {
+      moduleContent = rawHtml;
+    }
+
+    contentArea.innerHTML = `
+      <section class="module-page module-page--native">
+        ${moduleContent}
+      </section>
+    `;
 
     if (page.css) {
       const link = document.createElement('link');
@@ -276,37 +352,99 @@ async function renderModulePage(page) {
     }
   } catch (error) {
     console.error('Gagal memuat module:', error);
-    contentArea.innerHTML = `<section class="card"><h3>Gagal memuat modul</h3><p>File modul tidak bisa dimuat. Cek path HTML, CSS, JS, atau external script pada <b>APP_ROUTES</b>.</p><p><b>Detail:</b> ${error.message}</p></section>`;
+    contentArea.innerHTML = `
+      <section class="card">
+        <h3>Gagal memuat modul</h3>
+        <p>File modul tidak bisa dimuat. Cek path HTML, CSS, JS, atau external script pada <b>APP_ROUTES</b>.</p>
+        <p><b>Detail:</b> ${error.message}</p>
+      </section>
+    `;
   }
 }
 
-function closeFlyouts() {
-  document.querySelectorAll('.nav-group.show-flyout').forEach((group) => group.classList.remove('show-flyout'));
-  activeFlyoutGroup = null;
+function closeSidebarFlyout() {
+  if (activeFlyout) {
+    activeFlyout.remove();
+    activeFlyout = null;
+  }
 }
 
-function toggleFlyout(groupName) {
-  const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
-  if (!group || !sidebar.classList.contains('collapsed')) return;
+function openSidebarFlyout(groupButton, groupName) {
+  closeSidebarFlyout();
 
-  if (activeFlyoutGroup && activeFlyoutGroup !== groupName) closeFlyouts();
+  const group = groupButton.closest('.nav-group');
+  if (!group) return;
 
-  const isOpen = group.classList.contains('show-flyout');
-  if (isOpen) {
-    group.classList.remove('show-flyout');
-    activeFlyoutGroup = null;
-  } else {
-    group.classList.add('show-flyout');
-    activeFlyoutGroup = groupName;
-  }
+  const submenu = group.querySelector('.submenu');
+  if (!submenu) return;
+
+  const flyout = document.createElement('div');
+  flyout.className = 'sidebar-flyout';
+
+  const title = document.createElement('div');
+  title.className = 'sidebar-flyout-title';
+  title.textContent = groupName;
+  flyout.appendChild(title);
+
+  submenu.querySelectorAll('[data-page]').forEach((btn) => {
+    const clone = document.createElement('button');
+    clone.type = 'button';
+    clone.className = 'flyout-link';
+
+    if (btn.dataset.page === getCurrentActivePage()) {
+      clone.classList.add('active');
+    }
+
+    clone.textContent = btn.textContent.trim();
+    clone.addEventListener('click', () => {
+      loadPage(btn.dataset.page);
+      closeSidebarFlyout();
+    });
+    flyout.appendChild(clone);
+  });
+
+  document.body.appendChild(flyout);
+
+  const rect = groupButton.getBoundingClientRect();
+  flyout.style.left = `${rect.right + 12}px`;
+  flyout.style.top = `${Math.max(12, rect.top)}px`;
+
+  activeFlyout = flyout;
+
+  setTimeout(() => {
+    document.addEventListener('click', handleOutsideFlyoutClick, { once: true });
+  }, 0);
+}
+
+function handleOutsideFlyoutClick(e) {
+  if (!activeFlyout) return;
+  if (activeFlyout.contains(e.target)) return;
+  if (e.target.closest('#sidebar')) return;
+  closeSidebarFlyout();
+}
+
+function getCurrentActivePage() {
+  const activeSub = document.querySelector('.submenu-link.active');
+  if (activeSub) return activeSub.dataset.page;
+  const activeNav = document.querySelector('.nav-link.active');
+  return activeNav ? activeNav.dataset.page : 'dashboard';
 }
 
 async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
+
+  closeSidebarFlyout();
   updateActiveMenu(key);
 
-  if (page.type !== 'module') cleanupDynamicModule();
-  contentArea.classList.toggle('module-mode', page.type === 'module');
+  if (page.type !== 'module') {
+    cleanupDynamicModule();
+  }
+
+  if (page.type === 'module') {
+    contentArea.classList.add('module-mode');
+  } else {
+    contentArea.classList.remove('module-mode');
+  }
 
   if (page.type === 'iframe') {
     renderIframePage(page);
@@ -318,27 +456,24 @@ async function loadPage(key) {
     renderDashboard();
   }
 
-  if (window.innerWidth <= 980 && sidebar) sidebar.classList.remove('mobile-open');
-  if (!sidebar.classList.contains('collapsed')) closeFlyouts();
+  if (window.innerWidth <= 980 && sidebar) {
+    sidebar.classList.remove('mobile-open');
+  }
 }
 
 function bindMenu() {
   document.querySelectorAll('[data-page]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      loadPage(button.dataset.page);
-    });
+    button.addEventListener('click', () => loadPage(button.dataset.page));
   });
 
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      const groupName = button.dataset.toggleGroup;
-      const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
+    button.addEventListener('click', () => {
+      const group = document.querySelector(`.nav-group[data-group="${button.dataset.toggleGroup}"]`);
       if (!group) return;
 
-      if (sidebar.classList.contains('collapsed')) {
-        event.stopPropagation();
-        toggleFlyout(groupName);
+      if (sidebar && sidebar.classList.contains('collapsed')) {
+        const label = button.querySelector('.nav-text')?.textContent?.trim() || 'Menu';
+        openSidebarFlyout(button, label);
       } else {
         group.classList.toggle('open');
       }
@@ -346,23 +481,22 @@ function bindMenu() {
   });
 
   if (sidebarToggleButton && sidebar) {
-    sidebarToggleButton.addEventListener('click', (event) => {
-      event.stopPropagation();
+    sidebarToggleButton.addEventListener('click', () => {
+      closeSidebarFlyout();
+
       if (window.innerWidth <= 980) {
         sidebar.classList.toggle('mobile-open');
       } else {
         sidebar.classList.toggle('collapsed');
-        if (!sidebar.classList.contains('collapsed')) closeFlyouts();
       }
     });
   }
 
-  document.addEventListener('click', (event) => {
-    if (!sidebar.contains(event.target)) closeFlyouts();
-  });
-
   window.addEventListener('resize', () => {
-    if (window.innerWidth <= 980) closeFlyouts();
+    closeSidebarFlyout();
+    if (window.innerWidth <= 980 && sidebar) {
+      sidebar.classList.remove('collapsed');
+    }
   });
 }
 
