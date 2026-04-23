@@ -46,14 +46,14 @@ const APP_ROUTES = {
     type: 'iframe',
     url: 'https://pbjkotabogor.github.io/raporpbj/'
   },
-'simulasi-timeline': {
-  title: 'Simulasi Timeline Pengadaan',
-  subtitle: 'Simulasi penyusunan timeline pengadaan barang dan jasa.',
-  type: 'module',
-  html: 'modules/timeline/simulasi-timeline.html',
-  css: 'modules/timeline/simulasi-timeline.css',
-  js: 'modules/timeline/simulasi-timeline.js'
-},
+  'simulasi-timeline': {
+    title: 'Simulasi Timeline Pengadaan',
+    subtitle: 'Simulasi penyusunan timeline pengadaan barang dan jasa.',
+    type: 'module',
+    html: 'modules/timeline/simulasi-timeline.html',
+    css: 'modules/timeline/simulasi-timeline.css',
+    js: 'modules/timeline/simulasi-timeline.js'
+  },
   'simulasi-nontender': {
     title: 'Pencatatan Non Tender',
     subtitle: 'Simulasi PPK untuk pencatatan paket non tender.',
@@ -185,22 +185,6 @@ function renderIframePage(page) {
   `;
 }
 
-function renderLocalPage(page) {
-  contentArea.innerHTML = `
-    <section class="embed-card">
-      <h3>${page.title}</h3>
-      <div class="page-note">Halaman dimuat dari file lokal dalam project TRAXPBJ.</div>
-      <div class="embed-frame-wrap">
-        <iframe
-          class="embed-frame"
-          src="${page.url}"
-          loading="lazy">
-        </iframe>
-      </div>
-    </section>
-  `;
-}
-
 function renderPlaceholderPage(pageKey, page) {
   contentArea.innerHTML = `
     <section class="card">
@@ -212,7 +196,7 @@ function renderPlaceholderPage(pageKey, page) {
         </div>
         <div class="placeholder-box">
           <h4>Langkah berikutnya</h4>
-          <p>Cari route <b>${pageKey}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>local</b> dan isi <b>url</b> halaman milik kamu.</p>
+          <p>Cari route <b>${pageKey}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b> dan isi path/URL halaman milik kamu.</p>
         </div>
       </div>
     </section>
@@ -269,16 +253,78 @@ function updateActiveMenu(key) {
   }
 }
 
-function loadPage(key) {
+function cleanupDynamicModule() {
+  document.querySelectorAll('[data-dynamic-module-css]').forEach((el) => el.remove());
+  document.querySelectorAll('[data-dynamic-module-js]').forEach((el) => el.remove());
+}
+
+async function renderModulePage(page) {
+  cleanupDynamicModule();
+
+  try {
+    const response = await fetch(page.html, { cache: 'no-cache' });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} saat memuat ${page.html}`);
+    }
+
+    const rawHtml = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawHtml, 'text/html');
+
+    let moduleContent = '';
+    if (doc.body && doc.body.innerHTML.trim()) {
+      moduleContent = doc.body.innerHTML;
+    } else {
+      moduleContent = rawHtml;
+    }
+
+    contentArea.innerHTML = `
+      <section class="module-page">
+        ${moduleContent}
+      </section>
+    `;
+
+    if (page.css) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = page.css + '?v=' + Date.now();
+      link.setAttribute('data-dynamic-module-css', 'true');
+      document.head.appendChild(link);
+    }
+
+    if (page.js) {
+      const script = document.createElement('script');
+      script.src = page.js + '?v=' + Date.now();
+      script.defer = true;
+      script.setAttribute('data-dynamic-module-js', 'true');
+      document.body.appendChild(script);
+    }
+  } catch (error) {
+    console.error('Gagal memuat module:', error);
+    contentArea.innerHTML = `
+      <section class="card">
+        <h3>Gagal memuat modul</h3>
+        <p>File modul tidak bisa dimuat. Cek path HTML, CSS, dan JS pada <b>APP_ROUTES</b>.</p>
+        <p><b>Detail:</b> ${error.message}</p>
+      </section>
+    `;
+  }
+}
+
+async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
   pageTitle.textContent = page.title;
   pageSubtitle.textContent = page.subtitle;
   updateActiveMenu(key);
 
+  if (page.type !== 'module') {
+    cleanupDynamicModule();
+  }
+
   if (page.type === 'iframe') {
     renderIframePage(page);
-  } else if (page.type === 'local') {
-    renderLocalPage(page);
+  } else if (page.type === 'module') {
+    await renderModulePage(page);
   } else if (page.type === 'placeholder') {
     renderPlaceholderPage(key, page);
   } else {
