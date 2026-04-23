@@ -26,70 +26,80 @@ const TIMELINE_MONTHS = [
   { label: "Desember", yearOffset: 0, month: 11 }
 ];
 
-const el = {
-
-  tahunAnggaran: document.getElementById("tahunAnggaran"),
-  jenisKontrak: document.getElementById("jenisKontrak"),
-  jenisPengadaan: document.getElementById("jenisPengadaan"),
-  paguPaket: document.getElementById("paguPaket"),
-  tersediaKatalog: document.getElementById("tersediaKatalog"),
-  metodePemilihan: document.getElementById("metodePemilihan"),
-  durasiPemilihan: document.getElementById("durasiPemilihan"),
-  waktuPersiapanAwal: document.getElementById("waktuPersiapanAwal"),
-  durasiPekerjaan: document.getElementById("durasiPekerjaan"),
-  mulaiPelaksanaan: document.getElementById("mulaiPelaksanaan"),
-
-  helpMetode: document.getElementById("helpMetode"),
-  helpDurasiPemilihan: document.getElementById("helpDurasiPemilihan"),
-  infoRule: document.getElementById("infoRule"),
-
-  btnWhyMethod: document.getElementById("btnWhyMethod"),
-  whyMethodBox: document.getElementById("whyMethodBox"),
-  whyMethodText: document.getElementById("whyMethodText"),
-
-  btnSimulasikan: document.getElementById("btnSimulasikan"),
-  btnReset: document.getElementById("btnReset"),
-  btnExportPdf: document.getElementById("btnExportPdf"),
-  btnExportPdfTop: document.getElementById("btnExportPdfTop"),
-
-  badgeMetode: document.getElementById("badgeMetode"),
-
-  outPaguPaket: document.getElementById("outPaguPaket"),
-  outMulaiPersiapan: document.getElementById("outMulaiPersiapan"),
-  outMulaiPemilihan: document.getElementById("outMulaiPemilihan"),
-  outSelesaiPemilihan: document.getElementById("outSelesaiPemilihan"),
-  outMulaiKontrak: document.getElementById("outMulaiKontrak"),
-  outSelesaiPelaksanaan: document.getElementById("outSelesaiPelaksanaan"),
-  outDurasiTotal: document.getElementById("outDurasiTotal"),
-  outStatusMetode: document.getElementById("outStatusMetode"),
-  outSaranMetode: document.getElementById("outSaranMetode"),
-  outStatusJadwal: document.getElementById("outStatusJadwal"),
-  outSaranSistem: document.getElementById("outSaranSistem"),
-
-  statusBox: document.getElementById("statusBox"),
-
-  timelineSuperHeader: document.getElementById("timelineSuperHeader"),
-  timelineHeader: document.getElementById("timelineHeader"),
-  rowPersiapan: document.getElementById("rowPersiapan"),
-  rowPemilihan: document.getElementById("rowPemilihan"),
-  rowPelaksanaan: document.getElementById("rowPelaksanaan"),
-  rowAkhir: document.getElementById("rowAkhir"),
-
-  detailTahun: document.getElementById("detailTahun"),
-  detailJenisPengadaan: document.getElementById("detailJenisPengadaan"),
-  detailPaguPaket: document.getElementById("detailPaguPaket"),
-  detailKatalog: document.getElementById("detailKatalog"),
-  detailMetode: document.getElementById("detailMetode"),
-  detailJenisKontrak: document.getElementById("detailJenisKontrak"),
-  detailDurasiPemilihan: document.getElementById("detailDurasiPemilihan"),
-  detailWaktuPersiapanAwal: document.getElementById("detailWaktuPersiapanAwal"),
-  detailDurasiPekerjaan: document.getElementById("detailDurasiPekerjaan"),
-  detailMulaiPelaksanaan: document.getElementById("detailMulaiPelaksanaan"),
-  detailKesimpulan: document.getElementById("detailKesimpulan"),
-  catatanTambahan: document.getElementById("catatanTambahan")
-};
-
+let el = {};
 let methodExplanationCache = "";
+let moduleDestroyed = false;
+let eventsBound = false;
+
+function getElements() {
+  return {
+    tahunAnggaran: document.getElementById("tahunAnggaran"),
+    jenisKontrak: document.getElementById("jenisKontrak"),
+    jenisPengadaan: document.getElementById("jenisPengadaan"),
+    paguPaket: document.getElementById("paguPaket"),
+    tersediaKatalog: document.getElementById("tersediaKatalog"),
+    metodePemilihan: document.getElementById("metodePemilihan"),
+    durasiPemilihan: document.getElementById("durasiPemilihan"),
+    waktuPersiapanAwal: document.getElementById("waktuPersiapanAwal"),
+    durasiPekerjaan: document.getElementById("durasiPekerjaan"),
+    mulaiPelaksanaan: document.getElementById("mulaiPelaksanaan"),
+
+    helpMetode: document.getElementById("helpMetode"),
+    helpDurasiPemilihan: document.getElementById("helpDurasiPemilihan"),
+    infoRule: document.getElementById("infoRule"),
+
+    btnWhyMethod: document.getElementById("btnWhyMethod"),
+    whyMethodBox: document.getElementById("whyMethodBox"),
+    whyMethodText: document.getElementById("whyMethodText"),
+
+    btnSimulasikan: document.getElementById("btnSimulasikan"),
+    btnReset: document.getElementById("btnReset"),
+    btnExportPdf: document.getElementById("btnExportPdf"),
+    btnExportPdfTop: document.getElementById("btnExportPdfTop"),
+
+    badgeMetode: document.getElementById("badgeMetode"),
+
+    outPaguPaket: document.getElementById("outPaguPaket"),
+    outMulaiPersiapan: document.getElementById("outMulaiPersiapan"),
+    outMulaiPemilihan: document.getElementById("outMulaiPemilihan"),
+    outSelesaiPemilihan: document.getElementById("outSelesaiPemilihan"),
+    outMulaiKontrak: document.getElementById("outMulaiKontrak"),
+    outSelesaiPelaksanaan: document.getElementById("outSelesaiPelaksanaan"),
+    outDurasiTotal: document.getElementById("outDurasiTotal"),
+    outStatusMetode: document.getElementById("outStatusMetode"),
+    outSaranMetode: document.getElementById("outSaranMetode"),
+    outStatusJadwal: document.getElementById("outStatusJadwal"),
+    outSaranSistem: document.getElementById("outSaranSistem"),
+
+    statusBox: document.getElementById("statusBox"),
+
+    timelineSuperHeader: document.getElementById("timelineSuperHeader"),
+    timelineHeader: document.getElementById("timelineHeader"),
+    rowPersiapan: document.getElementById("rowPersiapan"),
+    rowPemilihan: document.getElementById("rowPemilihan"),
+    rowPelaksanaan: document.getElementById("rowPelaksanaan"),
+    rowAkhir: document.getElementById("rowAkhir"),
+
+    detailTahun: document.getElementById("detailTahun"),
+    detailJenisPengadaan: document.getElementById("detailJenisPengadaan"),
+    detailPaguPaket: document.getElementById("detailPaguPaket"),
+    detailKatalog: document.getElementById("detailKatalog"),
+    detailMetode: document.getElementById("detailMetode"),
+    detailJenisKontrak: document.getElementById("detailJenisKontrak"),
+    detailDurasiPemilihan: document.getElementById("detailDurasiPemilihan"),
+    detailWaktuPersiapanAwal: document.getElementById("detailWaktuPersiapanAwal"),
+    detailDurasiPekerjaan: document.getElementById("detailDurasiPekerjaan"),
+    detailMulaiPelaksanaan: document.getElementById("detailMulaiPelaksanaan"),
+    detailKesimpulan: document.getElementById("detailKesimpulan"),
+    catatanTambahan: document.getElementById("catatanTambahan")
+  };
+}
+
+function safeBind(element, eventName, handler) {
+  if (element) {
+    element.addEventListener(eventName, handler);
+  }
+}
 
 function parseLocalDate(dateString) {
   if (!dateString) return null;
@@ -139,6 +149,7 @@ function parseNumberInput(value) {
 }
 
 function formatPaguInput() {
+  if (!el.paguPaket) return;
   const value = parseNumberInput(el.paguPaket.value);
   el.paguPaket.value = value ? value.toLocaleString("id-ID") : "";
 }
@@ -155,6 +166,8 @@ function isOverlap(rangeStart, rangeEnd, monthStart, monthEnd) {
 }
 
 function buildHeader() {
+  if (!el.timelineSuperHeader || !el.timelineHeader) return;
+
   el.timelineSuperHeader.innerHTML = "";
   el.timelineHeader.innerHTML = "";
 
@@ -185,6 +198,7 @@ function buildHeader() {
 }
 
 function buildEmptyTrack(container) {
+  if (!container) return;
   container.innerHTML = "";
   for (let i = 0; i < TIMELINE_MONTHS.length; i++) {
     const cell = document.createElement("div");
@@ -195,6 +209,7 @@ function buildEmptyTrack(container) {
 }
 
 function fillTrackByRange(container, tahunAnggaran, startDate, endDate, fillClass, label) {
+  if (!container) return;
   buildEmptyTrack(container);
 
   for (let i = 0; i < TIMELINE_MONTHS.length; i++) {
@@ -202,7 +217,7 @@ function fillTrackByRange(container, tahunAnggaran, startDate, endDate, fillClas
     const monthRange = getTimelineMonthRange(tahunAnggaran, timelineItem);
     const cell = container.children[i];
 
-    if (isOverlap(startDate, endDate, monthRange.start, monthRange.end)) {
+    if (cell && isOverlap(startDate, endDate, monthRange.start, monthRange.end)) {
       cell.classList.add(fillClass);
       cell.textContent = label || "";
     }
@@ -327,6 +342,8 @@ function buildWhyMethodText(jenisPengadaan, pagu, katalog, hiddenMethods) {
 }
 
 function populateMethodOptions() {
+  if (!el.jenisPengadaan || !el.paguPaket || !el.tersediaKatalog || !el.metodePemilihan) return;
+
   const jenisPengadaan = el.jenisPengadaan.value;
   const pagu = parseNumberInput(el.paguPaket.value);
   const katalog = el.tersediaKatalog.value;
@@ -349,15 +366,26 @@ function populateMethodOptions() {
     el.metodePemilihan.value = allowed[0] || "";
   }
 
-  el.infoRule.innerHTML = ruleText || "Pilih jenis pengadaan, pagu, dan katalog untuk melihat metode yang sesuai.";
-  el.helpMetode.textContent = "Dropdown metode hanya menampilkan opsi yang lolos rule simulasi.";
+  if (el.infoRule) {
+    el.infoRule.innerHTML = ruleText || "Pilih jenis pengadaan, pagu, dan katalog untuk melihat metode yang sesuai.";
+  }
+
+  if (el.helpMetode) {
+    el.helpMetode.textContent = "Dropdown metode hanya menampilkan opsi yang lolos rule simulasi.";
+  }
+
   methodExplanationCache = buildWhyMethodText(jenisPengadaan, pagu, katalog, hidden);
-  el.whyMethodText.innerHTML = methodExplanationCache;
+
+  if (el.whyMethodText) {
+    el.whyMethodText.innerHTML = methodExplanationCache;
+  }
 
   updateMethodDefaults();
 }
 
 function updateMethodDefaults() {
+  if (!el.metodePemilihan || !el.durasiPemilihan || !el.waktuPersiapanAwal || !el.helpDurasiPemilihan) return;
+
   const method = el.metodePemilihan.value;
   const rule = METHOD_RULES[method];
   if (!rule) return;
@@ -429,6 +457,8 @@ function evaluateDuration(method, duration) {
 }
 
 function setStatus(type, html) {
+  if (!el.statusBox) return;
+
   el.statusBox.className = "status-box";
 
   if (type === "valid") {
@@ -443,6 +473,21 @@ function setStatus(type, html) {
 }
 
 function renderSimulation() {
+  if (
+    !el.tahunAnggaran ||
+    !el.jenisKontrak ||
+    !el.jenisPengadaan ||
+    !el.paguPaket ||
+    !el.tersediaKatalog ||
+    !el.metodePemilihan ||
+    !el.durasiPemilihan ||
+    !el.waktuPersiapanAwal ||
+    !el.durasiPekerjaan ||
+    !el.mulaiPelaksanaan
+  ) {
+    return;
+  }
+
   const tahun = Number(el.tahunAnggaran.value || 0);
   const jenisKontrak = el.jenisKontrak.value;
   const jenisPengadaan = el.jenisPengadaan.value;
@@ -549,18 +594,18 @@ function renderSimulation() {
     extraWarnings.push(durationCheck.text);
   }
 
-  el.badgeMetode.textContent = metode;
-  el.outPaguPaket.textContent = formatRupiah(pagu);
-  el.outMulaiPersiapan.textContent = formatDateID(mulaiPersiapan);
-  el.outMulaiPemilihan.textContent = formatDateID(mulaiPemilihan);
-  el.outSelesaiPemilihan.textContent = formatDateID(selesaiPemilihan);
-  el.outMulaiKontrak.textContent = formatDateID(mulaiKontrak);
-  el.outSelesaiPelaksanaan.textContent = formatDateID(selesaiPelaksanaan);
-  el.outDurasiTotal.textContent = `${totalDurasiHari.toLocaleString("id-ID")} Hari`;
-  el.outStatusMetode.textContent = methodCheck.status;
-  el.outSaranMetode.textContent = methodCheck.advice;
-  el.outStatusJadwal.textContent = statusJadwal;
-  el.outSaranSistem.textContent = saran;
+  if (el.badgeMetode) el.badgeMetode.textContent = metode;
+  if (el.outPaguPaket) el.outPaguPaket.textContent = formatRupiah(pagu);
+  if (el.outMulaiPersiapan) el.outMulaiPersiapan.textContent = formatDateID(mulaiPersiapan);
+  if (el.outMulaiPemilihan) el.outMulaiPemilihan.textContent = formatDateID(mulaiPemilihan);
+  if (el.outSelesaiPemilihan) el.outSelesaiPemilihan.textContent = formatDateID(selesaiPemilihan);
+  if (el.outMulaiKontrak) el.outMulaiKontrak.textContent = formatDateID(mulaiKontrak);
+  if (el.outSelesaiPelaksanaan) el.outSelesaiPelaksanaan.textContent = formatDateID(selesaiPelaksanaan);
+  if (el.outDurasiTotal) el.outDurasiTotal.textContent = `${totalDurasiHari.toLocaleString("id-ID")} Hari`;
+  if (el.outStatusMetode) el.outStatusMetode.textContent = methodCheck.status;
+  if (el.outSaranMetode) el.outSaranMetode.textContent = methodCheck.advice;
+  if (el.outStatusJadwal) el.outStatusJadwal.textContent = statusJadwal;
+  if (el.outSaranSistem) el.outSaranSistem.textContent = saran;
 
   let combinedHtml = `<strong>${kesimpulan}</strong><br>${catatan}`;
   if (extraWarnings.length) {
@@ -569,18 +614,18 @@ function renderSimulation() {
 
   setStatus(statusHtmlType, combinedHtml);
 
-  el.detailTahun.textContent = tahun;
-  el.detailJenisPengadaan.textContent = jenisPengadaan;
-  el.detailPaguPaket.textContent = formatRupiah(pagu);
-  el.detailKatalog.textContent = katalog === "ya" ? "Ya" : "Tidak";
-  el.detailMetode.textContent = metode;
-  el.detailJenisKontrak.textContent = jenisKontrak === "single" ? "Kontrak Tahunan (Single Year)" : "Kontrak Jamak (Multi Year)";
-  el.detailDurasiPemilihan.textContent = `${durasiPemilihanHari} Hari`;
-  el.detailWaktuPersiapanAwal.textContent = `${waktuPersiapanAwalHari} Hari`;
-  el.detailDurasiPekerjaan.textContent = `${durasiPekerjaanBulan} Bulan`;
-  el.detailMulaiPelaksanaan.textContent = formatDateID(mulaiPelaksanaan);
-  el.detailKesimpulan.innerHTML = `<strong>${kesimpulan}</strong>`;
-  el.catatanTambahan.innerHTML = combinedHtml;
+  if (el.detailTahun) el.detailTahun.textContent = tahun;
+  if (el.detailJenisPengadaan) el.detailJenisPengadaan.textContent = jenisPengadaan;
+  if (el.detailPaguPaket) el.detailPaguPaket.textContent = formatRupiah(pagu);
+  if (el.detailKatalog) el.detailKatalog.textContent = katalog === "ya" ? "Ya" : "Tidak";
+  if (el.detailMetode) el.detailMetode.textContent = metode;
+  if (el.detailJenisKontrak) el.detailJenisKontrak.textContent = jenisKontrak === "single" ? "Kontrak Tahunan (Single Year)" : "Kontrak Jamak (Multi Year)";
+  if (el.detailDurasiPemilihan) el.detailDurasiPemilihan.textContent = `${durasiPemilihanHari} Hari`;
+  if (el.detailWaktuPersiapanAwal) el.detailWaktuPersiapanAwal.textContent = `${waktuPersiapanAwalHari} Hari`;
+  if (el.detailDurasiPekerjaan) el.detailDurasiPekerjaan.textContent = `${durasiPekerjaanBulan} Bulan`;
+  if (el.detailMulaiPelaksanaan) el.detailMulaiPelaksanaan.textContent = formatDateID(mulaiPelaksanaan);
+  if (el.detailKesimpulan) el.detailKesimpulan.innerHTML = `<strong>${kesimpulan}</strong>`;
+  if (el.catatanTambahan) el.catatanTambahan.innerHTML = combinedHtml;
 
   const bufferStart = selesaiPelaksanaan <= akhirTahunAnggaran ? addDays(selesaiPelaksanaan, 1) : new Date(tahun, 11, 31);
 
@@ -607,15 +652,15 @@ function renderSimulation() {
 }
 
 function resetForm() {
-  el.tahunAnggaran.value = "2026";
-  el.jenisKontrak.value = "single";
-  el.jenisPengadaan.value = "Barang";
-  el.paguPaket.value = "150.000.000";
-  el.tersediaKatalog.value = "tidak";
+  if (el.tahunAnggaran) el.tahunAnggaran.value = "2026";
+  if (el.jenisKontrak) el.jenisKontrak.value = "single";
+  if (el.jenisPengadaan) el.jenisPengadaan.value = "Barang";
+  if (el.paguPaket) el.paguPaket.value = "150.000.000";
+  if (el.tersediaKatalog) el.tersediaKatalog.value = "tidak";
   populateMethodOptions();
-  el.durasiPekerjaan.value = "12";
-  el.mulaiPelaksanaan.value = "2026-04-01";
-  el.whyMethodBox.style.display = "none";
+  if (el.durasiPekerjaan) el.durasiPekerjaan.value = "12";
+  if (el.mulaiPelaksanaan) el.mulaiPelaksanaan.value = "2026-04-01";
+  if (el.whyMethodBox) el.whyMethodBox.style.display = "none";
   renderSimulation();
 }
 
@@ -623,32 +668,49 @@ function exportPdf() {
   window.print();
 }
 
-
 function toggleWhyMethod() {
+  if (!el.whyMethodBox || !el.whyMethodText) return;
   const isHidden = el.whyMethodBox.style.display === "none" || !el.whyMethodBox.style.display;
   el.whyMethodBox.style.display = isHidden ? "block" : "none";
   el.whyMethodText.innerHTML = methodExplanationCache || "-";
 }
 
-el.paguPaket.addEventListener("input", () => {
-  formatPaguInput();
-  populateMethodOptions();
-});
+function bindEventsOnce() {
+  if (eventsBound) return;
+  eventsBound = true;
 
-el.jenisPengadaan.addEventListener("change", populateMethodOptions);
-el.tersediaKatalog.addEventListener("change", populateMethodOptions);
-el.metodePemilihan.addEventListener("change", updateMethodDefaults);
+  safeBind(el.paguPaket, "input", () => {
+    formatPaguInput();
+    populateMethodOptions();
+  });
 
-el.btnWhyMethod.addEventListener("click", toggleWhyMethod);
-el.btnSimulasikan.addEventListener("click", renderSimulation);
-el.btnReset.addEventListener("click", resetForm);
-el.btnExportPdf.addEventListener("click", exportPdf);
-el.btnExportPdfTop.addEventListener("click", exportPdf);
+  safeBind(el.jenisPengadaan, "change", populateMethodOptions);
+  safeBind(el.tersediaKatalog, "change", populateMethodOptions);
+  safeBind(el.metodePemilihan, "change", updateMethodDefaults);
 
-function init() {
+  safeBind(el.btnWhyMethod, "click", toggleWhyMethod);
+  safeBind(el.btnSimulasikan, "click", renderSimulation);
+  safeBind(el.btnReset, "click", resetForm);
+  safeBind(el.btnExportPdf, "click", exportPdf);
+  safeBind(el.btnExportPdfTop, "click", exportPdf);
+}
+
+function initTimelineModule() {
+  if (moduleDestroyed) return;
+  el = getElements();
   formatPaguInput();
   populateMethodOptions();
   renderSimulation();
 }
 
-init();
+window.__moduleInit = function () {
+  moduleDestroyed = false;
+  el = getElements();
+
+  bindEventsOnce();
+  initTimelineModule();
+
+  return function destroy() {
+    moduleDestroyed = true;
+  };
+};
