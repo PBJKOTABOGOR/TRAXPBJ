@@ -2,10 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monitoring SIRUP</title>
   <link rel="stylesheet" href="./itkp-sirup.css">
 </head>
@@ -21,29 +18,14 @@
       </div>
 
       <div class="hero-actions">
-        <button
-          type="button"
-          class="btn btn-soft"
-          id="btnRefresh"
-        >
-          Refresh Data
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-primary"
-          id="btnExportRekap"
-        >
-          Export Rekap OPD
-        </button>
+        <button type="button" class="btn btn-soft" id="btnRefresh">Refresh Data</button>
+        <button type="button" class="btn btn-primary" id="btnExportRekap">Export Rekap OPD</button>
       </div>
     </section>
 
     <section class="panel">
       <h2 class="section-title">Filter Monitoring</h2>
-      <p class="section-subtitle">
-        Gunakan filter untuk menyaring rekap OPD dan detail paket.
-      </p>
+      <p class="section-subtitle">Gunakan filter untuk menyaring rekap OPD dan detail paket.</p>
 
       <div class="spacer-14"></div>
 
@@ -78,38 +60,15 @@
 
         <div class="field span-3">
           <label for="searchPaket">Cari Paket / Program / Kegiatan</label>
-          <input
-            type="text"
-            id="searchPaket"
-            placeholder="Ketik nama paket, program, kegiatan, kode RUP..."
-          >
+          <input type="text" id="searchPaket" placeholder="Ketik nama paket, program, kegiatan, kode RUP...">
         </div>
 
         <div class="field span-12">
           <div class="toolbar-inline">
-            <button
-              type="button"
-              class="btn btn-soft"
-              id="btnResetFilter"
-            >
-              Reset Filter
-            </button>
-
-            <button
-              type="button"
-              class="btn btn-primary"
-              id="btnExportDetail"
-            >
-              Export Detail Paket
-            </button>
+            <button type="button" class="btn btn-soft" id="btnResetFilter">Reset Filter</button>
+            <button type="button" class="btn btn-primary" id="btnExportDetail">Export Detail Paket</button>
           </div>
-
-          <div
-            class="loading"
-            id="loadingText"
-          >
-            Memuat data monitoring SIRUP...
-          </div>
+          <div class="loading" id="loadingText">Memuat data monitoring SIRUP...</div>
         </div>
       </div>
     </section>
@@ -172,66 +131,55 @@
       </div>
     </section>
 
-    <section class="split">
-      <div class="panel">
-        <h2 class="section-title">Rekap ITKP SIRUP per OPD</h2>
-        <p class="section-subtitle">
-          Sumber: sheet <strong>SCORE_ITKP_SIRUP</strong>
-        </p>
+    <section class="panel">
+      <h2 class="section-title">Rekap ITKP SIRUP per OPD</h2>
+      <p class="section-subtitle">Sumber: sheet <strong>SCORE_ITKP_SIRUP</strong></p>
 
-        <div class="spacer-14"></div>
+      <div class="spacer-14"></div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="min-width:60px;">No</th>
-                <th style="min-width:300px;">Satuan Kerja</th>
-                <th>Penyedia</th>
-                <th>Swakelola</th>
-                <th>Total RUP</th>
-                <th>Total Komitmen</th>
-                <th>Prosentase</th>
-                <th>Nilai ITKP</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="rekapTableBody">
-              <tr>
-                <td colspan="9" class="cell-muted center-cell">
-                  Belum ada data.
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:60px;">No</th>
+              <th style="min-width:300px;">Satuan Kerja</th>
+              <th>Penyedia</th>
+              <th>Swakelola</th>
+              <th>Total RUP</th>
+              <th>Total Komitmen</th>
+              <th>Prosentase</th>
+              <th>Nilai ITKP</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="rekapTableBody">
+            <tr>
+              <td colspan="9" class="cell-muted center-cell">Belum ada data.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel detail-panel">
+      <div class="detail-header">
+        <div>
+          <h2 class="detail-title" id="detailTitle">Detail Paket SIRUP</h2>
+          <p class="detail-subtitle" id="detailSubtitle">
+            Pilih salah satu OPD pada tabel rekap untuk melihat detail paket.
+          </p>
+        </div>
+
+        <div class="toolbar-inline">
+          <button type="button" class="btn btn-soft" id="btnClearSelected">Tutup Detail</button>
+          <button type="button" class="btn btn-primary" id="btnExportCurrentDetail">Export Detail OPD Ini</button>
         </div>
       </div>
 
-      <div class="panel">
-        <div class="detail-header">
-          <div>
-            <h2 class="detail-title" id="detailTitle">Detail Paket SIRUP</h2>
-            <p class="detail-subtitle" id="detailSubtitle">
-              Pilih salah satu OPD pada tabel rekap untuk melihat detail paket.
-            </p>
-          </div>
-
-          <div class="toolbar-inline">
-            <button
-              type="button"
-              class="btn btn-soft"
-              id="btnClearSelected"
-            >
-              Tutup Detail
-            </button>
-          </div>
-        </div>
-
-        <div id="detailContent">
-          <div class="empty-state">
-            Detail paket belum ditampilkan.<br>
-            Klik tombol <strong>Lihat Paket</strong> pada salah satu OPD.
-          </div>
+      <div id="detailContent">
+        <div class="empty-state">
+          Detail paket belum ditampilkan.<br>
+          Klik tombol <strong>Lihat Paket</strong> pada salah satu OPD.
         </div>
       </div>
     </section>
