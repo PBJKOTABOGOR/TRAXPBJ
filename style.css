@@ -1,4 +1,3 @@
-
 :root{
   --bg:#eef4fb;
   --bg-2:#f8fbff;
@@ -18,7 +17,7 @@
 
 *{box-sizing:border-box}
 
-html,body{
+html{
   margin:0;
   padding:0;
   min-height:100%;
@@ -27,6 +26,18 @@ html,body{
   background:
     radial-gradient(circle at top right, rgba(15,118,110,.08), transparent 28%),
     linear-gradient(180deg,#f8fbff 0%,#eef4fb 100%);
+  font-size:14px;
+}
+
+body{
+  margin:0;
+  padding:0;
+  min-height:100%;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top right, rgba(15,118,110,.08), transparent 28%),
+    linear-gradient(180deg,#f8fbff 0%,#eef4fb 100%);
+  zoom:.88;
 }
 
 button,input,select,textarea{
@@ -47,13 +58,17 @@ button,input,select,textarea{
   top:10px;
   height:calc(100vh - 20px);
   padding:10px;
-  background:rgba(255,255,255,.62);
-  border:1px solid rgba(255,255,255,.45);
-  box-shadow:0 18px 50px rgba(15,23,42,.10);
+  background:rgba(255,255,255,.82);
+  border:1px solid rgba(255,255,255,.65);
+  box-shadow:0 18px 50px rgba(15,23,42,.08);
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
   border-radius:26px;
-  transition:width .25s ease, padding .25s ease, background .25s ease;
+  transition:
+    width .25s ease,
+    padding .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
   overflow:visible;
   z-index:100;
 }
@@ -90,7 +105,7 @@ button,input,select,textarea{
   font-weight:900;
   background:linear-gradient(135deg,#123a72,#245a9b);
   color:#fff;
-  box-shadow:0 8px 18px rgba(18,58,114,.22);
+  box-shadow:0 8px 18px rgba(18,58,114,.18);
 }
 
 .brand-text{
@@ -133,6 +148,7 @@ button,input,select,textarea{
   display:flex;
   flex-direction:column;
   gap:8px;
+  min-height:0;
 }
 
 .nav-section-label{
@@ -193,13 +209,14 @@ button,input,select,textarea{
 .nav-link.active{
   background:linear-gradient(135deg,#123a72,#245a9b);
   color:#fff;
-  box-shadow:0 14px 28px rgba(18,58,114,.18);
+  box-shadow:0 14px 28px rgba(18,58,114,.15);
 }
 
 .nav-group{
   display:flex;
   flex-direction:column;
   gap:6px;
+  position:relative;
 }
 
 .submenu{
@@ -212,7 +229,11 @@ button,input,select,textarea{
   max-height:500px;
   opacity:1;
   overflow:hidden;
-  transition:max-height .2s ease, opacity .2s ease, margin .2s ease, padding .2s ease;
+  transition:
+    max-height .2s ease,
+    opacity .2s ease,
+    margin .2s ease,
+    padding .2s ease;
 }
 
 .nav-group:not(.open) .submenu{
@@ -242,13 +263,12 @@ button,input,select,textarea{
 }
 
 .sidebar-help{
-  margin-top:auto;
   margin-top:14px;
   padding:16px;
   border-radius:20px;
   background:linear-gradient(135deg,#123a72 0%,#245a9b 70%,#2f9a8f 100%);
   color:#fff;
-  box-shadow:0 18px 28px rgba(18,58,114,.18);
+  box-shadow:0 18px 28px rgba(18,58,114,.14);
 }
 
 .sidebar-help h3{
@@ -322,7 +342,7 @@ button,input,select,textarea{
   color:#fff;
   border-radius:30px;
   padding:24px;
-  box-shadow:0 24px 56px rgba(18,58,114,.22);
+  box-shadow:0 24px 56px rgba(18,58,114,.18);
   margin-bottom:18px;
 }
 
@@ -775,6 +795,10 @@ button,input,select,textarea{
 }
 
 @media (max-width:900px){
+  body{
+    zoom:1;
+  }
+
   .app-shell{
     padding:0;
     gap:0;
