@@ -5,6 +5,8 @@ const SHEET_CONFIG = {
 };
 
 const MIN_LOADING_MS = 700;
+const PAGE_SIZE_REKAP = 50;
+const PAGE_SIZE_DETAIL = 50;
 
 const APP_STATE = {
   rawSirup: [],
@@ -13,8 +15,8 @@ const APP_STATE = {
   filteredRawGlobal: [],
   selectedOpd: '',
   selectedRawRows: [],
-  currentPage: 1,
-  pageSize: 50
+  rekapPage: 1,
+  detailPage: 1
 };
 
 const EL = {
@@ -23,25 +25,30 @@ const EL = {
   errorBox: document.getElementById('errorBox'),
   globalLoadingOverlay: document.getElementById('globalLoadingOverlay'),
   globalLoadingText: document.getElementById('globalLoadingText'),
+
   filterOpd: document.getElementById('filterOpd'),
   filterMetode: document.getElementById('filterMetode'),
   filterSumberDana: document.getElementById('filterSumberDana'),
   filterWaktu: document.getElementById('filterWaktu'),
   searchPaket: document.getElementById('searchPaket'),
+
   rekapTableBody: document.getElementById('rekapTableBody'),
+  rekapPagination: document.getElementById('rekapPagination'),
+  rekapPaginationInfo: document.getElementById('rekapPaginationInfo'),
+
   detailContent: document.getElementById('detailContent'),
   detailTitle: document.getElementById('detailTitle'),
   detailSubtitle: document.getElementById('detailSubtitle'),
+  detailPagination: document.getElementById('detailPagination'),
+  detailPaginationInfo: document.getElementById('detailPaginationInfo'),
+
   btnResetFilter: document.getElementById('btnResetFilter'),
   btnExportRekap: document.getElementById('btnExportRekap'),
   btnExportDetail: document.getElementById('btnExportDetail'),
   btnExportCurrentDetail: document.getElementById('btnExportCurrentDetail'),
   btnRefresh: document.getElementById('btnRefresh'),
   btnClearSelected: document.getElementById('btnClearSelected'),
-  btnPrevPage: document.getElementById('btnPrevPage'),
-  btnNextPage: document.getElementById('btnNextPage'),
-  paginationStatus: document.getElementById('paginationStatus'),
-  rekapSummary: document.getElementById('rekapSummary'),
+
   statJumlahOpd: document.getElementById('statJumlahOpd'),
   statJumlahPaket: document.getElementById('statJumlahPaket'),
   statTotalRup: document.getElementById('statTotalRup'),
@@ -52,6 +59,7 @@ const EL = {
   statJumlahPaketNote: document.getElementById('statJumlahPaketNote'),
   statTotalRupNote: document.getElementById('statTotalRupNote'),
   statTotalKomitmenNote: document.getElementById('statTotalKomitmenNote'),
+
   insightTopOpd: document.getElementById('insightTopOpd'),
   insightTopNote: document.getElementById('insightTopNote'),
   insightLowOpd: document.getElementById('insightLowOpd'),
@@ -83,34 +91,20 @@ function setLoading(message, useOverlay = false) {
   if (EL.loadingBox) EL.loadingBox.classList.add('show');
   if (useOverlay && EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.add('show');
 
-  [
-    EL.btnRefresh,
-    EL.btnExportRekap,
-    EL.btnExportDetail,
-    EL.btnExportCurrentDetail,
-    EL.btnPrevPage,
-    EL.btnNextPage
-  ].forEach(btn => {
-    if (btn) btn.disabled = true;
-  });
+  if (EL.btnRefresh) EL.btnRefresh.disabled = true;
+  if (EL.btnExportRekap) EL.btnExportRekap.disabled = true;
+  if (EL.btnExportDetail) EL.btnExportDetail.disabled = true;
+  if (EL.btnExportCurrentDetail) EL.btnExportCurrentDetail.disabled = true;
 }
 
 function clearLoading() {
   if (EL.loadingBox) EL.loadingBox.classList.remove('show');
   if (EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.remove('show');
 
-  [
-    EL.btnRefresh,
-    EL.btnExportRekap,
-    EL.btnExportDetail,
-    EL.btnExportCurrentDetail,
-    EL.btnPrevPage,
-    EL.btnNextPage
-  ].forEach(btn => {
-    if (btn) btn.disabled = false;
-  });
-
-  updatePaginationControls();
+  if (EL.btnRefresh) EL.btnRefresh.disabled = false;
+  if (EL.btnExportRekap) EL.btnExportRekap.disabled = false;
+  if (EL.btnExportDetail) EL.btnExportDetail.disabled = false;
+  if (EL.btnExportCurrentDetail) EL.btnExportCurrentDetail.disabled = false;
 }
 
 async function initMonitoringSirup() {
@@ -124,32 +118,51 @@ async function initMonitoringSirup() {
     const rawUrl = buildCsvUrl(SHEET_CONFIG.rawGid);
     const scoreUrl = buildCsvUrl(SHEET_CONFIG.scoreGid);
 
-    setLoading('Mengambil data RAW_SIRUP...', true);
-    const rawCsvPromise = fetchCsv(rawUrl);
-
-    setLoading('Mengambil data SCORE_ITKP_SIRUP...', true);
-    const scoreCsvPromise = fetchCsv(scoreUrl);
-
-    const [rawCsv, scoreCsv] = await Promise.all([rawCsvPromise, scoreCsvPromise]);
-
-    setLoading('Memproses data CSV...', true);
+    setLoading('Mengambil data RAW_SIRUP dan SCORE_ITKP_SIRUP...', true);
     await nextPaint();
 
-    const rawRows = csvToObjects(rawCsv);
-    const scoreRows = csvToObjects(scoreCsv);
+    const [rawResult, scoreResult] = await Promise.allSettled([
+      fetchCsv(rawUrl),
+      fetchCsv(scoreUrl)
+    ]);
+
+    let rawRows = [];
+    let scoreRows = [];
+    const errors = [];
+
+    if (rawResult.status === 'fulfilled') {
+      rawRows = csvToObjects(rawResult.value);
+    } else {
+      errors.push('RAW_SIRUP gagal dimuat');
+      console.error(rawResult.reason);
+    }
+
+    if (scoreResult.status === 'fulfilled') {
+      scoreRows = csvToObjects(scoreResult.value);
+    } else {
+      errors.push('SCORE_ITKP_SIRUP gagal dimuat');
+      console.error(scoreResult.reason);
+    }
 
     setLoading('Menyesuaikan header dan format data...', true);
     await nextPaint();
 
     APP_STATE.rawSirup = normalizeRawSirup(rawRows);
     APP_STATE.scoreSirup = normalizeScoreSirup(scoreRows);
-    APP_STATE.currentPage = 1;
+    APP_STATE.rekapPage = 1;
+    APP_STATE.detailPage = 1;
+    APP_STATE.selectedOpd = '';
+    APP_STATE.selectedRawRows = [];
 
     setLoading('Menyusun filter dan tabel...', true);
     await nextPaint();
 
     buildFilterOptions();
     applyFilters();
+
+    if (errors.length) {
+      showError(errors.join(' + ') + '. Sebagian data berhasil dimuat, sebagian gagal.');
+    }
   } catch (error) {
     console.error(error);
     showError(
@@ -348,6 +361,9 @@ function applyFilters() {
   const selectedWaktu = EL.filterWaktu.value.trim().toLowerCase();
   const keyword = EL.searchPaket.value.trim().toLowerCase();
 
+  APP_STATE.rekapPage = 1;
+  APP_STATE.detailPage = 1;
+
   APP_STATE.filteredRawGlobal = APP_STATE.rawSirup.filter(row => {
     const matchOpd = !selectedOpdFilter || row.satuan_kerja === selectedOpdFilter;
     const matchMetode = !selectedMetode || row.metode_pemilihan.toLowerCase() === selectedMetode;
@@ -367,21 +383,12 @@ function applyFilters() {
     return matchOpd && matchMetode && matchDana && matchWaktu && matchKeyword;
   });
 
-  const allowedOpdSet = new Set(APP_STATE.filteredRawGlobal.map(row => row.satuan_kerja));
-
   APP_STATE.filteredScore = APP_STATE.scoreSirup.filter(row => {
     if (selectedOpdFilter && row.satuan_kerja !== selectedOpdFilter) {
       return false;
     }
-
-    if (selectedMetode || selectedSumberDana || selectedWaktu || keyword) {
-      return allowedOpdSet.has(row.satuan_kerja);
-    }
-
     return true;
   });
-
-  APP_STATE.currentPage = 1;
 
   renderStats(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
   renderInsights(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
@@ -473,7 +480,18 @@ function renderInsights(filteredRaw, filteredScore) {
 }
 
 function renderRekapTable(rows) {
-  if (!rows.length) {
+  const totalRows = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE_REKAP));
+
+  if (APP_STATE.rekapPage > totalPages) {
+    APP_STATE.rekapPage = totalPages;
+  }
+
+  const startIndex = (APP_STATE.rekapPage - 1) * PAGE_SIZE_REKAP;
+  const endIndex = startIndex + PAGE_SIZE_REKAP;
+  const pageRows = rows.slice(startIndex, endIndex);
+
+  if (!pageRows.length) {
     EL.rekapTableBody.innerHTML = `
       <tr>
         <td colspan="9" class="cell-muted center-cell">
@@ -481,28 +499,21 @@ function renderRekapTable(rows) {
         </td>
       </tr>
     `;
-    EL.rekapSummary.textContent = '0 data';
-    EL.paginationStatus.textContent = 'Halaman 1 dari 1';
-    updatePaginationControls(1, 1);
+    renderPagination(EL.rekapPagination, EL.rekapPaginationInfo, totalRows, APP_STATE.rekapPage, PAGE_SIZE_REKAP, (page) => {
+      APP_STATE.rekapPage = page;
+      renderRekapTable(APP_STATE.filteredScore);
+    });
     return;
   }
 
-  const totalRows = rows.length;
-  const totalPages = Math.max(1, Math.ceil(totalRows / APP_STATE.pageSize));
-  if (APP_STATE.currentPage > totalPages) APP_STATE.currentPage = totalPages;
-
-  const start = (APP_STATE.currentPage - 1) * APP_STATE.pageSize;
-  const end = start + APP_STATE.pageSize;
-  const pagedRows = rows.slice(start, end);
-
-  EL.rekapTableBody.innerHTML = pagedRows.map((row, index) => `
+  EL.rekapTableBody.innerHTML = pageRows.map((row, index) => `
     <tr>
-      <td>${start + index + 1}</td>
+      <td>${startIndex + index + 1}</td>
       <td class="cell-strong">${escapeHtml(row.satuan_kerja)}</td>
-      <td>${formatTableNumber(row.penyedia_diumumkan)}</td>
-      <td>${formatTableNumber(row.swakelola_diumumkan)}</td>
-      <td>${formatTableNumber(row.total_rup_diumumkan)}</td>
-      <td>${formatTableNumber(row.total_komitmen)}</td>
+      <td>${formatCurrency(row.penyedia_diumumkan)}</td>
+      <td>${formatCurrency(row.swakelola_diumumkan)}</td>
+      <td>${formatCurrency(row.total_rup_diumumkan)}</td>
+      <td>${formatCurrency(row.total_komitmen)}</td>
       <td>${renderPercentBadge(row.prosentase)}</td>
       <td>${renderItkpBadge(row.nilai_itkp)}</td>
       <td>
@@ -513,21 +524,18 @@ function renderRekapTable(rows) {
     </tr>
   `).join('');
 
-  EL.rekapSummary.textContent = `${formatNumber(totalRows)} data | ${APP_STATE.pageSize} per halaman`;
-  EL.paginationStatus.textContent = `Halaman ${APP_STATE.currentPage} dari ${totalPages}`;
-  updatePaginationControls(APP_STATE.currentPage, totalPages);
-
   EL.rekapTableBody.querySelectorAll('.action-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       APP_STATE.selectedOpd = btn.getAttribute('data-opd') || '';
+      APP_STATE.detailPage = 1;
       renderDetailForOpd(APP_STATE.selectedOpd);
     });
   });
-}
 
-function updatePaginationControls(current = APP_STATE.currentPage, total = Math.max(1, Math.ceil(APP_STATE.filteredScore.length / APP_STATE.pageSize))) {
-  if (EL.btnPrevPage) EL.btnPrevPage.disabled = current <= 1;
-  if (EL.btnNextPage) EL.btnNextPage.disabled = current >= total;
+  renderPagination(EL.rekapPagination, EL.rekapPaginationInfo, totalRows, APP_STATE.rekapPage, PAGE_SIZE_REKAP, (page) => {
+    APP_STATE.rekapPage = page;
+    renderRekapTable(APP_STATE.filteredScore);
+  });
 }
 
 function renderDetailForOpd(opdName) {
@@ -537,12 +545,27 @@ function renderDetailForOpd(opdName) {
   EL.detailTitle.textContent = `Detail Paket SIRUP - ${opdName}`;
   EL.detailSubtitle.textContent = `${formatNumber(rows.length)} paket ditampilkan sesuai filter aktif.`;
 
-  if (!rows.length) {
+  const totalRows = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE_DETAIL));
+
+  if (APP_STATE.detailPage > totalPages) {
+    APP_STATE.detailPage = totalPages;
+  }
+
+  const startIndex = (APP_STATE.detailPage - 1) * PAGE_SIZE_DETAIL;
+  const endIndex = startIndex + PAGE_SIZE_DETAIL;
+  const pageRows = rows.slice(startIndex, endIndex);
+
+  if (!pageRows.length) {
     EL.detailContent.innerHTML = `
       <div class="empty-state">
         Tidak ada detail paket untuk OPD ini sesuai filter yang dipilih.
       </div>
     `;
+    renderPagination(EL.detailPagination, EL.detailPaginationInfo, totalRows, APP_STATE.detailPage, PAGE_SIZE_DETAIL, (page) => {
+      APP_STATE.detailPage = page;
+      renderDetailForOpd(APP_STATE.selectedOpd);
+    });
     return;
   }
 
@@ -571,15 +594,15 @@ function renderDetailForOpd(opdName) {
           </tr>
         </thead>
         <tbody>
-          ${rows.map((row, index) => `
+          ${pageRows.map((row, index) => `
             <tr>
-              <td>${index + 1}</td>
+              <td>${startIndex + index + 1}</td>
               <td>${escapeHtml(row.kode_rup)}</td>
               <td class="cell-strong">${escapeHtml(row.nama_paket)}</td>
               <td class="cell-muted">${escapeHtml(row.program)}</td>
               <td class="cell-muted">${escapeHtml(row.kegiatan)}</td>
               <td class="cell-muted">${escapeHtml(row.sub_kegiatan)}</td>
-              <td>${formatTableNumber(row.pagu_anggaran)}</td>
+              <td>${formatCurrency(row.pagu_anggaran)}</td>
               <td>${escapeHtml(row.cara_pengadaan)}</td>
               <td>${renderBlueBadge(row.metode_pemilihan)}</td>
               <td>${escapeHtml(row.jenis_pengadaan)}</td>
@@ -624,8 +647,12 @@ function renderDetailForOpd(opdName) {
     });
 
     window.requestAnimationFrame(syncWidths);
-    window.addEventListener('resize', syncWidths, { once: true });
   }
+
+  renderPagination(EL.detailPagination, EL.detailPaginationInfo, totalRows, APP_STATE.detailPage, PAGE_SIZE_DETAIL, (page) => {
+    APP_STATE.detailPage = page;
+    renderDetailForOpd(APP_STATE.selectedOpd);
+  });
 
   const detailSection = document.querySelector('.detail-panel');
   if (detailSection) {
@@ -638,6 +665,8 @@ function renderDetailForOpd(opdName) {
 
 function renderEmptyDetail() {
   APP_STATE.selectedRawRows = [];
+  APP_STATE.detailPage = 1;
+
   EL.detailTitle.textContent = 'Detail Paket SIRUP';
   EL.detailSubtitle.textContent = 'Pilih salah satu OPD pada tabel rekap untuk melihat detail paket.';
   EL.detailContent.innerHTML = `
@@ -646,6 +675,55 @@ function renderEmptyDetail() {
       Klik tombol <strong>Lihat Paket</strong> pada salah satu OPD.
     </div>
   `;
+
+  renderPagination(EL.detailPagination, EL.detailPaginationInfo, 0, 1, PAGE_SIZE_DETAIL, () => {});
+}
+
+function renderPagination(container, infoEl, totalRows, currentPage, pageSize, onPageChange) {
+  if (!container || !infoEl) return;
+
+  container.innerHTML = '';
+
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+  const start = totalRows === 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+  const end = Math.min(currentPage * pageSize, totalRows);
+
+  infoEl.textContent = `${start}-${end} dari ${totalRows} data • Page ${currentPage} / ${totalPages}`;
+
+  const prevBtn = document.createElement('button');
+  prevBtn.type = 'button';
+  prevBtn.className = 'page-btn';
+  prevBtn.textContent = 'Prev';
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.onclick = () => {
+    if (currentPage > 1) onPageChange(currentPage - 1);
+  };
+  container.appendChild(prevBtn);
+
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, currentPage + 2);
+
+  if (currentPage <= 3) endPage = Math.min(totalPages, 5);
+  if (currentPage >= totalPages - 2) startPage = Math.max(1, totalPages - 4);
+
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+    btn.textContent = String(i);
+    btn.onclick = () => onPageChange(i);
+    container.appendChild(btn);
+  }
+
+  const nextBtn = document.createElement('button');
+  nextBtn.type = 'button';
+  nextBtn.className = 'page-btn';
+  nextBtn.textContent = 'Next';
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.onclick = () => {
+    if (currentPage < totalPages) onPageChange(currentPage + 1);
+  };
+  container.appendChild(nextBtn);
 }
 
 function renderPercentBadge(value) {
@@ -752,20 +830,56 @@ function resetFilters() {
   EL.filterWaktu.value = '';
   EL.searchPaket.value = '';
   APP_STATE.selectedOpd = '';
-  APP_STATE.currentPage = 1;
+  APP_STATE.rekapPage = 1;
+  APP_STATE.detailPage = 1;
   applyFilters();
 }
 
 function toNumber(value) {
   if (value == null || value === '') return 0;
 
-  const cleaned = String(value)
-    .replace(/\s/g, '')
-    .replace(/\./g, '')
-    .replace(/,/g, '')
-    .replace(/[^\d-]/g, '');
+  let str = String(value).trim();
+  if (!str) return 0;
 
-  const parsed = Number(cleaned);
+  str = str.replace(/[^\d.,-]/g, '').replace(/\s/g, '');
+
+  const hasDot = str.includes('.');
+  const hasComma = str.includes(',');
+
+  if (hasDot && hasComma) {
+    const lastDot = str.lastIndexOf('.');
+    const lastComma = str.lastIndexOf(',');
+
+    if (lastComma > lastDot) {
+      str = str.replace(/\./g, '').replace(',', '.');
+    } else {
+      str = str.replace(/,/g, '');
+    }
+  } else if (hasComma) {
+    const parts = str.split(',');
+    if (parts.length > 2) {
+      str = parts.join('');
+    } else {
+      const tail = parts[1] || '';
+      if (tail.length === 3) {
+        str = parts.join('');
+      } else {
+        str = parts[0] + '.' + tail;
+      }
+    }
+  } else if (hasDot) {
+    const parts = str.split('.');
+    if (parts.length > 2) {
+      str = parts.join('');
+    } else {
+      const tail = parts[1] || '';
+      if (tail.length === 3) {
+        str = parts.join('');
+      }
+    }
+  }
+
+  const parsed = Number(str);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
@@ -778,10 +892,6 @@ function uniqueSorted(arr) {
 }
 
 function formatNumber(value) {
-  return Number(value || 0).toLocaleString('id-ID');
-}
-
-function formatTableNumber(value) {
   return Number(value || 0).toLocaleString('id-ID');
 }
 
@@ -854,18 +964,5 @@ EL.btnClearSelected.addEventListener('click', () => {
   renderEmptyDetail();
 });
 EL.btnRefresh.addEventListener('click', initMonitoringSirup);
-EL.btnPrevPage.addEventListener('click', () => {
-  if (APP_STATE.currentPage > 1) {
-    APP_STATE.currentPage -= 1;
-    renderRekapTable(APP_STATE.filteredScore);
-  }
-});
-EL.btnNextPage.addEventListener('click', () => {
-  const totalPages = Math.max(1, Math.ceil(APP_STATE.filteredScore.length / APP_STATE.pageSize));
-  if (APP_STATE.currentPage < totalPages) {
-    APP_STATE.currentPage += 1;
-    renderRekapTable(APP_STATE.filteredScore);
-  }
-});
 
 initMonitoringSirup();
