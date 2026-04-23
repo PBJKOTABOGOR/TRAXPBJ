@@ -102,6 +102,7 @@ function resetUiState() {
 
   if (EL.loadingBox) EL.loadingBox.classList.remove('show');
   if (EL.globalLoadingOverlay) EL.globalLoadingOverlay.classList.remove('show');
+
   if (EL.errorBox) {
     EL.errorBox.textContent = '';
     EL.errorBox.classList.remove('show');
@@ -357,13 +358,21 @@ function applyFilters() {
     return matchOpd && matchMetode && matchDana && matchWaktu && matchKeyword;
   });
 
+  const allowedOpdSet = new Set(
+    APP_STATE.filteredRawGlobal.map(row => normalizeOpdName(row.satuan_kerja))
+  );
+
   APP_STATE.filteredScore = APP_STATE.scoreSirup.filter(row => {
-    if (
-      selectedOpdFilter &&
-      normalizeOpdName(row.satuan_kerja) !== normalizeOpdName(selectedOpdFilter)
-    ) {
+    const rowOpd = normalizeOpdName(row.satuan_kerja);
+
+    if (selectedOpdFilter && rowOpd !== normalizeOpdName(selectedOpdFilter)) {
       return false;
     }
+
+    if (selectedMetode || selectedSumberDana || selectedWaktu || keyword) {
+      return allowedOpdSet.has(rowOpd);
+    }
+
     return true;
   });
 
@@ -478,10 +487,17 @@ function renderRekapTable(rows) {
         </td>
       </tr>
     `;
-    renderPagination(EL.rekapPagination, EL.rekapPaginationInfo, totalRows, APP_STATE.rekapPage, PAGE_SIZE_REKAP, (page) => {
-      APP_STATE.rekapPage = page;
-      renderRekapTable(APP_STATE.filteredScore);
-    });
+    renderPagination(
+      EL.rekapPagination,
+      EL.rekapPaginationInfo,
+      totalRows,
+      APP_STATE.rekapPage,
+      PAGE_SIZE_REKAP,
+      (page) => {
+        APP_STATE.rekapPage = page;
+        renderRekapTable(APP_STATE.filteredScore);
+      }
+    );
     return;
   }
 
@@ -489,10 +505,10 @@ function renderRekapTable(rows) {
     <tr>
       <td>${startIndex + index + 1}</td>
       <td class="cell-strong">${escapeHtml(row.satuan_kerja)}</td>
-      <td>${formatCurrency(row.penyedia_diumumkan)}</td>
-      <td>${formatCurrency(row.swakelola_diumumkan)}</td>
-      <td>${formatCurrency(row.total_rup_diumumkan)}</td>
-      <td>${formatCurrency(row.total_komitmen)}</td>
+      <td>${formatTableNumber(row.penyedia_diumumkan)}</td>
+      <td>${formatTableNumber(row.swakelola_diumumkan)}</td>
+      <td>${formatTableNumber(row.total_rup_diumumkan)}</td>
+      <td>${formatTableNumber(row.total_komitmen)}</td>
       <td>${renderPercentBadge(row.prosentase)}</td>
       <td>${renderItkpBadge(row.nilai_itkp)}</td>
       <td>
@@ -511,10 +527,17 @@ function renderRekapTable(rows) {
     });
   });
 
-  renderPagination(EL.rekapPagination, EL.rekapPaginationInfo, totalRows, APP_STATE.rekapPage, PAGE_SIZE_REKAP, (page) => {
-    APP_STATE.rekapPage = page;
-    renderRekapTable(APP_STATE.filteredScore);
-  });
+  renderPagination(
+    EL.rekapPagination,
+    EL.rekapPaginationInfo,
+    totalRows,
+    APP_STATE.rekapPage,
+    PAGE_SIZE_REKAP,
+    (page) => {
+      APP_STATE.rekapPage = page;
+      renderRekapTable(APP_STATE.filteredScore);
+    }
+  );
 }
 
 function renderDetailForOpd(opdName) {
@@ -548,10 +571,17 @@ function renderDetailForOpd(opdName) {
         Tidak ada detail paket untuk OPD ini sesuai filter yang dipilih.
       </div>
     `;
-    renderPagination(EL.detailPagination, EL.detailPaginationInfo, totalRows, APP_STATE.detailPage, PAGE_SIZE_DETAIL, (page) => {
-      APP_STATE.detailPage = page;
-      renderDetailForOpd(APP_STATE.selectedOpd);
-    });
+    renderPagination(
+      EL.detailPagination,
+      EL.detailPaginationInfo,
+      totalRows,
+      APP_STATE.detailPage,
+      PAGE_SIZE_DETAIL,
+      (page) => {
+        APP_STATE.detailPage = page;
+        renderDetailForOpd(APP_STATE.selectedOpd);
+      }
+    );
     return;
   }
 
@@ -588,7 +618,7 @@ function renderDetailForOpd(opdName) {
               <td class="cell-muted">${escapeHtml(row.program)}</td>
               <td class="cell-muted">${escapeHtml(row.kegiatan)}</td>
               <td class="cell-muted">${escapeHtml(row.sub_kegiatan)}</td>
-              <td>${formatCurrency(row.pagu_anggaran)}</td>
+              <td>${formatTableNumber(row.pagu_anggaran)}</td>
               <td>${escapeHtml(row.cara_pengadaan)}</td>
               <td>${renderBlueBadge(row.metode_pemilihan)}</td>
               <td>${escapeHtml(row.jenis_pengadaan)}</td>
@@ -604,10 +634,17 @@ function renderDetailForOpd(opdName) {
 
   setupDetailHorizontalScroll();
 
-  renderPagination(EL.detailPagination, EL.detailPaginationInfo, totalRows, APP_STATE.detailPage, PAGE_SIZE_DETAIL, (page) => {
-    APP_STATE.detailPage = page;
-    renderDetailForOpd(APP_STATE.selectedOpd);
-  });
+  renderPagination(
+    EL.detailPagination,
+    EL.detailPaginationInfo,
+    totalRows,
+    APP_STATE.detailPage,
+    PAGE_SIZE_DETAIL,
+    (page) => {
+      APP_STATE.detailPage = page;
+      renderDetailForOpd(APP_STATE.selectedOpd);
+    }
+  );
 
   const detailSection = document.querySelector('.detail-panel');
   if (detailSection) {
@@ -897,6 +934,10 @@ function formatNumber(value) {
   return Number(value || 0).toLocaleString('id-ID');
 }
 
+function formatTableNumber(value) {
+  return Number(value || 0).toLocaleString('id-ID');
+}
+
 function formatCurrency(value) {
   return 'Rp' + Number(value || 0).toLocaleString('id-ID');
 }
@@ -1068,7 +1109,7 @@ function bindEventsOnce() {
   });
 }
 
-window.__moduleInit = function () {
+function initModule() {
   APP_STATE.destroyed = false;
   EL = getElements();
 
@@ -1083,4 +1124,16 @@ window.__moduleInit = function () {
       cleanupResizeHandler = null;
     }
   };
-};
+}
+
+window.__moduleInit = initModule;
+
+if (window.__itkpSirupDestroy) {
+  try {
+    window.__itkpSirupDestroy();
+  } catch (e) {
+    console.error('destroy previous itkp sirup module error:', e);
+  }
+}
+
+window.__itkpSirupDestroy = initModule();
