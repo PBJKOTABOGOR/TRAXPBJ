@@ -1,6 +1,6 @@
 const APP_ROUTES = {
   dashboard: {
-    title: 'Dashboard SIPPBJ',
+    title: 'Dashboard SIPPBJ ',
     subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
