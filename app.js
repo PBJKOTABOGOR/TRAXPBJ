@@ -1,55 +1,65 @@
-
 const APP_ROUTES = {
   dashboard: {
+    title: 'Dashboard TRAXPBJ',
+    subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
-'monitoring-perencanaan': {
-  title: 'Monitoring Perencanaan',
-  subtitle: 'Pemantauan progres perencanaan pengadaan perangkat daerah.',
-  type: 'module',
-  html: 'modules/monitoring/perencanaan/monitoring.html',
-  css: 'modules/monitoring/perencanaan/monitoring.css',
-  js: 'modules/monitoring/perencanaan/monitoring.js',
-  externalScripts: [
-    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
-  ]
-},
+
+  'monitoring-perencanaan': {
+    title: 'Monitoring Perencanaan',
+    subtitle: 'Pemantauan progres perencanaan pengadaan perangkat daerah.',
+    type: 'module',
+    html: 'modules/monitoring/perencanaan/monitoring.html',
+    css: 'modules/monitoring/perencanaan/monitoring.css',
+    js: 'modules/monitoring/perencanaan/monitoring.js',
+    externalScripts: [
+      'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+    ]
+  },
+
   'monitoring-konsolidasi': {
     title: 'Monitoring Paket Konsolidasi',
     subtitle: 'Halaman ini disiapkan untuk monitoring paket konsolidasi.',
     type: 'placeholder'
   },
+
   'monitoring-sirup': {
     title: 'Monitoring SiRUP',
     subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan SiRUP.',
     type: 'placeholder'
   },
+
   'monitoring-ekatalog': {
     title: 'Monitoring eKatalog',
     subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKatalog.',
     type: 'placeholder'
   },
+
   'monitoring-etendering': {
     title: 'Monitoring eTendering',
     subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eTendering.',
     type: 'placeholder'
   },
+
   'monitoring-nontender': {
     title: 'Monitoring Non Tender',
     subtitle: 'Halaman ini disiapkan untuk monitoring Non eTendering/Non ePurchasing.',
     type: 'placeholder'
   },
+
   'monitoring-ekontrak': {
     title: 'Monitoring eKontrak',
     subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKontrak.',
     type: 'placeholder'
   },
+
   'rapor-pbj': {
     title: 'Rapor PBJ',
     subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
     type: 'iframe',
     url: 'https://pbjkotabogor.github.io/raporpbj/'
   },
+
   'simulasi-timeline': {
     title: 'Simulasi Timeline Pengadaan',
     subtitle: 'Simulasi penyusunan timeline pengadaan barang dan jasa.',
@@ -58,6 +68,7 @@ const APP_ROUTES = {
     css: 'modules/timeline/simulasi-timeline.css',
     js: 'modules/timeline/simulasi-timeline.js'
   },
+
   'simulasi-nontender': {
     title: 'Pencatatan Non Tender',
     subtitle: 'Simulasi PPK untuk pencatatan paket non tender.',
@@ -67,8 +78,13 @@ const APP_ROUTES = {
 };
 
 const contentArea = document.getElementById('contentArea');
+const pageTitle = document.getElementById('pageTitle');
+const pageSubtitle = document.getElementById('pageSubtitle');
+const menuButton = document.getElementById('menuButton');
 const sidebar = document.getElementById('sidebar');
-const sidebarToggleButton = document.getElementById('sidebarToggleButton');
+const portalPageHeader = document.getElementById('portalPageHeader');
+
+let activeModuleToken = 0;
 
 function renderDashboard() {
   contentArea.innerHTML = `
@@ -173,12 +189,8 @@ function renderDashboard() {
 function renderIframePage(page) {
   contentArea.innerHTML = `
     <section class="embed-card">
-      <div class="embed-card-head">
-        <div>
-          <h3>${page.title}</h3>
-          <p>${page.subtitle || ''}</p>
-        </div>
-      </div>
+      <h3>${page.title}</h3>
+      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada. Jika tinggi iframe dirasa kurang, tinggal ubah CSS pada <b>.embed-frame</b>.</div>
       <div class="embed-frame-wrap">
         <iframe
           class="embed-frame"
@@ -198,11 +210,11 @@ function renderPlaceholderPage(pageKey, page) {
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Modul belum dihubungkan</h4>
-          <p>Halaman ini sudah disiapkan di portal utama. Nanti saat project GitHub/halaman monitoring selesai, tinggal isi URL modulnya di file <b>app.js</b>.</p>
+          <p>Halaman ini sudah disiapkan di portal utama. Nanti saat project GitHub/halaman monitoring selesai, tinggal isi URL atau module path di file <b>app.js</b>.</p>
         </div>
         <div class="placeholder-box">
           <h4>Langkah berikutnya</h4>
-          <p>Cari route <b>${pageKey}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b> dan isi path/URL halaman milik kamu.</p>
+          <p>Cari route <b>${pageKey}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b>.</p>
         </div>
       </div>
     </section>
@@ -246,34 +258,81 @@ function renderQuickCard(icon, bg, title, text, route) {
 }
 
 function updateActiveMenu(key) {
-  document.querySelectorAll('.nav-link, .submenu-link').forEach((el) => el.classList.remove('active'));
+  document.querySelectorAll('.nav-link, .submenu-link').forEach((el) => {
+    el.classList.remove('active');
+  });
 
   const directButton = document.querySelector(`.nav-link[data-page="${key}"]`);
   const subButton = document.querySelector(`.submenu-link[data-page="${key}"]`);
 
-  if (directButton) directButton.classList.add('active');
+  if (directButton) {
+    directButton.classList.add('active');
+  }
+
   if (subButton) {
     subButton.classList.add('active');
     const group = subButton.closest('.nav-group');
-    if (group) group.classList.add('open');
+    if (group) {
+      group.classList.add('open');
+    }
   }
 }
 
 function cleanupDynamicModule() {
   document.querySelectorAll('[data-dynamic-module-css]').forEach((el) => el.remove());
   document.querySelectorAll('[data-dynamic-module-js]').forEach((el) => el.remove());
+  document.querySelectorAll('[data-dynamic-external-script]').forEach((el) => el.remove());
+}
+
+function loadExternalScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[data-dynamic-external-script="true"][src^="${src}"]`);
+    if (existing) {
+      if (existing.dataset.loaded === 'true') {
+        resolve();
+        return;
+      }
+
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error(`Gagal memuat ${src}`)), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = false;
+    script.dataset.dynamicExternalScript = 'true';
+    script.dataset.loaded = 'false';
+
+    script.onload = () => {
+      script.dataset.loaded = 'true';
+      resolve();
+    };
+
+    script.onerror = () => reject(new Error(`Gagal memuat ${src}`));
+    document.body.appendChild(script);
+  });
 }
 
 async function renderModulePage(page) {
+  const token = ++activeModuleToken;
   cleanupDynamicModule();
 
   try {
+    if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
+      for (const src of page.externalScripts) {
+        await loadExternalScriptOnce(src);
+      }
+    }
+
     const response = await fetch(page.html, { cache: 'no-cache' });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status} saat memuat ${page.html}`);
     }
 
     const rawHtml = await response.text();
+    if (token !== activeModuleToken) return;
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawHtml, 'text/html');
 
@@ -285,24 +344,22 @@ async function renderModulePage(page) {
     }
 
     contentArea.innerHTML = `
-      <section class="module-page">
+      <section class="module-page module-page--native">
         ${moduleContent}
       </section>
     `;
 
-    contentArea.classList.add('module-mode');
-
     if (page.css) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = page.css + '?v=' + Date.now();
+      link.href = `${page.css}?v=${Date.now()}`;
       link.setAttribute('data-dynamic-module-css', 'true');
       document.head.appendChild(link);
     }
 
     if (page.js) {
       const script = document.createElement('script');
-      script.src = page.js + '?v=' + Date.now();
+      script.src = `${page.js}?v=${Date.now()}`;
       script.defer = true;
       script.setAttribute('data-dynamic-module-js', 'true');
       document.body.appendChild(script);
@@ -312,7 +369,7 @@ async function renderModulePage(page) {
     contentArea.innerHTML = `
       <section class="card">
         <h3>Gagal memuat modul</h3>
-        <p>File modul tidak bisa dimuat. Cek path HTML, CSS, dan JS pada <b>APP_ROUTES</b>.</p>
+        <p>File modul tidak bisa dimuat. Cek path HTML, CSS, JS, atau external script pada <b>APP_ROUTES</b>.</p>
         <p><b>Detail:</b> ${error.message}</p>
       </section>
     `;
@@ -321,13 +378,28 @@ async function renderModulePage(page) {
 
 async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
+
+  if (pageTitle) {
+    pageTitle.textContent = page.title || '';
+  }
+
+  if (pageSubtitle) {
+    pageSubtitle.textContent = page.subtitle || '';
+  }
+
   updateActiveMenu(key);
 
   if (page.type !== 'module') {
     cleanupDynamicModule();
   }
 
-  if (page.type !== 'module') {
+  if (portalPageHeader) {
+    portalPageHeader.style.display = page.type === 'module' ? 'none' : '';
+  }
+
+  if (page.type === 'module') {
+    contentArea.classList.add('module-mode');
+  } else {
     contentArea.classList.remove('module-mode');
   }
 
@@ -341,14 +413,9 @@ async function loadPage(key) {
     renderDashboard();
   }
 
-  if (window.innerWidth <= 980) {
+  if (window.innerWidth <= 980 && sidebar) {
     sidebar.classList.remove('mobile-open');
   }
-}
-
-function applySidebarState() {
-  const isCollapsed = localStorage.getItem('traxpbj-sidebar-collapsed') === '1';
-  document.body.classList.toggle('sidebar-collapsed', isCollapsed);
 }
 
 function bindMenu() {
@@ -359,24 +426,23 @@ function bindMenu() {
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
     button.addEventListener('click', () => {
       const group = document.querySelector(`.nav-group[data-group="${button.dataset.toggleGroup}"]`);
-      if (group) group.classList.toggle('open');
+      if (group) {
+        group.classList.toggle('open');
+      }
     });
   });
 
-  sidebarToggleButton.addEventListener('click', () => {
-    if (window.innerWidth <= 980) {
-      sidebar.classList.toggle('mobile-open');
-      return;
-    }
-
-    document.body.classList.toggle('sidebar-collapsed');
-    localStorage.setItem(
-      'traxpbj-sidebar-collapsed',
-      document.body.classList.contains('sidebar-collapsed') ? '1' : '0'
-    );
-  });
+  if (menuButton && sidebar) {
+    menuButton.addEventListener('click', () => {
+      if (window.innerWidth <= 980) {
+        sidebar.classList.toggle('mobile-open');
+      } else {
+        document.body.classList.toggle('sidebar-collapsed');
+        sidebar.classList.toggle('collapsed');
+      }
+    });
+  }
 }
 
-applySidebarState();
 bindMenu();
 loadPage('dashboard');
