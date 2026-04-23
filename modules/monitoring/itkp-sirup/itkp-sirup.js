@@ -6,7 +6,7 @@ const SHEET_CONFIG = {
 
 const MIN_LOADING_MS = 700;
 const PAGE_SIZE_REKAP = 50;
-const PAGE_SIZE_DETAIL = 50;
+const PAGE_SIZE_DETAIL = 10;
 
 const APP_STATE = {
   rawSirup: [],
