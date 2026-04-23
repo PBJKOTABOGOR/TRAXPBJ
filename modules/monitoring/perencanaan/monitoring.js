@@ -1,27 +1,5 @@
-
-(function(){
-  function ensurePapaLoaded() {
-    return new Promise((resolve, reject) => {
-      if (window.Papa) {
-        resolve();
-        return;
-      }
-      const existing = document.querySelector('script[data-papa-parse="true"]');
-      if (existing) {
-        existing.addEventListener('load', () => resolve(), { once:true });
-        existing.addEventListener('error', () => reject(new Error('Gagal memuat PapaParse.')), { once:true });
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';
-      script.setAttribute('data-papa-parse', 'true');
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Gagal memuat PapaParse.'));
-      document.body.appendChild(script);
-    });
-  }
-
-const CONFIG = {
+(function () {
+  const CONFIG = {
     SHEET_ID: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
     SHEETS: {
       perencanaan: 'D_PERENCANAAN',
@@ -34,6 +12,42 @@ const CONFIG = {
   let currentPage = 1;
   let sortWaktuAsc = true;
   let groupedRealByKode = {};
+  let moduleDestroyed = false;
+  let eventsBound = false;
+
+  function ensurePapaLoaded() {
+    return new Promise((resolve, reject) => {
+      if (window.Papa) {
+        resolve();
+        return;
+      }
+
+      const existing = document.querySelector('script[data-papa-parse="true"]');
+      if (existing) {
+        if (existing.dataset.loaded === 'true') {
+          resolve();
+          return;
+        }
+
+        existing.addEventListener('load', () => resolve(), { once: true });
+        existing.addEventListener('error', () => reject(new Error('Gagal memuat PapaParse.')), { once: true });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';
+      script.setAttribute('data-papa-parse', 'true');
+      script.dataset.loaded = 'false';
+
+      script.onload = () => {
+        script.dataset.loaded = 'true';
+        resolve();
+      };
+
+      script.onerror = () => reject(new Error('Gagal memuat PapaParse.'));
+      document.body.appendChild(script);
+    });
+  }
 
   function csvUrlBySheetName(sheetId, sheetName) {
     return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
@@ -45,10 +59,10 @@ const CONFIG = {
         download: true,
         header: true,
         skipEmptyLines: true,
-        complete: function(results) {
+        complete: function (results) {
           resolve(results.data || []);
         },
-        error: function(err) {
+        error: function (err) {
           reject(err);
         }
       });
@@ -58,6 +72,10 @@ const CONFIG = {
   function setText(id, val) {
     const el = document.getElementById(id);
     if (el) el.innerText = val || '';
+  }
+
+  function safeBind(el, eventName, handler) {
+    if (el) el.addEventListener(eventName, handler);
   }
 
   function escapeHtml(text) {
@@ -94,14 +112,50 @@ const CONFIG = {
     if (!str || str === '-') return 0;
 
     str = str
-      .replace(/Rp/gi, '')
+      .replace(/rp/gi, '')
       .replace(/\s/g, '')
-      .replace(/\./g, '')
-      .replace(/,/g, '.')
-      .replace(/[^\d.-]/g, '');
+      .replace(/[^\d.,-]/g, '');
 
-    const num = parseFloat(str);
-    return isNaN(num) ? 0 : num;
+    const hasDot = str.includes('.');
+    const hasComma = str.includes(',');
+
+    if (hasDot && hasComma) {
+      const lastDot = str.lastIndexOf('.');
+      const lastComma = str.lastIndexOf(',');
+
+      if (lastComma > lastDot) {
+        // format Indonesia: 1.234.567,89
+        str = str.replace(/\./g, '').replace(',', '.');
+      } else {
+        // format US/CSV: 1,234,567.89
+        str = str.replace(/,/g, '');
+      }
+    } else if (hasComma) {
+      const parts = str.split(',');
+      if (parts.length > 2) {
+        str = parts.join('');
+      } else {
+        const decimals = parts[1] || '';
+        if (decimals.length === 3) {
+          str = parts.join('');
+        } else {
+          str = parts[0] + '.' + decimals;
+        }
+      }
+    } else if (hasDot) {
+      const parts = str.split('.');
+      if (parts.length > 2) {
+        str = parts.join('');
+      } else {
+        const decimals = parts[1] || '';
+        if (decimals.length === 3) {
+          str = parts.join('');
+        }
+      }
+    }
+
+    const num = Number(str);
+    return Number.isFinite(num) ? num : 0;
   }
 
   function formatMoney(num) {
@@ -268,57 +322,57 @@ const CONFIG = {
     return summary;
   }
 
-function groupRealisasi(realRows) {
-  const grouped = {};
+  function groupRealisasi(realRows) {
+    const grouped = {};
 
-  realRows.forEach(r => {
-    const kode = String(r.kode_rup || '').trim();
-    if (!kode) return;
+    realRows.forEach(r => {
+      const kode = String(r.kode_rup || '').trim();
+      if (!kode) return;
 
-    if (!grouped[kode]) {
-      grouped[kode] = {
-        recall_paket: 0,
-        total_realisasi: 0,
-        rows: [],
-        first_order: null
-      };
-    }
-
-    const nilai = parseMoney(
-      r.nilai_realisasi ||
-      r['nilai_(rp)'] ||
-      r.total_nilai ||
-      r['total_nilai_(rp)'] ||
-      0
-    );
-
-    const waktuOrder = getWaktuOrder(r.waktu_pemilihan || '');
-
-    grouped[kode].recall_paket += 1;
-    grouped[kode].total_realisasi += nilai;
-
-    if (waktuOrder > 0) {
-      if (!grouped[kode].first_order || waktuOrder < grouped[kode].first_order) {
-        grouped[kode].first_order = waktuOrder;
+      if (!grouped[kode]) {
+        grouped[kode] = {
+          recall_paket: 0,
+          total_realisasi: 0,
+          rows: [],
+          first_order: null
+        };
       }
-    }
 
-    grouped[kode].rows.push({
-      kode_paket: String(r.kode_paket || '').trim(),
-      nama_paket: String(r.nama_paket || '').trim(),
-      nama_penyedia: String(r.nama_penyedia || '').trim(),
-      satuan_kerja: String(r.nama_satuan_kerja || '').trim(),
-      metode: String(r.metode_pengadaan || '').trim(),
-      status_paket: String(r.status_paket || '').trim(),
-      sumber_transaksi: String(r.sumber_transaksi || '').trim(),
-      bast: String(r.bast || '').trim(),
-      nilai: nilai
+      const nilai = parseMoney(
+        r.nilai_realisasi ||
+        r['nilai_(rp)'] ||
+        r.total_nilai ||
+        r['total_nilai_(rp)'] ||
+        0
+      );
+
+      const waktuOrder = getWaktuOrder(r.waktu_pemilihan || '');
+
+      grouped[kode].recall_paket += 1;
+      grouped[kode].total_realisasi += nilai;
+
+      if (waktuOrder > 0) {
+        if (!grouped[kode].first_order || waktuOrder < grouped[kode].first_order) {
+          grouped[kode].first_order = waktuOrder;
+        }
+      }
+
+      grouped[kode].rows.push({
+        kode_paket: String(r.kode_paket || '').trim(),
+        nama_paket: String(r.nama_paket || '').trim(),
+        nama_penyedia: String(r.nama_penyedia || '').trim(),
+        satuan_kerja: String(r.nama_satuan_kerja || '').trim(),
+        metode: String(r.metode_pengadaan || '').trim(),
+        status_paket: String(r.status_paket || '').trim(),
+        sumber_transaksi: String(r.sumber_transaksi || '').trim(),
+        bast: String(r.bast || '').trim(),
+        nilai: nilai
+      });
     });
-  });
 
-  return grouped;
-}
-  
+    return grouped;
+  }
+
   function buildMonitoringData(perencanaanRows, realisasiRows) {
     const planRows = normalizeRows(perencanaanRows);
     const realRows = normalizeRows(realisasiRows);
@@ -331,7 +385,16 @@ function groupRealisasi(realRows) {
       .filter(r => String(r.kode_rup || '').trim())
       .map(r => {
         const kodeRup = String(r.kode_rup || '').trim();
-        const pagu = parseMoney(r.nilai_pagu || 0);
+
+        const pagu = parseMoney(
+          r.nilai_pagu ||
+          r.pagu ||
+          r.total_pagu ||
+          r.nilai ||
+          r.pagu_rup ||
+          r['nilai_pagu_(rp)'] ||
+          0
+        );
 
         const real = groupedRealByKode[kodeRup] || {
           recall_paket: 0,
@@ -399,7 +462,7 @@ function groupRealisasi(realRows) {
         }
 
         let tindakLanjut = detailSummary.tindakLanjut || 'Tidak ada catatan tambahan.';
-        if (ketJadwal !== '-' ) {
+        if (ketJadwal !== '-') {
           tindakLanjut = ketJadwal + '. ' + tindakLanjut;
         }
 
@@ -430,6 +493,8 @@ function groupRealisasi(realRows) {
 
   function fillSelect(id, items) {
     const el = document.getElementById(id);
+    if (!el) return;
+
     const oldVal = el.value;
     const firstLabel = el.options[0] ? el.options[0].textContent : 'Semua';
     el.innerHTML = `<option value="">${escapeHtml(firstLabel)}</option>`;
@@ -446,11 +511,11 @@ function groupRealisasi(realRows) {
   }
 
   function buildFilterOptions(rows) {
-    fillSelect('filter_satker', [...new Set(rows.map(r => r.satuan_kerja).filter(Boolean))].sort((a,b) => a.localeCompare(b,'id')));
-    fillSelect('filter_pengadaan', [...new Set(rows.map(r => r.pengadaan).filter(Boolean))].sort((a,b) => a.localeCompare(b,'id')));
-    fillSelect('filter_metode', [...new Set(rows.map(r => r.metode).filter(Boolean))].sort((a,b) => a.localeCompare(b,'id')));
-    fillSelect('filter_jenis', [...new Set(rows.map(r => r.jenis).filter(Boolean))].sort((a,b) => a.localeCompare(b,'id')));
-    fillSelect('filter_waktu_pemilihan', [...new Set(rows.map(r => r.waktu_pemilihan_label).filter(Boolean))].sort((a,b) => getWaktuOrder(a) - getWaktuOrder(b)));
+    fillSelect('filter_satker', [...new Set(rows.map(r => r.satuan_kerja).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')));
+    fillSelect('filter_pengadaan', [...new Set(rows.map(r => r.pengadaan).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')));
+    fillSelect('filter_metode', [...new Set(rows.map(r => r.metode).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')));
+    fillSelect('filter_jenis', [...new Set(rows.map(r => r.jenis).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')));
+    fillSelect('filter_waktu_pemilihan', [...new Set(rows.map(r => r.waktu_pemilihan_label).filter(Boolean))].sort((a, b) => getWaktuOrder(a) - getWaktuOrder(b)));
   }
 
   function renderSummary(rows) {
@@ -481,6 +546,8 @@ function groupRealisasi(realRows) {
 
   function renderRows(rows) {
     const tbody = document.getElementById('monitoringBody');
+    if (!tbody) return;
+
     tbody.innerHTML = '';
 
     if (!rows.length) {
@@ -511,7 +578,7 @@ function groupRealisasi(realRows) {
   }
 
   function applySort(rows) {
-    return [...rows].sort((a,b) => {
+    return [...rows].sort((a, b) => {
       if (sortWaktuAsc) {
         if (a.waktu_pemilihan_order !== b.waktu_pemilihan_order) return a.waktu_pemilihan_order - b.waktu_pemilihan_order;
       } else {
@@ -524,6 +591,8 @@ function groupRealisasi(realRows) {
   function renderPagination(totalRows) {
     const wrap = document.getElementById('pagination');
     const info = document.getElementById('paginationInfo');
+    if (!wrap || !info) return;
+
     wrap.innerHTML = '';
 
     const size = 10;
@@ -538,7 +607,7 @@ function groupRealisasi(realRows) {
     prevBtn.className = 'page-btn';
     prevBtn.textContent = 'Prev';
     prevBtn.disabled = currentPage === 1;
-    prevBtn.onclick = function() {
+    prevBtn.onclick = function () {
       if (currentPage > 1) {
         currentPage--;
         updateTableOnly();
@@ -556,7 +625,7 @@ function groupRealisasi(realRows) {
       const btn = document.createElement('button');
       btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
       btn.textContent = i;
-      btn.onclick = function() {
+      btn.onclick = function () {
         currentPage = i;
         updateTableOnly();
       };
@@ -567,7 +636,7 @@ function groupRealisasi(realRows) {
     nextBtn.className = 'page-btn';
     nextBtn.textContent = 'Next';
     nextBtn.disabled = currentPage === totalPages;
-    nextBtn.onclick = function() {
+    nextBtn.onclick = function () {
       if (currentPage < totalPages) {
         currentPage++;
         updateTableOnly();
@@ -598,16 +667,16 @@ function groupRealisasi(realRows) {
   }
 
   function runMonitoring() {
-    const satker = document.getElementById('filter_satker').value;
-    const pengadaan = document.getElementById('filter_pengadaan').value;
-    const metode = document.getElementById('filter_metode').value;
-    const jenis = document.getElementById('filter_jenis').value;
-    const status = document.getElementById('filter_status').value;
-    const progres = document.getElementById('filter_progres').value;
-    const posisiJadwal = document.getElementById('filter_posisi_jadwal').value;
-    const waktuPemilihan = document.getElementById('filter_waktu_pemilihan').value;
-    const filterWarning = document.getElementById('filter_warning').value;
-    const keyword = document.getElementById('filter_koderup').value.trim().toLowerCase();
+    const satker = document.getElementById('filter_satker')?.value || '';
+    const pengadaan = document.getElementById('filter_pengadaan')?.value || '';
+    const metode = document.getElementById('filter_metode')?.value || '';
+    const jenis = document.getElementById('filter_jenis')?.value || '';
+    const status = document.getElementById('filter_status')?.value || '';
+    const progres = document.getElementById('filter_progres')?.value || '';
+    const posisiJadwal = document.getElementById('filter_posisi_jadwal')?.value || '';
+    const waktuPemilihan = document.getElementById('filter_waktu_pemilihan')?.value || '';
+    const filterWarning = document.getElementById('filter_warning')?.value || '';
+    const keyword = (document.getElementById('filter_koderup')?.value || '').trim().toLowerCase();
 
     currentPage = 1;
 
@@ -644,16 +713,24 @@ function groupRealisasi(realRows) {
   }
 
   function resetMonitoring() {
-    document.getElementById('filter_satker').value = '';
-    document.getElementById('filter_pengadaan').value = '';
-    document.getElementById('filter_metode').value = '';
-    document.getElementById('filter_jenis').value = '';
-    document.getElementById('filter_status').value = '';
-    document.getElementById('filter_progres').value = '';
-    document.getElementById('filter_posisi_jadwal').value = '';
-    document.getElementById('filter_waktu_pemilihan').value = '';
-    document.getElementById('filter_warning').value = '';
-    document.getElementById('filter_koderup').value = '';
+    const ids = [
+      'filter_satker',
+      'filter_pengadaan',
+      'filter_metode',
+      'filter_jenis',
+      'filter_status',
+      'filter_progres',
+      'filter_posisi_jadwal',
+      'filter_waktu_pemilihan',
+      'filter_warning',
+      'filter_koderup'
+    ];
+
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+
     runMonitoring();
   }
 
@@ -684,6 +761,9 @@ function groupRealisasi(realRows) {
 
     const tbody = document.getElementById('detailBody');
     const empty = document.getElementById('detailEmpty');
+
+    if (!tbody || !empty) return;
+
     tbody.innerHTML = '';
 
     if (!detailRows.length) {
@@ -708,11 +788,13 @@ function groupRealisasi(realRows) {
       });
     }
 
-    document.getElementById('detailModal').classList.add('show');
+    const modal = document.getElementById('detailModal');
+    if (modal) modal.classList.add('show');
   }
 
   function closeDetailModal() {
-    document.getElementById('detailModal').classList.remove('show');
+    const modal = document.getElementById('detailModal');
+    if (modal) modal.classList.remove('show');
   }
 
   function handleModalBackdrop(event) {
@@ -730,6 +812,8 @@ function groupRealisasi(realRows) {
         fetchSheet(CONFIG.SHEETS.realisasi)
       ]);
 
+      if (moduleDestroyed) return;
+
       allRows = buildMonitoringData(perencanaanRows, realisasiRows);
       buildFilterOptions(allRows);
       setText('sortWaktuLabel', sortWaktuAsc ? 'Terlama → Terbaru' : 'Terbaru → Terlama');
@@ -741,7 +825,20 @@ function groupRealisasi(realRows) {
     }
   }
 
-  loadMonitoringData();
+  function bindMonitoringEvents() {
+    if (eventsBound) return;
+    eventsBound = true;
+
+    const btnSort = document.getElementById('btnSortWaktu');
+    const btnRun = document.getElementById('btnRunMonitoring');
+    const btnReset = document.getElementById('btnResetMonitoring');
+    const modal = document.getElementById('detailModal');
+
+    safeBind(btnSort, 'click', toggleSortWaktu);
+    safeBind(btnRun, 'click', runMonitoring);
+    safeBind(btnReset, 'click', resetMonitoring);
+    safeBind(modal, 'click', handleModalBackdrop);
+  }
 
   window.runMonitoring = runMonitoring;
   window.toggleSortWaktu = toggleSortWaktu;
@@ -750,13 +847,27 @@ function groupRealisasi(realRows) {
   window.closeDetailModal = closeDetailModal;
   window.handleModalBackdrop = handleModalBackdrop;
 
-  ensurePapaLoaded()
-    .then(() => loadMonitoringData())
-    .catch((err) => {
-      console.error(err);
-      const statusEl = document.getElementById('monitoringStatus');
-      if (statusEl) {
-        statusEl.innerText = 'Gagal memuat library PapaParse: ' + (err.message || String(err));
-      }
-    });
+  window.__moduleInit = function () {
+    moduleDestroyed = false;
+
+    bindMonitoringEvents();
+
+    ensurePapaLoaded()
+      .then(() => {
+        if (!moduleDestroyed) {
+          loadMonitoringData();
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        const statusEl = document.getElementById('monitoringStatus');
+        if (statusEl) {
+          statusEl.innerText = 'Gagal memuat library PapaParse: ' + (err.message || String(err));
+        }
+      });
+
+    return function destroy() {
+      moduleDestroyed = true;
+    };
+  };
 })();
