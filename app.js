@@ -27,7 +27,9 @@ const APP_ROUTES = {
   title: 'Monitoring SiRUP',
   subtitle: 'Monitoring indikator pemanfaatan SiRUP dan detail paket per OPD.',
   type: 'module',
-  html: 'modules/monitoring/itkp-sirup/itkp-sirup.html'
+  html: 'modules/monitoring/itkp-sirup/itkp-sirup.html',
+  css: 'modules/monitoring/itkp-sirup/itkp-sirup.css',
+  js: 'modules/monitoring/itkp-sirup/itkp-sirup.js'
 },
 
   'monitoring-ekatalog': {
