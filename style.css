@@ -284,7 +284,17 @@ button,input,select,textarea{
   color:rgba(255,255,255,.86);
 }
 
+/* INI YANG DIBENERIN */
+.sidebar-help-link{
+  display:block;
+  text-decoration:none;
+  color:inherit;
+}
+
 .help-button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
   width:100%;
   border:none;
   border-radius:14px;
@@ -294,6 +304,25 @@ button,input,select,textarea{
   color:#123a72;
   background:#fff;
   box-shadow:var(--shadow-sm);
+  text-decoration:none;
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    background .18s ease;
+}
+
+.help-button:hover{
+  background:#f8fbff;
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(15,23,42,.12);
+}
+
+.help-button:active{
+  transform:translateY(0);
+}
+
+.help-button:focus{
+  outline:none;
 }
 
 .app-shell .sidebar.collapsed .brand-text,
