@@ -161,7 +161,7 @@ button,input,select,textarea{
 }
 
 .nav-link,
-.submenu-link{
+.-link{
   width:100%;
   border:none;
   background:transparent;
@@ -225,7 +225,7 @@ button,input,select,textarea{
   border-left:2px solid rgba(18,58,114,.10);
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:8px;
   max-height:500px;
   opacity:1;
   overflow:hidden;
@@ -245,21 +245,38 @@ button,input,select,textarea{
 }
 
 .submenu-link{
-  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  width:100%;
+  min-height:42px;
+  padding:0 14px;
+  border:none;
   border-radius:14px;
+  background:transparent;
+  color:#5b6472;
   font-size:14px;
-  color:#4b5563;
+  font-weight:700;
+  line-height:1.35;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:none;
+  transition:
+    background .18s ease,
+    color .18s ease,
+    box-shadow .18s ease;
 }
 
 .submenu-link:hover{
   background:rgba(18,58,114,.06);
   color:#123a72;
+  box-shadow:none;
 }
 
 .submenu-link.active{
   background:rgba(37,99,235,.12);
   color:#123a72;
   font-weight:800;
+  box-shadow:none;
 }
 
 .sidebar-help{
