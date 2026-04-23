@@ -973,3 +973,47 @@ body{
     grid-template-columns:1fr;
   }
 }
+
+
+/* ===== PORTAL INTEGRATION FIX ===== */
+
+.timeline-module{
+  width:100%;
+}
+
+.app.no-sidebar{
+  display:block;
+  min-height:auto;
+  width:100%;
+}
+
+.app.no-sidebar .main{
+  width:100%;
+  max-width:none;
+  display:block;
+}
+
+.app.no-sidebar .topbar{
+  display:none !important;
+}
+
+.app.no-sidebar .content{
+  width:100%;
+  max-width:none;
+  padding:0;
+  background:transparent;
+}
+
+.app.no-sidebar .hero{
+  margin-top:0;
+}
+
+.app.no-sidebar .grid{
+  grid-template-columns:420px 1fr;
+}
+
+@media (max-width:1200px){
+  .app.no-sidebar .grid{
+    grid-template-columns:1fr;
+  }
+}
