@@ -67,6 +67,7 @@ const pageTitle = document.getElementById('pageTitle');
 const pageSubtitle = document.getElementById('pageSubtitle');
 const menuButton = document.getElementById('menuButton');
 const sidebar = document.getElementById('sidebar');
+const portalPageHeader = document.getElementById('portalPageHeader');
 
 function renderDashboard() {
   contentArea.innerHTML = `
@@ -319,6 +320,10 @@ async function loadPage(key) {
 
   if (page.type !== 'module') {
     cleanupDynamicModule();
+  }
+
+  if (portalPageHeader) {
+    portalPageHeader.style.display = page.type === 'module' ? 'none' : '';
   }
 
   if (page.type === 'iframe') {
