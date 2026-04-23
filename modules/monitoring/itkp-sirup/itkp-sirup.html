@@ -139,13 +139,8 @@
       </section>
 
       <section class="panel">
-        <div class="section-head-inline">
-          <div>
-            <h2 class="section-title">Rekap ITKP SIRUP per OPD</h2>
-            <p class="section-subtitle">Sumber: sheet <strong>SCORE_ITKP_SIRUP</strong></p>
-          </div>
-          <div class="pagination-info" id="rekapSummary">0 data</div>
-        </div>
+        <h2 class="section-title">Rekap ITKP SIRUP per OPD</h2>
+        <p class="section-subtitle">Sumber: sheet <strong>SCORE_ITKP_SIRUP</strong></p>
 
         <div class="spacer-14"></div>
 
@@ -172,12 +167,11 @@
           </table>
         </div>
 
-        <div class="pagination-bar" id="paginationBar">
-          <div class="pagination-left" id="paginationStatus">Halaman 1 dari 1</div>
-          <div class="pagination-right">
-            <button type="button" class="btn btn-soft btn-sm" id="btnPrevPage">Prev</button>
-            <button type="button" class="btn btn-soft btn-sm" id="btnNextPage">Next</button>
-          </div>
+        <div class="spacer-14"></div>
+
+        <div class="pagination-bar">
+          <div class="pagination-info" id="rekapPaginationInfo">0-0 dari 0 data • Page 1 / 1</div>
+          <div class="pagination-buttons" id="rekapPagination"></div>
         </div>
       </section>
 
@@ -201,6 +195,13 @@
             Detail paket belum ditampilkan.<br>
             Klik tombol <strong>Lihat Paket</strong> pada salah satu OPD.
           </div>
+        </div>
+
+        <div class="spacer-14"></div>
+
+        <div class="pagination-bar">
+          <div class="pagination-info" id="detailPaginationInfo">0-0 dari 0 data • Page 1 / 1</div>
+          <div class="pagination-buttons" id="detailPagination"></div>
         </div>
       </section>
     </div>
