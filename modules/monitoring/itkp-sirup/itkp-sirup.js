@@ -104,19 +104,31 @@ async function initMonitoringSirup() {
     const rawUrl = buildCsvUrl(SHEET_CONFIG.rawGid);
     const scoreUrl = buildCsvUrl(SHEET_CONFIG.scoreGid);
 
-    setLoading('Mengambil data RAW_SIRUP...', true);
-    const rawCsvPromise = fetchCsv(rawUrl);
-
-    setLoading('Mengambil data SCORE_ITKP_SIRUP...', true);
-    const scoreCsvPromise = fetchCsv(scoreUrl);
-
-    const [rawCsv, scoreCsv] = await Promise.all([rawCsvPromise, scoreCsvPromise]);
-
-    setLoading('Memproses data CSV...', true);
+    setLoading('Mengambil data RAW_SIRUP dan SCORE_ITKP_SIRUP...', true);
     await nextPaint();
 
-    const rawRows = csvToObjects(rawCsv);
-    const scoreRows = csvToObjects(scoreCsv);
+    const [rawResult, scoreResult] = await Promise.allSettled([
+      fetchCsv(rawUrl),
+      fetchCsv(scoreUrl)
+    ]);
+
+    let rawRows = [];
+    let scoreRows = [];
+    const errors = [];
+
+    if (rawResult.status === 'fulfilled') {
+      rawRows = csvToObjects(rawResult.value);
+    } else {
+      errors.push('RAW_SIRUP gagal dimuat');
+      console.error(rawResult.reason);
+    }
+
+    if (scoreResult.status === 'fulfilled') {
+      scoreRows = csvToObjects(scoreResult.value);
+    } else {
+      errors.push('SCORE_ITKP_SIRUP gagal dimuat');
+      console.error(scoreResult.reason);
+    }
 
     setLoading('Menyesuaikan header dan format data...', true);
     await nextPaint();
@@ -129,10 +141,14 @@ async function initMonitoringSirup() {
 
     buildFilterOptions();
     applyFilters();
+
+    if (errors.length) {
+      showError(errors.join(' + ') + '. Sebagian data berhasil dimuat, sebagian gagal.');
+    }
   } catch (error) {
     console.error(error);
     showError(
-      `Data gagal dimuat. Detail: ${error.message}. Pastikan sheet bisa diakses browser portal ini. Kalau masih private, ubah sharing minimal Viewer atau publish sheet terkait.`
+      `Data gagal dimuat. Detail: ${error.message}. Pastikan sheet bisa diakses browser portal ini.`
     );
   } finally {
     const elapsed = Date.now() - startedAt;
@@ -715,13 +731,50 @@ function resetFilters() {
 function toNumber(value) {
   if (value == null || value === '') return 0;
 
-  const cleaned = String(value)
-    .replace(/\s/g, '')
-    .replace(/\./g, '')
-    .replace(/,/g, '')
-    .replace(/[^\d-]/g, '');
+  let str = String(value).trim();
+  if (!str) return 0;
 
-  const parsed = Number(cleaned);
+  str = str.replace(/[^\d.,-]/g, '').replace(/\s/g, '');
+
+  const hasDot = str.includes('.');
+  const hasComma = str.includes(',');
+
+  if (hasDot && hasComma) {
+    const lastDot = str.lastIndexOf('.');
+    const lastComma = str.lastIndexOf(',');
+
+    if (lastComma > lastDot) {
+      // format Indonesia: 1.234.567,89
+      str = str.replace(/\./g, '').replace(',', '.');
+    } else {
+      // format US: 1,234,567.89
+      str = str.replace(/,/g, '');
+    }
+  } else if (hasComma) {
+    const parts = str.split(',');
+    if (parts.length > 2) {
+      str = parts.join('');
+    } else {
+      const tail = parts[1] || '';
+      if (tail.length === 3) {
+        str = parts.join('');
+      } else {
+        str = parts[0] + '.' + tail;
+      }
+    }
+  } else if (hasDot) {
+    const parts = str.split('.');
+    if (parts.length > 2) {
+      str = parts.join('');
+    } else {
+      const tail = parts[1] || '';
+      if (tail.length === 3) {
+        str = parts.join('');
+      }
+    }
+  }
+
+  const parsed = Number(str);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
