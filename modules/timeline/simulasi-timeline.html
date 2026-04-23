@@ -1,975 +1,412 @@
-:root{
-  --bg:#f3f7fb;
-  --card:#ffffff;
-  --line:#dbe5f0;
-  --text:#10233b;
-  --muted:#64748b;
-  --primary:#0f3d91;
-  --primary-2:#1d4ed8;
-  --success:#15803d;
-  --warning:#b45309;
-  --danger:#b91c1c;
-  --soft-primary:#e8f0ff;
-  --soft-success:#eaf8ee;
-  --soft-warning:#fff7e8;
-  --soft-danger:#fdecec;
-  --shadow:0 12px 28px rgba(15,23,42,0.08);
-  --radius:18px;
-  --sidebar-width:280px;
-  --sidebar-collapsed:86px;
-  --header-height:72px;
-}
-
-*{
-  box-sizing:border-box;
-}
-
-html,
-body{
-  margin:0;
-  padding:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-
-body{
-  min-height:100vh;
-}
-
-.app{
-  display:flex;
-  min-height:100vh;
-  width:100%;
-}
-
-.sidebar{
-  width:var(--sidebar-width);
-  background:linear-gradient(180deg, #0b2d63 0%, #123a72 100%);
-  color:#fff;
-  transition:width 0.25s ease;
-  position:sticky;
-  top:0;
-  height:100vh;
-  overflow:hidden;
-  box-shadow:8px 0 24px rgba(15,23,42,0.12);
-  z-index:20;
-}
-
-.sidebar.collapsed{
-  width:var(--sidebar-collapsed);
-}
-
-.sidebar-top{
-  height:var(--header-height);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:0 18px;
-  border-bottom:1px solid rgba(255,255,255,0.12);
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width:0;
-}
-
-.brand-logo{
-  width:40px;
-  height:40px;
-  border-radius:12px;
-  background:rgba(255,255,255,0.14);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  font-size:14px;
-  flex-shrink:0;
-}
-
-.brand-text{
-  min-width:0;
-  transition:opacity 0.2s ease;
-}
-
-.brand-title{
-  font-size:15px;
-  font-weight:700;
-  line-height:1.2;
-  white-space:nowrap;
-}
-
-.brand-subtitle{
-  font-size:11px;
-  color:rgba(255,255,255,0.74);
-  margin-top:3px;
-  white-space:nowrap;
-}
-
-.sidebar.collapsed .brand-text{
-  opacity:0;
-  pointer-events:none;
-  width:0;
-  overflow:hidden;
-}
-
-.toggle-btn{
-  width:38px;
-  height:38px;
-  border:none;
-  border-radius:12px;
-  background:rgba(255,255,255,0.14);
-  color:#fff;
-  cursor:pointer;
-  font-size:18px;
-  flex-shrink:0;
-}
-
-.toggle-btn:hover{
-  background:rgba(255,255,255,0.22);
-}
-
-.sidebar-content{
-  padding:18px 14px 22px 14px;
-  overflow:auto;
-  height:calc(100vh - var(--header-height));
-}
-
-.menu-section{
-  margin-bottom:20px;
-}
-
-.menu-section-title{
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:0.8px;
-  color:rgba(255,255,255,0.60);
-  padding:0 10px 8px 10px;
-  text-transform:uppercase;
-  transition:opacity 0.2s ease;
-  white-space:nowrap;
-}
-
-.sidebar.collapsed .menu-section-title{
-  opacity:0;
-  height:0;
-  padding:0;
-  overflow:hidden;
-}
-
-.menu-list{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.menu-item{
-  min-height:48px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:0 12px;
-  border-radius:14px;
-  color:#fff;
-  text-decoration:none;
-  background:transparent;
-  transition:all 0.2s ease;
-  overflow:hidden;
-  white-space:nowrap;
-}
-
-.menu-item:hover{
-  background:rgba(255,255,255,0.10);
-}
-
-.menu-item.active{
-  background:rgba(255,255,255,0.16);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.10);
-}
-
-.menu-icon{
-  width:22px;
-  text-align:center;
-  font-size:16px;
-  flex-shrink:0;
-}
-
-.menu-text{
-  font-size:14px;
-  font-weight:600;
-  transition:opacity 0.2s ease;
-}
-
-.sidebar.collapsed .menu-text{
-  opacity:0;
-  width:0;
-  overflow:hidden;
-  pointer-events:none;
-}
-
-.main{
-  flex:1;
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-}
-
-.topbar{
-  min-height:var(--header-height);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:16px 24px;
-  background:rgba(255,255,255,0.82);
-  backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--line);
-  position:sticky;
-  top:0;
-  z-index:10;
-}
-
-.topbar-title-wrap{
-  min-width:0;
-}
-
-.topbar-title{
-  margin:0;
-  font-size:22px;
-  line-height:1.2;
-}
-
-.topbar-subtitle{
-  margin:4px 0 0 0;
-  font-size:13px;
-  color:var(--muted);
-  line-height:1.5;
-}
-
-.topbar-actions{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
-
-.content{
-  width:100%;
-  max-width:none;
-  padding:24px;
-}
-
-.hero{
-  background:linear-gradient(135deg, #0f3d91 0%, #1e56c5 100%);
-  color:#fff;
-  border-radius:24px;
-  padding:28px;
-  box-shadow:var(--shadow);
-  margin-bottom:22px;
-}
-
-.hero h1{
-  margin:0 0 10px 0;
-  font-size:30px;
-  line-height:1.2;
-}
-
-.hero p{
-  margin:0;
-  font-size:14px;
-  line-height:1.7;
-  color:rgba(255,255,255,0.92);
-  max-width:980px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:420px 1fr;
-  gap:22px;
-  align-items:start;
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-}
-
-.card-header{
-  padding:18px 20px;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-
-.card-title{
-  margin:0;
-  font-size:18px;
-  font-weight:700;
-  color:var(--text);
-}
-
-.card-subtitle{
-  margin:4px 0 0 0;
-  font-size:13px;
-  color:var(--muted);
-  line-height:1.5;
-}
-
-.card-body{
-  padding:20px;
-}
-
-.form-grid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:14px;
-}
-
-.field{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-.field label{
-  font-size:13px;
-  font-weight:700;
-  color:var(--text);
-}
-
-.field small{
-  font-size:12px;
-  color:var(--muted);
-  line-height:1.5;
-}
-
-.input,
-.select{
-  width:100%;
-  height:46px;
-  border:1px solid #cfd9e6;
-  border-radius:12px;
-  padding:0 14px;
-  font-size:14px;
-  color:var(--text);
-  background:#fff;
-  outline:none;
-  transition:all 0.2s ease;
-}
-
-.input:focus,
-.select:focus{
-  border-color:var(--primary-2);
-  box-shadow:0 0 0 4px rgba(29,78,216,0.10);
-}
-
-.inline-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.actions{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-top:8px;
-}
-
-.btn{
-  appearance:none;
-  border:none;
-  border-radius:12px;
-  min-height:46px;
-  padding:0 18px;
-  font-size:14px;
-  font-weight:700;
-  cursor:pointer;
-  transition:all 0.2s ease;
-}
-
-.btn-primary{
-  background:var(--primary);
-  color:#fff;
-}
-
-.btn-primary:hover{
-  background:#0d347a;
-}
-
-.btn-light{
-  background:#eef3f9;
-  color:var(--text);
-  border:1px solid var(--line);
-}
-
-.btn-light:hover{
-  background:#e4ebf4;
-}
-
-.btn-outline{
-  background:#fff;
-  color:var(--primary);
-  border:1px solid #bdd0f6;
-}
-
-.btn-outline:hover{
-  background:#f6faff;
-}
-
-.btn-small{
-  min-height:36px;
-  padding:0 14px;
-  font-size:13px;
-  border-radius:10px;
-}
-
-.method-help-actions{
-  margin-top:4px;
-}
-
-.why-method-box{
-  margin-top:10px;
-  padding:12px 14px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:#f8fbff;
-}
-
-.why-method-title{
-  font-size:12px;
-  font-weight:700;
-  color:var(--muted);
-  text-transform:uppercase;
-  margin-bottom:6px;
-}
-
-.why-method-text{
-  font-size:13px;
-  line-height:1.7;
-  color:var(--text);
-}
-
-.right-panel{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:22px;
-}
-
-.summary-grid{
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:14px;
-}
-
-.summary-box{
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:16px;
-  background:#fff;
-}
-
-.summary-box .label{
-  font-size:12px;
-  color:var(--muted);
-  margin-bottom:8px;
-  font-weight:700;
-  text-transform:uppercase;
-  letter-spacing:0.3px;
-}
-
-.summary-box .value{
-  font-size:18px;
-  font-weight:700;
-  line-height:1.4;
-  color:var(--text);
-}
-
-.summary-box .sub{
-  margin-top:6px;
-  font-size:12px;
-  color:var(--muted);
-  line-height:1.5;
-}
-
-.advice-grid{
-  display:grid;
-  grid-template-columns:260px 1fr;
-  gap:14px;
-  margin-top:16px;
-}
-
-.mini-card{
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:16px;
-  background:#fff;
-}
-
-.mini-title{
-  font-size:12px;
-  color:var(--muted);
-  margin-bottom:8px;
-  font-weight:700;
-  text-transform:uppercase;
-}
-
-.mini-value{
-  font-size:18px;
-  font-weight:700;
-  line-height:1.5;
-}
-
-.mini-text{
-  font-size:14px;
-  line-height:1.7;
-  color:var(--text);
-}
-
-.status-wrap{
-  margin-top:16px;
-}
-
-.status-box{
-  border-radius:16px;
-  padding:16px 18px;
-  font-size:14px;
-  line-height:1.7;
-  font-weight:600;
-  border:1px solid transparent;
-}
-
-.status-valid{
-  background:var(--soft-success);
-  color:var(--success);
-  border-color:#b9e3c4;
-}
-
-.status-warning{
-  background:var(--soft-warning);
-  color:var(--warning);
-  border-color:#f0d7a6;
-}
-
-.status-invalid{
-  background:var(--soft-danger);
-  color:var(--danger);
-  border-color:#f2bebe;
-}
-
-.timeline-wrapper{
-  overflow:auto;
-  padding-bottom:4px;
-}
-
-.timeline-super-header{
-  display:grid;
-  grid-template-columns:180px repeat(16, minmax(86px, 1fr));
-  gap:6px;
-  min-width:1620px;
-  margin-bottom:6px;
-}
-
-.timeline-super-cell{
-  height:36px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:#f8fbff;
-  color:var(--text);
-  font-size:12px;
-  font-weight:700;
-  text-align:center;
-  padding:0 8px;
-}
-
-.timeline-super-spacer{
-  height:36px;
-  border:1px solid transparent;
-  background:transparent;
-}
-
-.timeline-super-prev{
-  grid-column:2 / span 4;
-}
-
-.timeline-super-current{
-  grid-column:6 / span 12;
-}
-
-.timeline-header{
-  display:grid;
-  grid-template-columns:180px repeat(16, minmax(86px, 1fr));
-  gap:6px;
-  min-width:1620px;
-  margin-bottom:10px;
-}
-
-.timeline-spacer{
-  height:42px;
-  border-radius:10px;
-  border:1px solid transparent;
-  background:transparent;
-}
-
-.timeline-month{
-  height:42px;
-  background:#f8fbff;
-  border:1px solid var(--line);
-  border-radius:10px;
-  text-align:center;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0 6px;
-  font-size:12px;
-  font-weight:700;
-  color:var(--muted);
-}
-
-.timeline-row{
-  display:grid;
-  grid-template-columns:180px 1fr;
-  gap:14px;
-  align-items:center;
-  margin-bottom:12px;
-  min-width:1620px;
-}
-
-.timeline-label{
-  font-size:13px;
-  font-weight:700;
-  color:var(--text);
-}
-
-.timeline-track{
-  display:grid;
-  gap:6px;
-}
-
-.timeline-track-16{
-  grid-template-columns:repeat(16, minmax(86px, 1fr));
-}
-
-.timeline-cell{
-  height:42px;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:700;
-  color:#334155;
-  text-align:center;
-  padding:0 4px;
-}
-
-.fill-persiapan{
-  background:#dbeafe;
-  border-color:#93c5fd;
-  color:#1d4ed8;
-}
-
-.fill-pemilihan{
-  background:#fee2e2;
-  border-color:#fca5a5;
-  color:#b91c1c;
-}
-
-.fill-pelaksanaan{
-  background:#fef3c7;
-  border-color:#fcd34d;
-  color:#a16207;
-}
-
-.fill-akhir{
-  background:#dcfce7;
-  border-color:#86efac;
-  color:#15803d;
-}
-
-.legend{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-top:14px;
-}
-
-.legend-item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:13px;
-  color:var(--muted);
-  font-weight:600;
-}
-
-.legend-dot{
-  width:16px;
-  height:16px;
-  border-radius:6px;
-  border:1px solid transparent;
-}
-
-.dot-persiapan{
-  background:#dbeafe;
-  border-color:#93c5fd;
-}
-
-.dot-pemilihan{
-  background:#fee2e2;
-  border-color:#fca5a5;
-}
-
-.dot-pelaksanaan{
-  background:#fef3c7;
-  border-color:#fcd34d;
-}
-
-.dot-akhir{
-  background:#dcfce7;
-  border-color:#86efac;
-}
-
-.detail-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-.detail-table th,
-.detail-table td{
-  padding:12px 14px;
-  border-bottom:1px solid var(--line);
-  text-align:left;
-  font-size:14px;
-  vertical-align:top;
-}
-
-.detail-table th{
-  width:240px;
-  color:var(--muted);
-  font-weight:700;
-  background:#fbfdff;
-}
-
-.info-note{
-  margin-top:16px;
-  padding:14px 16px;
-  border-radius:14px;
-  background:#f8fbff;
-  border:1px solid var(--line);
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.7;
-}
-
-.badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  min-height:28px;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-  background:var(--soft-primary);
-  color:var(--primary);
-  border:1px solid #c7dafc;
-}
-
-.print-only{
-  display:none;
-}
-
-.print-heading{
-  margin-bottom:16px;
-}
-
-.print-heading h2{
-  margin:0 0 6px 0;
-}
-
-.print-heading div{
-  font-size:13px;
-  color:#555;
-}
-
-@media (max-width:1200px){
-  .grid{
-    grid-template-columns:1fr;
-  }
-}
-
-@media (max-width:900px){
-  .sidebar{
-    position:fixed;
-    left:0;
-    top:0;
-    transform:translateX(0);
-  }
-
-  .sidebar.collapsed{
-    transform:translateX(-100%);
-    width:var(--sidebar-width);
-  }
-
-  .main{
-    width:100%;
-  }
-
-  .summary-grid,
-  .advice-grid{
-    grid-template-columns:1fr;
-  }
-}
-
-@media (max-width:640px){
-  .content{
-    padding:16px;
-  }
-
-  .hero{
-    padding:22px 18px;
-  }
-
-  .hero h1{
-    font-size:24px;
-  }
-
-  .inline-grid{
-    grid-template-columns:1fr;
-  }
-
-  .actions,
-  .topbar-actions{
-    flex-direction:column;
-  }
-
-  .btn{
-    width:100%;
-  }
-
-  .topbar{
-    padding:14px 16px;
-    align-items:flex-start;
-    flex-direction:column;
-  }
-}
-
-@media print{
-  body{
-    background:#fff;
-  }
-
-  .sidebar,
-  .topbar,
-  .actions,
-  .no-print{
-    display:none !important;
-  }
-
-  .print-only{
-    display:block !important;
-  }
-
-  .main,
-  .content{
-    width:100%;
-    padding:0;
-    margin:0;
-  }
-
-  .hero{
-    background:#fff !important;
-    color:#000 !important;
-    box-shadow:none !important;
-    border:1px solid #ddd !important;
-    margin-bottom:18px;
-  }
-
-  .hero p{
-    color:#333 !important;
-  }
-
-  .card{
-    box-shadow:none !important;
-    border:1px solid #ddd !important;
-    break-inside:avoid;
-  }
-
-  .grid{
-    display:block;
-  }
-
-  .card + .card,
-  .right-panel .card{
-    margin-top:16px;
-  }
-
-  .timeline-wrapper{
-    overflow:visible !important;
-  }
-
-  .timeline-super-header,
-  .timeline-header,
-  .timeline-row{
-    min-width:unset !important;
-  }
-
-  .timeline-super-header{
-    grid-template-columns:180px repeat(16, 1fr);
-  }
-
-  .timeline-header{
-    grid-template-columns:180px repeat(16, 1fr);
-  }
-
-  .timeline-track-16{
-    grid-template-columns:repeat(16, 1fr);
-  }
-}
-
-
-.app.no-sidebar{
-  display:block;
-  min-height:100vh;
-}
-
-.app.no-sidebar .main{
-  width:100%;
-  max-width:none;
-}
-
-.app.no-sidebar .topbar{
-  position:sticky;
-  top:0;
-  left:0;
-  width:100%;
-}
-
-.app.no-sidebar .content{
-  width:100%;
-  max-width:none;
-  padding:24px;
-}
-
-.app.no-sidebar .grid{
-  grid-template-columns:420px 1fr;
-}
-
-@media (max-width:1200px){
-  .app.no-sidebar .grid{
-    grid-template-columns:1fr;
-  }
-}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIPPBJ - Simulasi Timeline Pengadaan</title>
+  <link rel="stylesheet" href="simulasi-timeline.css">
+</head>
+<body>
+  <div class="app no-sidebar">
+<main class="main">
+      <div class="topbar no-print">
+        <div class="topbar-title-wrap">
+          <h2 class="topbar-title">Simulasi Timeline Proses Pengadaan</h2>
+          <p class="topbar-subtitle">
+            Simulasi metode dan jadwal pengadaan agar user tidak salah pilih metode dan tidak mepet akhir tahun.
+          </p>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="btn btn-outline" id="btnExportPdfTop">Export PDF</button>
+        </div>
+      </div>
+
+      <div class="content" id="printArea">
+        <div class="print-only print-heading">
+          <h2>Simulasi Timeline Proses Pengadaan</h2>
+          <div>Dokumen hasil simulasi timeline pengadaan</div>
+        </div>
+
+        <section class="hero">
+          <h1>Simulasi Timeline Proses Pengadaan</h1>
+          <p>
+            Isi jenis pengadaan, pagu, ketersediaan katalog, metode, durasi pekerjaan, dan target mulai pelaksanaan.
+            Sistem akan membantu menilai kesesuaian metode, memberi saran, lalu menghitung timeline pengadaan.
+          </p>
+        </section>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Form Simulasi</h2>
+                <p class="card-subtitle">Isi parameter, lalu klik tombol Simulasikan.</p>
+              </div>
+              <span class="badge">Menu Simulasi</span>
+            </div>
+
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="inline-grid">
+                  <div class="field">
+                    <label for="tahunAnggaran">Tahun Anggaran</label>
+                    <input
+                      type="number"
+                      id="tahunAnggaran"
+                      class="input"
+                      value="2026"
+                      min="2020"
+                      max="2100"
+                    >
+                  </div>
+
+                  <div class="field">
+                    <label for="jenisKontrak">Jenis Kontrak</label>
+                    <select id="jenisKontrak" class="select">
+                      <option value="single">Kontrak Tahunan (Single Year)</option>
+                      <option value="multi">Kontrak Jamak (Multi Year)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="inline-grid">
+                  <div class="field">
+                    <label for="jenisPengadaan">Jenis Pengadaan</label>
+                    <select id="jenisPengadaan" class="select">
+                      <option value="Barang">Barang</option>
+                      <option value="Pekerjaan Konstruksi">Pekerjaan Konstruksi</option>
+                      <option value="Jasa Konsultansi">Jasa Konsultansi</option>
+                      <option value="Jasa Lainnya">Jasa Lainnya</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label for="paguPaket">Pagu Paket (Rp)</label>
+                    <input
+                      type="text"
+                      id="paguPaket"
+                      class="input"
+                      value="150000000"
+                      inputmode="numeric"
+                      placeholder="Contoh: 150000000"
+                    >
+                  </div>
+                </div>
+
+                <div class="inline-grid">
+                  <div class="field">
+                    <label for="tersediaKatalog">Tersedia di Katalog?</label>
+                    <select id="tersediaKatalog" class="select">
+                      <option value="tidak">Tidak</option>
+                      <option value="ya">Ya</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label for="metodePemilihan">Metode Pemilihan</label>
+                    <select id="metodePemilihan" class="select"></select>
+                    <small id="helpMetode">
+                      Metode akan disesuaikan dengan jenis pengadaan, pagu, dan ketersediaan katalog.
+                    </small>
+
+                    <div class="method-help-actions">
+                      <button type="button" class="btn btn-light btn-small" id="btnWhyMethod">
+                        Kenapa metode ini tidak tampil?
+                      </button>
+                    </div>
+
+                    <div class="why-method-box" id="whyMethodBox" style="display:none;">
+                      <div class="why-method-title">Penjelasan Sistem</div>
+                      <div class="why-method-text" id="whyMethodText">-</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="inline-grid">
+                  <div class="field">
+                    <label for="durasiPemilihan">Durasi Pemilihan (hari)</label>
+                    <input
+                      type="number"
+                      id="durasiPemilihan"
+                      class="input"
+                      value="7"
+                      min="1"
+                    >
+                    <small id="helpDurasiPemilihan">
+                      Sistem memberi default sesuai metode, tetapi tetap bisa diubah manual.
+                    </small>
+                  </div>
+
+                  <div class="field">
+                    <label for="waktuPersiapanAwal">Waktu Persiapan Awal (hari)</label>
+                    <input
+                      type="number"
+                      id="waktuPersiapanAwal"
+                      class="input"
+                      value="7"
+                      min="0"
+                    >
+                  </div>
+                </div>
+
+                <div class="inline-grid">
+                  <div class="field">
+                    <label for="durasiPekerjaan">Durasi Pekerjaan (bulan)</label>
+                    <select id="durasiPekerjaan" class="select">
+                      <option value="1">1 Bulan</option>
+                      <option value="2">2 Bulan</option>
+                      <option value="3">3 Bulan</option>
+                      <option value="4">4 Bulan</option>
+                      <option value="5">5 Bulan</option>
+                      <option value="6">6 Bulan</option>
+                      <option value="7">7 Bulan</option>
+                      <option value="8">8 Bulan</option>
+                      <option value="9">9 Bulan</option>
+                      <option value="10">10 Bulan</option>
+                      <option value="11">11 Bulan</option>
+                      <option value="12" selected>12 Bulan</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label for="mulaiPelaksanaan">Target Mulai Pelaksanaan</label>
+                    <input
+                      type="date"
+                      id="mulaiPelaksanaan"
+                      class="input"
+                      value="2026-04-01"
+                    >
+                  </div>
+                </div>
+
+                <div class="actions no-print">
+                  <button class="btn btn-primary" id="btnSimulasikan">Simulasikan</button>
+                  <button class="btn btn-outline" id="btnExportPdf">Export PDF</button>
+                  <button class="btn btn-light" id="btnReset">Reset</button>
+                </div>
+
+                <div class="info-note" id="infoRule">
+                  Sistem akan membantu menyarankan metode yang lebih sesuai agar user tidak salah pilih metode.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="right-panel">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Ringkasan Hasil Simulasi</h2>
+                  <p class="card-subtitle">Hasil penilaian metode dan perhitungan jadwal otomatis.</p>
+                </div>
+                <span class="badge" id="badgeMetode">-</span>
+              </div>
+
+              <div class="card-body">
+                <div class="summary-grid">
+                  <div class="summary-box">
+                    <div class="label">Pagu Paket</div>
+                    <div class="value" id="outPaguPaket">-</div>
+                    <div class="sub">Nilai pagu yang digunakan dalam simulasi.</div>
+                  </div>
+
+                  <div class="summary-box">
+                    <div class="label">Mulai Persiapan</div>
+                    <div class="value" id="outMulaiPersiapan">-</div>
+                    <div class="sub">Tahap persiapan awal sebelum pemilihan dimulai.</div>
+                  </div>
+
+                  <div class="summary-box">
+                    <div class="label">Mulai Pemilihan</div>
+                    <div class="value" id="outMulaiPemilihan">-</div>
+                    <div class="sub">Awal proses pemilihan penyedia.</div>
+                  </div>
+
+                  <div class="summary-box">
+                    <div class="label">Selesai Pemilihan</div>
+                    <div class="value" id="outSelesaiPemilihan">-</div>
+                    <div class="sub">Perkiraan akhir proses pemilihan.</div>
+                  </div>
+
+                  <div class="summary-box">
+                    <div class="label">Mulai Kontrak</div>
+                    <div class="value" id="outMulaiKontrak">-</div>
+                    <div class="sub">Umumnya sama dengan mulai pelaksanaan.</div>
+                  </div>
+
+                  <div class="summary-box">
+                    <div class="label">Selesai Pelaksanaan</div>
+                    <div class="value" id="outSelesaiPelaksanaan">-</div>
+                    <div class="sub">Perkiraan akhir masa pekerjaan/kontrak.</div>
+                  </div>
+
+                  <div class="summary-box">
+                    <div class="label">Durasi Total</div>
+                    <div class="value" id="outDurasiTotal">-</div>
+                    <div class="sub">Akumulasi persiapan, pemilihan, dan pelaksanaan.</div>
+                  </div>
+                </div>
+
+                <div class="advice-grid">
+                  <div class="mini-card">
+                    <div class="mini-title">Status Metode</div>
+                    <div class="mini-value" id="outStatusMetode">-</div>
+                  </div>
+                  <div class="mini-card">
+                    <div class="mini-title">Saran Metode</div>
+                    <div class="mini-text" id="outSaranMetode">-</div>
+                  </div>
+                </div>
+
+                <div class="advice-grid">
+                  <div class="mini-card">
+                    <div class="mini-title">Status Jadwal</div>
+                    <div class="mini-value" id="outStatusJadwal">-</div>
+                  </div>
+                  <div class="mini-card">
+                    <div class="mini-title">Saran Sistem</div>
+                    <div class="mini-text" id="outSaranSistem">-</div>
+                  </div>
+                </div>
+
+                <div class="status-wrap">
+                  <div id="statusBox" class="status-box status-warning">
+                    Silakan isi parameter simulasi, lalu klik tombol <strong>Simulasikan</strong>.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Visual Timeline Sederhana</h2>
+                  <p class="card-subtitle">
+                    Timeline mengikuti susunan tahun anggaran sebelumnya dan tahun anggaran berkenaan.
+                  </p>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <div class="timeline-wrapper">
+                  <div class="timeline-super-header" id="timelineSuperHeader"></div>
+                  <div class="timeline-header" id="timelineHeader"></div>
+
+                  <div class="timeline-row">
+                    <div class="timeline-label">Persiapan</div>
+                    <div class="timeline-track timeline-track-16" id="rowPersiapan"></div>
+                  </div>
+
+                  <div class="timeline-row">
+                    <div class="timeline-label">Pemilihan</div>
+                    <div class="timeline-track timeline-track-16" id="rowPemilihan"></div>
+                  </div>
+
+                  <div class="timeline-row">
+                    <div class="timeline-label">Pelaksanaan</div>
+                    <div class="timeline-track timeline-track-16" id="rowPelaksanaan"></div>
+                  </div>
+
+                  <div class="timeline-row">
+                    <div class="timeline-label">Akhir / Buffer</div>
+                    <div class="timeline-track timeline-track-16" id="rowAkhir"></div>
+                  </div>
+                </div>
+
+                <div class="legend">
+                  <div class="legend-item">
+                    <span class="legend-dot dot-persiapan"></span>
+                    <span>Persiapan</span>
+                  </div>
+
+                  <div class="legend-item">
+                    <span class="legend-dot dot-pemilihan"></span>
+                    <span>Pemilihan</span>
+                  </div>
+
+                  <div class="legend-item">
+                    <span class="legend-dot dot-pelaksanaan"></span>
+                    <span>Pelaksanaan</span>
+                  </div>
+
+                  <div class="legend-item">
+                    <span class="legend-dot dot-akhir"></span>
+                    <span>Buffer / akhir tahun</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Detail Perhitungan</h2>
+                  <p class="card-subtitle">Rincian input, metode, dan hasil validasi.</p>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <table class="detail-table">
+                  <tbody>
+                    <tr>
+                      <th>Tahun Anggaran</th>
+                      <td id="detailTahun">-</td>
+                    </tr>
+                    <tr>
+                      <th>Jenis Pengadaan</th>
+                      <td id="detailJenisPengadaan">-</td>
+                    </tr>
+                    <tr>
+                      <th>Pagu Paket</th>
+                      <td id="detailPaguPaket">-</td>
+                    </tr>
+                    <tr>
+                      <th>Tersedia di Katalog</th>
+                      <td id="detailKatalog">-</td>
+                    </tr>
+                    <tr>
+                      <th>Metode Pemilihan</th>
+                      <td id="detailMetode">-</td>
+                    </tr>
+                    <tr>
+                      <th>Jenis Kontrak</th>
+                      <td id="detailJenisKontrak">-</td>
+                    </tr>
+                    <tr>
+                      <th>Durasi Pemilihan</th>
+                      <td id="detailDurasiPemilihan">-</td>
+                    </tr>
+                    <tr>
+                      <th>Waktu Persiapan Awal</th>
+                      <td id="detailWaktuPersiapanAwal">-</td>
+                    </tr>
+                    <tr>
+                      <th>Durasi Pekerjaan</th>
+                      <td id="detailDurasiPekerjaan">-</td>
+                    </tr>
+                    <tr>
+                      <th>Mulai Pelaksanaan</th>
+                      <td id="detailMulaiPelaksanaan">-</td>
+                    </tr>
+                    <tr>
+                      <th>Kesimpulan</th>
+                      <td id="detailKesimpulan">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="info-note" id="catatanTambahan">
+                  Belum ada hasil simulasi.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="simulasi-timeline.js"></script>
+</body>
+</html>
