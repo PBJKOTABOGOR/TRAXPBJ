@@ -46,12 +46,14 @@ const APP_ROUTES = {
     type: 'iframe',
     url: 'https://pbjkotabogor.github.io/raporpbj/'
   },
-  'simulasi-timeline': {
-    title: 'Simulasi Timeline Pengadaan',
-    subtitle: 'Simulasi penyusunan timeline pengadaan barang dan jasa.',
-    type: 'local',
-    url: 'modules/timeline/simulasi-timeline.html'
-  },
+'simulasi-timeline': {
+  title: 'Simulasi Timeline Pengadaan',
+  subtitle: 'Simulasi penyusunan timeline pengadaan barang dan jasa.',
+  type: 'module',
+  html: 'modules/timeline/simulasi-timeline.html',
+  css: 'modules/timeline/simulasi-timeline.css',
+  js: 'modules/timeline/simulasi-timeline.js'
+},
   'simulasi-nontender': {
     title: 'Pencatatan Non Tender',
     subtitle: 'Simulasi PPK untuk pencatatan paket non tender.',
