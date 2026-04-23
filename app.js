@@ -63,14 +63,30 @@ const APP_ROUTES = {
 };
 
 const contentArea = document.getElementById('contentArea');
-const pageTitle = document.getElementById('pageTitle');
-const pageSubtitle = document.getElementById('pageSubtitle');
-const menuButton = document.getElementById('menuButton');
 const sidebar = document.getElementById('sidebar');
-const portalPageHeader = document.getElementById('portalPageHeader');
+const sidebarToggleButton = document.getElementById('sidebarToggleButton');
+
+function setDocumentTitle(title) {
+  document.title = `${title} - TRAXPBJ`;
+}
+
+function setModuleMode(isModule) {
+  contentArea.classList.toggle('module-mode', isModule);
+}
+
+function renderPageHeading(title, subtitle) {
+  return `
+    <section class="portal-page-heading">
+      <h2>${title}</h2>
+      <p>${subtitle}</p>
+    </section>
+  `;
+}
 
 function renderDashboard() {
   contentArea.innerHTML = `
+    ${renderPageHeading('Dashboard TRAXPBJ', 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.')}
+
     <section class="hero-card">
       <h3>Selamat datang di TRAXPBJ</h3>
       <p>Ringkasan utama untuk monitoring, analisis, simulasi, dan pelaporan pengadaan barang/jasa.</p>
@@ -171,8 +187,8 @@ function renderDashboard() {
 
 function renderIframePage(page) {
   contentArea.innerHTML = `
+    ${renderPageHeading(page.title, page.subtitle)}
     <section class="embed-card">
-      <h3>${page.title}</h3>
       <div class="page-note">Halaman dimuat dari project/modul yang sudah ada. Jika tinggi iframe dirasa kurang, tinggal ubah CSS pada <b>.embed-frame</b>.</div>
       <div class="embed-frame-wrap">
         <iframe
@@ -188,8 +204,8 @@ function renderIframePage(page) {
 
 function renderPlaceholderPage(pageKey, page) {
   contentArea.innerHTML = `
+    ${renderPageHeading(page.title, page.subtitle)}
     <section class="card">
-      <h3>${page.title}</h3>
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Modul belum dihubungkan</h4>
@@ -280,7 +296,7 @@ async function renderModulePage(page) {
     }
 
     contentArea.innerHTML = `
-      <section class="module-page">
+      <section class="module-page module-page--timeline">
         ${moduleContent}
       </section>
     `;
@@ -314,17 +330,14 @@ async function renderModulePage(page) {
 
 async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
-  pageTitle.textContent = page.title;
-  pageSubtitle.textContent = page.subtitle;
+  setDocumentTitle(page.title);
   updateActiveMenu(key);
 
   if (page.type !== 'module') {
     cleanupDynamicModule();
   }
 
-  if (portalPageHeader) {
-    portalPageHeader.style.display = page.type === 'module' ? 'none' : '';
-  }
+  setModuleMode(page.type === 'module');
 
   if (page.type === 'iframe') {
     renderIframePage(page);
@@ -341,6 +354,15 @@ async function loadPage(key) {
   }
 }
 
+function toggleSidebar() {
+  if (window.innerWidth <= 980) {
+    sidebar.classList.toggle('mobile-open');
+  } else {
+    sidebar.classList.toggle('sidebar--collapsed');
+    document.body.classList.toggle('sidebar-collapsed');
+  }
+}
+
 function bindMenu() {
   document.querySelectorAll('[data-page]').forEach((button) => {
     button.addEventListener('click', () => loadPage(button.dataset.page));
@@ -348,18 +370,17 @@ function bindMenu() {
 
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
     button.addEventListener('click', () => {
+      if (sidebar.classList.contains('sidebar--collapsed') && window.innerWidth > 980) {
+        return;
+      }
       const group = document.querySelector(`.nav-group[data-group="${button.dataset.toggleGroup}"]`);
       if (group) group.classList.toggle('open');
     });
   });
 
-  menuButton.addEventListener('click', () => {
-    if (window.innerWidth <= 980) {
-      sidebar.classList.toggle('mobile-open');
-    } else {
-      document.body.classList.toggle('sidebar-collapsed');
-    }
-  });
+  if (sidebarToggleButton) {
+    sidebarToggleButton.addEventListener('click', toggleSidebar);
+  }
 }
 
 bindMenu();
