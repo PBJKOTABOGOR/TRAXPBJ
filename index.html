@@ -6,7 +6,7 @@
   <title>TRAXPBJ - Portal Utama</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,15 +24,17 @@
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-section-label">MENU UTAMA</div>
+        <div class="nav-section-label">MAIN</div>
 
-        <button class="nav-link active" data-page="dashboard">
-          <span class="nav-icon">🏠</span>
-          <span class="nav-text">Dashboard</span>
+        <button class="nav-link active" data-page="dashboard" type="button">
+          <span class="nav-left">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Dashboard</span>
+          </span>
         </button>
 
         <div class="nav-group open" data-group="monitoring">
-          <button class="nav-link nav-toggle" data-toggle-group="monitoring">
+          <button class="nav-link nav-toggle" data-toggle-group="monitoring" type="button">
             <span class="nav-left">
               <span class="nav-icon">📊</span>
               <span class="nav-text">Monitoring</span>
@@ -40,23 +42,34 @@
             <span class="nav-caret">⌄</span>
           </button>
           <div class="submenu">
-            <button class="submenu-link" data-page="monitoring-perencanaan">Monitoring Perencanaan</button>
-            <button class="submenu-link" data-page="monitoring-konsolidasi">Monitoring Paket Konsolidasi</button>
-            <button class="submenu-link" data-page="monitoring-sirup">SiRUP</button>
-            <button class="submenu-link" data-page="monitoring-ekatalog">eKatalog</button>
-            <button class="submenu-link" data-page="monitoring-etendering">eTendering</button>
-            <button class="submenu-link" data-page="monitoring-nontender">Non Tender</button>
-            <button class="submenu-link" data-page="monitoring-ekontrak">eKontrak</button>
+            <button class="submenu-link" data-page="monitoring-perencanaan" type="button">Monitoring Perencanaan</button>
+            <button class="submenu-link" data-page="monitoring-konsolidasi" type="button">Monitoring Paket Konsolidasi</button>
+            <button class="submenu-link" data-page="monitoring-sirup" type="button">SiRUP</button>
+            <button class="submenu-link" data-page="monitoring-ekatalog" type="button">eKatalog</button>
+            <button class="submenu-link" data-page="monitoring-etendering" type="button">eTendering</button>
+            <button class="submenu-link" data-page="monitoring-nontender" type="button">Non Tender</button>
+            <button class="submenu-link" data-page="monitoring-ekontrak" type="button">eKontrak</button>
+          </div>
+          <div class="submenu-flyout">
+            <button class="submenu-link" data-page="monitoring-perencanaan" type="button">Monitoring Perencanaan</button>
+            <button class="submenu-link" data-page="monitoring-konsolidasi" type="button">Monitoring Paket Konsolidasi</button>
+            <button class="submenu-link" data-page="monitoring-sirup" type="button">SiRUP</button>
+            <button class="submenu-link" data-page="monitoring-ekatalog" type="button">eKatalog</button>
+            <button class="submenu-link" data-page="monitoring-etendering" type="button">eTendering</button>
+            <button class="submenu-link" data-page="monitoring-nontender" type="button">Non Tender</button>
+            <button class="submenu-link" data-page="monitoring-ekontrak" type="button">eKontrak</button>
           </div>
         </div>
 
-        <button class="nav-link" data-page="rapor-pbj">
-          <span class="nav-icon">📝</span>
-          <span class="nav-text">Rapor PBJ</span>
+        <button class="nav-link" data-page="rapor-pbj" type="button">
+          <span class="nav-left">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">Rapor PBJ</span>
+          </span>
         </button>
 
         <div class="nav-group open" data-group="simulasi">
-          <button class="nav-link nav-toggle" data-toggle-group="simulasi">
+          <button class="nav-link nav-toggle" data-toggle-group="simulasi" type="button">
             <span class="nav-left">
               <span class="nav-icon">🧪</span>
               <span class="nav-text">Simulasi</span>
@@ -64,8 +77,12 @@
             <span class="nav-caret">⌄</span>
           </button>
           <div class="submenu">
-            <button class="submenu-link" data-page="simulasi-timeline">Timeline Pengadaan</button>
-            <button class="submenu-link" data-page="simulasi-nontender">Pencatatan Non Tender</button>
+            <button class="submenu-link" data-page="simulasi-timeline" type="button">Timeline Pengadaan</button>
+            <button class="submenu-link" data-page="simulasi-nontender" type="button">Pencatatan Non Tender</button>
+          </div>
+          <div class="submenu-flyout">
+            <button class="submenu-link" data-page="simulasi-timeline" type="button">Timeline Pengadaan</button>
+            <button class="submenu-link" data-page="simulasi-nontender" type="button">Pencatatan Non Tender</button>
           </div>
         </div>
       </nav>
