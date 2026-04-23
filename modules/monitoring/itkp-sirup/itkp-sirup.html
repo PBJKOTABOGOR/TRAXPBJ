@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>Monitoring SIRUP</title>
+
+  <style>
+    :root{
+      --bg:#eef4fb;
+      --bg-2:#f8fbff;
+      --card:#ffffff;
+      --line:#dbe5f0;
+      --text:#122033;
+      --muted:#64748b;
+      --navy:#123a72;
+      --navy2:#245a9b;
+      --teal:#0f766e;
+      --green:#16a34a;
+      --green-soft:#dcfce7;
+      --yellow:#ca8a04;
+      --yellow-soft:#fef3c7;
+      --red:#dc2626;
+      --red-soft:#fee2e2;
+      --blue-soft:#dbeafe;
+      --shadow-lg:0 18px 40px rgba(15,23,42,.10);
+      --shadow-sm:0 6px 18px rgba(15,23,42,.06);
+      --radius:24px;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    html,
+    body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      font-family:"Inter","Segoe UI",Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(15,118,110,.08), transparent 28%),
+        linear-gradient(180deg,#f8fbff 0%,#eef4fb 100%);
+    }
+
+    body{
+      padding:24px;
+    }
+
+    .page{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      max-width:1600px;
+      margin:0 auto;
+    }
+
+    .hero{
+      background:rgba(255,255,255,.76);
+      border:1px solid rgba(219,229,240,.9);
+      backdrop-filter:blur(10px);
+      border-radius:28px;
+      padding:22px 24px;
+      box-shadow:var(--shadow-sm);
+      display:flex;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:18px;
+    }
+
+    .hero-left{
+      min-width:280px;
+      flex:1 1 700px;
+    }
+
+    .hero-title{
+      margin:0 0 8px;
+      font-size:28px;
+      line-height:1.15;
+      font-weight:800;
+      color:var(--navy);
+    }
+
+    .hero-subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+      max-width:900px;
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+
+    .btn{
+      appearance:none;
+      border:none;
+      outline:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:12px 16px;
+      font-size:13px;
+      font-weight:700;
+      transition:.2s ease;
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,var(--navy),var(--navy2));
+      color:#fff;
+      box-shadow:var(--shadow-sm);
+    }
+
+    .btn-primary:hover{
+      transform:translateY(-1px);
+      opacity:.95;
+    }
+
+    .btn-soft{
+      background:#fff;
+      color:var(--navy);
+      border:1px solid var(--line);
+    }
+
+    .btn-soft:hover{
+      background:#f8fbff;
+    }
+
+    .panel{
+      background:rgba(255,255,255,.78);
+      border:1px solid rgba(219,229,240,.95);
+      backdrop-filter:blur(8px);
+      border-radius:24px;
+      box-shadow:var(--shadow-sm);
+      padding:18px;
+    }
+
+    .section-title{
+      margin:0 0 4px;
+      font-size:18px;
+      font-weight:800;
+      color:var(--navy);
+    }
+
+    .section-subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .filters{
+      display:grid;
+      grid-template-columns:repeat(12, minmax(0,1fr));
+      gap:12px;
+      align-items:end;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .field label{
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+    }
+
+    .field input,
+    .field select{
+      width:100%;
+      height:44px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:0 14px;
+      font-size:13px;
+      background:#fff;
+      color:var(--text);
+      outline:none;
+    }
+
+    .field input:focus,
+    .field select:focus{
+      border-color:var(--navy2);
+      box-shadow:0 0 0 3px rgba(36,90,155,.12);
+    }
+
+    .span-3{grid-column:span 3;}
+    .span-2{grid-column:span 2;}
+    .span-4{grid-column:span 4;}
+    .span-12{grid-column:span 12;}
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(6, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .stat-card{
+      background:linear-gradient(180deg,#ffffff 0%,#f7fbff 100%);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:var(--shadow-sm);
+      min-height:110px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .stat-label{
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.3px;
+    }
+
+    .stat-value{
+      font-size:28px;
+      font-weight:800;
+      color:var(--navy);
+      line-height:1.1;
+    }
+
+    .stat-note{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .split{
+      display:grid;
+      grid-template-columns:1.1fr 1.4fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .table-wrap{
+      width:100%;
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width:900px;
+    }
+
+    th,
+    td{
+      padding:12px 12px;
+      font-size:13px;
+      border-bottom:1px solid #edf2f7;
+      vertical-align:middle;
+      text-align:left;
+      white-space:nowrap;
+    }
+
+    th{
+      position:sticky;
+      top:0;
+      z-index:1;
+      background:#f8fbff;
+      color:var(--navy);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+      font-weight:800;
+    }
+
+    tbody tr:hover{
+      background:#f9fcff;
+    }
+
+    .cell-strong{
+      font-weight:700;
+      color:var(--text);
+    }
+
+    .cell-muted{
+      color:var(--muted);
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:74px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      line-height:1;
+    }
+
+    .badge-green{
+      background:var(--green-soft);
+      color:var(--green);
+    }
+
+    .badge-yellow{
+      background:var(--yellow-soft);
+      color:var(--yellow);
+    }
+
+    .badge-red{
+      background:var(--red-soft);
+      color:var(--red);
+    }
+
+    .badge-blue{
+      background:var(--blue-soft);
+      color:var(--navy2);
+    }
+
+    .action-btn{
+      border:none;
+      background:#eaf2ff;
+      color:var(--navy);
+      padding:8px 12px;
+      border-radius:10px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .action-btn:hover{
+      background:#dbeafe;
+    }
+
+    .detail-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .detail-title{
+      margin:0;
+      font-size:18px;
+      font-weight:800;
+      color:var(--navy);
+    }
+
+    .detail-subtitle{
+      margin:4px 0 0;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .empty-state{
+      border:1px dashed var(--line);
+      background:#f8fbff;
+      border-radius:20px;
+      padding:28px 20px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .toolbar-inline{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .mini-insights{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .insight-card{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg,#ffffff 0%,#f9fbff 100%);
+      border-radius:20px;
+      padding:16px;
+    }
+
+    .insight-label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+      margin-bottom:8px;
+      text-transform:uppercase;
+    }
+
+    .insight-value{
+      font-size:18px;
+      color:var(--navy);
+      font-weight:800;
+      line-height:1.4;
+    }
+
+    .insight-note{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .loading{
+      display:none;
+      font-size:13px;
+      color:var(--muted);
+      padding:8px 0 0;
+    }
+
+    .loading.show{
+      display:block;
+    }
+
+    .error-box{
+      display:none;
+      border:1px solid #fecaca;
+      background:#fff1f2;
+      color:#991b1b;
+      padding:14px 16px;
+      border-radius:16px;
+      font-size:13px;
+      line-height:1.6;
+      margin-top:12px;
+    }
+
+    .error-box.show{
+      display:block;
+    }
+
+    @media (max-width:1200px){
+      .stats{
+        grid-template-columns:repeat(3, minmax(0,1fr));
+      }
+
+      .split{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:900px){
+      .filters{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+
+      .span-3,
+      .span-2,
+      .span-4,
+      .span-12{
+        grid-column:span 2;
+      }
+
+      .stats{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+
+      .mini-insights{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:640px){
+      body{
+        padding:14px;
+      }
+
+      .hero-title{
+        font-size:22px;
+      }
+
+      .stats{
+        grid-template-columns:1fr;
+      }
+
+      .filters{
+        grid-template-columns:1fr;
+      }
+
+      .span-3,
+      .span-2,
+      .span-4,
+      .span-12{
+        grid-column:span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-left">
+        <h1 class="hero-title">Monitoring SIRUP</h1>
+        <p class="hero-subtitle">
+          Monitoring paket perencanaan yang diumumkan di SIRUP serta rekap perhitungan indikator ITKP SIRUP per Satuan Kerja.
+        </p>
+        <div class="error-box" id="errorBox"></div>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="btn btn-soft"
+          id="btnRefresh"
+        >
+          Refresh Data
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="btnExportRekap"
+        >
+          Export Rekap OPD
+        </button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="section-title">Filter Monitoring</h2>
+      <p class="section-subtitle">
+        Gunakan filter untuk menyaring rekap OPD dan detail paket.
+      </p>
+
+      <div style="height:14px;"></div>
+
+      <div class="filters">
+        <div class="field span-3">
+          <label for="filterOpd">Satuan Kerja</label>
+          <select id="filterOpd">
+            <option value="">Semua Satuan Kerja</option>
+          </select>
+        </div>
+
+        <div class="field span-2">
+          <label for="filterMetode">Metode Pemilihan</label>
+          <select id="filterMetode">
+            <option value="">Semua Metode</option>
+          </select>
+        </div>
+
+        <div class="field span-2">
+          <label for="filterSumberDana">Sumber Dana</label>
+          <select id="filterSumberDana">
+            <option value="">Semua Sumber Dana</option>
+          </select>
+        </div>
+
+        <div class="field span-2">
+          <label for="filterWaktu">Waktu Pemilihan</label>
+          <select id="filterWaktu">
+            <option value="">Semua Waktu</option>
+          </select>
+        </div>
+
+        <div class="field span-3">
+          <label for="searchPaket">Cari Paket / Program / Kegiatan</label>
+          <input
+            type="text"
+            id="searchPaket"
+            placeholder="Ketik nama paket, program, kegiatan, kode RUP..."
+          >
+        </div>
+
+        <div class="field span-12">
+          <div class="toolbar-inline">
+            <button
+              type="button"
+              class="btn btn-soft"
+              id="btnResetFilter"
+            >
+              Reset Filter
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="btnExportDetail"
+            >
+              Export Detail Paket
+            </button>
+          </div>
+
+          <div
+            class="loading"
+            id="loadingText"
+          >
+            Memuat data monitoring SIRUP...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Jumlah OPD</div>
+        <div class="stat-value" id="statJumlahOpd">0</div>
+        <div class="stat-note">Total satuan kerja pada data rekap</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Jumlah Paket</div>
+        <div class="stat-value" id="statJumlahPaket">0</div>
+        <div class="stat-note">Total paket pada RAW SIRUP</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Total RUP Diumumkan</div>
+        <div class="stat-value" id="statTotalRup">Rp0</div>
+        <div class="stat-note">Akumulasi total RUP diumumkan</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Total Komitmen SIRUP</div>
+        <div class="stat-value" id="statTotalKomitmen">Rp0</div>
+        <div class="stat-note">Akumulasi total komitmen</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Rata-rata Persentase</div>
+        <div class="stat-value" id="statAvgPersen">0%</div>
+        <div class="stat-note">Rata-rata prosentase seluruh OPD</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Rata-rata Nilai ITKP</div>
+        <div class="stat-value" id="statAvgItkp">0</div>
+        <div class="stat-note">Rata-rata nilai indikator ITKP</div>
+      </div>
+    </section>
+
+    <section class="mini-insights">
+      <div class="insight-card">
+        <div class="insight-label">OPD Tertinggi</div>
+        <div class="insight-value" id="insightTopOpd">-</div>
+        <div class="insight-note" id="insightTopNote">Belum ada data</div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-label">OPD Terendah</div>
+        <div class="insight-value" id="insightLowOpd">-</div>
+        <div class="insight-note" id="insightLowNote">Belum ada data</div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-label">Metode Dominan</div>
+        <div class="insight-value" id="insightMetode">-</div>
+        <div class="insight-note" id="insightMetodeNote">Belum ada data</div>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="panel">
+        <h2 class="section-title">Rekap ITKP SIRUP per OPD</h2>
+        <p class="section-subtitle">
+          Sumber: sheet <strong>SCORE_ITKP_SIRUP</strong>
+        </p>
+
+        <div style="height:14px;"></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="min-width:60px;">No</th>
+                <th style="min-width:300px;">Satuan Kerja</th>
+                <th>Penyedia</th>
+                <th>Swakelola</th>
+                <th>Total RUP</th>
+                <th>Total Komitmen</th>
+                <th>Prosentase</th>
+                <th>Nilai ITKP</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="rekapTableBody">
+              <tr>
+                <td colspan="9" class="cell-muted" style="text-align:center; padding:22px;">
+                  Belum ada data.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="detail-header">
+          <div>
+            <h2 class="detail-title" id="detailTitle">Detail Paket SIRUP</h2>
+            <p class="detail-subtitle" id="detailSubtitle">
+              Pilih salah satu OPD pada tabel rekap untuk melihat detail paket.
+            </p>
+          </div>
+
+          <div class="toolbar-inline">
+            <button
+              type="button"
+              class="btn btn-soft"
+              id="btnClearSelected"
+            >
+              Tutup Detail
+            </button>
+          </div>
+        </div>
+
+        <div id="detailContent">
+          <div class="empty-state">
+            Detail paket belum ditampilkan.<br>
+            Klik tombol <strong>Lihat Paket</strong> pada salah satu OPD.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const SHEET_CONFIG = {
+      spreadsheetId: '1tRYoFQ2obJLoQfIBmZQ_qIw72ZCMV9fKIpBA3DlsIxE',
+      rawGid: '0',
+      scoreGid: '468989223'
+    };
+
+    const APP_STATE = {
+      rawSirup: [],
+      scoreSirup: [],
+      filteredScore: [],
+      filteredRawGlobal: [],
+      selectedOpd: '',
+      selectedRawRows: []
+    };
+
+    const EL = {
+      loadingText: document.getElementById('loadingText'),
+      errorBox: document.getElementById('errorBox'),
+      filterOpd: document.getElementById('filterOpd'),
+      filterMetode: document.getElementById('filterMetode'),
+      filterSumberDana: document.getElementById('filterSumberDana'),
+      filterWaktu: document.getElementById('filterWaktu'),
+      searchPaket: document.getElementById('searchPaket'),
+      rekapTableBody: document.getElementById('rekapTableBody'),
+      detailContent: document.getElementById('detailContent'),
+      detailTitle: document.getElementById('detailTitle'),
+      detailSubtitle: document.getElementById('detailSubtitle'),
+      btnResetFilter: document.getElementById('btnResetFilter'),
+      btnExportRekap: document.getElementById('btnExportRekap'),
+      btnExportDetail: document.getElementById('btnExportDetail'),
+      btnRefresh: document.getElementById('btnRefresh'),
+      btnClearSelected: document.getElementById('btnClearSelected'),
+      statJumlahOpd: document.getElementById('statJumlahOpd'),
+      statJumlahPaket: document.getElementById('statJumlahPaket'),
+      statTotalRup: document.getElementById('statTotalRup'),
+      statTotalKomitmen: document.getElementById('statTotalKomitmen'),
+      statAvgPersen: document.getElementById('statAvgPersen'),
+      statAvgItkp: document.getElementById('statAvgItkp'),
+      insightTopOpd: document.getElementById('insightTopOpd'),
+      insightTopNote: document.getElementById('insightTopNote'),
+      insightLowOpd: document.getElementById('insightLowOpd'),
+      insightLowNote: document.getElementById('insightLowNote'),
+      insightMetode: document.getElementById('insightMetode'),
+      insightMetodeNote: document.getElementById('insightMetodeNote')
+    };
+
+    function buildCsvUrl(gid) {
+      return `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.spreadsheetId}/export?format=csv&gid=${gid}`;
+    }
+
+    async function initMonitoringSirup() {
+      try {
+        showLoading(true);
+        showError('');
+
+        const [rawCsv, scoreCsv] = await Promise.all([
+          fetchCsv(buildCsvUrl(SHEET_CONFIG.rawGid)),
+          fetchCsv(buildCsvUrl(SHEET_CONFIG.scoreGid))
+        ]);
+
+        const rawRows = csvToObjects(rawCsv);
+        const scoreRows = csvToObjects(scoreCsv);
+
+        APP_STATE.rawSirup = normalizeRawSirup(rawRows);
+        APP_STATE.scoreSirup = normalizeScoreSirup(scoreRows);
+
+        buildFilterOptions();
+        applyFilters();
+      } catch (error) {
+        console.error(error);
+        showError(
+          'Data gagal dimuat dari Google Sheet. Pastikan sheet bisa diakses browser portal ini. ' +
+          'Kalau masih private, ubah sharing minimal Viewer atau publish sheet terkait.'
+        );
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function fetchCsv(url) {
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} saat mengambil ${url}`);
+      }
+
+      return await response.text();
+    }
+
+    function csvToObjects(csvText) {
+      const rows = parseCsv(csvText);
+      if (!rows.length) return [];
+
+      const headers = rows[0].map(h => normalizeHeader(h));
+      const dataRows = rows.slice(1);
+
+      return dataRows
+        .filter(row => row.some(cell => String(cell || '').trim() !== ''))
+        .map(row => {
+          const obj = {};
+          headers.forEach((header, index) => {
+            obj[header] = row[index] != null ? String(row[index]).trim() : '';
+          });
+          return obj;
+        });
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let cell = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            cell += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          row.push(cell);
+          cell = '';
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && next === '\n') i++;
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = '';
+        } else {
+          cell += char;
+        }
+      }
+
+      if (cell.length || row.length) {
+        row.push(cell);
+        rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function normalizeHeader(header) {
+      return String(header || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[()/%.-]/g, '')
+        .replace(/__+/g, '_');
+    }
+
+    function normalizeRawSirup(rows) {
+      return rows.map(row => ({
+        satuan_kerja: pick(row, ['satuan_kerja']),
+        kode_rup: pick(row, ['kode_rup']),
+        program: pick(row, ['program']),
+        kegiatan: pick(row, ['kegiatan']),
+        sub_kegiatan: pick(row, ['sub_kegiatan']),
+        nama_paket: pick(row, ['nama_paket']),
+        pagu_anggaran: toNumber(pick(row, ['pagu_anggaran'])),
+        cara_pengadaan: pick(row, ['cara_pengadaan']),
+        metode_pemilihan: pick(row, ['metode_pemilihan']),
+        jenis_pengadaan: pick(row, ['jenis_pengadaan']),
+        pdn: pick(row, ['produk_dalam_negeri']),
+        sumber_dana: pick(row, ['sumber_dana']),
+        waktu_pemilihan: pick(row, ['waktu_pemilihan'])
+      }))
+      .filter(row => row.satuan_kerja && row.nama_paket);
+    }
+
+    function normalizeScoreSirup(rows) {
+      return rows.map(row => ({
+        satuan_kerja: pick(row, ['satuan_kerja']),
+        penyedia_diumumkan: toNumber(pick(row, ['penyedia_diumumkan'])),
+        swakelola_diumumkan: toNumber(pick(row, ['swakelola_diumumkan'])),
+        total_rup_diumumkan: toNumber(pick(row, ['total_rup_diumumkan'])),
+        total_komitmen: toNumber(pick(row, ['total_komitmen'])),
+        prosentase: toNumber(pick(row, ['prosentase'])),
+        nilai_itkp: toNumber(pick(row, ['nilai_itkp']))
+      }))
+      .filter(row => row.satuan_kerja);
+    }
+
+    function pick(obj, keys) {
+      for (const key of keys) {
+        if (obj[key] != null && String(obj[key]).trim() !== '') {
+          return String(obj[key]).trim();
+        }
+      }
+      return '';
+    }
+
+    function showLoading(isLoading) {
+      EL.loadingText.classList.toggle('show', !!isLoading);
+    }
+
+    function showError(message) {
+      EL.errorBox.textContent = message || '';
+      EL.errorBox.classList.toggle('show', !!message);
+    }
+
+    function buildFilterOptions() {
+      populateSelect(
+        EL.filterOpd,
+        uniqueSorted(APP_STATE.scoreSirup.map(x => x.satuan_kerja)),
+        'Semua Satuan Kerja'
+      );
+
+      populateSelect(
+        EL.filterMetode,
+        uniqueSorted(APP_STATE.rawSirup.map(x => x.metode_pemilihan)),
+        'Semua Metode'
+      );
+
+      populateSelect(
+        EL.filterSumberDana,
+        uniqueSorted(APP_STATE.rawSirup.map(x => x.sumber_dana)),
+        'Semua Sumber Dana'
+      );
+
+      populateSelect(
+        EL.filterWaktu,
+        uniqueSorted(APP_STATE.rawSirup.map(x => x.waktu_pemilihan)),
+        'Semua Waktu'
+      );
+    }
+
+    function populateSelect(selectEl, items, placeholder) {
+      const currentValue = selectEl.value;
+      selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+
+      items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item;
+        option.textContent = item;
+        selectEl.appendChild(option);
+      });
+
+      if (items.includes(currentValue)) {
+        selectEl.value = currentValue;
+      }
+    }
+
+    function applyFilters() {
+      const selectedOpdFilter = EL.filterOpd.value.trim();
+      const selectedMetode = EL.filterMetode.value.trim().toLowerCase();
+      const selectedSumberDana = EL.filterSumberDana.value.trim().toLowerCase();
+      const selectedWaktu = EL.filterWaktu.value.trim().toLowerCase();
+      const keyword = EL.searchPaket.value.trim().toLowerCase();
+
+      APP_STATE.filteredRawGlobal = APP_STATE.rawSirup.filter(row => {
+        const matchOpd = !selectedOpdFilter || row.satuan_kerja === selectedOpdFilter;
+        const matchMetode = !selectedMetode || row.metode_pemilihan.toLowerCase() === selectedMetode;
+        const matchDana = !selectedSumberDana || row.sumber_dana.toLowerCase() === selectedSumberDana;
+        const matchWaktu = !selectedWaktu || row.waktu_pemilihan.toLowerCase() === selectedWaktu;
+
+        const searchTarget = [
+          row.nama_paket,
+          row.program,
+          row.kegiatan,
+          row.sub_kegiatan,
+          row.kode_rup
+        ].join(' ').toLowerCase();
+
+        const matchKeyword = !keyword || searchTarget.includes(keyword);
+
+        return matchOpd && matchMetode && matchDana && matchWaktu && matchKeyword;
+      });
+
+      const allowedOpdSet = new Set(APP_STATE.filteredRawGlobal.map(row => row.satuan_kerja));
+
+      APP_STATE.filteredScore = APP_STATE.scoreSirup.filter(row => {
+        if (selectedOpdFilter && row.satuan_kerja !== selectedOpdFilter) {
+          return false;
+        }
+
+        if (selectedMetode || selectedSumberDana || selectedWaktu || keyword) {
+          return allowedOpdSet.has(row.satuan_kerja);
+        }
+
+        return true;
+      });
+
+      renderStats(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
+      renderInsights(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
+      renderRekapTable(APP_STATE.filteredScore);
+
+      if (APP_STATE.selectedOpd) {
+        renderDetailForOpd(APP_STATE.selectedOpd);
+      } else {
+        renderEmptyDetail();
+      }
+    }
+
+    function renderStats(filteredRaw, filteredScore) {
+      const jumlahOpd = filteredScore.length;
+      const jumlahPaket = filteredRaw.length;
+      const totalRup = sum(filteredScore.map(x => x.total_rup_diumumkan));
+      const totalKomitmen = sum(filteredScore.map(x => x.total_komitmen));
+      const avgPersen = filteredScore.length
+        ? sum(filteredScore.map(x => x.prosentase)) / filteredScore.length
+        : 0;
+      const avgItkp = filteredScore.length
+        ? sum(filteredScore.map(x => x.nilai_itkp)) / filteredScore.length
+        : 0;
+
+      EL.statJumlahOpd.textContent = formatNumber(jumlahOpd);
+      EL.statJumlahPaket.textContent = formatNumber(jumlahPaket);
+      EL.statTotalRup.textContent = formatCurrency(totalRup);
+      EL.statTotalKomitmen.textContent = formatCurrency(totalKomitmen);
+      EL.statAvgPersen.textContent = `${formatPercent(avgPersen)}%`;
+      EL.statAvgItkp.textContent = formatDecimal(avgItkp);
+    }
+
+    function renderInsights(filteredRaw, filteredScore) {
+      if (!filteredScore.length) {
+        EL.insightTopOpd.textContent = '-';
+        EL.insightTopNote.textContent = 'Belum ada data';
+        EL.insightLowOpd.textContent = '-';
+        EL.insightLowNote.textContent = 'Belum ada data';
+        EL.insightMetode.textContent = '-';
+        EL.insightMetodeNote.textContent = 'Belum ada data';
+        return;
+      }
+
+      const sortedByItkp = [...filteredScore].sort((a, b) => {
+        if (b.nilai_itkp !== a.nilai_itkp) return b.nilai_itkp - a.nilai_itkp;
+        return b.prosentase - a.prosentase;
+      });
+
+      const top = sortedByItkp[0];
+      const low = sortedByItkp[sortedByItkp.length - 1];
+
+      EL.insightTopOpd.textContent = top.satuan_kerja;
+      EL.insightTopNote.textContent = `Nilai ITKP ${formatDecimal(top.nilai_itkp)} | ${formatPercent(top.prosentase)}%`;
+
+      EL.insightLowOpd.textContent = low.satuan_kerja;
+      EL.insightLowNote.textContent = `Nilai ITKP ${formatDecimal(low.nilai_itkp)} | ${formatPercent(low.prosentase)}%`;
+
+      const metodeCounts = {};
+      filteredRaw.forEach(row => {
+        metodeCounts[row.metode_pemilihan] = (metodeCounts[row.metode_pemilihan] || 0) + 1;
+      });
+
+      const dominantEntry = Object.entries(metodeCounts).sort((a, b) => b[1] - a[1])[0];
+
+      if (dominantEntry) {
+        EL.insightMetode.textContent = dominantEntry[0];
+        EL.insightMetodeNote.textContent = `${formatNumber(dominantEntry[1])} paket`;
+      } else {
+        EL.insightMetode.textContent = '-';
+        EL.insightMetodeNote.textContent = 'Belum ada data';
+      }
+    }
+
+    function renderRekapTable(rows) {
+      if (!rows.length) {
+        EL.rekapTableBody.innerHTML = `
+          <tr>
+            <td colspan="9" class="cell-muted" style="text-align:center; padding:22px;">
+              Tidak ada data rekap yang sesuai filter.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      EL.rekapTableBody.innerHTML = rows.map((row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td class="cell-strong">${escapeHtml(row.satuan_kerja)}</td>
+          <td>${formatCurrency(row.penyedia_diumumkan)}</td>
+          <td>${formatCurrency(row.swakelola_diumumkan)}</td>
+          <td>${formatCurrency(row.total_rup_diumumkan)}</td>
+          <td>${formatCurrency(row.total_komitmen)}</td>
+          <td>${renderPercentBadge(row.prosentase)}</td>
+          <td>${renderItkpBadge(row.nilai_itkp)}</td>
+          <td>
+            <button
+              type="button"
+              class="action-btn"
+              data-opd="${escapeHtml(row.satuan_kerja)}"
+            >
+              Lihat Paket
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      EL.rekapTableBody.querySelectorAll('.action-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          APP_STATE.selectedOpd = btn.getAttribute('data-opd') || '';
+          renderDetailForOpd(APP_STATE.selectedOpd);
+        });
+      });
+    }
+
+    function renderDetailForOpd(opdName) {
+      const rows = APP_STATE.filteredRawGlobal.filter(row => row.satuan_kerja === opdName);
+      APP_STATE.selectedRawRows = rows;
+
+      EL.detailTitle.textContent = `Detail Paket SIRUP - ${opdName}`;
+      EL.detailSubtitle.textContent = `${formatNumber(rows.length)} paket ditampilkan sesuai filter aktif.`;
+
+      if (!rows.length) {
+        EL.detailContent.innerHTML = `
+          <div class="empty-state">
+            Tidak ada detail paket untuk OPD ini sesuai filter yang dipilih.
+          </div>
+        `;
+        return;
+      }
+
+      EL.detailContent.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Kode RUP</th>
+                <th>Nama Paket</th>
+                <th>Program</th>
+                <th>Kegiatan</th>
+                <th>Sub Kegiatan</th>
+                <th>Pagu</th>
+                <th>Metode</th>
+                <th>Jenis</th>
+                <th>PDN</th>
+                <th>Sumber Dana</th>
+                <th>Waktu</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((row, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${escapeHtml(row.kode_rup)}</td>
+                  <td class="cell-strong">${escapeHtml(row.nama_paket)}</td>
+                  <td class="cell-muted">${escapeHtml(row.program)}</td>
+                  <td class="cell-muted">${escapeHtml(row.kegiatan)}</td>
+                  <td class="cell-muted">${escapeHtml(row.sub_kegiatan)}</td>
+                  <td>${formatCurrency(row.pagu_anggaran)}</td>
+                  <td>${renderBlueBadge(row.metode_pemilihan)}</td>
+                  <td>${escapeHtml(row.jenis_pengadaan)}</td>
+                  <td>${renderPdnBadge(row.pdn)}</td>
+                  <td>${escapeHtml(row.sumber_dana)}</td>
+                  <td>${escapeHtml(row.waktu_pemilihan)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderEmptyDetail() {
+      APP_STATE.selectedRawRows = [];
+      EL.detailTitle.textContent = 'Detail Paket SIRUP';
+      EL.detailSubtitle.textContent = 'Pilih salah satu OPD pada tabel rekap untuk melihat detail paket.';
+      EL.detailContent.innerHTML = `
+        <div class="empty-state">
+          Detail paket belum ditampilkan.<br>
+          Klik tombol <strong>Lihat Paket</strong> pada salah satu OPD.
+        </div>
+      `;
+    }
+
+    function renderPercentBadge(value) {
+      const cls = value >= 100
+        ? 'badge badge-green'
+        : value >= 80
+          ? 'badge badge-yellow'
+          : 'badge badge-red';
+
+      return `<span class="${cls}">${formatPercent(value)}%</span>`;
+    }
+
+    function renderItkpBadge(value) {
+      const cls = value >= 10
+        ? 'badge badge-green'
+        : value >= 5
+          ? 'badge badge-yellow'
+          : 'badge badge-red';
+
+      return `<span class="${cls}">${formatDecimal(value)}</span>`;
+    }
+
+    function renderBlueBadge(value) {
+      return `<span class="badge badge-blue">${escapeHtml(value)}</span>`;
+    }
+
+    function renderPdnBadge(value) {
+      const yes = String(value).trim().toLowerCase() === 'ya';
+      return yes
+        ? '<span class="badge badge-green">Ya</span>'
+        : '<span class="badge badge-red">Tidak</span>';
+    }
+
+    function exportCsv(filename, rows) {
+      if (!rows || !rows.length) {
+        alert('Tidak ada data untuk diexport.');
+        return;
+      }
+
+      const headers = Object.keys(rows[0]);
+      const csv = [
+        headers.join(','),
+        ...rows.map(row =>
+          headers.map(key => {
+            const value = row[key] ?? '';
+            const escaped = String(value).replace(/"/g, '""');
+            return `"${escaped}"`;
+          }).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    function handleExportRekap() {
+      exportCsv(
+        'rekap_itkp_sirup.csv',
+        APP_STATE.filteredScore.map(row => ({
+          satuan_kerja: row.satuan_kerja,
+          penyedia_diumumkan: row.penyedia_diumumkan,
+          swakelola_diumumkan: row.swakelola_diumumkan,
+          total_rup_diumumkan: row.total_rup_diumumkan,
+          total_komitmen: row.total_komitmen,
+          prosentase: row.prosentase,
+          nilai_itkp: row.nilai_itkp
+        }))
+      );
+    }
+
+    function handleExportDetail() {
+      const rows = APP_STATE.selectedOpd
+        ? APP_STATE.selectedRawRows
+        : APP_STATE.filteredRawGlobal;
+
+      exportCsv('detail_paket_sirup.csv', rows);
+    }
+
+    function resetFilters() {
+      EL.filterOpd.value = '';
+      EL.filterMetode.value = '';
+      EL.filterSumberDana.value = '';
+      EL.filterWaktu.value = '';
+      EL.searchPaket.value = '';
+      APP_STATE.selectedOpd = '';
+      applyFilters();
+    }
+
+    function toNumber(value) {
+      if (value == null || value === '') return 0;
+
+      const cleaned = String(value)
+        .replace(/\s/g, '')
+        .replace(/\./g, '')
+        .replace(/,/g, '')
+        .replace(/[^\d-]/g, '');
+
+      const parsed = Number(cleaned);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function sum(arr) {
+      return arr.reduce((acc, val) => acc + Number(val || 0), 0);
+    }
+
+    function uniqueSorted(arr) {
+      return [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
+    }
+
+    function formatNumber(value) {
+      return Number(value || 0).toLocaleString('id-ID');
+    }
+
+    function formatCurrency(value) {
+      return 'Rp' + Number(value || 0).toLocaleString('id-ID');
+    }
+
+    function formatPercent(value) {
+      return Number(value || 0).toLocaleString('id-ID', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatDecimal(value) {
+      return Number(value || 0).toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    EL.filterOpd.addEventListener('change', applyFilters);
+    EL.filterMetode.addEventListener('change', applyFilters);
+    EL.filterSumberDana.addEventListener('change', applyFilters);
+    EL.filterWaktu.addEventListener('change', applyFilters);
+    EL.searchPaket.addEventListener('input', applyFilters);
+
+    EL.btnResetFilter.addEventListener('click', resetFilters);
+    EL.btnExportRekap.addEventListener('click', handleExportRekap);
+    EL.btnExportDetail.addEventListener('click', handleExportDetail);
+    EL.btnClearSelected.addEventListener('click', () => {
+      APP_STATE.selectedOpd = '';
+      renderEmptyDetail();
+    });
+    EL.btnRefresh.addEventListener('click', initMonitoringSirup);
+
+    initMonitoringSirup();
+  </script>
+</body>
+</html>
