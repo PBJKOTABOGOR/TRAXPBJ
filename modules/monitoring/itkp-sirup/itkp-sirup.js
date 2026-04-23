@@ -28,6 +28,7 @@ const EL = {
   btnResetFilter: document.getElementById('btnResetFilter'),
   btnExportRekap: document.getElementById('btnExportRekap'),
   btnExportDetail: document.getElementById('btnExportDetail'),
+  btnExportCurrentDetail: document.getElementById('btnExportCurrentDetail'),
   btnRefresh: document.getElementById('btnRefresh'),
   btnClearSelected: document.getElementById('btnClearSelected'),
   statJumlahOpd: document.getElementById('statJumlahOpd'),
@@ -329,20 +330,6 @@ function renderInsights(filteredRaw, filteredScore) {
     return;
   }
 
-  const sortedByItkp = [...filteredScore].sort((a, b) => {
-    if (b.nilai_itkp !== a.nilai_itkp) return b.nilai_itkp - a.nilai_itkp;
-    return b.prosentase - a.prosentase;
-  });
-
-  const top = sortedByItkp[0];
-  const low = sortedByItkp[sortedByItkp.length - 1];
-
-  EL.insightTopOpd.textContent = top.satuan_kerja;
-  EL.insightTopNote.textContent = `Nilai ITKP ${formatDecimal(top.nilai_itkp)} | ${formatPercent(top.prosentase)}%`;
-
-  EL.insightLowOpd.textContent = low.satuan_kerja;
-  EL.insightLowNote.textContent = `Nilai ITKP ${formatDecimal(low.nilai_itkp)} | ${formatPercent(low.prosentase)}%`;
-
   const metodeCounts = {};
   filteredRaw.forEach(row => {
     metodeCounts[row.metode_pemilihan] = (metodeCounts[row.metode_pemilihan] || 0) + 1;
@@ -357,6 +344,32 @@ function renderInsights(filteredRaw, filteredScore) {
     EL.insightMetode.textContent = '-';
     EL.insightMetodeNote.textContent = 'Belum ada data';
   }
+
+  const uniqueItkp = [...new Set(filteredScore.map(x => Number(x.nilai_itkp || 0)))];
+  const uniquePersen = [...new Set(filteredScore.map(x => Number(x.prosentase || 0)))];
+
+  if (uniqueItkp.length === 1 && uniquePersen.length === 1) {
+    EL.insightTopOpd.textContent = 'Semua OPD Setara';
+    EL.insightTopNote.textContent = `Nilai ITKP ${formatDecimal(uniqueItkp[0])} | ${formatPercent(uniquePersen[0])}%`;
+
+    EL.insightLowOpd.textContent = 'Semua OPD Setara';
+    EL.insightLowNote.textContent = `Nilai ITKP ${formatDecimal(uniqueItkp[0])} | ${formatPercent(uniquePersen[0])}%`;
+    return;
+  }
+
+  const sortedByItkp = [...filteredScore].sort((a, b) => {
+    if (b.nilai_itkp !== a.nilai_itkp) return b.nilai_itkp - a.nilai_itkp;
+    return b.prosentase - a.prosentase;
+  });
+
+  const top = sortedByItkp[0];
+  const low = sortedByItkp[sortedByItkp.length - 1];
+
+  EL.insightTopOpd.textContent = top.satuan_kerja;
+  EL.insightTopNote.textContent = `Nilai ITKP ${formatDecimal(top.nilai_itkp)} | ${formatPercent(top.prosentase)}%`;
+
+  EL.insightLowOpd.textContent = low.satuan_kerja;
+  EL.insightLowNote.textContent = `Nilai ITKP ${formatDecimal(low.nilai_itkp)} | ${formatPercent(low.prosentase)}%`;
 }
 
 function renderRekapTable(rows) {
@@ -382,11 +395,7 @@ function renderRekapTable(rows) {
       <td>${renderPercentBadge(row.prosentase)}</td>
       <td>${renderItkpBadge(row.nilai_itkp)}</td>
       <td>
-        <button
-          type="button"
-          class="action-btn"
-          data-opd="${escapeHtml(row.satuan_kerja)}"
-        >
+        <button type="button" class="action-btn" data-opd="${escapeHtml(row.satuan_kerja)}">
           Lihat Paket
         </button>
       </td>
@@ -418,7 +427,7 @@ function renderDetailForOpd(opdName) {
   }
 
   EL.detailContent.innerHTML = `
-    <div class="table-wrap">
+    <div class="detail-content-wrap">
       <table>
         <thead>
           <tr>
@@ -429,6 +438,7 @@ function renderDetailForOpd(opdName) {
             <th>Kegiatan</th>
             <th>Sub Kegiatan</th>
             <th>Pagu</th>
+            <th>Cara Pengadaan</th>
             <th>Metode</th>
             <th>Jenis</th>
             <th>PDN</th>
@@ -446,6 +456,7 @@ function renderDetailForOpd(opdName) {
               <td class="cell-muted">${escapeHtml(row.kegiatan)}</td>
               <td class="cell-muted">${escapeHtml(row.sub_kegiatan)}</td>
               <td>${formatCurrency(row.pagu_anggaran)}</td>
+              <td>${escapeHtml(row.cara_pengadaan)}</td>
               <td>${renderBlueBadge(row.metode_pemilihan)}</td>
               <td>${escapeHtml(row.jenis_pengadaan)}</td>
               <td>${renderPdnBadge(row.pdn)}</td>
@@ -457,6 +468,14 @@ function renderDetailForOpd(opdName) {
       </table>
     </div>
   `;
+
+  const detailSection = document.querySelector('.detail-panel');
+  if (detailSection) {
+    detailSection.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
 }
 
 function renderEmptyDetail() {
@@ -554,6 +573,20 @@ function handleExportDetail() {
   exportCsv('detail_paket_sirup.csv', rows);
 }
 
+function handleExportCurrentDetail() {
+  if (!APP_STATE.selectedOpd || !APP_STATE.selectedRawRows.length) {
+    alert('Pilih salah satu OPD terlebih dahulu.');
+    return;
+  }
+
+  const safeName = APP_STATE.selectedOpd
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gi, '_')
+    .replace(/^_+|_+$/g, '');
+
+  exportCsv(`detail_paket_${safeName}.csv`, APP_STATE.selectedRawRows);
+}
+
 function resetFilters() {
   EL.filterOpd.value = '';
   EL.filterMetode.value = '';
@@ -625,6 +658,7 @@ EL.searchPaket.addEventListener('input', applyFilters);
 EL.btnResetFilter.addEventListener('click', resetFilters);
 EL.btnExportRekap.addEventListener('click', handleExportRekap);
 EL.btnExportDetail.addEventListener('click', handleExportDetail);
+EL.btnExportCurrentDetail.addEventListener('click', handleExportCurrentDetail);
 EL.btnClearSelected.addEventListener('click', () => {
   APP_STATE.selectedOpd = '';
   renderEmptyDetail();
