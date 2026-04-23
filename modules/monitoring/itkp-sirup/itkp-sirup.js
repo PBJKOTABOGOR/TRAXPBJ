@@ -418,57 +418,52 @@ function renderDetailForOpd(opdName) {
   EL.detailSubtitle.textContent = `${formatNumber(rows.length)} paket ditampilkan sesuai filter aktif.`;
 
   if (!rows.length) {
-    EL.detailContent.innerHTML = `
-      <div class="empty-state">
-        Tidak ada detail paket untuk OPD ini sesuai filter yang dipilih.
-      </div>
-    `;
-    return;
-  }
+EL.detailContent.innerHTML = `
+  <div class="top-scroll-wrap" id="topScrollWrap">
+    <div class="top-scroll-inner" id="topScrollInner"></div>
+  </div>
 
-  EL.detailContent.innerHTML = `
-    <div class="detail-content-wrap">
-      <table>
-        <thead>
+  <div class="detail-content-wrap" id="detailTableWrap">
+    <table id="detailTable">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Kode RUP</th>
+          <th>Nama Paket</th>
+          <th>Program</th>
+          <th>Kegiatan</th>
+          <th>Sub Kegiatan</th>
+          <th>Pagu</th>
+          <th>Cara Pengadaan</th>
+          <th>Metode</th>
+          <th>Jenis</th>
+          <th>PDN</th>
+          <th>Sumber Dana</th>
+          <th>Waktu</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map((row, index) => `
           <tr>
-            <th>No</th>
-            <th>Kode RUP</th>
-            <th>Nama Paket</th>
-            <th>Program</th>
-            <th>Kegiatan</th>
-            <th>Sub Kegiatan</th>
-            <th>Pagu</th>
-            <th>Cara Pengadaan</th>
-            <th>Metode</th>
-            <th>Jenis</th>
-            <th>PDN</th>
-            <th>Sumber Dana</th>
-            <th>Waktu</th>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(row.kode_rup)}</td>
+            <td class="cell-strong">${escapeHtml(row.nama_paket)}</td>
+            <td class="cell-muted">${escapeHtml(row.program)}</td>
+            <td class="cell-muted">${escapeHtml(row.kegiatan)}</td>
+            <td class="cell-muted">${escapeHtml(row.sub_kegiatan)}</td>
+            <td>${formatCurrency(row.pagu_anggaran)}</td>
+            <td>${escapeHtml(row.cara_pengadaan)}</td>
+            <td>${renderBlueBadge(row.metode_pemilihan)}</td>
+            <td>${escapeHtml(row.jenis_pengadaan)}</td>
+            <td>${renderPdnBadge(row.pdn)}</td>
+            <td>${escapeHtml(row.sumber_dana)}</td>
+            <td>${escapeHtml(row.waktu_pemilihan)}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${rows.map((row, index) => `
-            <tr>
-              <td>${index + 1}</td>
-              <td>${escapeHtml(row.kode_rup)}</td>
-              <td class="cell-strong">${escapeHtml(row.nama_paket)}</td>
-              <td class="cell-muted">${escapeHtml(row.program)}</td>
-              <td class="cell-muted">${escapeHtml(row.kegiatan)}</td>
-              <td class="cell-muted">${escapeHtml(row.sub_kegiatan)}</td>
-              <td>${formatCurrency(row.pagu_anggaran)}</td>
-              <td>${escapeHtml(row.cara_pengadaan)}</td>
-              <td>${renderBlueBadge(row.metode_pemilihan)}</td>
-              <td>${escapeHtml(row.jenis_pengadaan)}</td>
-              <td>${renderPdnBadge(row.pdn)}</td>
-              <td>${escapeHtml(row.sumber_dana)}</td>
-              <td>${escapeHtml(row.waktu_pemilihan)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+`;
   const detailSection = document.querySelector('.detail-panel');
   if (detailSection) {
     detailSection.scrollIntoView({
