@@ -3,12 +3,17 @@ const APP_ROUTES = {
   dashboard: {
     type: 'internal'
   },
-  'monitoring-perencanaan': {
-    title: 'Monitoring Perencanaan',
-    subtitle: 'Pemantauan progres perencanaan pengadaan perangkat daerah.',
-    type: 'iframe',
-    url: 'https://pbjkotabogor.github.io/dev-raporpbj26/monitoring.html'
-  },
+'monitoring-perencanaan': {
+  title: 'Monitoring Perencanaan',
+  subtitle: 'Pemantauan progres perencanaan pengadaan perangkat daerah.',
+  type: 'module',
+  html: 'modules/monitoring/perencanaan/monitoring.html',
+  css: 'modules/monitoring/perencanaan/monitoring.css',
+  js: 'modules/monitoring/perencanaan/monitoring.js',
+  externalScripts: [
+    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+  ]
+},
   'monitoring-konsolidasi': {
     title: 'Monitoring Paket Konsolidasi',
     subtitle: 'Halaman ini disiapkan untuk monitoring paket konsolidasi.',
