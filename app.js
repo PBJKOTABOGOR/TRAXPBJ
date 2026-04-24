@@ -90,94 +90,158 @@ let activeFlyout = null;
 
 function renderDashboard() {
   contentArea.innerHTML = `
-    <section class="hero-card">
-      <h3>Selamat datang di TRAXPBJ</h3>
-      <p>Ringkasan utama untuk monitoring, analisis, simulasi, dan pelaporan pengadaan barang/jasa.</p>
+    <section class="premium-hero">
+      <div class="premium-hero-content">
+        <div class="hero-kicker">
+          <span class="kicker-dot"></span>
+          TRAXPBJ • Monitoring & Analisis Pengadaan
+        </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="label">ITKP</div>
-          <div class="value">86,42%</div>
-          <div class="desc">Tingkat kematangan PBJ</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Konsolidasi</div>
-          <div class="value">128</div>
-          <div class="desc">Paket terkonsolidasi</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Modul Monitoring</div>
-          <div class="value">7</div>
-          <div class="desc">Modul aktif dalam portal</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Rapor PBJ</div>
-          <div class="value">44</div>
-          <div class="desc">Laporan rapor tersedia</div>
+        <h3>Selamat datang di TRAXPBJ</h3>
+
+        <p>
+          Portal pemantauan pengadaan barang/jasa Kota Bogor untuk melihat indikator ITKP,
+          progres perencanaan, realisasi paket, konsolidasi, simulasi, dan Rapor PBJ.
+        </p>
+
+        <div class="premium-stats-grid">
+          <div class="premium-stat-card">
+            <div class="label">Skor ITKP</div>
+            <div class="value">86,42%</div>
+            <div class="desc">Indikator pemanfaatan sistem pengadaan</div>
+          </div>
+
+          <div class="premium-stat-card">
+            <div class="label">Konsolidasi</div>
+            <div class="value">128</div>
+            <div class="desc">Paket terindikasi / termonitor konsolidasi</div>
+          </div>
+
+          <div class="premium-stat-card">
+            <div class="label">Paket Belum Berjalan</div>
+            <div class="value">6.666</div>
+            <div class="desc">Berdasarkan progres monitoring perencanaan</div>
+          </div>
+
+          <div class="premium-stat-card">
+            <div class="label">Rapor PBJ</div>
+            <div class="value">44</div>
+            <div class="desc">Laporan rapor perangkat daerah tersedia</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="grid-main">
-      <div class="card">
-        <h3>Ringkasan Dashboard</h3>
-        <div class="summary-panels">
-          <div class="mini-card">
-            <h4>ITKP</h4>
-            <div class="big-number">86,42%</div>
-            <div class="progress-scale">
-              <div class="progress-track">
-                <div class="progress-bar" style="width:86.42%"></div>
-              </div>
-            </div>
-            <div class="dimensions">
-              ${renderDimension('Perencanaan', 92.10)}
-              ${renderDimension('Pengadaan', 84.33)}
-              ${renderDimension('Pengelolaan Kontrak', 83.21)}
-              ${renderDimension('Manajemen Risiko', 79.45)}
-              ${renderDimension('Kelembagaan', 88.60)}
-            </div>
-          </div>
-
-          <div class="mini-card">
-            <h4>Konsolidasi</h4>
-            <div class="donut-wrap">
-              <div class="donut"></div>
-              <div class="legend">
-                <span><i class="dot" style="background:#1f60e0"></i> Terkonsolidasi 45,1%</span>
-                <span><i class="dot" style="background:#27b0c2"></i> Dalam proses 26,1%</span>
-                <span><i class="dot" style="background:#cfd8e5"></i> Belum konsolidasi 28,8%</span>
-              </div>
-            </div>
-            <div class="table-lite">
-              <div class="table-row table-head"><div>OPD</div><div>Jumlah Paket</div></div>
-              <div class="table-row"><div>Badan Kepegawaian</div><div>24</div></div>
-              <div class="table-row"><div>Dinas PUPR</div><div>18</div></div>
-              <div class="table-row"><div>Dinas Kesehatan</div><div>15</div></div>
-              <div class="table-row"><div>Dinas Pendidikan</div><div>14</div></div>
-              <div class="table-row"><div>Sekretariat Daerah</div><div>11</div></div>
-            </div>
-          </div>
+    <section class="premium-section">
+      <div class="premium-section-head">
+        <div>
+          <h3>Profil Pengadaan Barang/Jasa Kota Bogor</h3>
+          <p>Ringkasan cepat performa indikator dan paket pengadaan.</p>
         </div>
       </div>
 
-      <div class="card">
-        <h3>Aktivitas / Informasi</h3>
-        <div class="activities">
-          ${renderActivity('#2ab56f', '✓', 'Rapor PBJ Bulan April 2026 telah tersedia', 'Laporan rapor untuk 10 OPD telah berhasil dibuat.', '2 jam lalu')}
-          ${renderActivity('#4c7df2', '👥', 'Paket konsolidasi baru ditambahkan', 'Dinas Kesehatan menambahkan 5 paket baru.', '3 jam lalu')}
-          ${renderActivity('#8e61e9', '📝', 'Update ITKP', 'Nilai ITKP bulan April meningkat 4,12%.', '5 jam lalu')}
-          ${renderActivity('#ef8d21', '🛒', 'Proses eTendering dimulai', 'Paket pembangunan RSUD memasuki tahap tender.', '1 hari lalu')}
-          ${renderActivity('#12a8a1', '📄', 'Kontrak ditandatangani', 'Paket pengadaan alat laboratorium selesai dikontrak.', '1 hari lalu')}
+      <div class="premium-profile-grid">
+        <div class="premium-card profile-main-card">
+          <div class="mini-label">Skor ITKP</div>
+          <div class="premium-big-number">86,42%</div>
+
+          <div class="premium-progress-track">
+            <div class="premium-progress-bar" style="width:86.42%"></div>
+          </div>
+
+          <div class="premium-dimensions dimensions">
+            ${renderDimension('SIRUP', 92.10)}
+            ${renderDimension('eKatalog', 84.33)}
+            ${renderDimension('eTendering', 83.21)}
+            ${renderDimension('eKontrak', 79.45)}
+            ${renderDimension('Non Tender', 88.60)}
+          </div>
+        </div>
+
+        <div class="premium-card">
+          <div class="premium-card-title-row">
+            <div>
+              <div class="mini-label">Paket Belum Berjalan</div>
+              <h4>per Metode Pengadaan</h4>
+            </div>
+          </div>
+
+          <div class="premium-table-lite">
+            <div class="premium-table-row premium-table-head">
+              <div>Metode</div>
+              <div>Jumlah</div>
+            </div>
+            <div class="premium-table-row"><div>Pengadaan Langsung</div><div>3.821</div></div>
+            <div class="premium-table-row"><div>e-Purchasing</div><div>1.744</div></div>
+            <div class="premium-table-row"><div>Tender</div><div>633</div></div>
+            <div class="premium-table-row"><div>Seleksi</div><div>214</div></div>
+            <div class="premium-table-row"><div>Lainnya</div><div>254</div></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="quick-grid">
-      ${renderQuickCard('📋', 'linear-gradient(135deg,#2665df,#3a8bff)', 'Monitoring Perencanaan', 'Pantau progres perencanaan pengadaan di seluruh OPD.', 'monitoring-perencanaan')}
-      ${renderQuickCard('🧾', 'linear-gradient(135deg,#11a6a2,#4cc7bc)', 'Rapor PBJ', 'Lihat dan unduh laporan rapor kinerja PBJ per OPD.', 'rapor-pbj')}
-      ${renderQuickCard('🗓️', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
-      ${renderQuickCard('✍️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Pencatatan Non Tender', 'Catat dan kelola paket pengadaan non tender.', 'simulasi-nontender')}
+    <section class="premium-section dashboard-itkp-embed-card">
+      <div class="premium-section-head">
+        <div>
+          <h3>Dashboard ITKP Kota Bogor 2026</h3>
+          <p>Visualisasi indikator pemanfaatan sistem pengadaan melalui Looker Studio.</p>
+        </div>
+
+        <a
+          class="premium-open-link"
+          href="https://datastudio.google.com/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2/page/ycoYF"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Buka Looker Studio
+          <span>›</span>
+        </a>
+      </div>
+
+      <div class="looker-frame-shell desktop-itkp-frame">
+        <iframe
+          src="https://datastudio.google.com/embed/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2/page/ycoYF"
+          frameborder="0"
+          allowfullscreen
+          sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+        </iframe>
+      </div>
+    </section>
+
+    <section class="premium-grid-two">
+      <div class="premium-section premium-section-flat">
+        <div class="premium-section-head">
+          <div>
+            <h3>Aktivitas / Informasi</h3>
+            <p>Informasi terbaru dari portal monitoring pengadaan.</p>
+          </div>
+        </div>
+
+        <div class="activities premium-activities">
+          ${renderActivity('#dc2626', '✓', 'Rapor PBJ Bulan April 2026 telah tersedia', 'Laporan rapor untuk perangkat daerah telah berhasil dibuat.', '2 jam lalu')}
+          ${renderActivity('#b91c1c', '📊', 'Update Dashboard ITKP', 'Data monitoring ITKP diperbarui pada portal.', '3 jam lalu')}
+          ${renderActivity('#ef4444', '📌', 'Monitoring Realisasi diperbarui', 'Sinkronisasi data realisasi paket berhasil dimuat.', '5 jam lalu')}
+          ${renderActivity('#f97316', '🧾', 'Konsolidasi sedang disiapkan', 'Menu konsolidasi masih dalam proses pengembangan.', '1 hari lalu')}
+          ${renderActivity('#0f766e', '📄', 'Rapor PBJ aktif', 'Portal rapor PBJ tetap dapat diakses.', '1 hari lalu')}
+        </div>
+      </div>
+
+      <div class="premium-section premium-section-flat">
+        <div class="premium-section-head">
+          <div>
+            <h3>Akses Cepat</h3>
+            <p>Menu utama yang sering digunakan.</p>
+          </div>
+        </div>
+
+        <div class="premium-quick-list">
+          ${renderQuickCard('📊', 'linear-gradient(135deg,#b91c1c,#ef4444)', 'ITKP - SIRUP', 'Lihat monitoring indikator ITKP dari modul SIRUP.', 'monitoring-sirup')}
+          ${renderQuickCard('📋', 'linear-gradient(135deg,#7f1d1d,#dc2626)', 'Monitoring Perencanaan', 'Pantau progres perencanaan pengadaan perangkat daerah.', 'monitoring-perencanaan')}
+          ${renderQuickCard('🧾', 'linear-gradient(135deg,#991b1b,#f97316)', 'Rapor PBJ', 'Lihat dan unduh laporan rapor kinerja PBJ.', 'rapor-pbj')}
+          ${renderQuickCard('🗓️', 'linear-gradient(135deg,#111827,#b91c1c)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
+        </div>
+      </div>
     </section>
 
     <div class="footer-note">© 2026 TRAXPBJ - Simulasi & Monitoring Pengadaan Barang/Jasa</div>
