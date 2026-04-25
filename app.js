@@ -194,6 +194,11 @@ const DASHBOARD_SHEETS = {
     spreadsheetId: '18SSLHINReP4mpMYLFhFGVGjsbspQSs0xHZ4weSjvE3A',
     gid: '1217577518'
   },
+  itkpSubOpd: {
+    title: 'FIX ITKP SUB OPD',
+    spreadsheetId: '18SSLHINReP4mpMYLFhFGVGjsbspQSs0xHZ4weSjvE3A',
+    gid: '1682485707'
+  },
   perencanaan: {
     title: 'D_PERENCANAAN',
     spreadsheetId: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
@@ -210,7 +215,8 @@ const DASHBOARD_STATE = {
   loading: false,
   loadedAt: null,
   error: null,
-  data: null
+  data: null,
+  selectedItkpSatker: 'PEMERINTAH KOTA BOGOR'
 };
 
 function normalizeHeader(value) {
@@ -291,6 +297,10 @@ function formatMoney(value) {
 function formatPercent(value) {
   const number = toNumber(value);
   return `${number.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+}
+
+function formatScore(value) {
+  return toNumber(value).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function parseCsv(text) {
@@ -398,8 +408,82 @@ function sum(values) {
   return values.reduce((total, value) => total + toNumber(value), 0);
 }
 
+function isCityAggregateName(name) {
+  return String(name || '').trim().toUpperCase() === 'PEMERINTAH KOTA BOGOR';
+}
+
+function getItkpScore(row) {
+  return toNumber(getField(row, [
+    'Nilai ITKP Indikator Pemanfaatan Sistem - skor maksimal 30 (point)',
+    'Nilai ITKP - Pemanfaatan Sistem - skor maksimal 30 (point)',
+    'Nilai ITKP Pemanfaatan Sistem',
+    'Pemanfaatan Sistem'
+  ]));
+}
+
+function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
+  const name = getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']) || fallbackName;
+
+  return {
+    name,
+    __sourceRow: row || {},
+    score: getItkpScore(row || {}),
+    dimensions: [
+      {
+        name: 'SiRUP',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 10 (point) (SIRUP)', 'SIRUP'])),
+        max: 10,
+        accent: 'blue',
+        route: 'monitoring-sirup',
+        hint: 'Klik untuk buka Monitoring SiRUP'
+      },
+      {
+        name: 'Toko Daring',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)', 'Toko Daring'])),
+        max: 1,
+        accent: 'teal',
+        route: 'monitoring-ekatalog',
+        hint: 'Klik untuk buka Monitoring eKatalog/Toko Daring'
+      },
+      {
+        name: 'e-Purchasing',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 4 (point) (Epurchasing)', 'Epurchasing', 'ePurchasing'])),
+        max: 4,
+        accent: 'purple',
+        route: 'monitoring-ekatalog',
+        hint: 'Klik untuk buka Monitoring eKatalog'
+      },
+      {
+        name: 'e-Tendering',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (etendering)', 'eTendering'])),
+        max: 5,
+        accent: 'orange',
+        route: 'monitoring-etendering',
+        hint: 'Klik untuk buka Monitoring eTendering'
+      },
+      {
+        name: 'e-Kontrak',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (ekontrak)', 'eKontrak'])),
+        max: 5,
+        accent: 'green',
+        route: 'monitoring-ekontrak',
+        hint: 'Klik untuk buka Monitoring eKontrak'
+      },
+      {
+        name: 'Non Tender',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)', 'Non etendering', 'Non ePurchasing', 'Non Tender'])),
+        max: 5,
+        accent: 'red',
+        route: 'monitoring-nontender',
+        hint: 'Klik untuk buka Monitoring Non Tender'
+      }
+    ]
+  };
+}
+
 function analyzeDashboardData(raw) {
-  const itkpRows = raw.itkp || [];
+  const itkpAllRows = raw.itkp || [];
+  const subOpdAllRows = raw.itkpSubOpd || [];
   const planningRows = raw.perencanaan || [];
   const realRows = raw.realisasi || [];
 
@@ -409,18 +493,18 @@ function analyzeDashboardData(raw) {
   const getRealisasi = (row) => getField(row, ['Nilai Realisasi', 'Total Realisasi', 'nilai_realisasi']);
   const getStatus = (row) => getField(row, ['Status Paket', 'status_paket', 'Status']);
 
-  const itkpOverall = avg(itkpRows.map((row) => getField(row, [
-    'Nilai ITKP - Pemanfaatan Sistem - skor maksimal 30 (point)',
-    'Nilai ITKP Pemanfaatan Sistem',
-    'Pemanfaatan Sistem'
-  ])));
+  const itkpOpdRows = itkpAllRows.filter((row) => !isCityAggregateName(getSatker(row)));
+  const subOpdRows = subOpdAllRows.filter((row) => !isCityAggregateName(getSatker(row)));
+  const cityRow = itkpAllRows.find((row) => isCityAggregateName(getSatker(row))) || null;
+  const cityProfile = buildItkpProfile(cityRow || {}, 'PEMERINTAH KOTA BOGOR');
 
-  const itkpSirup = avg(itkpRows.map((row) => getField(row, ['Nilai ITKP - skor maksimal 10 (point) (SIRUP)', 'SIRUP'])));
-  const itkpTender = avg(itkpRows.map((row) => getField(row, ['Nilai ITKP - skor maksimal 5 (point) (etendering)', 'eTendering'])));
-  const itkpTokoDaring = avg(itkpRows.map((row) => getField(row, ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)', 'Toko Daring'])));
-  const itkpEpurchasing = avg(itkpRows.map((row) => getField(row, ['Nilai ITKP - skor maksimal 4 (point) (Epurchasing)', 'Epurchasing'])));
-  const itkpEkontrak = avg(itkpRows.map((row) => getField(row, ['Nilai ITKP - skor maksimal 5 (point) (ekontrak)', 'eKontrak'])));
-  const itkpNon = avg(itkpRows.map((row) => getField(row, ['Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)', 'Non etendering', 'Non ePurchasing'])));
+  const profiles = [cityProfile]
+    .concat(itkpOpdRows.map((row) => buildItkpProfile(row, getSatker(row))))
+    .filter((profile) => profile.name);
+
+  const selectedName = DASHBOARD_STATE.selectedItkpSatker || cityProfile.name;
+  const selectedProfile = profiles.find((profile) => profile.name === selectedName) || cityProfile;
+  DASHBOARD_STATE.selectedItkpSatker = selectedProfile.name;
 
   const totalPagu = sum(planningRows.map(getPagu));
   const totalRealisasi = sum(realRows.map(getRealisasi));
@@ -435,27 +519,22 @@ function analyzeDashboardData(raw) {
   const bySatkerPlanning = groupSum(planningRows, getSatker, getPagu);
   const bySatkerReal = groupSum(realRows, getSatker, getRealisasi);
 
-  const scoreRows = itkpRows.map((row) => {
-    const score = toNumber(getField(row, [
-      'Nilai ITKP - Pemanfaatan Sistem - skor maksimal 30 (point)',
-      'Nilai ITKP Pemanfaatan Sistem',
-      'Pemanfaatan Sistem'
-    ]));
-
-    return {
-      name: getSatker(row) || getField(row, ['Satuan Kerja']),
-      score
-    };
-  }).filter((item) => item.name);
+  const rankingSourceRows = subOpdRows.length ? subOpdRows : itkpOpdRows;
+  const scoreRows = rankingSourceRows.map((row) => ({
+    name: getSatker(row) || getField(row, ['Satuan Kerja']),
+    score: getItkpScore(row)
+  })).filter((item) => item.name && !isCityAggregateName(item.name));
 
   const topItkp = [...scoreRows].sort((a, b) => b.score - a.score).slice(0, 8);
   const lowItkp = [...scoreRows].sort((a, b) => a.score - b.score).slice(0, 8);
 
   return {
-    itkpRows,
+    itkpRows: itkpOpdRows,
+    itkpSubOpdRows: subOpdRows,
     planningRows,
     realRows,
-    totalOpd: itkpRows.length,
+    totalOpd: itkpOpdRows.length,
+    totalSubOpd: subOpdRows.length,
     totalPaketRup: planningRows.length,
     totalPaketRealisasi: realRows.length,
     totalPagu,
@@ -464,15 +543,11 @@ function analyzeDashboardData(raw) {
     selesaiCount: selesaiRows.length,
     processCount: processRows.length,
     bastCount: bastRows.length,
-    itkpOverall,
-    dimensions: [
-      { name: 'SiRUP', value: itkpSirup, max: 10, accent: 'blue' },
-      { name: 'Toko Daring', value: itkpTokoDaring, max: 1, accent: 'teal' },
-      { name: 'e-Purchasing', value: itkpEpurchasing, max: 4, accent: 'purple' },
-      { name: 'e-Tendering', value: itkpTender, max: 5, accent: 'orange' },
-      { name: 'e-Kontrak', value: itkpEkontrak, max: 5, accent: 'green' },
-      { name: 'Non Tender', value: itkpNon, max: 5, accent: 'red' }
-    ],
+    itkpOverall: cityProfile.score,
+    dimensions: selectedProfile.dimensions,
+    cityProfile,
+    selectedProfile,
+    itkpProfiles: profiles,
     byMetodePlanning,
     byMetodeReal,
     bySatkerPlanning,
@@ -490,13 +565,14 @@ async function loadDashboardData(force = false) {
   DASHBOARD_STATE.error = null;
 
   try {
-    const [itkp, perencanaan, realisasi] = await Promise.all([
+    const [itkp, itkpSubOpd, perencanaan, realisasi] = await Promise.all([
       fetchSheetRows(DASHBOARD_SHEETS.itkp),
+      fetchSheetRows(DASHBOARD_SHEETS.itkpSubOpd),
       fetchSheetRows(DASHBOARD_SHEETS.perencanaan),
       fetchSheetRows(DASHBOARD_SHEETS.realisasi)
     ]);
 
-    DASHBOARD_STATE.data = analyzeDashboardData({ itkp, perencanaan, realisasi });
+    DASHBOARD_STATE.data = analyzeDashboardData({ itkp, itkpSubOpd, perencanaan, realisasi });
     DASHBOARD_STATE.loadedAt = new Date();
     return DASHBOARD_STATE.data;
   } catch (error) {
@@ -546,7 +622,7 @@ function renderDashboardError(error) {
         </div>
         <div class="insight-item">
           <b>2. GID sheet</b>
-          <span>FIX ITKP OPD: 1217577518, D_PERENCANAAN: 1819757327, D_REALISASI: 325886021.</span>
+          <span>FIX ITKP OPD: 1217577518, FIX ITKP SUB OPD: 1682485707, D_PERENCANAAN: 1819757327, D_REALISASI: 325886021.</span>
         </div>
         <div class="insight-item">
           <b>3. Header</b>
@@ -583,6 +659,8 @@ function renderDashboardReady(data) {
     ? DASHBOARD_STATE.loadedAt.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
     : '-';
 
+  const selectedProfile = data.selectedProfile || data.cityProfile;
+
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-glow"></div>
@@ -591,7 +669,7 @@ function renderDashboardReady(data) {
         <div>
           <div class="hero-kicker">TRAXPBJ · Kota Bogor Procurement Intelligence</div>
           <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
-          <p>Ringkasan interaktif dari ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD berdasarkan data Google Sheet yang tersedia.</p>
+          <p>Ringkasan interaktif dari ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD/Sub OPD berdasarkan data Google Sheet yang tersedia.</p>
         </div>
 
         <div class="hero-badge">
@@ -601,7 +679,7 @@ function renderDashboardReady(data) {
       </div>
 
       <div class="stats-grid dashboard-kpi-grid">
-        ${renderKpiCard('Skor ITKP Kota', formatPercent(data.itkpOverall), 'Rata-rata nilai pemanfaatan sistem OPD', '📊')}
+        ${renderKpiCard('Skor ITKP Kota Bogor', formatScore(data.itkpOverall), 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD', '📊')}
         ${renderKpiCard('Pagu Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket RUP/perencanaan`, '🧾')}
         ${renderKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu perencanaan`, '💰')}
         ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses`, '📦')}
@@ -616,27 +694,39 @@ function renderDashboardReady(data) {
 
     <section class="dashboard-grid dashboard-grid--main">
       <div class="card procurement-map-card">
-        <div class="section-title-row">
+        <div class="section-title-row section-title-row--select">
           <div>
             <span class="section-kicker">Profile Kota Bogor</span>
             <h3>Radar Pemanfaatan Sistem ITKP</h3>
+            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, bukan masuk ranking OPD.</p>
           </div>
-          <span class="soft-pill">${formatNumber(data.totalOpd)} OPD/Satker</span>
+
+          <label class="satker-select-wrap">
+            <span>Pilih Satuan Kerja</span>
+            <select id="itkpSatkerSelect" class="satker-select">
+              ${data.itkpProfiles.map((profile) => `
+                <option value="${escapeHtml(profile.name)}" ${profile.name === selectedProfile.name ? 'selected' : ''}>
+                  ${escapeHtml(profile.name)}
+                </option>
+              `).join('')}
+            </select>
+          </label>
         </div>
 
         <div class="itkp-radar-layout">
           <div class="score-orbit">
-            <div class="score-ring" style="--score:${Math.min(100, (data.itkpOverall / 30) * 100)}">
+            <div class="score-ring" style="--score:${Math.min(100, (selectedProfile.score / 30) * 100)}">
               <div class="score-core">
-                <span>ITKP</span>
-                <b>${formatNumber(data.itkpOverall)}</b>
+                <span>${escapeHtml(selectedProfile.name === 'PEMERINTAH KOTA BOGOR' ? 'ITKP KOTA' : 'ITKP OPD')}</span>
+                <b>${formatScore(selectedProfile.score)}</b>
                 <small>dari 30 poin</small>
               </div>
             </div>
+            <div class="score-caption">${escapeHtml(selectedProfile.name)}</div>
           </div>
 
-          <div class="dimensions dimensions--lux">
-            ${data.dimensions.map(renderDimension).join('')}
+          <div class="dimensions dimensions--lux dimensions--clickable">
+            ${selectedProfile.dimensions.map(renderDimension).join('')}
           </div>
         </div>
       </div>
@@ -705,10 +795,10 @@ function renderDashboardReady(data) {
       <div class="card">
         <div class="section-title-row">
           <div>
-            <span class="section-kicker">Ranking OPD</span>
+            <span class="section-kicker">Ranking Sub OPD</span>
             <h3>Nilai ITKP Tertinggi</h3>
           </div>
-          <span class="soft-pill">Top 8</span>
+          <span class="soft-pill">Top 8 · FIX ITKP SUB OPD</span>
         </div>
         <div class="rank-table">
           ${renderRankRows(data.topItkp, 'top')}
@@ -721,7 +811,7 @@ function renderDashboardReady(data) {
             <span class="section-kicker">Perlu Atensi</span>
             <h3>Nilai ITKP Terendah</h3>
           </div>
-          <span class="soft-pill">Bottom 8</span>
+          <span class="soft-pill">Bottom 8 · FIX ITKP SUB OPD</span>
         </div>
         <div class="rank-table">
           ${renderRankRows(data.lowItkp, 'low')}
@@ -776,9 +866,29 @@ function bindDashboardEvents() {
     });
   }
 
-  contentArea.querySelectorAll('[data-quick]').forEach((item) => {
+  const satkerSelect = document.getElementById('itkpSatkerSelect');
+
+  if (satkerSelect) {
+    satkerSelect.addEventListener('change', () => {
+      DASHBOARD_STATE.selectedItkpSatker = satkerSelect.value;
+      if (DASHBOARD_STATE.data) {
+        DASHBOARD_STATE.data = analyzeDashboardData({
+          itkp: DASHBOARD_STATE.data.itkpRows.concat([DASHBOARD_STATE.data.cityProfile.__sourceRow || {}]).filter(Boolean),
+          itkpSubOpd: DASHBOARD_STATE.data.itkpSubOpdRows,
+          perencanaan: DASHBOARD_STATE.data.planningRows,
+          realisasi: DASHBOARD_STATE.data.realRows
+        });
+        renderDashboardReady(DASHBOARD_STATE.data);
+        bindDashboardEvents();
+        initScrollAnimation();
+      }
+    });
+  }
+
+  contentArea.querySelectorAll('[data-quick], [data-route]').forEach((item) => {
     item.addEventListener('click', () => {
-      loadPage(item.dataset.quick);
+      const route = item.dataset.quick || item.dataset.route;
+      if (route) loadPage(route);
     });
   });
 }
@@ -806,15 +916,19 @@ function renderSmallMetric(label, value, desc) {
 
 function renderDimension(item) {
   const percent = item.max > 0 ? Math.min(100, (toNumber(item.value) / item.max) * 100) : 0;
+  const route = item.route || '';
 
   return `
-    <div class="dim-row dim-row--${escapeHtml(item.accent || 'blue')}">
-      <div class="dim-name">${escapeHtml(item.name)}</div>
+    <button class="dim-row dim-row--${escapeHtml(item.accent || 'blue')} dim-row--button" type="button" data-route="${escapeHtml(route)}" title="${escapeHtml(item.hint || 'Klik untuk membuka modul monitoring')}">
+      <div class="dim-name">
+        <span>${escapeHtml(item.name)}</span>
+        <small>${escapeHtml(item.hint || 'Buka detail')}</small>
+      </div>
       <div class="bar">
         <span style="width:${percent}%"></span>
       </div>
       <div class="dim-value">${toNumber(item.value).toLocaleString('id-ID', { maximumFractionDigits: 2 })}/${item.max}</div>
-    </div>
+    </button>
   `;
 }
 
