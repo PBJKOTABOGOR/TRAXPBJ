@@ -1,716 +1,2067 @@
-const METHOD_RULES = {
-  "Tender Cepat": { default: 3, min: 3, max: 14, prep: 7 },
-  "Tender": { default: 61, min: 30, max: 180, prep: 14 },
-  "Seleksi": { default: 40, min: 30, max: 120, prep: 14 },
-  "Pengadaan Langsung / ePL": { default: 7, min: 1, max: 30, prep: 7 },
-  "Penunjukan Langsung": { default: 7, min: 3, max: 30, prep: 7 },
-  "e-Purchasing": { default: 3, min: 1, max: 14, prep: 3 }
-};
+(() => {
+  const AUTO_NEXT_DELAY_MS = 1600;
+  const HINT_PENALTY = 3;
 
-const TIMELINE_MONTHS = [
-  { label: "September", yearOffset: -1, month: 8 },
-  { label: "Oktober", yearOffset: -1, month: 9 },
-  { label: "November", yearOffset: -1, month: 10 },
-  { label: "Desember", yearOffset: -1, month: 11 },
-  { label: "Januari", yearOffset: 0, month: 0 },
-  { label: "Februari", yearOffset: 0, month: 1 },
-  { label: "Maret", yearOffset: 0, month: 2 },
-  { label: "April", yearOffset: 0, month: 3 },
-  { label: "Mei", yearOffset: 0, month: 4 },
-  { label: "Juni", yearOffset: 0, month: 5 },
-  { label: "Juli", yearOffset: 0, month: 6 },
-  { label: "Agustus", yearOffset: 0, month: 7 },
-  { label: "September", yearOffset: 0, month: 8 },
-  { label: "Oktober", yearOffset: 0, month: 9 },
-  { label: "November", yearOffset: 0, month: 10 },
-  { label: "Desember", yearOffset: 0, month: 11 }
-];
+  let containerRef = null;
+  let root = null;
+  let destroyed = false;
+  let toastEl = null;
+  let autoNextTimer = null;
+  let panjiIntroTimers = [];
+  let panjiTalkTimer = null;
+  let panjiScrollTimer = null;
 
-let el = {};
-let methodExplanationCache = "";
-let moduleDestroyed = false;
-let eventsBound = false;
+  let panjiEl = null;
+  let panjiTextEl = null;
+  let panjiEmoteEl = null;
+  let panjiBubbleEl = null;
+  let panjiHintBtn = null;
+  let panjiMiniBtn = null;
+  let panjiCharacterBtn = null;
+  let panjiCloseBtn = null;
 
-function getElements() {
-  return {
-    tahunAnggaran: document.getElementById("tahunAnggaran"),
-    jenisKontrak: document.getElementById("jenisKontrak"),
-    jenisPengadaan: document.getElementById("jenisPengadaan"),
-    paguPaket: document.getElementById("paguPaket"),
-    tersediaKatalog: document.getElementById("tersediaKatalog"),
-    metodePemilihan: document.getElementById("metodePemilihan"),
-    durasiPemilihan: document.getElementById("durasiPemilihan"),
-    waktuPersiapanAwal: document.getElementById("waktuPersiapanAwal"),
-    durasiPekerjaan: document.getElementById("durasiPekerjaan"),
-    mulaiPelaksanaan: document.getElementById("mulaiPelaksanaan"),
+  const CARD_LIBRARY = {
+    rup: {
+      id: 'rup',
+      label: 'Cek RUP',
+      icon: '📋',
+      note: 'Pastikan paket sudah ada dan sesuai perencanaan.'
+    },
+    identifikasi: {
+      id: 'identifikasi',
+      label: 'Identifikasi Kebutuhan',
+      icon: '🧠',
+      note: 'Validasi kebutuhan, volume, lokasi, dan jadwal.'
+    },
+    konsolidasi: {
+      id: 'konsolidasi',
+      label: 'Konsolidasi',
+      icon: '🧲',
+      note: 'Gabungkan kebutuhan sejenis bila tepat.'
+    },
+    reviewSpek: {
+      id: 'review-spek',
+      label: 'Review Spesifikasi',
+      icon: '🧐',
+      note: 'Cegah spesifikasi mengarah.'
+    },
+    kak: {
+      id: 'kak',
+      label: 'KAK / Spesifikasi',
+      icon: '🧩',
+      note: 'Susun kebutuhan teknis secara jelas dan adil.'
+    },
+    hps: {
+      id: 'hps',
+      label: 'HPS / Referensi Harga',
+      icon: '💰',
+      note: 'Susun harga perkiraan dengan dasar wajar.'
+    },
+    cekPdn: {
+      id: 'cek-pdn',
+      label: 'Cek PDN / TKDN',
+      icon: '🇮🇩',
+      note: 'Perhatikan produk dalam negeri.'
+    },
+    cekKatalog: {
+      id: 'cek-katalog',
+      label: 'Cek e-Katalog',
+      icon: '🔎',
+      note: 'Pastikan barang/jasa tersedia dan sesuai.'
+    },
+    katalogTidakSesuai: {
+      id: 'katalog-tidak-sesuai',
+      label: 'Katalog Tidak Sesuai',
+      icon: '🛑',
+      note: 'Produk/penyedia tidak tersedia atau tidak sesuai kebutuhan.'
+    },
+    dokumentasiGagalKatalog: {
+      id: 'dokumentasi-gagal-katalog',
+      label: 'Dokumentasi Hasil Cek',
+      icon: '📝',
+      note: 'Catat bukti hasil pengecekan katalog sebelum ganti metode.'
+    },
+    evaluasiMetode: {
+      id: 'evaluasi-metode',
+      label: 'Evaluasi Metode',
+      icon: '🧭',
+      note: 'Evaluasi metode awal bila kondisi pasar tidak sesuai rencana.'
+    },
+    pilihMetode: {
+      id: 'pilih-metode',
+      label: 'Pilih Metode',
+      icon: '⚙️',
+      note: 'Tentukan metode berdasarkan nilai, jenis, dan kondisi paket.'
+    },
+    metodePl: {
+      id: 'metode-pl',
+      label: 'Pengadaan Langsung',
+      icon: '🛠️',
+      note: 'Digunakan bila nilai dan kondisi paket sesuai.'
+    },
+    metodeEpurchasing: {
+      id: 'metode-epurchasing',
+      label: 'e-Purchasing',
+      icon: '🛒',
+      note: 'Gunakan katalog bila sesuai.'
+    },
+    tender: {
+      id: 'tender',
+      label: 'Tender',
+      icon: '🏗️',
+      note: 'Untuk paket yang membutuhkan proses pemilihan formal.'
+    },
+    seleksi: {
+      id: 'seleksi',
+      label: 'Seleksi',
+      icon: '📐',
+      note: 'Umumnya untuk jasa konsultansi.'
+    },
+    swakelola: {
+      id: 'swakelola',
+      label: 'Swakelola',
+      icon: '🤲',
+      note: 'Dipilih bila memenuhi kriteria swakelola.'
+    },
+    klarifikasi: {
+      id: 'klarifikasi',
+      label: 'Klarifikasi / Negosiasi',
+      icon: '🤝',
+      note: 'Pastikan harga, spek, dan kemampuan pelaksanaan.'
+    },
+    proses: {
+      id: 'proses',
+      label: 'Proses Pemilihan',
+      icon: '🚦',
+      note: 'Laksanakan proses sesuai metode.'
+    },
+    kontrak: {
+      id: 'kontrak',
+      label: 'SPK / Kontrak',
+      icon: '📑',
+      note: 'Ikat hasil proses secara tertulis.'
+    },
+    monitoringKontrak: {
+      id: 'monitoring-kontrak',
+      label: 'Monitoring Kontrak',
+      icon: '📡',
+      note: 'Pantau waktu, mutu, volume, dan kewajiban.'
+    },
+    identifikasiPerubahan: {
+      id: 'identifikasi-perubahan',
+      label: 'Identifikasi Perubahan',
+      icon: '🔍',
+      note: 'Cek perubahan volume, waktu, spesifikasi, atau kondisi lapangan.'
+    },
+    kajiKontrak: {
+      id: 'kaji-kontrak',
+      label: 'Kaji Klausul Kontrak',
+      icon: '📖',
+      note: 'Pastikan perubahan memungkinkan secara kontraktual.'
+    },
+    justifikasiTeknis: {
+      id: 'justifikasi-teknis',
+      label: 'Justifikasi Teknis',
+      icon: '🧾',
+      note: 'Susun alasan teknis dan administrasi perubahan.'
+    },
+    negosiasiPerubahan: {
+      id: 'negosiasi-perubahan',
+      label: 'Negosiasi Perubahan',
+      icon: '🤝',
+      note: 'Bahas dampak harga, waktu, volume, dan mutu.'
+    },
+    adendumKontrak: {
+      id: 'adendum-kontrak',
+      label: 'Adendum Kontrak',
+      icon: '✍️',
+      note: 'Tuangkan perubahan kontrak secara tertulis.'
+    },
+    teguran: {
+      id: 'teguran',
+      label: 'Teguran / Evaluasi',
+      icon: '📣',
+      note: 'Dilakukan saat ada keterlambatan atau masalah.'
+    },
+    pemeriksaan: {
+      id: 'pemeriksaan',
+      label: 'Pemeriksaan Hasil',
+      icon: '🔬',
+      note: 'Cek kesesuaian sebelum diterima.'
+    },
+    bast: {
+      id: 'bast',
+      label: 'BAST',
+      icon: '📦',
+      note: 'Serah terima setelah barang/jasa sesuai.'
+    },
+    pembayaran: {
+      id: 'pembayaran',
+      label: 'Pembayaran',
+      icon: '💳',
+      note: 'Dilakukan sesuai dokumen pendukung.'
+    },
+    realisasi: {
+      id: 'realisasi',
+      label: 'Catat Realisasi',
+      icon: '✅',
+      note: 'Pastikan realisasi tercatat.'
+    },
 
-    helpMetode: document.getElementById("helpMetode"),
-    helpDurasiPemilihan: document.getElementById("helpDurasiPemilihan"),
-    infoRule: document.getElementById("infoRule"),
-
-    btnWhyMethod: document.getElementById("btnWhyMethod"),
-    whyMethodBox: document.getElementById("whyMethodBox"),
-    whyMethodText: document.getElementById("whyMethodText"),
-
-    btnSimulasikan: document.getElementById("btnSimulasikan"),
-    btnReset: document.getElementById("btnReset"),
-    btnExportPdf: document.getElementById("btnExportPdf"),
-    btnExportPdfTop: document.getElementById("btnExportPdfTop"),
-
-    badgeMetode: document.getElementById("badgeMetode"),
-
-    outPaguPaket: document.getElementById("outPaguPaket"),
-    outMulaiPersiapan: document.getElementById("outMulaiPersiapan"),
-    outMulaiPemilihan: document.getElementById("outMulaiPemilihan"),
-    outSelesaiPemilihan: document.getElementById("outSelesaiPemilihan"),
-    outMulaiKontrak: document.getElementById("outMulaiKontrak"),
-    outSelesaiPelaksanaan: document.getElementById("outSelesaiPelaksanaan"),
-    outDurasiTotal: document.getElementById("outDurasiTotal"),
-    outStatusMetode: document.getElementById("outStatusMetode"),
-    outSaranMetode: document.getElementById("outSaranMetode"),
-    outStatusJadwal: document.getElementById("outStatusJadwal"),
-    outSaranSistem: document.getElementById("outSaranSistem"),
-
-    statusBox: document.getElementById("statusBox"),
-
-    timelineSuperHeader: document.getElementById("timelineSuperHeader"),
-    timelineHeader: document.getElementById("timelineHeader"),
-    rowPersiapan: document.getElementById("rowPersiapan"),
-    rowPemilihan: document.getElementById("rowPemilihan"),
-    rowPelaksanaan: document.getElementById("rowPelaksanaan"),
-    rowAkhir: document.getElementById("rowAkhir"),
-
-    detailTahun: document.getElementById("detailTahun"),
-    detailJenisPengadaan: document.getElementById("detailJenisPengadaan"),
-    detailPaguPaket: document.getElementById("detailPaguPaket"),
-    detailKatalog: document.getElementById("detailKatalog"),
-    detailMetode: document.getElementById("detailMetode"),
-    detailJenisKontrak: document.getElementById("detailJenisKontrak"),
-    detailDurasiPemilihan: document.getElementById("detailDurasiPemilihan"),
-    detailWaktuPersiapanAwal: document.getElementById("detailWaktuPersiapanAwal"),
-    detailDurasiPekerjaan: document.getElementById("detailDurasiPekerjaan"),
-    detailMulaiPelaksanaan: document.getElementById("detailMulaiPelaksanaan"),
-    detailKesimpulan: document.getElementById("detailKesimpulan"),
-    catatanTambahan: document.getElementById("catatanTambahan")
+    kontrakAwal: {
+      id: 'kontrak-awal',
+      label: 'Kontrak Dulu',
+      icon: '🚨',
+      note: 'Jebakan: lompat proses.',
+      type: 'trap'
+    },
+    pecahPaket: {
+      id: 'pecah-paket',
+      label: 'Pecah Paket',
+      icon: '💣',
+      note: 'Jebakan: rawan menghindari metode.',
+      type: 'trap'
+    },
+    spekMengarah: {
+      id: 'spek-mengarah',
+      label: 'Spek Mengarah',
+      icon: '🚫',
+      note: 'Jebakan: persaingan tidak sehat.',
+      type: 'trap'
+    },
+    abaikanKatalog: {
+      id: 'abaikan-katalog',
+      label: 'Abaikan Katalog',
+      icon: '⚠️',
+      note: 'Jebakan: tidak cek kanal tersedia.',
+      type: 'trap'
+    },
+    lanjutEpurchasingPaksa: {
+      id: 'lanjut-epurchasing-paksa',
+      label: 'Paksa e-Purchasing',
+      icon: '🚧',
+      note: 'Jebakan: tetap memaksa katalog padahal tidak sesuai.',
+      type: 'trap'
+    },
+    gantiMetodeTanpaBukti: {
+      id: 'ganti-metode-tanpa-bukti',
+      label: 'Ganti Metode Tanpa Bukti',
+      icon: '⚡',
+      note: 'Jebakan: perubahan metode tanpa dokumentasi hasil cek.',
+      type: 'trap'
+    },
+    lewatiRup: {
+      id: 'lewati-rup',
+      label: 'Lewati RUP',
+      icon: '⛔',
+      note: 'Jebakan: proses tanpa cek perencanaan.',
+      type: 'trap'
+    },
+    bastTanpaCek: {
+      id: 'bast-tanpa-cek',
+      label: 'BAST Tanpa Pemeriksaan',
+      icon: '📦',
+      note: 'Jebakan: menerima tanpa verifikasi.',
+      type: 'trap'
+    },
+    bayarDulu: {
+      id: 'bayar-dulu',
+      label: 'Bayar Dulu',
+      icon: '💸',
+      note: 'Jebakan: pembayaran sebelum bukti memadai.',
+      type: 'trap'
+    },
+    tundaDokumen: {
+      id: 'tunda-dokumen',
+      label: 'Tunda Dokumen',
+      icon: '🧨',
+      note: 'Jebakan: risiko administrasi meningkat.',
+      type: 'trap'
+    },
+    metodeAsalCepat: {
+      id: 'metode-asal-cepat',
+      label: 'Metode Asal Cepat',
+      icon: '🏃',
+      note: 'Jebakan: cepat belum tentu tepat.',
+      type: 'trap'
+    },
+    realisasiLupa: {
+      id: 'realisasi-lupa',
+      label: 'Lupakan Realisasi',
+      icon: '🕳️',
+      note: 'Jebakan: monitoring bolong.',
+      type: 'trap'
+    },
+    adendumTanpaDasar: {
+      id: 'adendum-tanpa-dasar',
+      label: 'Adendum Tanpa Dasar',
+      icon: '🔥',
+      note: 'Jebakan: perubahan kontrak tanpa kajian/justifikasi.',
+      type: 'trap'
+    },
+    bayarSebelumAdendum: {
+      id: 'bayar-sebelum-adendum',
+      label: 'Bayar Sebelum Adendum',
+      icon: '💸',
+      note: 'Jebakan: pembayaran sebelum perubahan kontrak tertib.',
+      type: 'trap'
+    }
   };
-}
 
-function safeBind(element, eventName, handler) {
-  if (element) {
-    element.addEventListener(eventName, handler);
+  function card(key) {
+    const item = CARD_LIBRARY[key];
+
+    if (!item) return null;
+
+    return {
+      ...item,
+      type: item.type || 'action'
+    };
   }
-}
 
-function parseLocalDate(dateString) {
-  if (!dateString) return null;
-  const parts = dateString.split("-");
-  if (parts.length !== 3) return null;
-  return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-}
-
-function formatDateID(date) {
-  if (!(date instanceof Date) || isNaN(date)) return "-";
-  const monthNames = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  const CHALLENGE_RAW = [
+    {
+      type: 'pipeline',
+      title: 'Soal 1 — Susun Pipeline Dasar Pengadaan',
+      caseTitle: 'Belanja ATK Kantor',
+      desc: 'OPD akan melakukan belanja ATK kantor senilai Rp45 juta. Susun alur pengadaan paling aman dari awal sampai realisasi.',
+      budget: 'Rp45.000.000',
+      difficulty: 'Level 1 - Pemula',
+      ideal: ['rup', 'kak', 'hps', 'metodePl', 'proses', 'kontrak', 'bast', 'realisasi'],
+      traps: ['kontrakAwal', 'lewatiRup', 'bayarDulu'],
+      explanation: 'Alur dasar dimulai dari cek RUP, penyusunan KAK/spesifikasi, HPS, penentuan metode, proses pengadaan, kontrak, BAST, lalu realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 2 — Ruang Lingkup PBJ',
+      caseTitle: 'Konsep Dasar PBJ',
+      desc: 'Jawab pertanyaan berikut berdasarkan konsep dasar PBJ Pemerintah.',
+      question: 'PBJ Pemerintah dimulai dari tahap apa sampai tahap apa?',
+      options: [
+        'Identifikasi kebutuhan sampai kontrak',
+        'Perencanaan sampai pembayaran',
+        'Identifikasi kebutuhan sampai serah terima hasil pekerjaan',
+        'Penyusunan HPS sampai serah terima'
+      ],
+      answer: 2,
+      hint: 'Fokus pada ruang lingkup PBJ yang paling lengkap, bukan yang berhenti di kontrak.',
+      explanation: 'PBJ Pemerintah dimulai dari identifikasi kebutuhan sampai serah terima hasil pekerjaan.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 3 — Susun Pipeline e-Purchasing',
+      caseTitle: 'Pengadaan Laptop Pelayanan Publik',
+      desc: 'OPD membutuhkan laptop untuk layanan publik. Barang tersedia di e-Katalog dan nilai paket Rp350 juta.',
+      budget: 'Rp350.000.000',
+      difficulty: 'Level 2 - Pemula+',
+      ideal: ['rup', 'kak', 'hps', 'cekPdn', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
+      traps: ['metodePl', 'tender', 'abaikanKatalog', 'kontrakAwal'],
+      explanation: 'Untuk barang tersedia di katalog, alur aman adalah tetap cek RUP, siapkan KAK/HPS, cek PDN/TKDN, cek katalog, lakukan e-Purchasing, klarifikasi/negosiasi, kontrak, BAST, realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 4 — Tujuan PBJ',
+      caseTitle: 'Laptop TKDN + BMP 42%',
+      desc: 'PPK membeli laptop melalui katalog elektronik dengan TKDN + BMP 42%.',
+      question: 'Tujuan PBJ yang paling didukung oleh kondisi tersebut adalah?',
+      options: [
+        'Menghasilkan barang sesuai nilai uang',
+        'Meningkatkan penggunaan produk dalam negeri',
+        'Meningkatkan peran UMK',
+        'Meningkatkan peran pelaku usaha lokal'
+      ],
+      answer: 1,
+      hint: 'Kata kunci utama ada pada TKDN dan BMP.',
+      explanation: 'TKDN/BMP menunjukkan keberpihakan pada produk dalam negeri.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 5 — Susun Pipeline Konsolidasi',
+      caseTitle: 'Komputer Beberapa Bidang',
+      desc: 'Beberapa bidang mengusulkan komputer dengan kebutuhan sejenis. Total nilai Rp650 juta.',
+      budget: 'Rp650.000.000',
+      difficulty: 'Level 3 - Menengah',
+      ideal: ['rup', 'identifikasi', 'konsolidasi', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'kontrak', 'bast', 'realisasi'],
+      traps: ['pecahPaket', 'metodePl', 'metodeAsalCepat', 'kontrakAwal'],
+      explanation: 'Kebutuhan sejenis perlu diidentifikasi dan dapat dikonsolidasikan agar tidak terjadi pemecahan paket yang tidak wajar.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 6 — Pemaketan',
+      caseTitle: 'Strategi Pemaketan PBJ',
+      desc: 'Jawab pertanyaan tentang dasar pemaketan barang/jasa.',
+      question: 'Pemaketan barang/jasa dilakukan dengan mempertimbangkan apa?',
+      options: [
+        'Keluaran, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran',
+        'Keinginan bidang, kecepatan proses, dan kemudahan administrasi',
+        'Jumlah penyedia yang dikenal PPK',
+        'Nilai paket agar selalu bisa pengadaan langsung'
+      ],
+      answer: 0,
+      hint: 'Pilih jawaban yang paling objektif dan menyangkut kebutuhan + kondisi pasar.',
+      explanation: 'Pemaketan perlu mempertimbangkan output, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 7 — Susun Pipeline Spek Mengarah',
+      caseTitle: 'Laptop dengan Spek Terlalu Spesifik',
+      desc: 'Spesifikasi awal mengarah ke merek tertentu. Susun langkah korektif sebelum proses.',
+      budget: 'Rp420.000.000',
+      difficulty: 'Level 4 - Menengah',
+      ideal: ['rup', 'reviewSpek', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
+      traps: ['spekMengarah', 'kontrakAwal', 'abaikanKatalog', 'metodeAsalCepat'],
+      explanation: 'Jika spesifikasi mengarah, lakukan review spek dulu agar kebutuhan teknis lebih fair sebelum lanjut HPS dan metode.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 8 — Spesifikasi Teknis',
+      caseTitle: 'Fungsi Spesifikasi',
+      desc: 'Jawab pertanyaan tentang fungsi spesifikasi teknis dalam PBJ.',
+      question: 'Salah satu fungsi spesifikasi teknis adalah?',
+      options: [
+        'Menentukan pemenang sebelum proses',
+        'Memberikan informasi kebutuhan kepada pelaku usaha',
+        'Mengunci merek tertentu agar barang sesuai selera',
+        'Menghindari persaingan agar proses cepat'
+      ],
+      answer: 1,
+      hint: 'Spesifikasi teknis seharusnya menjelaskan kebutuhan, bukan mengunci penyedia.',
+      explanation: 'Spesifikasi teknis harus memberi informasi kebutuhan kepada pelaku usaha.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 9 — Susun Pipeline Jasa Konsultansi',
+      caseTitle: 'Kajian Teknis Perencanaan',
+      desc: 'OPD akan menyusun kajian teknis perencanaan dengan nilai Rp280 juta.',
+      budget: 'Rp280.000.000',
+      difficulty: 'Level 5 - Menengah',
+      ideal: ['rup', 'identifikasi', 'kak', 'hps', 'seleksi', 'proses', 'kontrak', 'monitoringKontrak', 'bast', 'realisasi'],
+      traps: ['metodeEpurchasing', 'metodePl', 'kontrakAwal', 'abaikanKatalog'],
+      explanation: 'Jasa konsultansi menggunakan pendekatan KAK, HPS, seleksi, proses, kontrak, monitoring, BAST, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 10 — Jenis Pengadaan',
+      caseTitle: 'Kajian Teknis / Studi Kelayakan',
+      desc: 'Jawab pertanyaan tentang jenis pengadaan.',
+      question: 'Penyusunan studi kelayakan/kajian teknis termasuk jenis pengadaan apa?',
+      options: [
+        'Barang',
+        'Pekerjaan konstruksi',
+        'Jasa lainnya',
+        'Jasa konsultansi'
+      ],
+      answer: 3,
+      hint: 'Perhatikan sifat pekerjaannya: kajian/studi berbasis keahlian.',
+      explanation: 'Kajian teknis/studi kelayakan merupakan jasa profesional berbasis keahlian, sehingga termasuk jasa konsultansi.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 11 — Susun Pipeline Konstruksi Ringan',
+      caseTitle: 'Rehabilitasi Ruang Pelayanan',
+      desc: 'Pekerjaan konstruksi ringan dengan nilai Rp760 juta membutuhkan proses formal dan pemeriksaan hasil.',
+      budget: 'Rp760.000.000',
+      difficulty: 'Level 6 - Sulit',
+      ideal: ['rup', 'identifikasi', 'kak', 'hps', 'tender', 'proses', 'kontrak', 'monitoringKontrak', 'pemeriksaan', 'bast', 'realisasi'],
+      traps: ['metodePl', 'kontrakAwal', 'bastTanpaCek', 'bayarDulu'],
+      explanation: 'Pekerjaan konstruksi membutuhkan dokumen teknis, HPS, pemilihan, kontrak, monitoring, pemeriksaan hasil, BAST, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 12 — Prinsip PBJ',
+      caseTitle: 'Barang Tidak Sesuai',
+      desc: 'Barang/pekerjaan tidak sesuai spesifikasi sehingga tidak dapat digunakan.',
+      question: 'Prinsip PBJ yang tidak terpenuhi adalah?',
+      options: [
+        'Efisien',
+        'Efektif',
+        'Transparan',
+        'Akuntabel'
+      ],
+      answer: 1,
+      hint: 'Kalau hasilnya tidak sesuai kebutuhan, prinsip yang gagal adalah terkait tercapainya tujuan.',
+      explanation: 'Efektif berarti barang/jasa harus sesuai kebutuhan dan tujuan.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 13 — Susun Pipeline Swakelola',
+      caseTitle: 'Pelatihan Internal Pegawai',
+      desc: 'OPD akan melaksanakan kegiatan pelatihan internal pegawai. Susun alur yang sesuai untuk skema swakelola.',
+      budget: 'Rp95.000.000',
+      difficulty: 'Level 7 - Menengah',
+      ideal: ['rup', 'identifikasi', 'kak', 'hps', 'swakelola', 'proses', 'bast', 'realisasi'],
+      traps: ['metodeEpurchasing', 'tender', 'kontrakAwal', 'bayarDulu'],
+      explanation: 'Swakelola tetap perlu perencanaan, identifikasi kebutuhan, KAK, anggaran/HPS, pelaksanaan, BAST, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 14 — Swakelola',
+      caseTitle: 'Kriteria Swakelola',
+      desc: 'Jawab pertanyaan tentang penggunaan swakelola.',
+      question: 'Contoh pengadaan yang dapat dilakukan secara swakelola adalah?',
+      options: [
+        'Kegiatan yang memenuhi kriteria swakelola dan dapat dilaksanakan sendiri/oleh pihak sesuai ketentuan',
+        'Semua pengadaan barang elektronik',
+        'Semua pekerjaan yang ingin dipercepat',
+        'Paket yang sengaja dipecah agar nilainya kecil'
+      ],
+      answer: 0,
+      hint: 'Swakelola bukan dipilih karena paling cepat, tapi karena memang memenuhi kriteria.',
+      explanation: 'Swakelola tidak dipilih asal cepat. Swakelola dipilih bila karakter kegiatan dan pelaksanaannya memenuhi kriteria.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 15 — Susun Pipeline Penyedia Terlambat',
+      caseTitle: 'Penyedia Terlambat Mengirim Barang',
+      desc: 'Kontrak sudah berjalan, namun penyedia terlambat mengirim barang. Jangan langsung BAST atau bayar.',
+      budget: 'Rp190.000.000',
+      difficulty: 'Level 8 - Sulit',
+      ideal: ['kontrak', 'monitoringKontrak', 'teguran', 'pemeriksaan', 'bast', 'pembayaran', 'realisasi'],
+      traps: ['bastTanpaCek', 'bayarDulu', 'realisasiLupa'],
+      explanation: 'Saat kontrak bermasalah, lakukan monitoring kontrak, teguran/evaluasi, pemeriksaan hasil, BAST jika sesuai, pembayaran, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 16 — Aspek Hukum Kontrak',
+      caseTitle: 'Sengketa Pelaksanaan Kontrak',
+      desc: 'PPK dan penyedia berselisih dalam pelaksanaan kontrak.',
+      question: 'Perselisihan PPK dan penyedia dalam pelaksanaan kontrak terutama termasuk aspek hukum apa?',
+      options: [
+        'Hukum pidana',
+        'Hukum perdata',
+        'Hukum persaingan usaha',
+        'Hukum tata negara'
+      ],
+      answer: 1,
+      hint: 'Perhatikan hubungan antara PPK dan penyedia dalam kontrak.',
+      explanation: 'Hubungan PPK dan penyedia dalam pelaksanaan kontrak pada dasarnya adalah hubungan perdata.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 17 — Susun Pipeline Ganti Metode dari e-Purchasing',
+      caseTitle: 'e-Purchasing Tidak Bisa Dilanjutkan',
+      desc: 'Paket awalnya direncanakan e-Purchasing, tetapi setelah dicek tidak ada produk/penyedia yang sesuai di katalog. Susun langkah paling aman sebelum mengganti metode.',
+      budget: 'Rp480.000.000',
+      difficulty: 'Level 9 - Sulit',
+      ideal: [
+        'rup',
+        'kak',
+        'hps',
+        'cekPdn',
+        'cekKatalog',
+        'katalogTidakSesuai',
+        'dokumentasiGagalKatalog',
+        'evaluasiMetode',
+        'pilihMetode',
+        'proses',
+        'kontrak',
+        'bast',
+        'realisasi'
+      ],
+      traps: [
+        'lanjutEpurchasingPaksa',
+        'gantiMetodeTanpaBukti',
+        'kontrakAwal',
+        'metodeAsalCepat'
+      ],
+      explanation: 'Jika rencana awal e-Purchasing tidak bisa dilakukan karena tidak ada produk/penyedia sesuai di katalog, PPK perlu mendokumentasikan hasil pengecekan, mengevaluasi metode, lalu memilih metode lain yang sesuai nilai, jenis, dan kondisi paket. Jangan langsung ganti metode tanpa bukti.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 18 — Perubahan Metode dari e-Purchasing',
+      caseTitle: 'Tidak Ada Penyedia di Katalog',
+      desc: 'Rencana awal paket adalah e-Purchasing, namun hasil cek katalog menunjukkan produk/penyedia tidak sesuai kebutuhan.',
+      question: 'Langkah paling aman sebelum mengganti metode dari e-Purchasing adalah?',
+      options: [
+        'Langsung tunjuk penyedia yang dikenal agar cepat',
+        'Tetap memaksa e-Purchasing walaupun produk tidak sesuai',
+        'Dokumentasikan hasil cek katalog, evaluasi metode, lalu pilih metode yang sesuai',
+        'Pecah paket agar bisa memakai metode yang lebih sederhana'
+      ],
+      answer: 2,
+      hint: 'Jangan lompat ganti metode. Harus ada dasar dan dokumentasinya dulu.',
+      explanation: 'Perubahan metode harus didasarkan pada hasil cek dan dokumentasi yang jelas. Setelah itu baru dilakukan evaluasi dan pemilihan metode yang sesuai.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 19 — Susun Pipeline Adendum Kontrak',
+      caseTitle: 'Perubahan Volume dan Waktu Pelaksanaan',
+      desc: 'Kontrak sedang berjalan. Terdapat kebutuhan perubahan volume dan penyesuaian waktu pelaksanaan. Susun alur adendum kontrak yang tertib.',
+      budget: 'Nilai kontrak berjalan',
+      difficulty: 'Level 10 - Expert',
+      ideal: [
+        'kontrak',
+        'monitoringKontrak',
+        'identifikasiPerubahan',
+        'kajiKontrak',
+        'justifikasiTeknis',
+        'negosiasiPerubahan',
+        'adendumKontrak',
+        'pemeriksaan',
+        'bast',
+        'pembayaran',
+        'realisasi'
+      ],
+      traps: [
+        'adendumTanpaDasar',
+        'bayarSebelumAdendum',
+        'bastTanpaCek',
+        'realisasiLupa'
+      ],
+      explanation: 'Adendum kontrak harus didahului identifikasi perubahan, kajian klausul kontrak, justifikasi teknis/administratif, dan negosiasi dampak perubahan. Setelah adendum tertib, pelaksanaan dapat dilanjutkan sampai pemeriksaan, BAST, pembayaran, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 20 — Adendum Kontrak',
+      caseTitle: 'Perubahan Kontrak Berjalan',
+      desc: 'Dalam pelaksanaan kontrak ditemukan kebutuhan perubahan volume dan waktu.',
+      question: 'Apa yang paling tepat dilakukan sebelum membuat adendum kontrak?',
+      options: [
+        'Membayar dulu agar penyedia tetap bekerja',
+        'Membuat justifikasi dan memastikan perubahan sesuai ketentuan/klausul kontrak',
+        'Langsung BAST agar pekerjaan cepat selesai',
+        'Membiarkan perubahan terjadi tanpa dokumen'
+      ],
+      answer: 1,
+      hint: 'Adendum butuh dasar, bukan sekadar kesepakatan lisan.',
+      explanation: 'Adendum kontrak membutuhkan dasar yang jelas, termasuk kajian kontrak dan justifikasi perubahan. Perubahan tidak boleh berjalan tanpa dasar dan dokumen yang tertib.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 21 — Susun Pipeline Pemeriksaan dan Pembayaran',
+      caseTitle: 'Barang Sudah Datang ke Gudang',
+      desc: 'Penyedia mengirim barang. User meminta segera bayar karena barang sudah datang. Susun alur yang aman.',
+      budget: 'Rp180.000.000',
+      difficulty: 'Level 11 - Sulit',
+      ideal: ['kontrak', 'monitoringKontrak', 'pemeriksaan', 'bast', 'pembayaran', 'realisasi'],
+      traps: ['bayarDulu', 'bastTanpaCek', 'realisasiLupa'],
+      explanation: 'Barang datang belum otomatis bisa dibayar. Perlu pemeriksaan, BAST jika sesuai, pembayaran berdasarkan dokumen, lalu realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 22 — Pemeriksaan Hasil',
+      caseTitle: 'BAST Barang',
+      desc: 'Barang sudah dikirim penyedia, tetapi belum diperiksa kesesuaiannya.',
+      question: 'Langkah yang paling aman sebelum BAST adalah?',
+      options: [
+        'Langsung pembayaran karena barang sudah datang',
+        'Melakukan pemeriksaan hasil pekerjaan/barang sesuai kontrak',
+        'Membuat adendum tanpa alasan',
+        'Mencatat realisasi tanpa dokumen'
+      ],
+      answer: 1,
+      hint: 'BAST bukan sekadar tanda barang datang. Ada pemeriksaan kesesuaian dulu.',
+      explanation: 'Sebelum BAST, hasil pekerjaan/barang perlu diperiksa agar sesuai spesifikasi, volume, kualitas, dan ketentuan kontrak.'
+    }
   ];
-  return `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-}
 
-function addDays(date, days) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
+  function buildChallenge(raw) {
+    if (raw.type === 'quiz') return raw;
 
-function addMonths(date, months) {
-  const d = new Date(date);
-  const originalDate = d.getDate();
-  d.setMonth(d.getMonth() + months);
-  if (d.getDate() < originalDate) {
-    d.setDate(0);
+    const idealCards = raw.ideal.map(key => card(key)).filter(Boolean);
+    const trapCards = (raw.traps || []).map(key => card(key)).filter(Boolean);
+
+    return {
+      ...raw,
+      idealIds: idealCards.map(item => item.id),
+      cards: [...idealCards, ...trapCards]
+    };
   }
-  return d;
-}
 
-function diffDays(start, end) {
-  const ms = end.getTime() - start.getTime();
-  return Math.round(ms / (1000 * 60 * 60 * 24));
-}
+  const CHALLENGES = CHALLENGE_RAW.map(buildChallenge);
 
-function formatRupiah(number) {
-  return `Rp${Number(number || 0).toLocaleString("id-ID")}`;
-}
+  const GAME_STATE = {
+    order: [],
+    index: 0,
+    current: null,
+    stage: 'ready',
+    placed: [],
+    shuffledCards: [],
+    selectedCardId: null,
+    answered: false,
+    selectedAnswer: null,
+    score: 0,
+    risk: 0,
+    wrong: 0,
+    progress: 0,
+    logs: [],
+    finished: false,
+    hintUsed: false,
+    hasSeenIntro: false
+  };
 
-function parseNumberInput(value) {
-  if (!value) return 0;
-  const cleaned = String(value).replace(/[^\d]/g, "");
-  return Number(cleaned || 0);
-}
-
-function formatPaguInput() {
-  if (!el.paguPaket) return;
-  const value = parseNumberInput(el.paguPaket.value);
-  el.paguPaket.value = value ? value.toLocaleString("id-ID") : "";
-}
-
-function getTimelineMonthRange(tahunAnggaran, timelineItem) {
-  const year = tahunAnggaran + timelineItem.yearOffset;
-  const start = new Date(year, timelineItem.month, 1);
-  const end = new Date(year, timelineItem.month + 1, 0);
-  return { start, end };
-}
-
-function isOverlap(rangeStart, rangeEnd, monthStart, monthEnd) {
-  return rangeStart <= monthEnd && rangeEnd >= monthStart;
-}
-
-function buildHeader() {
-  if (!el.timelineSuperHeader || !el.timelineHeader) return;
-
-  el.timelineSuperHeader.innerHTML = "";
-  el.timelineHeader.innerHTML = "";
-
-  const superSpacer = document.createElement("div");
-  superSpacer.className = "timeline-super-spacer";
-  el.timelineSuperHeader.appendChild(superSpacer);
-
-  const prevHeader = document.createElement("div");
-  prevHeader.className = "timeline-super-cell timeline-super-prev";
-  prevHeader.textContent = "TAHUN ANGGARAN SEBELUMNYA";
-  el.timelineSuperHeader.appendChild(prevHeader);
-
-  const currentHeader = document.createElement("div");
-  currentHeader.className = "timeline-super-cell timeline-super-current";
-  currentHeader.textContent = "TAHUN ANGGARAN BERKENAAN";
-  el.timelineSuperHeader.appendChild(currentHeader);
-
-  const spacer = document.createElement("div");
-  spacer.className = "timeline-spacer";
-  el.timelineHeader.appendChild(spacer);
-
-  TIMELINE_MONTHS.forEach((item) => {
-    const div = document.createElement("div");
-    div.className = "timeline-month";
-    div.textContent = item.label;
-    el.timelineHeader.appendChild(div);
-  });
-}
-
-function buildEmptyTrack(container) {
-  if (!container) return;
-  container.innerHTML = "";
-  for (let i = 0; i < TIMELINE_MONTHS.length; i++) {
-    const cell = document.createElement("div");
-    cell.className = "timeline-cell";
-    cell.textContent = "";
-    container.appendChild(cell);
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
-}
 
-function fillTrackByRange(container, tahunAnggaran, startDate, endDate, fillClass, label) {
-  if (!container) return;
-  buildEmptyTrack(container);
+  function shuffleArray(items) {
+    const result = [...items];
 
-  for (let i = 0; i < TIMELINE_MONTHS.length; i++) {
-    const timelineItem = TIMELINE_MONTHS[i];
-    const monthRange = getTimelineMonthRange(tahunAnggaran, timelineItem);
-    const cell = container.children[i];
+    for (let i = result.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
 
-    if (cell && isOverlap(startDate, endDate, monthRange.start, monthRange.end)) {
-      cell.classList.add(fillClass);
-      cell.textContent = label || "";
+    return result;
+  }
+
+  function getCurrentChallenge() {
+    return GAME_STATE.current;
+  }
+
+  function getPlacedCount() {
+    return GAME_STATE.placed.filter(Boolean).length;
+  }
+
+  function clearAutoNextTimer() {
+    if (autoNextTimer) {
+      clearTimeout(autoNextTimer);
+      autoNextTimer = null;
     }
   }
-}
 
-function buildTimeline(tahunAnggaran, ranges) {
-  buildHeader();
-
-  fillTrackByRange(el.rowPersiapan, tahunAnggaran, ranges.persiapan.start, ranges.persiapan.end, "fill-persiapan", "Persiapan");
-  fillTrackByRange(el.rowPemilihan, tahunAnggaran, ranges.pemilihan.start, ranges.pemilihan.end, "fill-pemilihan", "Pilih");
-  fillTrackByRange(el.rowPelaksanaan, tahunAnggaran, ranges.pelaksanaan.start, ranges.pelaksanaan.end, "fill-pelaksanaan", "Kerja");
-  fillTrackByRange(el.rowAkhir, tahunAnggaran, ranges.akhir.start, ranges.akhir.end, "fill-akhir", "Buffer");
-}
-
-function getMethodOptions(jenisPengadaan, pagu, katalog) {
-  const isKatalog = katalog === "ya";
-  const allowed = [];
-  const hidden = [];
-  let ruleText = "";
-
-  function allow(method) {
-    if (!allowed.includes(method)) allowed.push(method);
+  function clearPanjiIntroTimers() {
+    panjiIntroTimers.forEach(timer => clearTimeout(timer));
+    panjiIntroTimers = [];
   }
 
-  function hide(method, reason) {
-    hidden.push({ method, reason });
+  function clearPanjiTalkTimer() {
+    if (panjiTalkTimer) {
+      clearTimeout(panjiTalkTimer);
+      panjiTalkTimer = null;
+    }
   }
 
-  if (jenisPengadaan === "Barang" || jenisPengadaan === "Jasa Lainnya") {
-    if (isKatalog) {
-      allow("e-Purchasing");
+  function scheduleAutoNext(message, delay = AUTO_NEXT_DELAY_MS) {
+    clearAutoNextTimer();
+
+    if (message) {
+      showToast(message, 'info');
+    }
+
+    autoNextTimer = setTimeout(() => {
+      autoNextTimer = null;
+
+      if (destroyed) return;
+
+      nextChallenge();
+    }, delay);
+  }
+
+  function calculateMaxScore() {
+    return CHALLENGES.reduce((total, challenge) => {
+      if (challenge.type === 'pipeline') {
+        return total + (challenge.idealIds.length * 10) + 20;
+      }
+
+      return total + 20;
+    }, 0);
+  }
+
+  function getResultGrade(percent) {
+    if (percent >= 90 && GAME_STATE.risk <= 20) {
+      return {
+        label: 'Sangat Baik',
+        icon: '🏆',
+        text: 'Pemahaman alur PBJ sudah kuat. Risiko rendah dan keputusan relatif aman.'
+      };
+    }
+
+    if (percent >= 75) {
+      return {
+        label: 'Baik',
+        icon: '🥇',
+        text: 'Pemahaman sudah baik, tetapi masih ada beberapa risiko yang perlu dikurangi.'
+      };
+    }
+
+    if (percent >= 60) {
+      return {
+        label: 'Cukup',
+        icon: '🥈',
+        text: 'Dasar sudah mulai terbentuk, namun perlu latihan ulang pada studi kasus yang salah.'
+      };
+    }
+
+    return {
+      label: 'Perlu Pembinaan',
+      icon: '📚',
+      text: 'Disarankan mengulang dari awal agar alur dan prinsip PBJ lebih kuat.'
+    };
+  }
+
+  function addLog(type, title, text) {
+    GAME_STATE.logs.unshift({ type, title, text });
+    GAME_STATE.logs = GAME_STATE.logs.slice(0, 8);
+  }
+
+  function showToast(message, type = 'info') {
+    if (!message) return;
+
+    if (!toastEl) {
+      toastEl = document.createElement('div');
+      toastEl.className = 'ps-toast';
+      document.body.appendChild(toastEl);
+    }
+
+    toastEl.textContent = message;
+    toastEl.className = `ps-toast ${type}`;
+
+    requestAnimationFrame(() => {
+      if (toastEl) {
+        toastEl.classList.add('show');
+      }
+    });
+
+    clearTimeout(toastEl._hideTimer);
+    toastEl._hideTimer = setTimeout(() => {
+      if (toastEl) {
+        toastEl.classList.remove('show');
+      }
+    }, 1800);
+  }
+
+  function flashScreen(type) {
+    let flash = document.getElementById('psScreenFlash');
+
+    if (!flash) {
+      flash = document.createElement('div');
+      flash.id = 'psScreenFlash';
+      flash.className = 'ps-screen-flash';
+      document.body.appendChild(flash);
+    }
+
+    flash.className = `ps-screen-flash ${type}`;
+
+    setTimeout(() => {
+      flash.className = 'ps-screen-flash';
+    }, 360);
+  }
+
+  function popScore(target, text, type = 'info') {
+    if (!target || !target.getBoundingClientRect) return;
+
+    const rect = target.getBoundingClientRect();
+    const el = document.createElement('div');
+
+    el.className = `ps-floating-score ${type}`;
+    el.textContent = text;
+    el.style.left = `${rect.left + Math.min(80, rect.width / 2)}px`;
+    el.style.top = `${rect.top + 8}px`;
+
+    document.body.appendChild(el);
+
+    setTimeout(() => el.remove(), 850);
+  }
+
+  function spawnConfetti() {
+    const colors = ['#2563eb', '#22d3ee', '#16a34a', '#f59e0b', '#ef4444'];
+    const centerX = window.innerWidth / 2;
+    const startY = 90;
+
+    for (let i = 0; i < 36; i += 1) {
+      const piece = document.createElement('div');
+      piece.className = 'ps-confetti';
+      piece.style.left = `${centerX + (Math.random() * 520 - 260)}px`;
+      piece.style.top = `${startY + Math.random() * 40}px`;
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDelay = `${Math.random() * .18}s`;
+
+      document.body.appendChild(piece);
+
+      setTimeout(() => piece.remove(), 1100);
+    }
+  }
+
+  function initPanji(scope) {
+    panjiEl = scope.querySelector('#panjiAssistant');
+    panjiTextEl = scope.querySelector('#panjiText');
+    panjiEmoteEl = scope.querySelector('#panjiEmote');
+    panjiBubbleEl = scope.querySelector('#panjiBubble');
+    panjiHintBtn = scope.querySelector('#panjiHintBtn');
+    panjiMiniBtn = scope.querySelector('#panjiMiniBtn');
+    panjiCharacterBtn = scope.querySelector('#panjiCharacter');
+    panjiCloseBtn = scope.querySelector('#panjiClose');
+
+    if (!panjiEl || !panjiTextEl) return;
+
+    document.body.appendChild(panjiEl);
+
+    if (panjiHintBtn) {
+      panjiHintBtn.addEventListener('click', () => {
+        requestHintFromPanji();
+      });
+    }
+
+    if (panjiMiniBtn) {
+      panjiMiniBtn.addEventListener('click', () => {
+        panjiEl.classList.add('panji-minimized');
+      });
+    }
+
+    if (panjiCharacterBtn) {
+      panjiCharacterBtn.addEventListener('click', () => {
+        panjiEl.classList.remove('panji-hidden');
+
+        if (panjiEl.classList.contains('panji-minimized')) {
+          panjiEl.classList.remove('panji-minimized');
+          showPanji('Aku balik lagi. Kalau bingung, klik tombol "Tanya PANJI".', 'thinking');
+        } else {
+          panjiEl.classList.add('panji-minimized');
+        }
+      });
+    }
+
+    if (panjiCloseBtn) {
+      panjiCloseBtn.addEventListener('click', () => {
+        panjiEl.classList.add('panji-hidden');
+      });
+    }
+
+    initPanjiScrollMotion();
+  }
+
+  function initPanjiScrollMotion() {
+    if (!panjiEl) return;
+
+    let lastScrollY = window.scrollY || document.documentElement.scrollTop;
+    let ticking = false;
+
+    const updatePanji = () => {
+      if (!panjiEl) return;
+
+      const currentY = window.scrollY || document.documentElement.scrollTop;
+      const diff = currentY - lastScrollY;
+
+      if (diff > 8) {
+        panjiEl.style.transform = 'translateY(5px)';
+      } else if (diff < -8) {
+        panjiEl.style.transform = 'translateY(-5px)';
+      } else {
+        panjiEl.style.transform = 'translateY(0)';
+      }
+
+      clearTimeout(panjiScrollTimer);
+      panjiScrollTimer = setTimeout(() => {
+        if (panjiEl) {
+          panjiEl.style.transform = 'translateY(0)';
+        }
+      }, 180);
+
+      lastScrollY = currentY;
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updatePanji);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    panjiEl._panjiScrollDestroy = () => {
+      window.removeEventListener('scroll', onScroll);
+    };
+  }
+
+  function showPanji(message, mood = 'thinking') {
+    if (!panjiEl || !panjiTextEl) return;
+
+    clearPanjiTalkTimer();
+
+    panjiEl.classList.remove('panji-hidden');
+    panjiEl.classList.remove('panji-minimized');
+
+    panjiEl.classList.remove(
+      'panji-happy',
+      'panji-sad',
+      'panji-thinking',
+      'panji-intro',
+      'panji-talking'
+    );
+
+    void panjiEl.offsetWidth;
+
+    panjiEl.classList.add(`panji-${mood}`);
+    panjiEl.classList.add('panji-talking');
+
+    if (panjiEmoteEl) {
+      panjiEmoteEl.textContent =
+        mood === 'happy'
+          ? '😄'
+          : mood === 'sad'
+            ? '😭'
+            : '🤔';
+    }
+
+    panjiTextEl.textContent = message;
+
+    if (panjiBubbleEl) {
+      panjiBubbleEl.classList.remove('burst');
+      void panjiBubbleEl.offsetWidth;
+      panjiBubbleEl.classList.add('burst');
+    }
+
+    const talkDuration = Math.min(
+      5200,
+      Math.max(1200, String(message || '').length * 36)
+    );
+
+    panjiTalkTimer = setTimeout(() => {
+      if (!panjiEl) return;
+
+      panjiEl.classList.remove('panji-talking');
+      panjiTalkTimer = null;
+    }, talkDuration);
+  }
+
+  function showPanjiIntro() {
+    clearPanjiIntroTimers();
+
+    showPanji(
+      'Halo! Perkenalkan, aku PANJI.',
+      'happy'
+    );
+
+    if (panjiEl) {
+      panjiEl.classList.remove('panji-intro');
+      void panjiEl.offsetWidth;
+      panjiEl.classList.add('panji-intro');
+    }
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ sambil main Procurement Stacker.',
+        'thinking'
+      );
+    }, 1700));
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin ya. Jadi pakai bantuanku seperlunya aja.`,
+        'thinking'
+      );
+    }, 3900));
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        'Yuk mulai. Susun pipeline dengan tertib: jangan asal cepat, yang penting sesuai alur, ada bukti, dan risikonya rendah.',
+        'happy'
+      );
+    }, 6500));
+  }
+
+  function getHintMessage(challenge) {
+    if (!challenge) {
+      return 'Fokus susun langkah paling tertib ya.';
+    }
+
+    if (challenge.type === 'pipeline') {
+      const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
+      const expectedId = challenge.idealIds[nextEmpty];
+      const expectedCard = challenge.cards.find(item => item.id === expectedId);
+
+      if (!expectedCard) {
+        return 'Pipeline hampir selesai. Cek lagi urutan dari kiri ke kanan.';
+      }
+
+      if (nextEmpty === 0) {
+        return `Hint PANJI: untuk posisi pertama, fokus cari kartu "${expectedCard.label}".`;
+      }
+
+      const prev = GAME_STATE.placed[nextEmpty - 1];
+
+      if (prev) {
+        return `Hint PANJI: setelah "${prev.label}", langkah yang lebih aman untuk posisi berikutnya adalah "${expectedCard.label}".`;
+      }
+
+      return `Hint PANJI: fokus cari kartu "${expectedCard.label}" untuk posisi ${nextEmpty + 1}.`;
+    }
+
+    if (challenge.hint) {
+      return `Hint PANJI: ${challenge.hint}`;
+    }
+
+    return 'Baca kata kunci soal dan pilih jawaban yang paling sesuai prinsip PBJ.';
+  }
+
+  function requestHintFromPanji() {
+    clearPanjiIntroTimers();
+
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || GAME_STATE.finished) return;
+
+    if (GAME_STATE.hintUsed) {
+      showPanji('Untuk soal ini kamu sudah pakai hint dari PANJI ya. Coba lanjutkan dulu.', 'thinking');
+      showToast('Hint soal ini sudah dipakai.', 'info');
+      return;
+    }
+
+    GAME_STATE.hintUsed = true;
+    GAME_STATE.score = Math.max(0, GAME_STATE.score - HINT_PENALTY);
+
+    addLog('info', 'Hint PANJI dipakai', `Kamu memakai bantuan PANJI. Skor berkurang ${HINT_PENALTY} poin.`);
+
+    showPanji(getHintMessage(challenge), 'thinking');
+    showToast(`Hint dipakai. Skor -${HINT_PENALTY}.`, 'info');
+
+    if (panjiCharacterBtn) {
+      popScore(panjiCharacterBtn, `-${HINT_PENALTY}`, 'info');
+    }
+
+    renderGame();
+  }
+
+  function panjiForChallenge(challenge) {
+    if (!challenge) return;
+
+    clearPanjiIntroTimers();
+
+    if (challenge.type === 'pipeline') {
+      showPanji(
+        'Ini soal pipeline. Susun kartu dari kiri ke kanan secara tertib. Kalau bingung urutan berikutnya, kamu bisa tanya aku.',
+        'thinking'
+      );
     } else {
-      hide("e-Purchasing", "Tidak dimunculkan karena paket ditandai tidak tersedia di katalog.");
+      showPanji(
+        'Ini soal Pilihan Ganda. Baca kata kuncinya pelan-pelan. Pilih jawaban yang paling sesuai prinsip PBJ, bukan yang sekadar paling cepat.',
+        'thinking'
+      );
     }
-
-    if (pagu <= 200000000) {
-      allow("Pengadaan Langsung / ePL");
-      allow("Tender Cepat");
-      allow("Tender");
-      hide("Seleksi", "Seleksi tidak digunakan untuk Barang/Jasa Lainnya.");
-      ruleText = "Untuk Barang/Jasa Lainnya sampai Rp200 juta, Pengadaan Langsung masih dimungkinkan.";
-    } else {
-      hide("Pengadaan Langsung / ePL", "Tidak dimunculkan karena Pengadaan Langsung untuk Barang/Jasa Lainnya dibatasi sampai Rp200 juta.");
-      allow("Tender Cepat");
-      allow("Tender");
-      hide("Seleksi", "Seleksi tidak digunakan untuk Barang/Jasa Lainnya.");
-      ruleText = "Untuk Barang/Jasa Lainnya di atas Rp200 juta, arahkan ke Tender atau E-purchasing bila tersedia di katalog.";
-    }
-
-    hide("Penunjukan Langsung", "Penunjukan Langsung tidak dimunculkan sebagai opsi normal simulasi ini karena hanya untuk kondisi tertentu.");
   }
 
-  if (jenisPengadaan === "Pekerjaan Konstruksi") {
-    if (isKatalog) {
-      allow("e-Purchasing");
-    } else {
-      hide("e-Purchasing", "Tidak dimunculkan karena paket ditandai tidak tersedia di katalog.");
-    }
+  function startGame() {
+    clearAutoNextTimer();
+    clearPanjiIntroTimers();
 
-    if (pagu <= 400000000) {
-      allow("Pengadaan Langsung / ePL");
-      allow("Tender Cepat");
-      allow("Tender");
-      hide("Seleksi", "Seleksi tidak digunakan untuk Pekerjaan Konstruksi.");
-      ruleText = "Untuk Pekerjaan Konstruksi sampai Rp400 juta, Pengadaan Langsung masih dimungkinkan.";
-    } else {
-      hide("Pengadaan Langsung / ePL", "Tidak dimunculkan karena Pengadaan Langsung untuk Pekerjaan Konstruksi dibatasi sampai Rp400 juta.");
-      allow("Tender Cepat");
-      allow("Tender");
-      hide("Seleksi", "Seleksi tidak digunakan untuk Pekerjaan Konstruksi.");
-      ruleText = "Untuk Pekerjaan Konstruksi di atas Rp400 juta, arahkan ke Tender atau E-purchasing bila tersedia di katalog.";
-    }
+    GAME_STATE.order = CHALLENGES.map((_, index) => index);
+    GAME_STATE.index = 0;
+    GAME_STATE.score = 0;
+    GAME_STATE.risk = 0;
+    GAME_STATE.wrong = 0;
+    GAME_STATE.finished = false;
+    GAME_STATE.hasSeenIntro = false;
 
-    hide("Penunjukan Langsung", "Penunjukan Langsung tidak dimunculkan sebagai opsi normal simulasi ini karena hanya untuk kondisi tertentu.");
+    showPanjiIntro();
+    loadChallenge();
   }
 
-  if (jenisPengadaan === "Jasa Konsultansi") {
-    if (isKatalog) {
-      allow("e-Purchasing");
+  function loadChallenge() {
+    clearAutoNextTimer();
+
+    const challengeIndex = GAME_STATE.order[GAME_STATE.index];
+    const challenge = CHALLENGES[challengeIndex];
+
+    GAME_STATE.current = challenge;
+    GAME_STATE.selectedCardId = null;
+    GAME_STATE.answered = false;
+    GAME_STATE.selectedAnswer = null;
+    GAME_STATE.logs = [];
+    GAME_STATE.finished = false;
+    GAME_STATE.hintUsed = false;
+
+    if (challenge.type === 'pipeline') {
+      GAME_STATE.stage = 'pipeline';
+      GAME_STATE.placed = Array(challenge.idealIds.length).fill(null);
+      GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
+      GAME_STATE.progress = 0;
+
+      addLog(
+        'info',
+        'Challenge pipeline dimulai',
+        'Susun kartu dari kiri ke kanan. Kartu jebakan akan menaikkan risiko.'
+      );
     } else {
-      hide("e-Purchasing", "Tidak dimunculkan karena paket ditandai tidak tersedia di katalog.");
+      GAME_STATE.stage = 'quiz';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.progress = 100;
+
+      addLog(
+        'info',
+        'Soal Pilihan Ganda dimulai',
+        'Pilih jawaban yang paling tepat.'
+      );
     }
 
-    if (pagu <= 100000000) {
-      allow("Pengadaan Langsung / ePL");
-      allow("Seleksi");
-      hide("Tender Cepat", "Tender Cepat tidak digunakan untuk Jasa Konsultansi.");
-      hide("Tender", "Tender tidak digunakan sebagai metode lazim untuk Jasa Konsultansi.");
-      ruleText = "Untuk Jasa Konsultansi sampai Rp100 juta, Pengadaan Langsung masih dimungkinkan.";
-    } else {
-      hide("Pengadaan Langsung / ePL", "Tidak dimunculkan karena Pengadaan Langsung untuk Jasa Konsultansi dibatasi sampai Rp100 juta.");
-      allow("Seleksi");
-      hide("Tender Cepat", "Tender Cepat tidak digunakan untuk Jasa Konsultansi.");
-      hide("Tender", "Tender tidak digunakan sebagai metode lazim untuk Jasa Konsultansi.");
-      ruleText = "Untuk Jasa Konsultansi di atas Rp100 juta, metode yang lebih sesuai adalah Seleksi, atau E-purchasing bila tersedia di katalog.";
-    }
+    renderGame();
 
-    hide("Penunjukan Langsung", "Penunjukan Langsung tidak dimunculkan sebagai opsi normal simulasi ini karena hanya untuk kondisi tertentu.");
+    if (GAME_STATE.index === 0 && !GAME_STATE.hasSeenIntro) {
+      GAME_STATE.hasSeenIntro = true;
+    } else {
+      panjiForChallenge(challenge);
+    }
   }
 
-  return { allowed, hidden, ruleText };
-}
+  function finishGame() {
+    clearAutoNextTimer();
+    clearPanjiIntroTimers();
 
-function buildWhyMethodText(jenisPengadaan, pagu, katalog, hiddenMethods) {
-  const lines = [];
-  lines.push(`Jenis Pengadaan: ${jenisPengadaan}`);
-  lines.push(`Pagu Paket: ${formatRupiah(pagu)}`);
-  lines.push(`Tersedia di Katalog: ${katalog === "ya" ? "Ya" : "Tidak"}`);
-  lines.push("");
-  lines.push("Metode yang tidak ditampilkan:");
+    GAME_STATE.finished = true;
+    GAME_STATE.stage = 'result';
+    GAME_STATE.current = null;
+    GAME_STATE.progress = 100;
 
-  if (!hiddenMethods.length) {
-    lines.push("- Semua metode utama yang relevan sudah ditampilkan.");
-  } else {
-    hiddenMethods.forEach((item) => {
-      lines.push(`- ${item.method}: ${item.reason}`);
+    renderGame();
+    spawnConfetti();
+    showPanji('Selesai! Hasil akhir kamu sudah keluar. Kalau mau nilai lebih bagus, coba ulangi lagi dan kurangi risiko ya.', 'happy');
+    showToast('Semua soal selesai. Hasil akhir ditampilkan.', 'ok');
+  }
+
+  function nextChallenge() {
+    clearAutoNextTimer();
+
+    if (GAME_STATE.index < GAME_STATE.order.length - 1) {
+      GAME_STATE.index += 1;
+      loadChallenge();
+      return;
+    }
+
+    finishGame();
+  }
+
+  function canGoNext() {
+    const challenge = getCurrentChallenge();
+
+    if (!challenge) return false;
+    if (challenge.type === 'pipeline') return GAME_STATE.progress === 100;
+    return GAME_STATE.answered;
+  }
+
+  function getQuestionTypeLabel(challenge) {
+    if (!challenge) return '-';
+    if (challenge.type === 'pipeline') return 'Susun Pipeline';
+    if (challenge.type === 'quiz') return 'Soal "Pilihan Ganda"';
+    return challenge.type;
+  }
+
+  function renderGame() {
+    if (!root) return;
+
+    if (GAME_STATE.stage === 'result') {
+      root.innerHTML = renderResultScreen();
+      bindResultEvents();
+      return;
+    }
+
+    const challenge = getCurrentChallenge();
+
+    root.innerHTML = `
+      <section class="ps-card">
+        <div class="ps-card-head">
+          <div>
+            <h3>${escapeHtml(challenge.title)}</h3>
+            <p>${escapeHtml(challenge.desc)}</p>
+          </div>
+
+          <div class="ps-pill-row">
+            <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : ''}">
+              ${getQuestionTypeLabel(challenge)}
+            </div>
+            <div class="ps-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
+            ${GAME_STATE.selectedCardId ? '<div class="ps-pill warn">Kartu dipilih</div>' : ''}
+            ${GAME_STATE.hintUsed ? '<div class="ps-pill warn">Hint PANJI dipakai</div>' : ''}
+          </div>
+        </div>
+
+        <div class="ps-case-panel">
+          <div class="ps-case-box">
+            <label>Kasus / Topik</label>
+            <strong>${escapeHtml(challenge.caseTitle)}</strong>
+            <span>${escapeHtml(challenge.desc)}</span>
+          </div>
+
+          <div class="ps-case-box">
+            <label>Jenis Soal</label>
+            <strong>${getQuestionTypeLabel(challenge)}</strong>
+          </div>
+
+          <div class="ps-case-box">
+            <label>Skor</label>
+            <strong>${GAME_STATE.score}</strong>
+          </div>
+
+          <div class="ps-case-box">
+            <label>Risiko</label>
+            <strong>${GAME_STATE.risk}</strong>
+          </div>
+        </div>
+
+        <div class="ps-score-grid">
+          <div class="ps-score-card">
+            <label>Progress</label>
+            <strong>${GAME_STATE.progress}%</strong>
+          </div>
+          <div class="ps-score-card">
+            <label>Skor</label>
+            <strong>${GAME_STATE.score}</strong>
+          </div>
+          <div class="ps-score-card">
+            <label>Risiko</label>
+            <strong>${GAME_STATE.risk}</strong>
+          </div>
+          <div class="ps-score-card">
+            <label>Salah</label>
+            <strong>${GAME_STATE.wrong}</strong>
+          </div>
+        </div>
+
+        <div class="ps-progress-track">
+          <div class="ps-progress-bar" style="width:${GAME_STATE.progress}%"></div>
+        </div>
+
+        <div class="ps-helper-row">
+          <div class="ps-helper-note">
+            <b>PANJI siap bantu.</b> Kalau klik <b>Tanya PANJI</b>, kamu dapat hint tetapi skor berkurang <b>${HINT_PENALTY}</b>.
+          </div>
+          <button type="button" class="ps-btn ps-btn-soft" id="btnPanjiHint">
+            Tanya PANJI (-${HINT_PENALTY})
+          </button>
+        </div>
+
+        ${challenge.type === 'pipeline' ? renderPipelineChallenge(challenge) : renderQuizChallenge(challenge)}
+
+        ${renderLogs()}
+
+        <div class="ps-buttons">
+          <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Mulai Ulang dari Soal 1</button>
+          ${
+            challenge.type === 'pipeline'
+              ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
+              : ''
+          }
+          <button type="button" class="ps-btn ps-btn-primary" id="btnNextChallenge" ${canGoNext() ? '' : 'disabled'}>
+            Lanjut Soal Berikutnya
+          </button>
+        </div>
+      </section>
+    `;
+
+    bindGameEvents();
+  }
+
+  function renderPipelineChallenge(challenge) {
+    const placedIds = new Set(GAME_STATE.placed.filter(Boolean).map(item => item.id));
+
+    return `
+      <div class="ps-pipeline">
+        ${challenge.idealIds.map((_, index) => renderSlot(index)).join('')}
+      </div>
+
+      <div class="ps-card-head">
+        <div>
+          <h3>Kartu Pipeline Acak</h3>
+          <p>Drag kartu ke slot, atau klik kartu lalu klik slot biru. Urutan harus dari kiri ke kanan.</p>
+        </div>
+        <button type="button" class="ps-btn ps-btn-soft" id="btnShuffleCards">
+          Acak Kartu
+        </button>
+      </div>
+
+      <div class="ps-bank">
+        ${GAME_STATE.shuffledCards.map(item => renderPipelineCard(item, placedIds.has(item.id))).join('')}
+      </div>
+
+      ${
+        GAME_STATE.progress === 100
+          ? `
+            <div class="ps-explanation">
+              <strong>Pipeline selesai:</strong><br>
+              ${escapeHtml(challenge.explanation)}
+            </div>
+          `
+          : ''
+      }
+    `;
+  }
+
+  function renderSlot(index) {
+    const placed = GAME_STATE.placed[index];
+    const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
+    const isReady = GAME_STATE.selectedCardId && !placed && index === nextEmpty;
+
+    if (placed) {
+      return `
+        <div class="ps-slot correct" data-slot-index="${index}">
+          <div class="ps-slot-number">${index + 1}</div>
+          ${renderPipelineCard(placed, false, true)}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="ps-slot ${isReady ? 'click-ready' : ''}" data-slot-index="${index}">
+        <div class="ps-slot-number">${index + 1}</div>
+        <div class="ps-slot-placeholder">
+          ${isReady ? 'Klik untuk pasang kartu' : `Slot ${index + 1}`}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPipelineCard(item, used = false, locked = false) {
+    const selected = GAME_STATE.selectedCardId === item.id ? 'selected' : '';
+    const trapClass = item.type === 'trap' ? 'trap-card' : '';
+
+    return `
+      <div
+        class="ps-action-card ${used ? 'used' : ''} ${locked ? 'correct-card' : ''} ${selected} ${trapClass}"
+        draggable="${used || locked || GAME_STATE.progress === 100 ? 'false' : 'true'}"
+        data-card-id="${escapeHtml(item.id)}"
+      >
+        <div class="ps-card-icon">${item.icon}</div>
+        <strong>${escapeHtml(item.label)}</strong>
+        <span>${escapeHtml(item.note)}</span>
+      </div>
+    `;
+  }
+
+  function renderQuizChallenge(challenge) {
+    return `
+      <div class="ps-quiz-question">
+        ${escapeHtml(challenge.question)}
+      </div>
+
+      <div class="ps-quiz-options">
+        ${challenge.options.map((option, index) => {
+          let cls = '';
+
+          if (GAME_STATE.answered) {
+            if (index === challenge.answer) cls = 'correct';
+            else if (index === GAME_STATE.selectedAnswer) cls = 'wrong';
+          }
+
+          return `
+            <button
+              type="button"
+              class="ps-quiz-option ${cls}"
+              data-answer-index="${index}"
+              ${GAME_STATE.answered ? 'disabled' : ''}
+            >
+              ${String.fromCharCode(65 + index)}. ${escapeHtml(option)}
+            </button>
+          `;
+        }).join('')}
+      </div>
+
+      ${
+        GAME_STATE.answered
+          ? `
+            <div class="ps-explanation">
+              <strong>Pembahasan:</strong><br>
+              ${escapeHtml(challenge.explanation)}
+            </div>
+          `
+          : ''
+      }
+    `;
+  }
+
+  function renderLogs() {
+    if (!GAME_STATE.logs.length) return '';
+
+    return `
+      <div class="ps-log-box">
+        <strong>Log Pembelajaran</strong>
+        <div class="ps-log-list">
+          ${GAME_STATE.logs.map(item => `
+            <div class="ps-log-item">
+              <div class="ps-log-icon ${item.type}">
+                ${item.type === 'ok' ? '✓' : item.type === 'bad' ? '!' : 'i'}
+              </div>
+              <div>
+                <div class="ps-log-title">${escapeHtml(item.title)}</div>
+                <div class="ps-log-sub">${escapeHtml(item.text)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderResultScreen() {
+    const maxScore = calculateMaxScore();
+    const percent = maxScore > 0 ? Math.round((GAME_STATE.score / maxScore) * 100) : 0;
+    const grade = getResultGrade(percent);
+    const totalQuestions = CHALLENGES.length;
+    const riskLabel = GAME_STATE.risk <= 20
+      ? 'Rendah'
+      : GAME_STATE.risk <= 60
+        ? 'Sedang'
+        : 'Tinggi';
+
+    return `
+      <section class="ps-card">
+        <div class="ps-result-hero">
+          <h2>${grade.icon} ${grade.label}</h2>
+          <p>${escapeHtml(grade.text)}</p>
+        </div>
+
+        <div class="ps-result-grid">
+          <div class="ps-result-card">
+            <label>Nilai Akhir</label>
+            <strong>${percent}%</strong>
+          </div>
+
+          <div class="ps-result-card">
+            <label>Skor</label>
+            <strong>${GAME_STATE.score}/${maxScore}</strong>
+          </div>
+
+          <div class="ps-result-card">
+            <label>Risiko</label>
+            <strong>${GAME_STATE.risk}</strong>
+          </div>
+
+          <div class="ps-result-card">
+            <label>Salah</label>
+            <strong>${GAME_STATE.wrong}</strong>
+          </div>
+        </div>
+
+        <div class="ps-result-note">
+          <strong>Ringkasan:</strong><br>
+          Kamu sudah menyelesaikan ${totalQuestions} soal/challenge. Level risiko kamu saat ini:
+          <strong>${riskLabel}</strong>. Ingat, terlalu sering memakai hint dari PANJI memang membantu,
+          tetapi mengurangi skor.
+        </div>
+
+        <div class="ps-result-note">
+          <strong>Catatan pembelajaran:</strong><br>
+          Dalam praktik PBJ, keputusan tidak cukup hanya cepat. Harus ada alur yang tertib, bukti yang jelas,
+          pemilihan metode yang sesuai, serta dokumentasi saat terjadi perubahan kondisi seperti katalog tidak tersedia
+          atau kontrak perlu diadendum.
+        </div>
+
+        <div class="ps-buttons">
+          <button type="button" class="ps-btn ps-btn-primary" id="btnPlayAgain">
+            Main Lagi dari Soal 1
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
+  function bindResultEvents() {
+    const btnPlayAgain = root.querySelector('#btnPlayAgain');
+
+    if (btnPlayAgain) {
+      btnPlayAgain.addEventListener('click', () => {
+        clearAutoNextTimer();
+        startGame();
+      });
+    }
+  }
+
+  function bindGameEvents() {
+    root.querySelectorAll('.ps-action-card[draggable="true"]').forEach(cardEl => {
+      cardEl.addEventListener('dragstart', event => {
+        event.dataTransfer.setData('text/plain', cardEl.dataset.cardId);
+        event.dataTransfer.effectAllowed = 'move';
+        cardEl.classList.add('selected');
+      });
+
+      cardEl.addEventListener('dragend', () => {
+        cardEl.classList.remove('selected');
+      });
+
+      cardEl.addEventListener('click', () => {
+        selectCard(cardEl.dataset.cardId);
+      });
+    });
+
+    root.querySelectorAll('.ps-slot').forEach(slot => {
+      slot.addEventListener('dragover', event => {
+        event.preventDefault();
+        slot.classList.add('drag-over');
+      });
+
+      slot.addEventListener('dragleave', () => {
+        slot.classList.remove('drag-over');
+      });
+
+      slot.addEventListener('drop', event => {
+        event.preventDefault();
+        slot.classList.remove('drag-over');
+
+        const cardId = event.dataTransfer.getData('text/plain');
+        const slotIndex = Number(slot.dataset.slotIndex);
+        placeCard(cardId, slotIndex, slot);
+      });
+
+      slot.addEventListener('click', () => {
+        if (!GAME_STATE.selectedCardId) return;
+
+        const slotIndex = Number(slot.dataset.slotIndex);
+        placeCard(GAME_STATE.selectedCardId, slotIndex, slot);
+      });
+    });
+
+    root.querySelectorAll('[data-answer-index]').forEach(button => {
+      button.addEventListener('click', () => {
+        answerQuiz(Number(button.dataset.answerIndex), button);
+      });
+    });
+
+    const btnNext = root.querySelector('#btnNextChallenge');
+    const btnRestart = root.querySelector('#btnRestartGame');
+    const btnReset = root.querySelector('#btnResetChallenge');
+    const btnShuffle = root.querySelector('#btnShuffleCards');
+    const btnPanjiHint = root.querySelector('#btnPanjiHint');
+
+    if (btnNext) {
+      btnNext.addEventListener('click', () => {
+        clearAutoNextTimer();
+        nextChallenge();
+      });
+    }
+
+    if (btnRestart) {
+      btnRestart.addEventListener('click', () => {
+        clearAutoNextTimer();
+        startGame();
+      });
+    }
+
+    if (btnReset) {
+      btnReset.addEventListener('click', () => {
+        clearAutoNextTimer();
+        loadChallenge();
+      });
+    }
+
+    if (btnShuffle) {
+      btnShuffle.addEventListener('click', () => {
+        const challenge = getCurrentChallenge();
+
+        if (!challenge || challenge.type !== 'pipeline') return;
+
+        GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
+        GAME_STATE.selectedCardId = null;
+
+        renderGame();
+        showToast('Kartu diacak ulang.', 'info');
+        showPanji('Kartu sudah diacak ulang. Coba fokus lagi dari urutan yang paling awal.', 'thinking');
+      });
+    }
+
+    if (btnPanjiHint) {
+      btnPanjiHint.addEventListener('click', () => {
+        requestHintFromPanji();
+      });
+    }
+  }
+
+  function selectCard(cardId) {
+    if (GAME_STATE.progress === 100) return;
+
+    GAME_STATE.selectedCardId = GAME_STATE.selectedCardId === cardId ? null : cardId;
+
+    if (GAME_STATE.selectedCardId) {
+      const challenge = getCurrentChallenge();
+      const item = challenge.cards.find(cardItem => cardItem.id === cardId);
+      showToast(`Kartu dipilih: ${item ? item.label : cardId}. Klik slot biru.`, 'info');
+    }
+
+    renderGame();
+  }
+
+  function placeCard(cardId, slotIndex, slotEl) {
+    clearPanjiIntroTimers();
+
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || challenge.type !== 'pipeline') return;
+    if (GAME_STATE.progress === 100) return;
+
+    const expectedId = challenge.idealIds[slotIndex];
+    const item = challenge.cards.find(cardItem => cardItem.id === cardId);
+
+    if (!item) return;
+
+    const alreadyPlaced = GAME_STATE.placed.some(placedItem => placedItem && placedItem.id === cardId);
+    if (alreadyPlaced) return;
+
+    const nextEmpty = GAME_STATE.placed.findIndex(placedItem => placedItem === null);
+
+    if (slotIndex !== nextEmpty) {
+      wrongMove(cardId, `Isi pipeline dari kiri ke kanan. Slot berikutnya adalah nomor ${nextEmpty + 1}.`);
+      return;
+    }
+
+    if (cardId !== expectedId) {
+      const expected = challenge.cards.find(cardItem => cardItem.id === expectedId);
+      wrongMove(cardId, `Belum tepat. Kamu memilih "${item.label}", posisi ini seharusnya "${expected ? expected.label : expectedId}".`);
+      return;
+    }
+
+    GAME_STATE.placed[slotIndex] = item;
+    GAME_STATE.selectedCardId = null;
+    GAME_STATE.progress = Math.round((getPlacedCount() / challenge.idealIds.length) * 100);
+    GAME_STATE.score += 10;
+
+    addLog('ok', `${item.label} benar`, getCorrectMessage(item.id));
+
+    showToast(`Benar: ${item.label}`, 'ok');
+    showPanji(getPanjiReactionMessage(item.id), 'happy');
+    flashScreen('ok');
+    popScore(slotEl || document.body, '+10', 'ok');
+
+    const completed = GAME_STATE.progress === 100;
+
+    renderGame();
+    pulseSlot(slotIndex);
+
+    if (completed) {
+      GAME_STATE.score += 20;
+      addLog('ok', 'Pipeline selesai', challenge.explanation);
+      showPanji('Mantap! Pipeline ini selesai dengan benar. Kita lanjut ke soal berikutnya ya.', 'happy');
+      showToast('Pipeline benar 100%. Otomatis lanjut...', 'ok');
+      spawnConfetti();
+
+      scheduleAutoNext('Pipeline selesai. Otomatis lanjut ke soal berikutnya...');
+    }
+  }
+
+  function pulseSlot(slotIndex) {
+    requestAnimationFrame(() => {
+      const slot = root.querySelector(`.ps-slot[data-slot-index="${slotIndex}"]`);
+
+      if (!slot) return;
+
+      slot.classList.add('fx-correct');
+
+      setTimeout(() => {
+        slot.classList.remove('fx-correct');
+      }, 520);
     });
   }
 
-  return lines.join("<br>");
-}
+  function shakeCard(cardId) {
+    requestAnimationFrame(() => {
+      const cardEl = root.querySelector(`.ps-action-card[data-card-id="${cardId}"]`);
 
-function populateMethodOptions() {
-  if (!el.jenisPengadaan || !el.paguPaket || !el.tersediaKatalog || !el.metodePemilihan) return;
+      if (!cardEl) return;
 
-  const jenisPengadaan = el.jenisPengadaan.value;
-  const pagu = parseNumberInput(el.paguPaket.value);
-  const katalog = el.tersediaKatalog.value;
-  const currentValue = el.metodePemilihan.value;
+      cardEl.classList.remove('wrong');
+      void cardEl.offsetWidth;
+      cardEl.classList.add('wrong');
 
-  const { allowed, hidden, ruleText } = getMethodOptions(jenisPengadaan, pagu, katalog);
-
-  el.metodePemilihan.innerHTML = "";
-
-  allowed.forEach((method) => {
-    const option = document.createElement("option");
-    option.value = method;
-    option.textContent = method;
-    el.metodePemilihan.appendChild(option);
-  });
-
-  if (allowed.includes(currentValue)) {
-    el.metodePemilihan.value = currentValue;
-  } else {
-    el.metodePemilihan.value = allowed[0] || "";
+      setTimeout(() => {
+        cardEl.classList.remove('wrong');
+      }, 360);
+    });
   }
 
-  if (el.infoRule) {
-    el.infoRule.innerHTML = ruleText || "Pilih jenis pengadaan, pagu, dan katalog untuk melihat metode yang sesuai.";
+  function wrongMove(cardId, message) {
+    clearPanjiIntroTimers();
+
+    GAME_STATE.risk += 10;
+    GAME_STATE.wrong += 1;
+    GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
+    GAME_STATE.selectedCardId = null;
+
+    addLog('bad', 'Urutan belum tepat', message);
+
+    showToast('Belum tepat. Risiko naik.', 'bad');
+    showPanji(getPanjiWrongMessage(cardId, message), 'sad');
+    flashScreen('bad');
+
+    renderGame();
+    shakeCard(cardId);
   }
 
-  if (el.helpMetode) {
-    el.helpMetode.textContent = "Dropdown metode hanya menampilkan opsi yang lolos rule simulasi.";
-  }
+  function answerQuiz(selectedIndex, buttonEl) {
+    clearPanjiIntroTimers();
 
-  methodExplanationCache = buildWhyMethodText(jenisPengadaan, pagu, katalog, hidden);
+    const challenge = getCurrentChallenge();
 
-  if (el.whyMethodText) {
-    el.whyMethodText.innerHTML = methodExplanationCache;
-  }
+    if (!challenge || challenge.type !== 'quiz') return;
+    if (GAME_STATE.answered) return;
 
-  updateMethodDefaults();
-}
+    GAME_STATE.selectedAnswer = selectedIndex;
+    GAME_STATE.answered = true;
 
-function updateMethodDefaults() {
-  if (!el.metodePemilihan || !el.durasiPemilihan || !el.waktuPersiapanAwal || !el.helpDurasiPemilihan) return;
+    if (selectedIndex === challenge.answer) {
+      GAME_STATE.score += 20;
 
-  const method = el.metodePemilihan.value;
-  const rule = METHOD_RULES[method];
-  if (!rule) return;
+      addLog('ok', 'Jawaban benar', challenge.explanation);
 
-  el.durasiPemilihan.value = rule.default;
-  el.waktuPersiapanAwal.value = rule.prep;
+      showToast('Jawaban benar. Otomatis lanjut...', 'ok');
+      showPanji('Jawabanmu benar! Keren, kamu makin paham pola pikir PBJ.', 'happy');
+      flashScreen('ok');
+      popScore(buttonEl || document.body, '+20', 'ok');
+      spawnConfetti();
 
-  let helpText = `Default durasi untuk ${method} adalah ${rule.default} hari.`;
-  if (method === "Tender" || method === "Seleksi") {
-    helpText += " Anda masih bisa mengubah manual, tetapi sistem akan memberi warning jika terlalu pendek atau terlalu panjang.";
-  }
-  if (method === "Tender Cepat") {
-    helpText += " Metode ini cocok untuk proses yang sangat singkat.";
-  }
-
-  el.helpDurasiPemilihan.textContent = helpText;
-}
-
-function evaluateMethodSuitability(jenisPengadaan, pagu, katalog, metode) {
-  const { allowed } = getMethodOptions(jenisPengadaan, pagu, katalog);
-
-  if (!allowed.includes(metode)) {
-    return {
-      status: "Belum cocok",
-      advice: "Metode ini tidak termasuk opsi yang lolos rule simulasi. Pilih metode yang disediakan sistem."
-    };
-  }
-
-  if (metode === "e-Purchasing") {
-    return {
-      status: "Sesuai",
-      advice: "E-purchasing dipilih karena paket ditandai tersedia di katalog."
-    };
-  }
-
-  return {
-    status: "Sesuai",
-    advice: "Metode yang dipilih masih sesuai dengan rule simulasi ini."
-  };
-}
-
-function evaluateDuration(method, duration) {
-  const rule = METHOD_RULES[method];
-  if (!rule) {
-    return {
-      type: "warning",
-      text: "Durasi belum memiliki rule khusus. Cek kembali secara manual."
-    };
-  }
-
-  if (duration < rule.min) {
-    return {
-      type: "warning",
-      text: `Durasi ${method} terlalu singkat. Minimal kewajaran simulasi untuk metode ini adalah ${rule.min} hari.`
-    };
-  }
-
-  if (duration > rule.max) {
-    return {
-      type: "warning",
-      text: `Durasi ${method} cukup panjang. Batas kewajaran simulasi untuk metode ini adalah ${rule.max} hari. Pastikan sesuai kompleksitas paket.`
-    };
-  }
-
-  return {
-    type: "valid",
-    text: `Durasi ${method} masih dalam rentang kewajaran simulasi.`
-  };
-}
-
-function setStatus(type, html) {
-  if (!el.statusBox) return;
-
-  el.statusBox.className = "status-box";
-
-  if (type === "valid") {
-    el.statusBox.classList.add("status-valid");
-  } else if (type === "invalid") {
-    el.statusBox.classList.add("status-invalid");
-  } else {
-    el.statusBox.classList.add("status-warning");
-  }
-
-  el.statusBox.innerHTML = html;
-}
-
-function renderSimulation() {
-  if (
-    !el.tahunAnggaran ||
-    !el.jenisKontrak ||
-    !el.jenisPengadaan ||
-    !el.paguPaket ||
-    !el.tersediaKatalog ||
-    !el.metodePemilihan ||
-    !el.durasiPemilihan ||
-    !el.waktuPersiapanAwal ||
-    !el.durasiPekerjaan ||
-    !el.mulaiPelaksanaan
-  ) {
-    return;
-  }
-
-  const tahun = Number(el.tahunAnggaran.value || 0);
-  const jenisKontrak = el.jenisKontrak.value;
-  const jenisPengadaan = el.jenisPengadaan.value;
-  const pagu = parseNumberInput(el.paguPaket.value);
-  const katalog = el.tersediaKatalog.value;
-  const metode = el.metodePemilihan.value;
-  const durasiPemilihanHari = Number(el.durasiPemilihan.value || 0);
-  const waktuPersiapanAwalHari = Number(el.waktuPersiapanAwal.value || 0);
-  const durasiPekerjaanBulan = Number(el.durasiPekerjaan.value || 0);
-  const mulaiPelaksanaan = parseLocalDate(el.mulaiPelaksanaan.value);
-
-  if (!tahun || !mulaiPelaksanaan || !pagu || durasiPemilihanHari < 1 || durasiPekerjaanBulan < 1 || waktuPersiapanAwalHari < 0) {
-    setStatus("warning", "Input belum lengkap atau belum valid. Pastikan tahun, pagu, metode, durasi, dan target mulai pelaksanaan sudah terisi.");
-    return;
-  }
-
-  const methodCheck = evaluateMethodSuitability(jenisPengadaan, pagu, katalog, metode);
-  const durationCheck = evaluateDuration(metode, durasiPemilihanHari);
-
-  const mulaiKontrak = new Date(mulaiPelaksanaan);
-  const selesaiPelaksanaan = addDays(addMonths(mulaiPelaksanaan, durasiPekerjaanBulan), -1);
-  const selesaiPemilihan = addDays(mulaiPelaksanaan, -1);
-  const mulaiPemilihan = addDays(selesaiPemilihan, -(durasiPemilihanHari - 1));
-  const mulaiPersiapan = addDays(mulaiPemilihan, -waktuPersiapanAwalHari);
-
-  const akhirTahunAnggaran = new Date(tahun, 11, 31);
-  const awalPraTahun = new Date(tahun - 1, 8, 1);
-  const totalDurasiHari = diffDays(mulaiPersiapan, selesaiPelaksanaan) + 1;
-
-  let statusType = "valid";
-  let statusJadwal = "";
-  let kesimpulan = "";
-  let saran = "";
-  let catatan = "";
-
-  if (jenisKontrak === "single") {
-    if (selesaiPelaksanaan > akhirTahunAnggaran) {
-      statusType = "invalid";
-      statusJadwal = "Belum cocok";
-      kesimpulan = "Jadwal belum cocok untuk kontrak tahunan";
-      saran = "Pertimbangkan memajukan jadwal atau menggunakan kontrak jamak.";
-      catatan = `Jadwal ini melewati batas tahun anggaran <strong>${tahun}</strong>. Untuk kontrak tahunan, pekerjaan seharusnya selesai paling lambat 31 Desember ${tahun}.`;
-    } else if (mulaiPersiapan < awalPraTahun) {
-      statusType = "warning";
-      statusJadwal = "Terlalu awal";
-      kesimpulan = "Paket sebaiknya disiapkan jauh sebelum periode simulasi";
-      saran = "Durasi paket cukup panjang. Disarankan penyusunan dokumen dimulai lebih awal lagi.";
-      catatan = `Jadwal persiapan ideal dimulai sebelum <strong>September ${tahun - 1}</strong>. Ini menunjukkan paket berdurasi panjang dan perlu perhatian khusus sejak awal.`;
+      renderGame();
+      scheduleAutoNext('Jawaban benar. Otomatis lanjut ke soal berikutnya...');
     } else {
-      const sisaHari = diffDays(selesaiPelaksanaan, akhirTahunAnggaran);
+      GAME_STATE.risk += 8;
+      GAME_STATE.wrong += 1;
+      GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
 
-      if (mulaiPersiapan.getFullYear() < tahun) {
-        statusType = "warning";
-        statusJadwal = "Mulai lebih awal";
-        kesimpulan = "Sebaiknya disiapkan sejak akhir tahun sebelumnya";
-        saran = "Agar aman, proses persiapan dan pemilihan jangan menunggu tahun anggaran berjalan.";
-        catatan = `Paket ini masih bisa selesai dalam tahun anggaran <strong>${tahun}</strong>, namun jadwal ideal menunjukkan bahwa persiapan sebaiknya sudah dimulai sejak akhir tahun sebelumnya.`;
-      } else if (sisaHari <= 30) {
-        statusType = "warning";
-        statusJadwal = "Mepet";
-        kesimpulan = "Jadwal cukup mepet akhir tahun";
-        saran = "Disarankan memajukan persiapan atau pemilihan agar pelaksanaan tidak menumpuk di akhir tahun.";
-        catatan = `Jadwal masih berada dalam tahun anggaran <strong>${tahun}</strong>, tetapi waktu penyelesaian cukup mepet dengan akhir tahun.`;
-      } else {
-        statusType = "valid";
-        statusJadwal = "Aman";
-        kesimpulan = "Jadwal masih aman";
-        saran = "Paket dapat diproses pada tahun anggaran berjalan sesuai simulasi ini.";
-        catatan = `Jadwal masih aman dalam tahun anggaran <strong>${tahun}</strong>. Pelaksanaan diperkirakan selesai sebelum 31 Desember ${tahun}.`;
+      addLog('bad', 'Jawaban belum tepat', challenge.explanation);
+
+      showToast('Jawaban belum tepat. Otomatis lanjut setelah pembahasan.', 'bad');
+      showPanji(`Yah, belum tepat. Cek pembahasan ini ya: ${challenge.explanation}`, 'sad');
+      flashScreen('bad');
+      popScore(buttonEl || document.body, '+8 Risiko', 'bad');
+
+      renderGame();
+      scheduleAutoNext('Pembahasan terbuka. Otomatis lanjut ke soal berikutnya...', 2200);
+    }
+  }
+
+  function getCorrectMessage(cardId) {
+    const messages = {
+      rup: 'RUP menjadi pintu awal untuk memastikan paket, jadwal, pagu, dan metode.',
+      identifikasi: 'Identifikasi kebutuhan mencegah paket dobel, tidak relevan, atau tidak sesuai prioritas.',
+      konsolidasi: 'Konsolidasi membantu mengelola kebutuhan sejenis agar tidak terpecah tanpa alasan.',
+      kak: 'KAK/spesifikasi harus berbasis kebutuhan dan tidak mengarah.',
+      'review-spek': 'Review spesifikasi penting agar persaingan sehat.',
+      hps: 'HPS/referensi harga menjadi dasar kewajaran biaya.',
+      'cek-pdn': 'PDN/TKDN perlu diperhatikan untuk mendukung produk dalam negeri.',
+      'cek-katalog': 'Cek katalog membantu menentukan apakah e-Purchasing dapat digunakan.',
+      'katalog-tidak-sesuai': 'Jika katalog tidak menyediakan produk/penyedia sesuai, kondisi itu harus dicatat sebelum mengganti metode.',
+      'dokumentasi-gagal-katalog': 'Dokumentasi hasil cek katalog menjadi dasar perubahan metode.',
+      'evaluasi-metode': 'Evaluasi metode diperlukan agar metode baru sesuai nilai, jenis, dan kondisi paket.',
+      'pilih-metode': 'Metode dipilih setelah kebutuhan, nilai, jadwal, dan pasar dipahami.',
+      'metode-pl': 'Pengadaan Langsung tepat bila nilai dan kondisi paket sesuai.',
+      'metode-epurchasing': 'e-Purchasing tepat jika tersedia di katalog dan sesuai kebutuhan.',
+      tender: 'Tender dipakai saat karakter paket membutuhkan proses pemilihan formal.',
+      seleksi: 'Seleksi relevan untuk jasa konsultansi.',
+      swakelola: 'Swakelola dapat dipilih jika memenuhi kriteria.',
+      klarifikasi: 'Klarifikasi/negosiasi memastikan harga, spesifikasi, dan kemampuan pelaksanaan.',
+      proses: 'Proses pemilihan dilakukan setelah dokumen dan metode siap.',
+      kontrak: 'Kontrak/SPK menjadi dasar pelaksanaan setelah proses pengadaan.',
+      'monitoring-kontrak': 'Monitoring kontrak mengendalikan waktu, mutu, dan kewajiban penyedia.',
+      'identifikasi-perubahan': 'Perubahan kontrak harus diawali identifikasi kondisi perubahan.',
+      'kaji-kontrak': 'Klausul kontrak perlu dikaji sebelum adendum.',
+      'justifikasi-teknis': 'Justifikasi teknis menjadi dasar perubahan kontrak.',
+      'negosiasi-perubahan': 'Negosiasi perubahan membahas dampak harga, waktu, dan volume.',
+      'adendum-kontrak': 'Adendum dituangkan secara tertulis sebelum perubahan dilaksanakan lebih lanjut.',
+      teguran: 'Teguran/evaluasi diperlukan saat penyedia terlambat atau bermasalah.',
+      pemeriksaan: 'Pemeriksaan hasil mencegah barang/jasa tidak sesuai langsung diterima.',
+      bast: 'BAST dilakukan setelah hasil diperiksa dan sesuai.',
+      pembayaran: 'Pembayaran dilakukan setelah dokumen pendukung memadai.',
+      realisasi: 'Pencatatan realisasi memastikan data monitoring tidak bolong.'
+    };
+
+    return messages[cardId] || 'Langkah ini benar pada posisi pipeline saat ini.';
+  }
+
+  function getPanjiReactionMessage(cardId) {
+    const messages = {
+      rup:
+        'Betul. Cek RUP dulu di SiRUP untuk memastikan paket sudah diumumkan, pagu, metode, jadwal, dan satkernya sesuai sebelum proses lanjut. Dari RUP ini kita tahu prosesnya tidak loncat dari perencanaan.',
+
+      identifikasi:
+        'Betul. Identifikasi kebutuhan itu pondasi awal. PPK perlu memastikan barang atau jasa memang dibutuhkan, volumenya jelas, lokasinya jelas, waktunya masuk akal, dan tidak dobel dengan paket lain.',
+
+      konsolidasi:
+        'Betul. Kalau kebutuhannya sejenis, pikirkan konsolidasi dulu. Ini bisa membantu efisiensi, menguatkan posisi belanja pemerintah, dan mencegah paket dipecah-pecah tanpa alasan yang kuat.',
+
+      'review-spek':
+        'Betul. Spesifikasi perlu direview supaya tidak mengarah ke merek atau penyedia tertentu. Spek harus menjelaskan kebutuhan dan standar kinerja, bukan mengunci calon pemenang.',
+
+      kak:
+        'Betul. KAK atau spesifikasi menjelaskan kebutuhan secara teknis, ruang lingkup, output, jadwal, lokasi, dan standar yang harus dipenuhi. KAK yang rapi bikin proses berikutnya lebih aman.',
+
+      hps:
+        'Betul. Setelah KAK jelas, HPS atau referensi harga disusun sebagai dasar kewajaran harga. Jangan asal ambil angka tanpa survei, pembanding, katalog, pasar, atau dasar yang masuk akal.',
+
+      'cek-pdn':
+        'Betul. Cek PDN dan TKDN penting untuk mendukung penggunaan produk dalam negeri. Kalau produk dalam negeri tersedia dan sesuai, jangan langsung lari ke produk impor.',
+
+      'cek-katalog':
+        'Betul. Cek e-Katalog dulu untuk melihat apakah barang atau jasa tersedia, spesifikasinya sesuai, penyedianya ada, harganya wajar, TKDN-nya cocok, dan proses e-Purchasing bisa dipertanggungjawabkan.',
+
+      'katalog-tidak-sesuai':
+        'Betul. Kalau katalog tidak menyediakan produk atau penyedia yang sesuai, kondisi itu harus dicatat. Jangan memaksakan e-Purchasing kalau barangnya tidak cocok dengan kebutuhan.',
+
+      'dokumentasi-gagal-katalog':
+        'Betul. Dokumentasi hasil cek katalog penting sebagai bukti kenapa metode awal tidak bisa dilanjutkan. Simpan dasar pengecekan agar perubahan metode tidak terlihat asal-asalan.',
+
+      'evaluasi-metode':
+        'Betul. Setelah ada bukti katalog tidak sesuai, metode perlu dievaluasi ulang berdasarkan nilai paket, jenis pengadaan, kondisi pasar, ketersediaan penyedia, dan ketentuan yang berlaku.',
+
+      'pilih-metode':
+        'Betul. Metode dipilih setelah kebutuhan, HPS, kondisi pasar, jenis pengadaan, dan nilai paket jelas. Jangan pilih metode hanya karena paling cepat atau paling gampang.',
+
+      'metode-pl':
+        'Betul. Pengadaan Langsung bisa dipakai kalau nilai dan kondisinya sesuai. Kalau nilainya melewati batas atau paketnya kompleks, jangan dipaksa jadi Pengadaan Langsung.',
+
+      'metode-epurchasing':
+        'Betul. e-Purchasing tepat kalau barang atau jasa tersedia di katalog, spesifikasinya sesuai, penyedianya ada, dan prosesnya bisa dipertanggungjawabkan.',
+
+      tender:
+        'Betul. Tender dipakai untuk paket yang memerlukan proses pemilihan formal dan kompetitif, terutama jika nilai atau karakter pekerjaannya tidak cocok dengan metode sederhana.',
+
+      seleksi:
+        'Betul. Untuk jasa konsultansi, metode seleksi sering digunakan karena yang dinilai bukan cuma harga, tapi juga kualitas keahlian, pengalaman, dan pendekatan teknis.',
+
+      swakelola:
+        'Betul. Swakelola digunakan kalau kegiatan memenuhi kriteria swakelola. Tetap harus ada perencanaan, KAK, anggaran, pelaksanaan, pengawasan, dan pertanggungjawaban.',
+
+      klarifikasi:
+        'Betul. Klarifikasi atau negosiasi memastikan harga, spesifikasi, jadwal, dan kemampuan pelaksanaan benar-benar masuk akal sebelum kontrak dilakukan.',
+
+      proses:
+        'Betul. Proses pemilihan dilakukan setelah dokumen dan metode siap. Jangan lompat ke kontrak sebelum proses pemilihannya tertib dan bisa dipertanggungjawabkan.',
+
+      kontrak:
+        'Betul. Kontrak atau SPK menjadi dasar pelaksanaan pekerjaan. Ini dilakukan setelah proses pengadaan selesai dan penyedia atau pelaksana sudah ditetapkan.',
+
+      'monitoring-kontrak':
+        'Betul. Setelah kontrak berjalan, PPK wajib memantau waktu, mutu, volume, progres, dan kewajiban penyedia. Jangan baru sadar bermasalah saat mau BAST.',
+
+      teguran:
+        'Betul. Kalau penyedia terlambat atau tidak sesuai, lakukan teguran atau evaluasi. Masalah kontrak harus dikendalikan, bukan dibiarkan sampai akhir.',
+
+      pemeriksaan:
+        'Betul. Pemeriksaan hasil dilakukan sebelum BAST. Barang atau pekerjaan harus dicek dulu kesesuaiannya dengan kontrak, spesifikasi, volume, dan kualitas.',
+
+      bast:
+        'Betul. BAST dilakukan setelah hasil pekerjaan atau barang sesuai. Jangan BAST kalau barang belum diperiksa, belum lengkap, atau masih bermasalah.',
+
+      pembayaran:
+        'Betul. Pembayaran dilakukan setelah dokumen pendukung lengkap, prestasi pekerjaan sesuai, dan proses serah terima tertib.',
+
+      realisasi:
+        'Betul. Realisasi harus dicatat supaya data monitoring tidak bolong, termasuk untuk evaluasi, laporan, dan pemantauan kinerja pengadaan.',
+
+      'identifikasi-perubahan':
+        'Betul. Kalau ada perubahan kontrak, mulai dari identifikasi dulu: apa yang berubah, kenapa berubah, dan dampaknya ke volume, waktu, mutu, atau biaya.',
+
+      'kaji-kontrak':
+        'Betul. Sebelum adendum, klausul kontrak harus dikaji. Tidak semua perubahan bisa langsung ditulis jadi adendum tanpa dasar kontraktual.',
+
+      'justifikasi-teknis':
+        'Betul. Justifikasi teknis menjelaskan alasan perubahan secara tertib. Ini penting supaya adendum tidak terlihat asal mengubah kontrak.',
+
+      'negosiasi-perubahan':
+        'Betul. Perubahan kontrak perlu dibahas dampaknya, termasuk harga, waktu, volume, mutu, dan risiko. Jangan sampai perubahan merugikan atau tidak jelas dasarnya.',
+
+      'adendum-kontrak':
+        'Betul. Adendum kontrak menuangkan perubahan secara tertulis. Setelah itu pelaksanaan lanjut sesuai perubahan yang sudah disepakati.'
+    };
+
+    return messages[cardId] || 'Betul. Langkah itu sudah tepat di posisi pipeline ini. Lanjutkan dengan urutan yang tertib dan jangan lompat proses.';
+  }
+
+  function getPanjiWrongMessage(cardId, fallbackMessage) {
+    const messages = {
+      'kontrak-awal':
+        'Aduh, jangan kontrak dulu. Kontrak atau SPK baru aman setelah dokumen siap, metode jelas, proses pemilihan selesai, dan penyedia sudah ditetapkan.',
+
+      'pecah-paket':
+        'Waduh, hati-hati. Pecah paket tanpa alasan kuat bisa dianggap menghindari metode yang seharusnya. Kalau kebutuhan sejenis, pikirkan konsolidasi.',
+
+      'spek-mengarah':
+        'Jangan pakai spek mengarah. Spesifikasi harus menjelaskan kebutuhan, bukan mengunci merek atau penyedia tertentu.',
+
+      'abaikan-katalog':
+        'Jangan abaikan katalog. Untuk barang atau jasa yang berpotensi tersedia di e-Katalog, cek dulu kesesuaian produk, penyedia, harga, dan TKDN.',
+
+      'lanjut-epurchasing-paksa':
+        'Jangan memaksa e-Purchasing kalau produk atau penyedia di katalog tidak sesuai kebutuhan. Dokumentasikan hasil cek dulu, baru evaluasi metode.',
+
+      'ganti-metode-tanpa-bukti':
+        'Jangan ganti metode tanpa bukti. Perubahan metode harus punya dasar, misalnya hasil cek katalog tidak sesuai dan dokumentasi pendukungnya jelas.',
+
+      'lewati-rup':
+        'Jangan lewati RUP. RUP di SiRUP adalah pintu awal untuk memastikan paket memang sudah direncanakan dan diumumkan.',
+
+      'bast-tanpa-cek':
+        'Jangan BAST tanpa pemeriksaan. Barang atau pekerjaan harus dicek dulu kesesuaiannya dengan kontrak, volume, spesifikasi, dan kualitas.',
+
+      'bayar-dulu':
+        'Jangan bayar dulu. Pembayaran harus menunggu prestasi pekerjaan, dokumen pendukung, dan serah terima yang tertib.',
+
+      'tunda-dokumen':
+        'Jangan tunda dokumen. Dalam PBJ, bukti dan administrasi itu bagian dari akuntabilitas, bukan pelengkap belakangan.',
+
+      'metode-asal-cepat':
+        'Jangan pilih metode hanya karena cepat. Metode harus sesuai nilai paket, jenis pengadaan, kondisi pasar, dan ketentuan.',
+
+      'realisasi-lupa':
+        'Jangan lupa catat realisasi. Kalau realisasi tidak dicatat, monitoring dan laporan kinerja pengadaan jadi bolong.',
+
+      'adendum-tanpa-dasar':
+        'Jangan membuat adendum tanpa dasar. Perubahan kontrak harus diawali identifikasi, kajian klausul, justifikasi teknis, dan kesepakatan yang tertib.',
+
+      'bayar-sebelum-adendum':
+        'Jangan bayar sebelum perubahan kontrak tertib. Kalau ada perubahan volume, waktu, atau nilai, rapikan dasar dan adendumnya dulu.'
+    };
+
+    return messages[cardId] || `Aduh, belum tepat. ${fallbackMessage}`;
+  }
+
+  window.__moduleInit = function ({ container }) {
+    destroyed = false;
+    containerRef = container;
+    root = container.querySelector('#procstackRoot');
+
+    if (!root) {
+      return function destroy() {};
+    }
+
+    initPanji(container);
+    startGame();
+
+    return function destroy() {
+      destroyed = true;
+
+      clearAutoNextTimer();
+      clearPanjiIntroTimers();
+      clearPanjiTalkTimer();
+
+      if (panjiScrollTimer) {
+        clearTimeout(panjiScrollTimer);
+        panjiScrollTimer = null;
       }
-    }
-  } else {
-    if (mulaiPersiapan < awalPraTahun) {
-      statusType = "warning";
-      statusJadwal = "Panjang";
-      kesimpulan = "Paket berdurasi panjang";
-      saran = "Karena paket cukup panjang, penyusunan dokumen dan kesiapan internal sebaiknya dimulai lebih awal.";
-      catatan = `Untuk kontrak jamak, jadwal ini masih memungkinkan, namun persiapan ideal dimulai sebelum periode simulasi yang ditampilkan.`;
-    } else if (mulaiPersiapan.getFullYear() < tahun) {
-      statusType = "valid";
-      statusJadwal = "Aman";
-      kesimpulan = "Cocok untuk kontrak jamak";
-      saran = "Paket dapat disiapkan sejak akhir tahun sebelumnya agar pelaksanaan lebih rapi.";
-      catatan = `Jadwal dapat dilaksanakan sebagai <strong>kontrak jamak</strong>, dan persiapan sejak akhir tahun sebelumnya justru membantu pelaksanaan lebih tertib.`;
-    } else {
-      statusType = "valid";
-      statusJadwal = "Aman";
-      kesimpulan = "Cocok untuk kontrak jamak";
-      saran = "Paket dapat dilanjutkan sesuai simulasi, dengan tetap memperhatikan kesiapan dokumen dan anggaran.";
-      catatan = `Jadwal dapat dilaksanakan sebagai <strong>kontrak jamak</strong>, dengan catatan tetap menyesuaikan ketentuan penganggaran dan kontrak yang berlaku.`;
-    }
-  }
 
-  let statusHtmlType = statusType;
-  const extraWarnings = [];
+      if (panjiEl && typeof panjiEl._panjiScrollDestroy === 'function') {
+        panjiEl._panjiScrollDestroy();
+        panjiEl._panjiScrollDestroy = null;
+      }
 
-  if (methodCheck.status !== "Sesuai") {
-    statusHtmlType = "warning";
-    extraWarnings.push(methodCheck.advice);
-  }
+      if (toastEl) {
+        toastEl.remove();
+        toastEl = null;
+      }
 
-  if (durationCheck.type === "warning") {
-    statusHtmlType = "warning";
-    extraWarnings.push(durationCheck.text);
-  }
+      const flash = document.getElementById('psScreenFlash');
 
-  if (el.badgeMetode) el.badgeMetode.textContent = metode;
-  if (el.outPaguPaket) el.outPaguPaket.textContent = formatRupiah(pagu);
-  if (el.outMulaiPersiapan) el.outMulaiPersiapan.textContent = formatDateID(mulaiPersiapan);
-  if (el.outMulaiPemilihan) el.outMulaiPemilihan.textContent = formatDateID(mulaiPemilihan);
-  if (el.outSelesaiPemilihan) el.outSelesaiPemilihan.textContent = formatDateID(selesaiPemilihan);
-  if (el.outMulaiKontrak) el.outMulaiKontrak.textContent = formatDateID(mulaiKontrak);
-  if (el.outSelesaiPelaksanaan) el.outSelesaiPelaksanaan.textContent = formatDateID(selesaiPelaksanaan);
-  if (el.outDurasiTotal) el.outDurasiTotal.textContent = `${totalDurasiHari.toLocaleString("id-ID")} Hari`;
-  if (el.outStatusMetode) el.outStatusMetode.textContent = methodCheck.status;
-  if (el.outSaranMetode) el.outSaranMetode.textContent = methodCheck.advice;
-  if (el.outStatusJadwal) el.outStatusJadwal.textContent = statusJadwal;
-  if (el.outSaranSistem) el.outSaranSistem.textContent = saran;
+      if (flash) {
+        flash.remove();
+      }
 
-  let combinedHtml = `<strong>${kesimpulan}</strong><br>${catatan}`;
-  if (extraWarnings.length) {
-    combinedHtml += `<br><br><strong>Catatan tambahan:</strong><br>${extraWarnings.map((x) => `• ${x}`).join("<br>")}`;
-  }
+      document.querySelectorAll('.ps-confetti, .ps-floating-score').forEach(el => {
+        el.remove();
+      });
 
-  setStatus(statusHtmlType, combinedHtml);
+      if (panjiEl) {
+        panjiEl.classList.add('panji-hidden');
+      }
 
-  if (el.detailTahun) el.detailTahun.textContent = tahun;
-  if (el.detailJenisPengadaan) el.detailJenisPengadaan.textContent = jenisPengadaan;
-  if (el.detailPaguPaket) el.detailPaguPaket.textContent = formatRupiah(pagu);
-  if (el.detailKatalog) el.detailKatalog.textContent = katalog === "ya" ? "Ya" : "Tidak";
-  if (el.detailMetode) el.detailMetode.textContent = metode;
-  if (el.detailJenisKontrak) el.detailJenisKontrak.textContent = jenisKontrak === "single" ? "Kontrak Tahunan (Single Year)" : "Kontrak Jamak (Multi Year)";
-  if (el.detailDurasiPemilihan) el.detailDurasiPemilihan.textContent = `${durasiPemilihanHari} Hari`;
-  if (el.detailWaktuPersiapanAwal) el.detailWaktuPersiapanAwal.textContent = `${waktuPersiapanAwalHari} Hari`;
-  if (el.detailDurasiPekerjaan) el.detailDurasiPekerjaan.textContent = `${durasiPekerjaanBulan} Bulan`;
-  if (el.detailMulaiPelaksanaan) el.detailMulaiPelaksanaan.textContent = formatDateID(mulaiPelaksanaan);
-  if (el.detailKesimpulan) el.detailKesimpulan.innerHTML = `<strong>${kesimpulan}</strong>`;
-  if (el.catatanTambahan) el.catatanTambahan.innerHTML = combinedHtml;
-
-  const bufferStart = selesaiPelaksanaan <= akhirTahunAnggaran ? addDays(selesaiPelaksanaan, 1) : new Date(tahun, 11, 31);
-
-  const ranges = {
-    persiapan: {
-      start: mulaiPersiapan,
-      end: addDays(mulaiPemilihan, -1)
-    },
-    pemilihan: {
-      start: mulaiPemilihan,
-      end: selesaiPemilihan
-    },
-    pelaksanaan: {
-      start: mulaiPelaksanaan,
-      end: selesaiPelaksanaan
-    },
-    akhir: {
-      start: bufferStart,
-      end: akhirTahunAnggaran
-    }
+      containerRef = null;
+      root = null;
+    };
   };
-
-  buildTimeline(tahun, ranges);
-}
-
-function resetForm() {
-  if (el.tahunAnggaran) el.tahunAnggaran.value = "2026";
-  if (el.jenisKontrak) el.jenisKontrak.value = "single";
-  if (el.jenisPengadaan) el.jenisPengadaan.value = "Barang";
-  if (el.paguPaket) el.paguPaket.value = "150.000.000";
-  if (el.tersediaKatalog) el.tersediaKatalog.value = "tidak";
-  populateMethodOptions();
-  if (el.durasiPekerjaan) el.durasiPekerjaan.value = "12";
-  if (el.mulaiPelaksanaan) el.mulaiPelaksanaan.value = "2026-04-01";
-  if (el.whyMethodBox) el.whyMethodBox.style.display = "none";
-  renderSimulation();
-}
-
-function exportPdf() {
-  window.print();
-}
-
-function toggleWhyMethod() {
-  if (!el.whyMethodBox || !el.whyMethodText) return;
-  const isHidden = el.whyMethodBox.style.display === "none" || !el.whyMethodBox.style.display;
-  el.whyMethodBox.style.display = isHidden ? "block" : "none";
-  el.whyMethodText.innerHTML = methodExplanationCache || "-";
-}
-
-function bindEventsOnce() {
-  if (eventsBound) return;
-  eventsBound = true;
-
-  safeBind(el.paguPaket, "input", () => {
-    formatPaguInput();
-    populateMethodOptions();
-  });
-
-  safeBind(el.jenisPengadaan, "change", populateMethodOptions);
-  safeBind(el.tersediaKatalog, "change", populateMethodOptions);
-  safeBind(el.metodePemilihan, "change", updateMethodDefaults);
-
-  safeBind(el.btnWhyMethod, "click", toggleWhyMethod);
-  safeBind(el.btnSimulasikan, "click", renderSimulation);
-  safeBind(el.btnReset, "click", resetForm);
-  safeBind(el.btnExportPdf, "click", exportPdf);
-  safeBind(el.btnExportPdfTop, "click", exportPdf);
-}
-
-function initTimelineModule() {
-  if (moduleDestroyed) return;
-  el = getElements();
-  formatPaguInput();
-  populateMethodOptions();
-  renderSimulation();
-}
-
-window.__moduleInit = function () {
-  moduleDestroyed = false;
-  el = getElements();
-
-  bindEventsOnce();
-  initTimelineModule();
-
-  return function destroy() {
-    moduleDestroyed = true;
-  };
-};
+})();
