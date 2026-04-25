@@ -930,41 +930,56 @@ function showPanji(message, mood = 'thinking') {
     }
   }
 
-  function showPanjiIntro() {
-    clearPanjiIntroTimers();
+function showPanjiIntro() {
+  clearPanjiIntroTimers();
 
-    showPanji(
-      'Halo! Perkenalkan, aku PANJI.',
-      'happy'
+  if (panjiEl) {
+    panjiEl.classList.remove('panji-hidden');
+    panjiEl.classList.remove('panji-minimized');
+    panjiEl.classList.remove(
+      'panji-happy',
+      'panji-sad',
+      'panji-thinking',
+      'panji-intro'
     );
 
-    panjiIntroTimers.push(setTimeout(() => {
-      if (destroyed) return;
+    void panjiEl.offsetWidth;
 
-      showPanji(
-        'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ sambil main Procurement Stacker.',
-        'thinking'
-      );
-    }, 1700));
-
-    panjiIntroTimers.push(setTimeout(() => {
-      if (destroyed) return;
-
-      showPanji(
-        `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin ya. Jadi pakai bantuanku seperlunya aja.`,
-        'thinking'
-      );
-    }, 3900));
-
-    panjiIntroTimers.push(setTimeout(() => {
-      if (destroyed) return;
-
-      showPanji(
-        'Yuk mulai. Susun pipeline dengan tertib: jangan asal cepat, yang penting sesuai alur, ada bukti, dan risikonya rendah.',
-        'happy'
-      );
-    }, 6500));
+    panjiEl.classList.add('panji-intro');
   }
+
+  showPanji(
+    'Halo! Perkenalkan, aku PANJI.',
+    'happy'
+  );
+
+  panjiIntroTimers.push(setTimeout(() => {
+    if (destroyed) return;
+
+    showPanji(
+      'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ sambil main Procurement Stacker.',
+      'thinking'
+    );
+  }, 1700));
+
+  panjiIntroTimers.push(setTimeout(() => {
+    if (destroyed) return;
+
+    showPanji(
+      `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin ya. Jadi pakai bantuanku seperlunya aja.`,
+      'thinking'
+    );
+  }, 3900));
+
+  panjiIntroTimers.push(setTimeout(() => {
+    if (destroyed) return;
+
+    showPanji(
+      'Yuk mulai. Susun pipeline dengan tertib: jangan asal cepat, yang penting sesuai alur, ada bukti, dan risikonya rendah.',
+      'happy'
+    );
+  }, 6500));
+}
 
   function getHintMessage(challenge) {
     if (!challenge) {
