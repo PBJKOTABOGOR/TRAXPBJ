@@ -1,13 +1,13 @@
 const APP_ROUTES = {
   dashboard: {
-    title: 'Dashboard SIPPBJ',
-    subtitle: 'Ringkasan profil pengadaan barang/jasa Kota Bogor.',
+    title: 'Dashboard TRAXPBJ',
+    subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
 
   'monitoring-sirup': {
     title: 'Monitoring SiRUP',
-    subtitle: 'Monitoring indikator pemanfaatan SiRUP dalam capaian ITKP Perangkat Daerah.',
+    subtitle: 'Monitoring paket perencanaan yang diumumkan di SIRUP dan indikator ITKP SIRUP.',
     type: 'module',
     html: 'modules/monitoring/itkp-sirup/itkp-sirup.html',
     css: 'modules/monitoring/itkp-sirup/itkp-sirup.css',
@@ -16,7 +16,7 @@ const APP_ROUTES = {
 
   'monitoring-ekatalog': {
     title: 'Monitoring eKatalog',
-    subtitle: 'Monitoring indikator pemanfaatan eKatalog dalam capaian ITKP Perangkat Daerah.',
+    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKatalog.',
     type: 'module',
     html: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.html',
     css: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.css',
@@ -25,7 +25,7 @@ const APP_ROUTES = {
 
   'monitoring-etendering': {
     title: 'Monitoring eTendering',
-    subtitle: 'Monitoring indikator pemanfaatan eTendering dalam capaian ITKP Perangkat Daerah.',
+    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eTendering.',
     type: 'module',
     html: 'modules/monitoring/itkp-etendering/itkp-etendering.html',
     css: 'modules/monitoring/itkp-etendering/itkp-etendering.css',
@@ -34,7 +34,7 @@ const APP_ROUTES = {
 
   'monitoring-ekontrak': {
     title: 'Monitoring eKontrak',
-    subtitle: 'Monitoring indikator pemanfaatan eKontrak dalam capaian ITKP Perangkat Daerah.',
+    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKontrak.',
     type: 'module',
     html: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.html',
     css: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.css',
@@ -42,7 +42,7 @@ const APP_ROUTES = {
   },
 
   'monitoring-nontender': {
-    title: 'Non eTendering/Non ePurchasing',
+    title: 'Monitoring Non Tender',
     subtitle: 'Halaman ini disiapkan untuk monitoring Non eTendering/Non ePurchasing.',
     type: 'placeholder'
   },
@@ -67,8 +67,8 @@ const APP_ROUTES = {
   },
 
   'monitoring-konsolidasi': {
-    title: 'Konsolidasi',
-    subtitle: 'Monitoring paket konsolidasi dan informasi konsolidasi pengadaan.',
+    title: 'Monitoring Paket Konsolidasi',
+    subtitle: 'Halaman ini disiapkan untuk monitoring paket konsolidasi.',
     type: 'placeholder'
   },
 
@@ -109,8 +109,8 @@ let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
 
-function escapeHtml(text) {
-  return String(text || '')
+function escapeHtml(value) {
+  return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -151,6 +151,7 @@ function initScrollAnimation() {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+
     progress.style.width = `${Math.min(100, Math.max(0, percent))}%`;
   };
 
@@ -178,7 +179,7 @@ function initScrollAnimation() {
   revealItems.forEach((item) => observer.observe(item));
 
   updateProgress();
-  window.addEventListener('scroll', updateProgress, { passive:true });
+  window.addEventListener('scroll', updateProgress, { passive: true });
 
   scrollAnimationDestroy = () => {
     window.removeEventListener('scroll', updateProgress);
@@ -198,16 +199,19 @@ function renderDashboard() {
           <div class="value">86,42%</div>
           <div class="desc">Indikator pemanfaatan sistem pengadaan</div>
         </div>
+
         <div class="stat-card">
           <div class="label">Konsolidasi</div>
           <div class="value">128</div>
           <div class="desc">Paket terindikasi/termonitor konsolidasi</div>
         </div>
+
         <div class="stat-card">
           <div class="label">Paket Belum Berjalan</div>
           <div class="value">6.666</div>
           <div class="desc">Breakdown per metode pengadaan</div>
         </div>
+
         <div class="stat-card">
           <div class="label">Rapor PBJ</div>
           <div class="value">44</div>
@@ -219,15 +223,19 @@ function renderDashboard() {
     <section class="grid-main">
       <div class="card">
         <h3>Profil Pengadaan Barang/Jasa Kota Bogor</h3>
+
         <div class="summary-panels">
           <div class="mini-card">
             <h4>Skor ITKP</h4>
+
             <div class="big-number">86,42%</div>
+
             <div class="progress-scale">
               <div class="progress-track">
                 <div class="progress-bar" style="width:86.42%"></div>
               </div>
             </div>
+
             <div class="dimensions">
               ${renderDimension('SiRUP', 92.10)}
               ${renderDimension('eKatalog', 84.33)}
@@ -239,13 +247,37 @@ function renderDashboard() {
 
           <div class="mini-card">
             <h4>Paket Belum Berjalan per Metode</h4>
+
             <div class="table-lite">
-              <div class="table-row table-head"><div>Metode</div><div>Jumlah</div></div>
-              <div class="table-row"><div>Pengadaan Langsung</div><div>3.821</div></div>
-              <div class="table-row"><div>e-Purchasing</div><div>1.744</div></div>
-              <div class="table-row"><div>Tender</div><div>633</div></div>
-              <div class="table-row"><div>Seleksi</div><div>214</div></div>
-              <div class="table-row"><div>Lainnya</div><div>254</div></div>
+              <div class="table-row table-head">
+                <div>Metode</div>
+                <div>Jumlah</div>
+              </div>
+
+              <div class="table-row">
+                <div>Pengadaan Langsung</div>
+                <div>3.821</div>
+              </div>
+
+              <div class="table-row">
+                <div>e-Purchasing</div>
+                <div>1.744</div>
+              </div>
+
+              <div class="table-row">
+                <div>Tender</div>
+                <div>633</div>
+              </div>
+
+              <div class="table-row">
+                <div>Seleksi</div>
+                <div>214</div>
+              </div>
+
+              <div class="table-row">
+                <div>Lainnya</div>
+                <div>254</div>
+              </div>
             </div>
           </div>
         </div>
@@ -253,6 +285,7 @@ function renderDashboard() {
 
       <div class="card">
         <h3>Aktivitas / Informasi</h3>
+
         <div class="activities">
           ${renderActivity('#2ab56f', '✓', 'Rapor PBJ Bulan April 2026 telah tersedia', 'Laporan rapor untuk perangkat daerah telah berhasil dibuat.', '2 jam lalu')}
           ${renderActivity('#4c7df2', '📊', 'Update Dashboard ITKP', 'Data monitoring ITKP diperbarui pada portal.', '3 jam lalu')}
@@ -274,8 +307,52 @@ function renderDashboard() {
   `;
 
   contentArea.querySelectorAll('[data-quick]').forEach((item) => {
-    item.addEventListener('click', () => loadPage(item.dataset.quick));
+    item.addEventListener('click', () => {
+      loadPage(item.dataset.quick);
+    });
   });
+}
+
+function renderDimension(name, value) {
+  return `
+    <div class="dim-row">
+      <div>${escapeHtml(name)}</div>
+      <div class="bar">
+        <span style="width:${value}%"></span>
+      </div>
+      <div>${value.toFixed(2).replace('.', ',')}%</div>
+    </div>
+  `;
+}
+
+function renderActivity(color, icon, title, text, time) {
+  return `
+    <div class="activity-item">
+      <div class="activity-icon" style="background:${color}">${icon}</div>
+
+      <div>
+        <div class="activity-title">${escapeHtml(title)}</div>
+        <div class="activity-text">${escapeHtml(text)}</div>
+      </div>
+
+      <div class="activity-time">${escapeHtml(time)}</div>
+    </div>
+  `;
+}
+
+function renderQuickCard(icon, bg, title, text, route) {
+  return `
+    <button class="quick-card" type="button" data-quick="${escapeHtml(route)}">
+      <div class="quick-icon" style="background:${bg}">${icon}</div>
+
+      <div>
+        <div class="quick-title">${escapeHtml(title)}</div>
+        <div class="quick-text">${escapeHtml(text)}</div>
+      </div>
+
+      <div class="quick-arrow">›</div>
+    </button>
+  `;
 }
 
 function renderIframePage(page) {
@@ -283,6 +360,7 @@ function renderIframePage(page) {
     <section class="embed-card">
       <h3>${escapeHtml(page.title)}</h3>
       <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
+
       <div class="embed-frame-wrap">
         <iframe
           class="embed-frame"
@@ -299,53 +377,19 @@ function renderPlaceholderPage(pageKey, page) {
   contentArea.innerHTML = `
     <section class="card">
       <h3>${escapeHtml(page.title)}</h3>
+
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Modul belum dihubungkan</h4>
           <p>Halaman ini sudah disiapkan di portal utama. Nanti saat project GitHub/halaman monitoring selesai, tinggal isi URL atau module path di file <b>app.js</b>.</p>
         </div>
+
         <div class="placeholder-box">
           <h4>Langkah berikutnya</h4>
           <p>Cari route <b>${escapeHtml(pageKey)}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b>.</p>
         </div>
       </div>
     </section>
-  `;
-}
-
-function renderDimension(name, value) {
-  return `
-    <div class="dim-row">
-      <div>${escapeHtml(name)}</div>
-      <div class="bar"><span style="width:${value}%"></span></div>
-      <div>${value.toFixed(2).replace('.', ',')}%</div>
-    </div>
-  `;
-}
-
-function renderActivity(color, icon, title, text, time) {
-  return `
-    <div class="activity-item">
-      <div class="activity-icon" style="background:${color}">${icon}</div>
-      <div>
-        <div class="activity-title">${escapeHtml(title)}</div>
-        <div class="activity-text">${escapeHtml(text)}</div>
-      </div>
-      <div class="activity-time">${escapeHtml(time)}</div>
-    </div>
-  `;
-}
-
-function renderQuickCard(icon, bg, title, text, route) {
-  return `
-    <button class="quick-card" type="button" data-quick="${escapeHtml(route)}">
-      <div class="quick-icon" style="background:${bg}">${icon}</div>
-      <div>
-        <div class="quick-title">${escapeHtml(title)}</div>
-        <div class="quick-text">${escapeHtml(text)}</div>
-      </div>
-      <div class="quick-arrow">›</div>
-    </button>
   `;
 }
 
@@ -363,8 +407,11 @@ function updateActiveMenu(key) {
 
   if (subButton) {
     subButton.classList.add('active');
+
     const group = subButton.closest('.nav-group');
-    if (group) group.classList.add('open');
+    if (group) {
+      group.classList.add('open');
+    }
   }
 }
 
@@ -386,8 +433,8 @@ function cleanupDynamicModule() {
   if (typeof currentModuleDestroy === 'function') {
     try {
       currentModuleDestroy();
-    } catch (err) {
-      console.warn('Cleanup module lama gagal:', err);
+    } catch (error) {
+      console.warn('Cleanup module lama gagal:', error);
     }
   }
 
@@ -395,17 +442,22 @@ function cleanupDynamicModule() {
 
   try {
     delete window.__moduleInit;
-  } catch (err) {
+  } catch (error) {
     window.__moduleInit = undefined;
   }
 
-  document.querySelectorAll('[data-dynamic-module-css]').forEach((el) => el.remove());
-  document.querySelectorAll('[data-dynamic-module-js]').forEach((el) => el.remove());
+  document.querySelectorAll('[data-dynamic-module-css]').forEach((el) => {
+    el.remove();
+  });
+
+  document.querySelectorAll('[data-dynamic-module-js]').forEach((el) => {
+    el.remove();
+  });
 }
 
 function loadExternalScriptOnce(src) {
   return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[data-external-src="${src}"]`);
+    const existing = document.querySelector(`script[data-dynamic-external-script="true"][src="${src}"]`);
 
     if (existing) {
       if (existing.dataset.loaded === 'true') {
@@ -414,14 +466,14 @@ function loadExternalScriptOnce(src) {
       }
 
       existing.addEventListener('load', () => resolve(), { once: true });
-      existing.addEventListener('error', () => reject(new Error(`Gagal memuat external script: ${src}`)), { once: true });
+      existing.addEventListener('error', () => reject(new Error(`Gagal memuat ${src}`)), { once: true });
       return;
     }
 
     const script = document.createElement('script');
     script.src = src;
     script.async = false;
-    script.dataset.externalSrc = src;
+    script.dataset.dynamicExternalScript = 'true';
     script.dataset.loaded = 'false';
 
     script.onload = () => {
@@ -429,7 +481,10 @@ function loadExternalScriptOnce(src) {
       resolve();
     };
 
-    script.onerror = () => reject(new Error(`Gagal memuat external script: ${src}`));
+    script.onerror = () => {
+      reject(new Error(`Gagal memuat ${src}`));
+    };
+
     document.body.appendChild(script);
   });
 }
@@ -447,7 +502,7 @@ function loadModuleCss(href) {
     link.setAttribute('data-dynamic-module-css', 'true');
 
     link.onload = () => resolve();
-    link.onerror = () => reject(new Error(`Gagal memuat CSS: ${href}`));
+    link.onerror = () => reject(new Error(`Gagal memuat CSS ${href}`));
 
     document.head.appendChild(link);
   });
@@ -466,17 +521,19 @@ function loadModuleJs(src) {
     script.setAttribute('data-dynamic-module-js', 'true');
 
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Gagal memuat JS: ${src}`));
+    script.onerror = () => reject(new Error(`Gagal memuat JS ${src}`));
 
     document.body.appendChild(script);
   });
 }
 
 async function fetchModuleHtml(path) {
-  const response = await fetch(cacheBust(path), { cache: 'no-store' });
+  const response = await fetch(cacheBust(path), {
+    cache: 'no-store'
+  });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} saat memuat HTML: ${path}`);
+    throw new Error(`HTTP ${response.status} saat memuat HTML ${path}`);
   }
 
   return response.text();
@@ -503,15 +560,24 @@ async function renderModulePage(page) {
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
       for (const src of page.externalScripts) {
         await loadExternalScriptOnce(src);
-        if (token !== activeModuleToken) return false;
+
+        if (token !== activeModuleToken) {
+          return false;
+        }
       }
     }
 
     const rawHtml = await fetchModuleHtml(page.html);
-    if (token !== activeModuleToken) return false;
+
+    if (token !== activeModuleToken) {
+      return false;
+    }
 
     await loadModuleCss(page.css);
-    if (token !== activeModuleToken) return false;
+
+    if (token !== activeModuleToken) {
+      return false;
+    }
 
     const moduleContent = extractModuleBody(rawHtml);
 
@@ -522,10 +588,16 @@ async function renderModulePage(page) {
     `;
 
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    if (token !== activeModuleToken) return false;
+
+    if (token !== activeModuleToken) {
+      return false;
+    }
 
     await loadModuleJs(page.js);
-    if (token !== activeModuleToken) return false;
+
+    if (token !== activeModuleToken) {
+      return false;
+    }
 
     const moduleContainer = contentArea.querySelector('.module-page--native') || contentArea;
 
@@ -544,12 +616,14 @@ async function renderModulePage(page) {
   } catch (error) {
     console.error('Gagal memuat module:', error);
 
-    if (token !== activeModuleToken) return false;
+    if (token !== activeModuleToken) {
+      return false;
+    }
 
     contentArea.innerHTML = `
       <section class="card">
         <h3>Gagal memuat modul</h3>
-        <p>File modul tidak bisa dimuat atau script modul gagal dijalankan.</p>
+        <p>File modul tidak bisa dimuat. Cek path HTML, CSS, JS, atau inisialisasi modul.</p>
         <p><b>Detail:</b> ${escapeHtml(error.message)}</p>
       </section>
     `;
@@ -614,7 +688,11 @@ function bindMenu() {
   document.querySelectorAll('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
       const pageKey = button.dataset.page;
-      if (!pageKey) return;
+
+      if (!pageKey) {
+        return;
+      }
+
       loadPage(pageKey);
     });
   });
@@ -623,7 +701,10 @@ function bindMenu() {
     button.addEventListener('click', (event) => {
       const groupName = button.dataset.toggleGroup;
       const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
-      if (!group) return;
+
+      if (!group) {
+        return;
+      }
 
       if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 980) {
         event.preventDefault();
@@ -647,7 +728,9 @@ function bindMenu() {
   }
 
   document.addEventListener('click', (event) => {
-    if (!activeFlyout) return;
+    if (!activeFlyout) {
+      return;
+    }
 
     const clickedInsideFlyout = activeFlyout.contains(event.target);
     const clickedToggle = event.target.closest('[data-toggle-group]');
@@ -667,7 +750,9 @@ function bindMenu() {
 }
 
 function toggleFlyout(toggleButton, groupName) {
-  if (!toggleButton) return;
+  if (!toggleButton) {
+    return;
+  }
 
   if (activeFlyout && activeFlyout.dataset.group === groupName) {
     closeFlyout();
@@ -677,14 +762,16 @@ function toggleFlyout(toggleButton, groupName) {
   closeFlyout();
 
   const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
-  if (!group) return;
+
+  if (!group) {
+    return;
+  }
 
   const submenuLinks = group.querySelectorAll('.submenu-link');
-  if (!submenuLinks.length) return;
 
-  const flyout = document.createElement('div');
-  flyout.className = 'sidebar-flyout';
-  flyout.dataset.group = groupName;
+  if (!submenuLinks.length) {
+    return;
+  }
 
   const titleMap = {
     itkp: 'ITKP',
@@ -692,10 +779,16 @@ function toggleFlyout(toggleButton, groupName) {
     simulasi: 'Simulasi'
   };
 
+  const flyout = document.createElement('div');
+  flyout.className = 'sidebar-flyout';
+  flyout.dataset.group = groupName;
+
   flyout.innerHTML = `
     <div class="sidebar-flyout-title">${escapeHtml(titleMap[groupName] || 'Menu')}</div>
+
     ${Array.from(submenuLinks).map((link) => {
       const isActive = link.classList.contains('active') ? ' active' : '';
+
       return `
         <button class="flyout-link${isActive}" type="button" data-page="${escapeHtml(link.dataset.page)}">
           ${escapeHtml(link.textContent)}
@@ -707,6 +800,7 @@ function toggleFlyout(toggleButton, groupName) {
   document.body.appendChild(flyout);
 
   const rect = toggleButton.getBoundingClientRect();
+
   flyout.style.top = `${rect.top}px`;
   flyout.style.left = `${rect.right + 12}px`;
 
