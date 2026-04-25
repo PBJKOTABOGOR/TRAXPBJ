@@ -7,6 +7,7 @@
   let destroyed = false;
   let toastEl = null;
   let autoNextTimer = null;
+  let panjiIntroTimers = [];
 
   let panjiEl = null;
   let panjiTextEl = null;
@@ -307,6 +308,7 @@
 
   function card(key) {
     const item = CARD_LIBRARY[key];
+
     if (!item) return null;
 
     return {
@@ -343,7 +345,6 @@
       hint: 'Fokus pada ruang lingkup PBJ yang paling lengkap, bukan yang berhenti di kontrak.',
       explanation: 'PBJ Pemerintah dimulai dari identifikasi kebutuhan sampai serah terima hasil pekerjaan.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 3 — Susun Pipeline e-Purchasing',
@@ -371,7 +372,6 @@
       hint: 'Kata kunci utama ada pada TKDN dan BMP.',
       explanation: 'TKDN/BMP menunjukkan keberpihakan pada produk dalam negeri.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 5 — Susun Pipeline Konsolidasi',
@@ -399,7 +399,6 @@
       hint: 'Pilih jawaban yang paling objektif dan menyangkut kebutuhan + kondisi pasar.',
       explanation: 'Pemaketan perlu mempertimbangkan output, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 7 — Susun Pipeline Spek Mengarah',
@@ -427,7 +426,6 @@
       hint: 'Spesifikasi teknis seharusnya menjelaskan kebutuhan, bukan mengunci penyedia.',
       explanation: 'Spesifikasi teknis harus memberi informasi kebutuhan kepada pelaku usaha.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 9 — Susun Pipeline Jasa Konsultansi',
@@ -455,7 +453,6 @@
       hint: 'Perhatikan sifat pekerjaannya: kajian/studi berbasis keahlian.',
       explanation: 'Kajian teknis/studi kelayakan merupakan jasa profesional berbasis keahlian, sehingga termasuk jasa konsultansi.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 11 — Susun Pipeline Konstruksi Ringan',
@@ -483,7 +480,6 @@
       hint: 'Kalau hasilnya tidak sesuai kebutuhan, prinsip yang gagal adalah terkait tercapainya tujuan.',
       explanation: 'Efektif berarti barang/jasa harus sesuai kebutuhan dan tujuan.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 13 — Susun Pipeline Swakelola',
@@ -511,7 +507,6 @@
       hint: 'Swakelola bukan dipilih karena paling cepat, tapi karena memang memenuhi kriteria.',
       explanation: 'Swakelola tidak dipilih asal cepat. Swakelola dipilih bila karakter kegiatan dan pelaksanaannya memenuhi kriteria.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 15 — Susun Pipeline Penyedia Terlambat',
@@ -539,7 +534,6 @@
       hint: 'Perhatikan hubungan antara PPK dan penyedia dalam kontrak.',
       explanation: 'Hubungan PPK dan penyedia dalam pelaksanaan kontrak pada dasarnya adalah hubungan perdata.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 17 — Susun Pipeline Ganti Metode dari e-Purchasing',
@@ -586,7 +580,6 @@
       hint: 'Jangan lompat ganti metode. Harus ada dasar dan dokumentasinya dulu.',
       explanation: 'Perubahan metode harus didasarkan pada hasil cek dan dokumentasi yang jelas. Setelah itu baru dilakukan evaluasi dan pemilihan metode yang sesuai.'
     },
-
     {
       type: 'pipeline',
       title: 'Soal 19 — Susun Pipeline Adendum Kontrak',
@@ -664,7 +657,8 @@
     progress: 0,
     logs: [],
     finished: false,
-    hintUsed: false
+    hintUsed: false,
+    hasSeenIntro: false
   };
 
   function escapeHtml(value) {
@@ -702,6 +696,11 @@
     }
   }
 
+  function clearPanjiIntroTimers() {
+    panjiIntroTimers.forEach(timer => clearTimeout(timer));
+    panjiIntroTimers = [];
+  }
+
   function scheduleAutoNext(message, delay = AUTO_NEXT_DELAY_MS) {
     clearAutoNextTimer();
 
@@ -723,6 +722,7 @@
       if (challenge.type === 'pipeline') {
         return total + (challenge.idealIds.length * 10) + 20;
       }
+
       return total + 20;
     }, 0);
   }
@@ -884,11 +884,6 @@
         panjiEl.classList.add('panji-hidden');
       });
     }
-
-    showPanji(
-      'Halo, aku PANJI — Pengadaan Jitu. Aku bantu kasih hint kalau kamu bingung. Tapi kalau minta hint, skor kamu berkurang ya.',
-      'thinking'
-    );
   }
 
   function showPanji(message, mood = 'thinking') {
@@ -914,6 +909,42 @@
     }
   }
 
+  function showPanjiIntro() {
+    clearPanjiIntroTimers();
+
+    showPanji(
+      'Halo! Perkenalkan, aku PANJI.',
+      'happy'
+    );
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ sambil main Procurement Stacker.',
+        'thinking'
+      );
+    }, 1700));
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin ya. Jadi pakai bantuanku seperlunya aja.`,
+        'thinking'
+      );
+    }, 3900));
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        'Yuk mulai. Susun pipeline dengan tertib: jangan asal cepat, yang penting sesuai alur, ada bukti, dan risikonya rendah.',
+        'happy'
+      );
+    }, 6500));
+  }
+
   function getHintMessage(challenge) {
     if (!challenge) {
       return 'Fokus susun langkah paling tertib ya.';
@@ -933,6 +964,7 @@
       }
 
       const prev = GAME_STATE.placed[nextEmpty - 1];
+
       if (prev) {
         return `Hint PANJI: setelah "${prev.label}", langkah yang lebih aman untuk posisi berikutnya adalah "${expectedCard.label}".`;
       }
@@ -948,6 +980,8 @@
   }
 
   function requestHintFromPanji() {
+    clearPanjiIntroTimers();
+
     const challenge = getCurrentChallenge();
 
     if (!challenge || GAME_STATE.finished) return;
@@ -976,6 +1010,8 @@
   function panjiForChallenge(challenge) {
     if (!challenge) return;
 
+    clearPanjiIntroTimers();
+
     if (challenge.type === 'pipeline') {
       showPanji(
         'Ini soal pipeline. Susun kartu dari kiri ke kanan secara tertib. Kalau bingung urutan berikutnya, kamu bisa tanya aku.',
@@ -991,6 +1027,7 @@
 
   function startGame() {
     clearAutoNextTimer();
+    clearPanjiIntroTimers();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
     GAME_STATE.index = 0;
@@ -998,7 +1035,9 @@
     GAME_STATE.risk = 0;
     GAME_STATE.wrong = 0;
     GAME_STATE.finished = false;
+    GAME_STATE.hasSeenIntro = false;
 
+    showPanjiIntro();
     loadChallenge();
   }
 
@@ -1041,11 +1080,17 @@
     }
 
     renderGame();
-    panjiForChallenge(challenge);
+
+    if (GAME_STATE.index === 0 && !GAME_STATE.hasSeenIntro) {
+      GAME_STATE.hasSeenIntro = true;
+    } else {
+      panjiForChallenge(challenge);
+    }
   }
 
   function finishGame() {
     clearAutoNextTimer();
+    clearPanjiIntroTimers();
 
     GAME_STATE.finished = true;
     GAME_STATE.stage = 'result';
@@ -1168,9 +1213,10 @@
 
         <div class="ps-buttons">
           <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Mulai Ulang dari Soal 1</button>
-          ${challenge.type === 'pipeline'
-            ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
-            : ''
+          ${
+            challenge.type === 'pipeline'
+              ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
+              : ''
           }
           <button type="button" class="ps-btn ps-btn-primary" id="btnNextChallenge" ${canGoNext() ? '' : 'disabled'}>
             Lanjut Soal Berikutnya
@@ -1204,12 +1250,16 @@
         ${GAME_STATE.shuffledCards.map(item => renderPipelineCard(item, placedIds.has(item.id))).join('')}
       </div>
 
-      ${GAME_STATE.progress === 100 ? `
-        <div class="ps-explanation">
-          <strong>Pipeline selesai:</strong><br>
-          ${escapeHtml(challenge.explanation)}
-        </div>
-      ` : ''}
+      ${
+        GAME_STATE.progress === 100
+          ? `
+            <div class="ps-explanation">
+              <strong>Pipeline selesai:</strong><br>
+              ${escapeHtml(challenge.explanation)}
+            </div>
+          `
+          : ''
+      }
     `;
   }
 
@@ -1282,12 +1332,16 @@
         }).join('')}
       </div>
 
-      ${GAME_STATE.answered ? `
-        <div class="ps-explanation">
-          <strong>Pembahasan:</strong><br>
-          ${escapeHtml(challenge.explanation)}
-        </div>
-      ` : ''}
+      ${
+        GAME_STATE.answered
+          ? `
+            <div class="ps-explanation">
+              <strong>Pembahasan:</strong><br>
+              ${escapeHtml(challenge.explanation)}
+            </div>
+          `
+          : ''
+      }
     `;
   }
 
@@ -1468,10 +1522,12 @@
     if (btnShuffle) {
       btnShuffle.addEventListener('click', () => {
         const challenge = getCurrentChallenge();
+
         if (!challenge || challenge.type !== 'pipeline') return;
 
         GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
         GAME_STATE.selectedCardId = null;
+
         renderGame();
         showToast('Kartu diacak ulang.', 'info');
         showPanji('Kartu sudah diacak ulang. Coba fokus lagi dari urutan yang paling awal.', 'thinking');
@@ -1500,6 +1556,8 @@
   }
 
   function placeCard(cardId, slotIndex, slotEl) {
+    clearPanjiIntroTimers();
+
     const challenge = getCurrentChallenge();
 
     if (!challenge || challenge.type !== 'pipeline') return;
@@ -1578,11 +1636,15 @@
       void cardEl.offsetWidth;
       cardEl.classList.add('wrong');
 
-      setTimeout(() => cardEl.classList.remove('wrong'), 360);
+      setTimeout(() => {
+        cardEl.classList.remove('wrong');
+      }, 360);
     });
   }
 
   function wrongMove(cardId, message) {
+    clearPanjiIntroTimers();
+
     GAME_STATE.risk += 10;
     GAME_STATE.wrong += 1;
     GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
@@ -1599,6 +1661,8 @@
   }
 
   function answerQuiz(selectedIndex, buttonEl) {
+    clearPanjiIntroTimers();
+
     const challenge = getCurrentChallenge();
 
     if (!challenge || challenge.type !== 'quiz') return;
@@ -1609,7 +1673,9 @@
 
     if (selectedIndex === challenge.answer) {
       GAME_STATE.score += 20;
+
       addLog('ok', 'Jawaban benar', challenge.explanation);
+
       showToast('Jawaban benar. Otomatis lanjut...', 'ok');
       showPanji('Jawabanmu benar! Keren, kamu makin paham pola pikir PBJ.', 'happy');
       flashScreen('ok');
@@ -1622,7 +1688,9 @@
       GAME_STATE.risk += 8;
       GAME_STATE.wrong += 1;
       GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
+
       addLog('bad', 'Jawaban belum tepat', challenge.explanation);
+
       showToast('Jawaban belum tepat. Otomatis lanjut setelah pembahasan.', 'bad');
       showPanji(`Yah, belum tepat. Cek pembahasan ini ya: ${challenge.explanation}`, 'sad');
       flashScreen('bad');
@@ -1685,7 +1753,9 @@
 
     return function destroy() {
       destroyed = true;
+
       clearAutoNextTimer();
+      clearPanjiIntroTimers();
 
       if (toastEl) {
         toastEl.remove();
@@ -1693,11 +1763,14 @@
       }
 
       const flash = document.getElementById('psScreenFlash');
+
       if (flash) {
         flash.remove();
       }
 
-      document.querySelectorAll('.ps-confetti, .ps-floating-score').forEach(el => el.remove());
+      document.querySelectorAll('.ps-confetti, .ps-floating-score').forEach(el => {
+        el.remove();
+      });
 
       if (panjiEl) {
         panjiEl.classList.add('panji-hidden');
