@@ -412,13 +412,88 @@ function isCityAggregateName(name) {
   return String(name || '').trim().toUpperCase() === 'PEMERINTAH KOTA BOGOR';
 }
 
+function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
+  const map = row && row.__normalized ? row.__normalized : {};
+  const required = requiredWords.map(normalizeHeader).filter(Boolean);
+  const optional = optionalWords.map(normalizeHeader).filter(Boolean);
+
+  let bestValue = 0;
+  let bestWeight = -1;
+
+  Object.entries(map).forEach(([key, value]) => {
+    const number = toNumber(value);
+
+    if (!Number.isFinite(number) || number <= 0) {
+      return;
+    }
+
+    const isMatch = required.every((word) => key.includes(word));
+
+    if (!isMatch) {
+      return;
+    }
+
+    let weight = 0;
+    optional.forEach((word) => {
+      if (key.includes(word)) weight += 1;
+    });
+
+    if (weight > bestWeight) {
+      bestWeight = weight;
+      bestValue = number;
+    }
+  });
+
+  return bestValue;
+}
+
+function getLastReasonableItkpNumber(row) {
+  const map = row && row.__normalized ? row.__normalized : {};
+  const values = Object.entries(map)
+    .filter(([key]) => {
+      return !key.includes('total rup')
+        && !key.includes('total komitmen')
+        && !key.includes('total pagu')
+        && !key.includes('total realisasi')
+        && !key.includes('paket')
+        && !key.includes('pagu');
+    })
+    .map(([, value]) => toNumber(value))
+    .filter((value) => Number.isFinite(value) && value > 0 && value <= 30);
+
+  return values.length ? values[values.length - 1] : 0;
+}
+
 function getItkpScore(row) {
-  return toNumber(getField(row, [
+  const exactValue = toNumber(getField(row, [
     'Nilai ITKP Indikator Pemanfaatan Sistem - skor maksimal 30 (point)',
     'Nilai ITKP - Pemanfaatan Sistem - skor maksimal 30 (point)',
+    'Nilai ITKP Pemanfaatan Sistem - skor maksimal 30 (point)',
     'Nilai ITKP Pemanfaatan Sistem',
+    'Nilai ITKP Indikator Pemanfaatan Sistem',
+    'Pemanfaatan Sistem - skor maksimal 30',
     'Pemanfaatan Sistem'
   ]));
+
+  if (exactValue > 0) {
+    return exactValue;
+  }
+
+  const headerValue = findNumericByHeader(
+    row,
+    ['nilai itkp', 'pemanfaatan sistem'],
+    ['skor maksimal 30', '30', 'point']
+  );
+
+  if (headerValue > 0) {
+    return headerValue;
+  }
+
+  if (isCityAggregateName(getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']))) {
+    return getLastReasonableItkpNumber(row || {});
+  }
+
+  return 0;
 }
 
 function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
@@ -698,7 +773,7 @@ function renderDashboardReady(data) {
           <div>
             <span class="section-kicker">Profile Kota Bogor</span>
             <h3>Radar Pemanfaatan Sistem ITKP</h3>
-            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, bukan masuk ranking OPD.</p>
+            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, dibaca langsung dari kolom <b>Nilai ITKP Pemanfaatan Sistem</b>, dan tidak masuk ranking OPD.</p>
           </div>
 
           <label class="satker-select-wrap">
@@ -873,7 +948,9 @@ function bindDashboardEvents() {
       DASHBOARD_STATE.selectedItkpSatker = satkerSelect.value;
       if (DASHBOARD_STATE.data) {
         DASHBOARD_STATE.data = analyzeDashboardData({
-          itkp: DASHBOARD_STATE.data.itkpRows.concat([DASHBOARD_STATE.data.cityProfile.__sourceRow || {}]).filter(Boolean),
+          itkp: DASHBOARD_STATE.data.cityProfile && DASHBOARD_STATE.data.cityProfile.__sourceRow
+            ? DASHBOARD_STATE.data.itkpRows.concat([DASHBOARD_STATE.data.cityProfile.__sourceRow])
+            : DASHBOARD_STATE.data.itkpRows,
           itkpSubOpd: DASHBOARD_STATE.data.itkpSubOpdRows,
           perencanaan: DASHBOARD_STATE.data.planningRows,
           realisasi: DASHBOARD_STATE.data.realRows
