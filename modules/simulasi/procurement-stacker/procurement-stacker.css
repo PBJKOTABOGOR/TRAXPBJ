@@ -296,9 +296,17 @@
 }
 
 @keyframes psSlotCorrect{
-  0%{transform:scale(.96);}
-  60%{transform:scale(1.03);}
-  100%{transform:scale(1);}
+  0%{
+    transform:scale(.96);
+  }
+
+  60%{
+    transform:scale(1.03);
+  }
+
+  100%{
+    transform:scale(1);
+  }
 }
 
 .ps-slot-number{
@@ -399,12 +407,29 @@
 }
 
 @keyframes psShake{
-  0%{transform:translateX(0);}
-  20%{transform:translateX(-8px);}
-  40%{transform:translateX(8px);}
-  60%{transform:translateX(-6px);}
-  80%{transform:translateX(4px);}
-  100%{transform:translateX(0);}
+  0%{
+    transform:translateX(0);
+  }
+
+  20%{
+    transform:translateX(-8px);
+  }
+
+  40%{
+    transform:translateX(8px);
+  }
+
+  60%{
+    transform:translateX(-6px);
+  }
+
+  80%{
+    transform:translateX(4px);
+  }
+
+  100%{
+    transform:translateX(0);
+  }
 }
 
 .ps-card-icon{
@@ -525,8 +550,15 @@
 }
 
 @keyframes psLogIn{
-  from{opacity:0;transform:translateY(8px);}
-  to{opacity:1;transform:translateY(0);}
+  from{
+    opacity:0;
+    transform:translateY(8px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
 }
 
 .ps-log-icon{
@@ -540,9 +572,17 @@
   font-weight:950;
 }
 
-.ps-log-icon.ok{background:#16a34a;}
-.ps-log-icon.bad{background:#dc2626;}
-.ps-log-icon.info{background:#2563eb;}
+.ps-log-icon.ok{
+  background:#16a34a;
+}
+
+.ps-log-icon.bad{
+  background:#dc2626;
+}
+
+.ps-log-icon.info{
+  background:#2563eb;
+}
 
 .ps-log-title{
   font-weight:950;
@@ -707,9 +747,17 @@
 }
 
 @keyframes psFlash{
-  0%{opacity:0;}
-  35%{opacity:1;}
-  100%{opacity:0;}
+  0%{
+    opacity:0;
+  }
+
+  35%{
+    opacity:1;
+  }
+
+  100%{
+    opacity:0;
+  }
 }
 
 .ps-floating-score{
@@ -725,14 +773,32 @@
   box-shadow:0 12px 28px rgba(15,23,42,.18);
 }
 
-.ps-floating-score.ok{background:#16a34a;}
-.ps-floating-score.bad{background:#dc2626;}
-.ps-floating-score.info{background:#2563eb;}
+.ps-floating-score.ok{
+  background:#16a34a;
+}
+
+.ps-floating-score.bad{
+  background:#dc2626;
+}
+
+.ps-floating-score.info{
+  background:#2563eb;
+}
 
 @keyframes psFloatScore{
-  from{opacity:0;transform:translateY(8px) scale(.92);}
-  20%{opacity:1;}
-  to{opacity:0;transform:translateY(-34px) scale(1.05);}
+  from{
+    opacity:0;
+    transform:translateY(8px) scale(.92);
+  }
+
+  20%{
+    opacity:1;
+  }
+
+  to{
+    opacity:0;
+    transform:translateY(-34px) scale(1.05);
+  }
 }
 
 .ps-confetti{
@@ -746,8 +812,15 @@
 }
 
 @keyframes psConfettiFall{
-  from{opacity:1;transform:translateY(0) rotate(0deg);}
-  to{opacity:0;transform:translateY(110px) rotate(220deg);}
+  from{
+    opacity:1;
+    transform:translateY(0) rotate(0deg);
+  }
+
+  to{
+    opacity:0;
+    transform:translateY(110px) rotate(220deg);
+  }
 }
 
 /* ===============================
@@ -795,16 +868,38 @@
   backdrop-filter:blur(14px);
   -webkit-backdrop-filter:blur(14px);
   transition:opacity .22s ease, transform .22s ease, width .22s ease, padding .22s ease;
+  animation:panjiBubbleIdle 3.8s ease-in-out infinite;
+  will-change:transform;
 }
 
 .panji-bubble.burst{
-  animation:panjiBurst .32s ease;
+  animation:
+    panjiBurst .32s ease,
+    panjiBubbleIdle 3.8s ease-in-out infinite .32s;
 }
 
 @keyframes panjiBurst{
-  0%{transform:scale(.96);}
-  60%{transform:scale(1.02);}
-  100%{transform:scale(1);}
+  0%{
+    transform:scale(.96);
+  }
+
+  60%{
+    transform:scale(1.02);
+  }
+
+  100%{
+    transform:scale(1);
+  }
+}
+
+@keyframes panjiBubbleIdle{
+  0%,100%{
+    transform:translateY(0);
+  }
+
+  50%{
+    transform:translateY(-4px);
+  }
 }
 
 .panji-bubble::after{
@@ -851,6 +946,17 @@
   justify-content:center;
   background:#eef4fb;
   font-size:18px;
+  animation:panjiEmotePop 2s ease-in-out infinite;
+}
+
+@keyframes panjiEmotePop{
+  0%,100%{
+    transform:scale(1);
+  }
+
+  50%{
+    transform:scale(1.12);
+  }
 }
 
 .panji-text{
@@ -912,12 +1018,39 @@
   cursor:pointer;
   padding:0;
   flex-shrink:0;
-  animation:panjiFloat 2.8s ease-in-out infinite;
+  animation:
+    panjiFloat 2.8s ease-in-out infinite,
+    panjiIdleTilt 4.2s ease-in-out infinite;
+  transform-origin:center bottom;
+  will-change:transform;
 }
 
 @keyframes panjiFloat{
-  0%,100%{transform:translateY(0);}
-  50%{transform:translateY(-8px);}
+  0%,100%{
+    transform:translateY(0);
+  }
+
+  50%{
+    transform:translateY(-8px);
+  }
+}
+
+@keyframes panjiIdleTilt{
+  0%,100%{
+    rotate:0deg;
+  }
+
+  25%{
+    rotate:-2deg;
+  }
+
+  50%{
+    rotate:0deg;
+  }
+
+  75%{
+    rotate:2deg;
+  }
 }
 
 .panji-glow{
@@ -926,6 +1059,20 @@
   border-radius:999px;
   background:radial-gradient(circle, rgba(37,99,235,.28), transparent 68%);
   filter:blur(10px);
+  animation:panjiGlowPulse 2.4s ease-in-out infinite;
+  will-change:transform,opacity;
+}
+
+@keyframes panjiGlowPulse{
+  0%,100%{
+    opacity:.65;
+    transform:scale(.96);
+  }
+
+  50%{
+    opacity:1;
+    transform:scale(1.08);
+  }
 }
 
 .panji-head{
@@ -943,6 +1090,19 @@
     0 14px 28px rgba(18,58,114,.20),
     inset 0 -8px 18px rgba(37,99,235,.10);
   transition:.25s ease;
+  animation:panjiHeadBob 3.4s ease-in-out infinite;
+  transform-origin:center bottom;
+  will-change:transform;
+}
+
+@keyframes panjiHeadBob{
+  0%,100%{
+    transform:translateY(0);
+  }
+
+  50%{
+    transform:translateY(-3px);
+  }
 }
 
 .panji-hat{
@@ -974,12 +1134,22 @@
 }
 
 @keyframes panjiBlink{
-  0%,92%,100%{transform:scaleY(1);}
-  95%{transform:scaleY(.12);}
+  0%,92%,100%{
+    transform:scaleY(1);
+  }
+
+  95%{
+    transform:scaleY(.12);
+  }
 }
 
-.panji-eye-left{left:20px;}
-.panji-eye-right{right:20px;}
+.panji-eye-left{
+  left:20px;
+}
+
+.panji-eye-right{
+  right:20px;
+}
 
 .panji-mouth{
   position:absolute;
@@ -1002,6 +1172,19 @@
   background:linear-gradient(135deg,#123a72,#2f9a8f);
   border:2px solid rgba(255,255,255,.88);
   box-shadow:0 14px 24px rgba(15,23,42,.18);
+  animation:panjiBodyBreath 2.6s ease-in-out infinite;
+  transform-origin:center center;
+  will-change:transform;
+}
+
+@keyframes panjiBodyBreath{
+  0%,100%{
+    transform:scale(1);
+  }
+
+  50%{
+    transform:scale(1.025);
+  }
 }
 
 .panji-badge{
@@ -1043,9 +1226,55 @@
 }
 
 @keyframes panjiWave{
-  0%,100%{transform:rotate(-18deg);}
-  50%{transform:rotate(-46deg);}
+  0%,100%{
+    transform:rotate(-18deg);
+  }
+
+  50%{
+    transform:rotate(-46deg);
+  }
 }
+
+/* INTRO */
+
+.panji-assistant.panji-intro .panji-character{
+  animation:panjiIntroCome .85s cubic-bezier(.2,.8,.2,1);
+}
+
+@keyframes panjiIntroCome{
+  0%{
+    opacity:0;
+    transform:translateY(38px) scale(.82) rotate(-8deg);
+  }
+
+  60%{
+    opacity:1;
+    transform:translateY(-10px) scale(1.05) rotate(4deg);
+  }
+
+  100%{
+    opacity:1;
+    transform:translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+.panji-assistant.panji-intro .panji-bubble{
+  animation:panjiIntroBubble .75s ease .15s both;
+}
+
+@keyframes panjiIntroBubble{
+  0%{
+    opacity:0;
+    transform:translateY(16px) scale(.92);
+  }
+
+  100%{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+/* HAPPY */
 
 .panji-assistant.panji-happy .panji-head{
   background:
@@ -1058,194 +1287,6 @@
   height:12px;
   border-bottom-color:#166534;
 }
-
-.panji-assistant.panji-sad .panji-head{
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
-    linear-gradient(135deg,#fff1f2,#fecdd3);
-  border-color:#dc2626;
-}
-
-.panji-assistant.panji-sad .panji-mouth{
-  width:18px;
-  height:4px;
-  left:27px;
-  bottom:15px;
-  border-bottom:none;
-  border-top:3px solid #991b1b;
-  border-radius:999px 999px 0 0;
-}
-
-.panji-assistant.panji-thinking .panji-head{
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
-    linear-gradient(135deg,#eff6ff,#bfdbfe);
-}
-
-.panji-assistant.panji-thinking .panji-character::after{
-  content:"?";
-  position:absolute;
-  right:0;
-  top:0;
-  width:28px;
-  height:28px;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fef3c7;
-  color:#92400e;
-  font-weight:950;
-  box-shadow:0 8px 18px rgba(15,23,42,.14);
-}
-
-@media (max-width:1280px){
-  .ps-case-panel,
-  .ps-score-grid,
-  .ps-result-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-
-  .ps-pipeline{
-    grid-template-columns:repeat(4,minmax(0,1fr));
-  }
-
-  .ps-quiz-options{
-    grid-template-columns:1fr;
-  }
-}
-
-@media (max-width:900px){
-  .procstack-hero h2{
-    font-size:34px;
-  }
-
-  .ps-case-panel,
-  .ps-score-grid,
-  .ps-result-grid{
-    grid-template-columns:1fr;
-  }
-
-  .ps-pipeline{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-
-  .panji-assistant{
-    right:12px;
-    bottom:12px;
-    transform:scale(.88);
-    transform-origin:right bottom;
-  }
-
-  .panji-bubble{
-    width:286px;
-  }
-}
-/* ===============================
-   PANJI MOTION UPGRADE
-   PANJI jadi lebih hidup:
-   - idle naik turun
-   - kepala gerak
-   - badan napas
-   - happy loncat
-   - sad goyang/nunduk
-   - thinking mikir
-   =============================== */
-
-.panji-character{
-  animation:
-    panjiFloat 2.8s ease-in-out infinite,
-    panjiIdleTilt 4.2s ease-in-out infinite;
-  transform-origin:center bottom;
-  will-change:transform;
-}
-
-@keyframes panjiIdleTilt{
-  0%,100%{
-    rotate:0deg;
-  }
-
-  25%{
-    rotate:-2deg;
-  }
-
-  50%{
-    rotate:0deg;
-  }
-
-  75%{
-    rotate:2deg;
-  }
-}
-
-.panji-head{
-  animation:panjiHeadBob 3.4s ease-in-out infinite;
-  transform-origin:center bottom;
-  will-change:transform;
-}
-
-@keyframes panjiHeadBob{
-  0%,100%{
-    transform:translateY(0);
-  }
-
-  50%{
-    transform:translateY(-3px);
-  }
-}
-
-.panji-body{
-  animation:panjiBodyBreath 2.6s ease-in-out infinite;
-  transform-origin:center center;
-  will-change:transform;
-}
-
-@keyframes panjiBodyBreath{
-  0%,100%{
-    transform:scale(1);
-  }
-
-  50%{
-    transform:scale(1.025);
-  }
-}
-
-.panji-glow{
-  animation:panjiGlowPulse 2.4s ease-in-out infinite;
-  will-change:transform,opacity;
-}
-
-@keyframes panjiGlowPulse{
-  0%,100%{
-    opacity:.65;
-    transform:scale(.96);
-  }
-
-  50%{
-    opacity:1;
-    transform:scale(1.08);
-  }
-}
-
-.panji-bubble{
-  animation:panjiBubbleIdle 3.8s ease-in-out infinite;
-  will-change:transform;
-}
-
-@keyframes panjiBubbleIdle{
-  0%,100%{
-    transform:translateY(0);
-  }
-
-  50%{
-    transform:translateY(-4px);
-  }
-}
-
-/* ===============================
-   PANJI MOOD: HAPPY
-   saat user benar
-   =============================== */
 
 .panji-assistant.panji-happy .panji-character{
   animation:
@@ -1304,10 +1345,24 @@
   }
 }
 
-/* ===============================
-   PANJI MOOD: SAD
-   saat user salah
-   =============================== */
+/* SAD */
+
+.panji-assistant.panji-sad .panji-head{
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
+    linear-gradient(135deg,#fff1f2,#fecdd3);
+  border-color:#dc2626;
+}
+
+.panji-assistant.panji-sad .panji-mouth{
+  width:18px;
+  height:4px;
+  left:27px;
+  bottom:15px;
+  border-bottom:none;
+  border-top:3px solid #991b1b;
+  border-radius:999px 999px 0 0;
+}
 
 .panji-assistant.panji-sad .panji-character{
   animation:
@@ -1393,10 +1448,13 @@
   }
 }
 
-/* ===============================
-   PANJI MOOD: THINKING
-   saat kasih hint / mikir
-   =============================== */
+/* THINKING */
+
+.panji-assistant.panji-thinking .panji-head{
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
+    linear-gradient(135deg,#eff6ff,#bfdbfe);
+}
 
 .panji-assistant.panji-thinking .panji-character{
   animation:
@@ -1428,6 +1486,20 @@
 }
 
 .panji-assistant.panji-thinking .panji-character::after{
+  content:"?";
+  position:absolute;
+  right:0;
+  top:0;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fef3c7;
+  color:#92400e;
+  font-weight:950;
+  box-shadow:0 8px 18px rgba(15,23,42,.14);
   animation:panjiQuestionFloat 1.1s ease-in-out infinite;
 }
 
@@ -1459,68 +1531,45 @@
   }
 }
 
-/* ===============================
-   PANJI BUBBLE FX
-   =============================== */
-
-.panji-bubble.burst{
-  animation:
-    panjiBurst .32s ease,
-    panjiBubbleIdle 3.8s ease-in-out infinite .32s;
-}
-
-.panji-emote{
-  animation:panjiEmotePop 2s ease-in-out infinite;
-}
-
-@keyframes panjiEmotePop{
-  0%,100%{
-    transform:scale(1);
+@media (max-width:1280px){
+  .ps-case-panel,
+  .ps-score-grid,
+  .ps-result-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
 
-  50%{
-    transform:scale(1.12);
+  .ps-pipeline{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+
+  .ps-quiz-options{
+    grid-template-columns:1fr;
   }
 }
 
-/* ===============================
-   PANJI INTRO FX
-   saat pertama muncul
-   =============================== */
-
-.panji-assistant.panji-intro .panji-character{
-  animation:panjiIntroCome .85s cubic-bezier(.2,.8,.2,1);
-}
-
-@keyframes panjiIntroCome{
-  0%{
-    opacity:0;
-    transform:translateY(38px) scale(.82) rotate(-8deg);
+@media (max-width:900px){
+  .procstack-hero h2{
+    font-size:34px;
   }
 
-  60%{
-    opacity:1;
-    transform:translateY(-10px) scale(1.05) rotate(4deg);
+  .ps-case-panel,
+  .ps-score-grid,
+  .ps-result-grid{
+    grid-template-columns:1fr;
   }
 
-  100%{
-    opacity:1;
-    transform:translateY(0) scale(1) rotate(0deg);
-  }
-}
-
-.panji-assistant.panji-intro .panji-bubble{
-  animation:panjiIntroBubble .75s ease .15s both;
-}
-
-@keyframes panjiIntroBubble{
-  0%{
-    opacity:0;
-    transform:translateY(16px) scale(.92);
+  .ps-pipeline{
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
 
-  100%{
-    opacity:1;
-    transform:translateY(0) scale(1);
+  .panji-assistant{
+    right:12px;
+    bottom:12px;
+    transform:scale(.88);
+    transform-origin:right bottom;
+  }
+
+  .panji-bubble{
+    width:286px;
   }
 }
