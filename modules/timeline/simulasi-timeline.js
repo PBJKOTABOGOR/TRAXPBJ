@@ -1,4 +1,3 @@
-(() => {
   const AUTO_NEXT_DELAY_MS = 1600;
   const HINT_PENALTY = 3;
 
