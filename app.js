@@ -233,66 +233,83 @@ const CARD_LIBRARY = {
     id: 'kontrak-awal',
     label: 'Kontrak Dulu',
     icon: '🚨',
-    note: 'Jebakan: lompat proses.'
+    note: 'Jebakan: lompat proses.',
+    type: 'trap'
   },
   pecahPaket: {
     id: 'pecah-paket',
     label: 'Pecah Paket',
     icon: '💣',
-    note: 'Jebakan: rawan menghindari metode.'
+    note: 'Jebakan: rawan menghindari metode.',
+    type: 'trap'
   },
   spekMengarah: {
     id: 'spek-mengarah',
     label: 'Spek Mengarah',
     icon: '🚫',
-    note: 'Jebakan: persaingan tidak sehat.'
+    note: 'Jebakan: persaingan tidak sehat.',
+    type: 'trap'
   },
   abaikanKatalog: {
     id: 'abaikan-katalog',
     label: 'Abaikan Katalog',
     icon: '⚠️',
-    note: 'Jebakan: tidak cek kanal tersedia.'
+    note: 'Jebakan: tidak cek kanal tersedia.',
+    type: 'trap'
   },
   lewatiRup: {
     id: 'lewati-rup',
     label: 'Lewati RUP',
     icon: '⛔',
-    note: 'Jebakan: proses tanpa cek perencanaan.'
+    note: 'Jebakan: proses tanpa cek perencanaan.',
+    type: 'trap'
   },
   bastTanpaCek: {
     id: 'bast-tanpa-cek',
     label: 'BAST Tanpa Pemeriksaan',
     icon: '📦',
-    note: 'Jebakan: menerima tanpa verifikasi.'
+    note: 'Jebakan: menerima tanpa verifikasi.',
+    type: 'trap'
   },
   bayarDulu: {
     id: 'bayar-dulu',
     label: 'Bayar Dulu',
     icon: '💸',
-    note: 'Jebakan: pembayaran sebelum bukti memadai.'
+    note: 'Jebakan: pembayaran sebelum bukti memadai.',
+    type: 'trap'
   },
   tundaDokumen: {
     id: 'tunda-dokumen',
     label: 'Tunda Dokumen',
     icon: '🧨',
-    note: 'Jebakan: risiko administrasi meningkat.'
+    note: 'Jebakan: risiko administrasi meningkat.',
+    type: 'trap'
   },
   metodeAsalCepat: {
     id: 'metode-asal-cepat',
     label: 'Metode Asal Cepat',
     icon: '🏃',
-    note: 'Jebakan: cepat belum tentu tepat.'
+    note: 'Jebakan: cepat belum tentu tepat.',
+    type: 'trap'
   },
   realisasiLupa: {
     id: 'realisasi-lupa',
     label: 'Lupakan Realisasi',
     icon: '🕳️',
-    note: 'Jebakan: monitoring bolong.'
+    note: 'Jebakan: monitoring bolong.',
+    type: 'trap'
   }
 };
 
 function card(key) {
-  return CARD_LIBRARY[key];
+  const item = CARD_LIBRARY[key];
+
+  if (!item) return null;
+
+  return {
+    ...item,
+    type: item.type || 'action'
+  };
 }
 
 const CHALLENGE_RAW = [
@@ -302,11 +319,12 @@ const CHALLENGE_RAW = [
     caseTitle: 'Belanja ATK Kantor',
     desc: 'OPD akan melakukan belanja ATK kantor senilai Rp45 juta. Susun alur pengadaan paling aman dari awal sampai realisasi.',
     budget: 'Rp45.000.000',
-    difficulty: 'Pemula',
+    difficulty: 'Level 1 - Pemula',
     ideal: ['rup', 'kak', 'hps', 'metodePl', 'proses', 'kontrak', 'bast', 'realisasi'],
     traps: ['kontrakAwal', 'lewatiRup', 'bayarDulu'],
     explanation: 'Alur dasar dimulai dari cek RUP, penyusunan KAK/spesifikasi, HPS, penentuan metode, proses pengadaan, kontrak, BAST, lalu realisasi.'
   },
+
   {
     type: 'quiz',
     title: 'Soal 2 — Ruang Lingkup PBJ',
@@ -322,17 +340,19 @@ const CHALLENGE_RAW = [
     answer: 2,
     explanation: 'PBJ Pemerintah dimulai dari identifikasi kebutuhan sampai serah terima hasil pekerjaan.'
   },
+
   {
     type: 'pipeline',
     title: 'Soal 3 — Susun Pipeline e-Purchasing',
     caseTitle: 'Pengadaan Laptop Pelayanan Publik',
     desc: 'OPD membutuhkan laptop untuk layanan publik. Barang tersedia di e-Katalog dan nilai paket Rp350 juta.',
     budget: 'Rp350.000.000',
-    difficulty: 'Pemula+',
+    difficulty: 'Level 2 - Pemula+',
     ideal: ['rup', 'kak', 'hps', 'cekPdn', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
     traps: ['metodePl', 'tender', 'abaikanKatalog', 'kontrakAwal'],
     explanation: 'Untuk barang tersedia di katalog, alur aman adalah tetap cek RUP, siapkan KAK/HPS, cek PDN/TKDN, cek katalog, lakukan e-Purchasing, klarifikasi/negosiasi, kontrak, BAST, realisasi.'
   },
+
   {
     type: 'quiz',
     title: 'Soal 4 — Tujuan PBJ',
@@ -348,17 +368,19 @@ const CHALLENGE_RAW = [
     answer: 1,
     explanation: 'TKDN/BMP menunjukkan keberpihakan pada produk dalam negeri.'
   },
+
   {
     type: 'pipeline',
     title: 'Soal 5 — Susun Pipeline Konsolidasi',
     caseTitle: 'Komputer Beberapa Bidang',
     desc: 'Beberapa bidang mengusulkan komputer dengan kebutuhan sejenis. Total nilai Rp650 juta.',
     budget: 'Rp650.000.000',
-    difficulty: 'Menengah',
+    difficulty: 'Level 3 - Menengah',
     ideal: ['rup', 'identifikasi', 'konsolidasi', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'kontrak', 'bast', 'realisasi'],
     traps: ['pecahPaket', 'metodePl', 'metodeAsalCepat', 'kontrakAwal'],
     explanation: 'Kebutuhan sejenis perlu diidentifikasi dan dapat dikonsolidasikan agar tidak terjadi pemecahan paket yang tidak wajar.'
   },
+
   {
     type: 'quiz',
     title: 'Soal 6 — Pemaketan',
@@ -374,17 +396,19 @@ const CHALLENGE_RAW = [
     answer: 0,
     explanation: 'Pemaketan perlu mempertimbangkan output, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran.'
   },
+
   {
     type: 'pipeline',
     title: 'Soal 7 — Susun Pipeline Spek Mengarah',
     caseTitle: 'Laptop dengan Spek Terlalu Spesifik',
     desc: 'Spesifikasi awal mengarah ke merek tertentu. Susun langkah korektif sebelum proses.',
     budget: 'Rp420.000.000',
-    difficulty: 'Menengah',
+    difficulty: 'Level 4 - Menengah',
     ideal: ['rup', 'reviewSpek', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
     traps: ['spekMengarah', 'kontrakAwal', 'abaikanKatalog', 'metodeAsalCepat'],
     explanation: 'Jika spesifikasi mengarah, lakukan review spek dulu agar kebutuhan teknis lebih fair sebelum lanjut HPS dan metode.'
   },
+
   {
     type: 'quiz',
     title: 'Soal 8 — Spesifikasi Teknis',
@@ -400,17 +424,19 @@ const CHALLENGE_RAW = [
     answer: 1,
     explanation: 'Spesifikasi teknis harus memberi informasi kebutuhan kepada pelaku usaha.'
   },
+
   {
     type: 'pipeline',
     title: 'Soal 9 — Susun Pipeline Jasa Konsultansi',
     caseTitle: 'Kajian Teknis Perencanaan',
     desc: 'OPD akan menyusun kajian teknis perencanaan dengan nilai Rp280 juta.',
     budget: 'Rp280.000.000',
-    difficulty: 'Menengah',
+    difficulty: 'Level 5 - Menengah',
     ideal: ['rup', 'identifikasi', 'kak', 'hps', 'seleksi', 'proses', 'kontrak', 'monitoringKontrak', 'bast', 'realisasi'],
     traps: ['metodeEpurchasing', 'metodePl', 'kontrakAwal', 'abaikanKatalog'],
     explanation: 'Jasa konsultansi menggunakan pendekatan KAK, HPS, seleksi, proses, kontrak, monitoring, BAST, dan realisasi.'
   },
+
   {
     type: 'quiz',
     title: 'Soal 10 — Jenis Pengadaan',
@@ -426,17 +452,19 @@ const CHALLENGE_RAW = [
     answer: 3,
     explanation: 'Kajian teknis/studi kelayakan merupakan jasa profesional berbasis keahlian, sehingga termasuk jasa konsultansi.'
   },
+
   {
     type: 'pipeline',
     title: 'Soal 11 — Susun Pipeline Konstruksi Ringan',
     caseTitle: 'Rehabilitasi Ruang Pelayanan',
     desc: 'Pekerjaan konstruksi ringan dengan nilai Rp760 juta membutuhkan proses formal dan pemeriksaan hasil.',
     budget: 'Rp760.000.000',
-    difficulty: 'Sulit',
+    difficulty: 'Level 6 - Sulit',
     ideal: ['rup', 'identifikasi', 'kak', 'hps', 'tender', 'proses', 'kontrak', 'monitoringKontrak', 'pemeriksaan', 'bast', 'realisasi'],
     traps: ['metodePl', 'kontrakAwal', 'bastTanpaCek', 'bayarDulu'],
     explanation: 'Pekerjaan konstruksi membutuhkan dokumen teknis, HPS, pemilihan, kontrak, monitoring, pemeriksaan hasil, BAST, dan realisasi.'
   },
+
   {
     type: 'quiz',
     title: 'Soal 12 — Prinsip PBJ',
@@ -451,6 +479,62 @@ const CHALLENGE_RAW = [
     ],
     answer: 1,
     explanation: 'Efektif berarti barang/jasa harus sesuai kebutuhan dan tujuan.'
+  },
+
+  {
+    type: 'pipeline',
+    title: 'Soal 13 — Susun Pipeline Swakelola',
+    caseTitle: 'Pelatihan Internal Pegawai',
+    desc: 'OPD akan melaksanakan kegiatan pelatihan internal pegawai. Susun alur yang sesuai untuk skema swakelola.',
+    budget: 'Rp95.000.000',
+    difficulty: 'Level 7 - Menengah',
+    ideal: ['rup', 'identifikasi', 'kak', 'hps', 'swakelola', 'proses', 'bast', 'realisasi'],
+    traps: ['metodeEpurchasing', 'tender', 'kontrakAwal', 'bayarDulu'],
+    explanation: 'Swakelola tetap perlu perencanaan, identifikasi kebutuhan, KAK, anggaran/HPS, pelaksanaan, BAST, dan realisasi.'
+  },
+
+  {
+    type: 'quiz',
+    title: 'Soal 14 — Swakelola',
+    caseTitle: 'Kriteria Swakelola',
+    desc: 'Jawab pertanyaan tentang penggunaan swakelola.',
+    question: 'Contoh pengadaan yang dapat dilakukan secara swakelola adalah?',
+    options: [
+      'Kegiatan yang memenuhi kriteria swakelola dan dapat dilaksanakan sendiri/oleh pihak sesuai ketentuan',
+      'Semua pengadaan barang elektronik',
+      'Semua pekerjaan yang ingin dipercepat',
+      'Paket yang sengaja dipecah agar nilainya kecil'
+    ],
+    answer: 0,
+    explanation: 'Swakelola tidak dipilih asal cepat. Swakelola dipilih bila karakter kegiatan dan pelaksanaannya memenuhi kriteria.'
+  },
+
+  {
+    type: 'pipeline',
+    title: 'Soal 15 — Susun Pipeline Penyedia Terlambat',
+    caseTitle: 'Penyedia Terlambat Mengirim Barang',
+    desc: 'Kontrak sudah berjalan, namun penyedia terlambat mengirim barang. Jangan langsung BAST atau bayar.',
+    budget: 'Rp190.000.000',
+    difficulty: 'Level 8 - Sulit',
+    ideal: ['kontrak', 'monitoringKontrak', 'teguran', 'pemeriksaan', 'bast', 'pembayaran', 'realisasi'],
+    traps: ['bastTanpaCek', 'bayarDulu', 'realisasiLupa'],
+    explanation: 'Saat kontrak bermasalah, lakukan monitoring kontrak, teguran/evaluasi, pemeriksaan hasil, BAST jika sesuai, pembayaran, dan realisasi.'
+  },
+
+  {
+    type: 'quiz',
+    title: 'Soal 16 — Aspek Hukum Kontrak',
+    caseTitle: 'Sengketa Pelaksanaan Kontrak',
+    desc: 'PPK dan penyedia berselisih dalam pelaksanaan kontrak.',
+    question: 'Perselisihan PPK dan penyedia dalam pelaksanaan kontrak terutama termasuk aspek hukum apa?',
+    options: [
+      'Hukum pidana',
+      'Hukum perdata',
+      'Hukum persaingan usaha',
+      'Hukum tata negara'
+    ],
+    answer: 1,
+    explanation: 'Hubungan PPK dan penyedia dalam pelaksanaan kontrak pada dasarnya adalah hubungan perdata.'
   }
 ];
 
@@ -1427,7 +1511,7 @@ function addLog(type, title, text) {
 }
 
 function startGame() {
-  GAME_STATE.order = shuffleArray(CHALLENGES.map((_, index) => index));
+  GAME_STATE.order = CHALLENGES.map((_, index) => index);
   GAME_STATE.index = 0;
   GAME_STATE.score = 0;
   GAME_STATE.risk = 0;
@@ -1451,14 +1535,22 @@ function loadChallenge() {
     GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
     GAME_STATE.progress = 0;
 
-    addLog('info', 'Challenge pipeline dimulai', 'Susun kartu dari kiri ke kanan. Kartu jebakan akan menaikkan risiko.');
+    addLog(
+      'info',
+      'Challenge pipeline dimulai',
+      'Susun kartu dari kiri ke kanan. Kartu jebakan akan menaikkan risiko.'
+    );
   } else {
     GAME_STATE.stage = 'quiz';
     GAME_STATE.placed = [];
     GAME_STATE.shuffledCards = [];
     GAME_STATE.progress = 100;
 
-    addLog('info', 'Challenge ABCD dimulai', 'Pilih jawaban yang paling tepat.');
+    addLog(
+      'info',
+      'Challenge ABCD dimulai',
+      'Pilih jawaban yang paling tepat.'
+    );
   }
 
   renderGame();
@@ -1469,7 +1561,6 @@ function nextChallenge() {
     GAME_STATE.index += 1;
   } else {
     GAME_STATE.index = 0;
-    GAME_STATE.order = shuffleArray(CHALLENGES.map((_, index) => index));
   }
 
   loadChallenge();
@@ -1549,7 +1640,7 @@ function renderGame() {
       ${renderLogs()}
 
       <div class="ps-buttons">
-        <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Acak Ulang Semua Soal</button>
+        <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Mulai Ulang dari Soal 1</button>
         ${challenge.type === 'pipeline'
           ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
           : ''
@@ -1842,6 +1933,34 @@ function placeCard(cardId, slotIndex, slotEl) {
   pulseSlot(slotIndex);
 }
 
+function pulseSlot(slotIndex) {
+  requestAnimationFrame(() => {
+    const slot = document.querySelector(`.ps-slot[data-slot-index="${slotIndex}"]`);
+
+    if (!slot) return;
+
+    slot.classList.add('fx-correct');
+
+    setTimeout(() => {
+      slot.classList.remove('fx-correct');
+    }, 520);
+  });
+}
+
+function shakeCard(cardId) {
+  requestAnimationFrame(() => {
+    const cardEl = document.querySelector(`.ps-action-card[data-card-id="${cardId}"]`);
+
+    if (!cardEl) return;
+
+    cardEl.classList.remove('wrong');
+    void cardEl.offsetWidth;
+    cardEl.classList.add('wrong');
+
+    setTimeout(() => cardEl.classList.remove('wrong'), 360);
+  });
+}
+
 function wrongMove(cardId, message) {
   GAME_STATE.risk += 10;
   GAME_STATE.wrong += 1;
@@ -1977,11 +2096,11 @@ function renderDashboard() {
     <section class="ps-dashboard">
       <section class="ps-hero lux-reveal">
         <div>
-          <div class="ps-kicker">TRAXPBJ Academy • Mixed Challenge Mode</div>
+          <div class="ps-kicker">TRAXPBJ Academy • Level Challenge Mode</div>
           <h3>Procurement Stacker</h3>
           <p>
-            Soal diacak. Kadang keluar challenge susun pipeline, kadang keluar soal ABCD.
-            Semuanya tampil di satu kartu utama, tidak dipisah atas-bawah.
+            Mulai dari Soal 1 yang paling mudah, lalu naik bertahap ke soal berikutnya.
+            Jenis soal bisa berupa susun pipeline atau pilihan ABCD, tapi urutan soal tetap berlevel.
           </p>
         </div>
       </section>
@@ -2006,7 +2125,7 @@ function renderDashboard() {
         </div>
       </section>
 
-      <div class="footer-note lux-reveal">© 2026 TRAXPBJ - Mixed Pipeline & ABCD Challenge</div>
+      <div class="footer-note lux-reveal">© 2026 TRAXPBJ - Level Pipeline & ABCD Challenge</div>
     </section>
   `;
 
