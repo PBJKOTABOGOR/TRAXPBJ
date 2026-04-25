@@ -1,47 +1,54 @@
-<div class="procstack-page">
+<div class="procstack-shell">
   <section class="procstack-hero">
-    <div>
-      <div class="procstack-kicker">SIPPBJ • Interactive PBJ Challenge</div>
-      <h1>Procurement Mini Game</h1>
-      <p>
-        Game edukasi pengadaan berbasis studi kasus. Susun pipeline PBJ, jawab soal ABCD,
-        pahami risiko, metode, adendum kontrak, dan perubahan metode dari e-Purchasing.
-      </p>
-    </div>
+    <div class="procstack-kicker">Interactive Procurement Challenge</div>
+    <h2>Procurement Mini Game</h2>
+    <p>
+      Susun pipeline pengadaan dengan benar dan jawab soal ABCD secara bertahap.
+      Sekarang ada PANJI (Pengadaan Jitu) yang bisa membantu kamu memberi hint.
+      Tapi ingat: kalau minta hint ke PANJI, skor kamu berkurang.
+    </p>
   </section>
 
   <section class="procstack-game-card">
     <div id="procstackRoot"></div>
   </section>
+</div>
 
-  <div class="panji-assistant" id="panjiAssistant">
+<div class="panji-assistant" id="panjiAssistant">
   <button class="panji-close" type="button" id="panjiClose" title="Sembunyikan PANJI">×</button>
 
   <div class="panji-bubble" id="panjiBubble">
-    <div class="panji-name">PANJI</div>
+    <div class="panji-bubble-top">
+      <div class="panji-name">PANJI</div>
+      <div class="panji-emote" id="panjiEmote">🤔</div>
+    </div>
+
     <div class="panji-text" id="panjiText">
-      Halo! Aku PANJI, Pengadaan Jitu. Aku bantu kamu memahami alur PBJ sambil main.
+      Halo, aku PANJI — Pengadaan Jitu. Kalau kamu bingung, aku bisa bantu kasih hint.
+      Tapi hati-hati ya, pakai hint bikin skor berkurang.
     </div>
 
     <div class="panji-actions">
-      <button type="button" id="panjiTipBtn">Kasih Tips</button>
+      <button type="button" id="panjiHintBtn">Tanya PANJI (-3 skor)</button>
       <button type="button" id="panjiMiniBtn">Minimize</button>
     </div>
   </div>
 
   <button class="panji-character" type="button" id="panjiCharacter" title="PANJI - Pengadaan Jitu">
     <div class="panji-glow"></div>
+
     <div class="panji-head">
       <div class="panji-hat">PBJ</div>
       <div class="panji-eye panji-eye-left"></div>
       <div class="panji-eye panji-eye-right"></div>
       <div class="panji-mouth"></div>
     </div>
+
     <div class="panji-body">
       <div class="panji-badge">PJ</div>
     </div>
+
     <div class="panji-hand panji-hand-left"></div>
     <div class="panji-hand panji-hand-right"></div>
   </button>
-</div>
 </div>
