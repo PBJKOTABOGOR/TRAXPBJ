@@ -886,19 +886,40 @@
     }
   }
 
-  function showPanji(message, mood = 'thinking') {
-    if (!panjiEl || !panjiTextEl) return;
+function showPanji(message, mood = 'thinking') {
+  if (!panjiEl || !panjiTextEl) return;
 
-    panjiEl.classList.remove('panji-hidden');
-    panjiEl.classList.remove('panji-happy', 'panji-sad', 'panji-thinking');
-    panjiEl.classList.add(`panji-${mood}`);
+  panjiEl.classList.remove('panji-hidden');
+  panjiEl.classList.remove('panji-minimized');
 
-    if (panjiEmoteEl) {
-      panjiEmoteEl.textContent =
-        mood === 'happy' ? '😄' :
-        mood === 'sad' ? '😢' :
-        '🤔';
-    }
+  panjiEl.classList.remove(
+    'panji-happy',
+    'panji-sad',
+    'panji-thinking',
+    'panji-intro'
+  );
+
+  void panjiEl.offsetWidth;
+
+  panjiEl.classList.add(`panji-${mood}`);
+
+  if (panjiEmoteEl) {
+    panjiEmoteEl.textContent =
+      mood === 'happy'
+        ? '😄'
+        : mood === 'sad'
+          ? '😢'
+          : '🤔';
+  }
+
+  panjiTextEl.textContent = message;
+
+  if (panjiBubbleEl) {
+    panjiBubbleEl.classList.remove('burst');
+    void panjiBubbleEl.offsetWidth;
+    panjiBubbleEl.classList.add('burst');
+  }
+}
 
     panjiTextEl.textContent = message;
 
