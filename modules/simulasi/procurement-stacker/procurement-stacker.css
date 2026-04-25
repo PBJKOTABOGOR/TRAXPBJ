@@ -28,7 +28,6 @@
   flex-direction:column;
   gap:18px;
   position:relative;
-  min-height:100vh;
 }
 
 .procstack-hero{
@@ -44,32 +43,6 @@
   box-shadow:0 22px 58px rgba(18,58,114,.20);
 }
 
-.procstack-hero::before{
-  content:"";
-  position:absolute;
-  inset:-40%;
-  background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,.14) 46%, transparent 56%);
-  transform:rotate(10deg);
-  animation:psHeroShine 6s ease-in-out infinite;
-  pointer-events:none;
-}
-
-@keyframes psHeroShine{
-  0%,70%{
-    transform:translateX(-24%) rotate(10deg);
-    opacity:0;
-  }
-
-  78%{
-    opacity:1;
-  }
-
-  100%{
-    transform:translateX(24%) rotate(10deg);
-    opacity:0;
-  }
-}
-
 .procstack-kicker{
   display:inline-flex;
   align-items:center;
@@ -83,8 +56,6 @@
   font-weight:900;
   letter-spacing:.1em;
   text-transform:uppercase;
-  position:relative;
-  z-index:2;
 }
 
 .procstack-hero h2{
@@ -93,18 +64,14 @@
   line-height:1.05;
   font-weight:950;
   letter-spacing:-.04em;
-  position:relative;
-  z-index:2;
 }
 
 .procstack-hero p{
   margin:0;
-  max-width:900px;
+  max-width:920px;
   color:rgba(255,255,255,.86);
   font-size:14px;
   line-height:1.75;
-  position:relative;
-  z-index:2;
 }
 
 .procstack-game-card{
@@ -856,7 +823,9 @@
   }
 }
 
-/* PANJI */
+/* ===============================
+   PANJI ASSISTANT
+   =============================== */
 
 .panji-assistant{
   position:fixed;
@@ -1165,14 +1134,6 @@
   transform-origin:center center;
 }
 
-.panji-eye-left{
-  left:20px;
-}
-
-.panji-eye-right{
-  right:20px;
-}
-
 @keyframes panjiBlink{
   0%,91%,100%{
     transform:scaleY(1);
@@ -1187,6 +1148,14 @@
   }
 }
 
+.panji-eye-left{
+  left:20px;
+}
+
+.panji-eye-right{
+  right:20px;
+}
+
 .panji-mouth{
   position:absolute;
   left:29px;
@@ -1196,6 +1165,7 @@
   border-bottom:3px solid #102544;
   border-radius:0 0 999px 999px;
   transition:.25s ease;
+  color:#102544;
 }
 
 .panji-body{
@@ -1302,7 +1272,19 @@
   }
 }
 
-/* PANJI INTRO */
+.panji-assistant.panji-happy .panji-mouth{
+  color:#166534;
+}
+
+.panji-assistant.panji-sad .panji-mouth{
+  color:#991b1b;
+}
+
+.panji-assistant.panji-thinking .panji-mouth{
+  color:#102544;
+}
+
+/* INTRO */
 
 .panji-assistant.panji-intro .panji-character{
   animation:panjiIntroCome .85s cubic-bezier(.2,.8,.2,1);
@@ -1341,7 +1323,7 @@
   }
 }
 
-/* PANJI HAPPY */
+/* HAPPY */
 
 .panji-assistant.panji-happy .panji-head{
   background:
@@ -1354,14 +1336,12 @@
   height:8px;
   top:35px;
   border-radius:999px;
-  transform:rotate(0deg);
   background:transparent;
   border-bottom:4px solid #166534;
   animation:none;
 }
 
 .panji-assistant.panji-happy .panji-mouth{
-  color:#166534;
   height:12px;
   border-bottom-color:#166534;
 }
@@ -1423,7 +1403,7 @@
   }
 }
 
-/* PANJI SAD / NANGIS */
+/* SAD */
 
 .panji-assistant.panji-sad .panji-head{
   background:
@@ -1483,7 +1463,6 @@
 }
 
 .panji-assistant.panji-sad .panji-mouth{
-  color:#991b1b;
   width:18px;
   height:4px;
   left:27px;
@@ -1599,16 +1578,12 @@
   }
 }
 
-/* PANJI THINKING */
+/* THINKING */
 
 .panji-assistant.panji-thinking .panji-head{
   background:
     radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
     linear-gradient(135deg,#eff6ff,#bfdbfe);
-}
-
-.panji-assistant.panji-thinking .panji-mouth{
-  color:#102544;
 }
 
 .panji-assistant.panji-thinking .panji-character{
@@ -1685,8 +1660,6 @@
     transform:rotate(8deg) scale(1.04);
   }
 }
-
-/* IDLE LOOK AROUND */
 
 .panji-assistant:not(.panji-hidden):not(.panji-sad):not(.panji-happy):not(.panji-thinking) .panji-eye-left{
   animation:
