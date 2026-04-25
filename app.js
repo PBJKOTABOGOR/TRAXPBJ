@@ -141,6 +141,24 @@ const CARD_LIBRARY = {
     icon: '🔎',
     note: 'Pastikan barang/jasa tersedia dan sesuai.'
   },
+  katalogTidakSesuai: {
+    id: 'katalog-tidak-sesuai',
+    label: 'Katalog Tidak Sesuai',
+    icon: '🛑',
+    note: 'Produk/penyedia tidak tersedia atau tidak sesuai kebutuhan.'
+  },
+  dokumentasiGagalKatalog: {
+    id: 'dokumentasi-gagal-katalog',
+    label: 'Dokumentasi Hasil Cek',
+    icon: '📝',
+    note: 'Catat bukti hasil pengecekan katalog sebelum ganti metode.'
+  },
+  evaluasiMetode: {
+    id: 'evaluasi-metode',
+    label: 'Evaluasi Metode',
+    icon: '🧭',
+    note: 'Evaluasi metode awal bila kondisi pasar tidak sesuai rencana.'
+  },
   pilihMetode: {
     id: 'pilih-metode',
     label: 'Pilih Metode',
@@ -201,6 +219,36 @@ const CARD_LIBRARY = {
     icon: '📡',
     note: 'Pantau waktu, mutu, volume, dan kewajiban.'
   },
+  identifikasiPerubahan: {
+    id: 'identifikasi-perubahan',
+    label: 'Identifikasi Perubahan',
+    icon: '🔍',
+    note: 'Cek perubahan volume, waktu, spesifikasi, atau kondisi lapangan.'
+  },
+  kajiKontrak: {
+    id: 'kaji-kontrak',
+    label: 'Kaji Klausul Kontrak',
+    icon: '📖',
+    note: 'Pastikan perubahan memungkinkan secara kontraktual.'
+  },
+  justifikasiTeknis: {
+    id: 'justifikasi-teknis',
+    label: 'Justifikasi Teknis',
+    icon: '🧾',
+    note: 'Susun alasan teknis dan administrasi perubahan.'
+  },
+  negosiasiPerubahan: {
+    id: 'negosiasi-perubahan',
+    label: 'Negosiasi Perubahan',
+    icon: '🤝',
+    note: 'Bahas dampak harga, waktu, volume, dan mutu.'
+  },
+  adendumKontrak: {
+    id: 'adendum-kontrak',
+    label: 'Adendum Kontrak',
+    icon: '✍️',
+    note: 'Tuangkan perubahan kontrak secara tertulis.'
+  },
   teguran: {
     id: 'teguran',
     label: 'Teguran / Evaluasi',
@@ -260,6 +308,20 @@ const CARD_LIBRARY = {
     note: 'Jebakan: tidak cek kanal tersedia.',
     type: 'trap'
   },
+  lanjutEpurchasingPaksa: {
+    id: 'lanjut-epurchasing-paksa',
+    label: 'Paksa e-Purchasing',
+    icon: '🚧',
+    note: 'Jebakan: tetap memaksa katalog padahal tidak sesuai.',
+    type: 'trap'
+  },
+  gantiMetodeTanpaBukti: {
+    id: 'ganti-metode-tanpa-bukti',
+    label: 'Ganti Metode Tanpa Bukti',
+    icon: '⚡',
+    note: 'Jebakan: perubahan metode tanpa dokumentasi hasil cek.',
+    type: 'trap'
+  },
   lewatiRup: {
     id: 'lewati-rup',
     label: 'Lewati RUP',
@@ -300,6 +362,20 @@ const CARD_LIBRARY = {
     label: 'Lupakan Realisasi',
     icon: '🕳️',
     note: 'Jebakan: monitoring bolong.',
+    type: 'trap'
+  },
+  adendumTanpaDasar: {
+    id: 'adendum-tanpa-dasar',
+    label: 'Adendum Tanpa Dasar',
+    icon: '🔥',
+    note: 'Jebakan: perubahan kontrak tanpa kajian/justifikasi.',
+    type: 'trap'
+  },
+  bayarSebelumAdendum: {
+    id: 'bayar-sebelum-adendum',
+    label: 'Bayar Sebelum Adendum',
+    icon: '💸',
+    note: 'Jebakan: pembayaran sebelum perubahan kontrak tertib.',
     type: 'trap'
   }
 };
@@ -538,6 +614,98 @@ const CHALLENGE_RAW = [
     ],
     answer: 1,
     explanation: 'Hubungan PPK dan penyedia dalam pelaksanaan kontrak pada dasarnya adalah hubungan perdata.'
+  },
+
+  {
+    type: 'pipeline',
+    title: 'Soal 17 — Susun Pipeline Ganti Metode dari e-Purchasing',
+    caseTitle: 'e-Purchasing Tidak Bisa Dilanjutkan',
+    desc: 'Paket awalnya direncanakan e-Purchasing, tetapi setelah dicek tidak ada produk/penyedia yang sesuai di katalog. Susun langkah paling aman sebelum mengganti metode.',
+    budget: 'Rp480.000.000',
+    difficulty: 'Level 9 - Sulit',
+    ideal: [
+      'rup',
+      'kak',
+      'hps',
+      'cekPdn',
+      'cekKatalog',
+      'katalogTidakSesuai',
+      'dokumentasiGagalKatalog',
+      'evaluasiMetode',
+      'pilihMetode',
+      'proses',
+      'kontrak',
+      'bast',
+      'realisasi'
+    ],
+    traps: [
+      'lanjutEpurchasingPaksa',
+      'gantiMetodeTanpaBukti',
+      'kontrakAwal',
+      'metodeAsalCepat'
+    ],
+    explanation: 'Jika rencana awal e-Purchasing tidak bisa dilakukan karena tidak ada produk/penyedia sesuai di katalog, PPK perlu mendokumentasikan hasil pengecekan, mengevaluasi metode, lalu memilih metode lain yang sesuai nilai, jenis, dan kondisi paket. Jangan langsung ganti metode tanpa bukti.'
+  },
+
+  {
+    type: 'quiz',
+    title: 'Soal 18 — Perubahan Metode dari e-Purchasing',
+    caseTitle: 'Tidak Ada Penyedia di Katalog',
+    desc: 'Rencana awal paket adalah e-Purchasing, namun hasil cek katalog menunjukkan produk/penyedia tidak sesuai kebutuhan.',
+    question: 'Langkah paling aman sebelum mengganti metode dari e-Purchasing adalah?',
+    options: [
+      'Langsung tunjuk penyedia yang dikenal agar cepat',
+      'Tetap memaksa e-Purchasing walaupun produk tidak sesuai',
+      'Dokumentasikan hasil cek katalog, evaluasi metode, lalu pilih metode yang sesuai',
+      'Pecah paket agar bisa memakai metode yang lebih sederhana'
+    ],
+    answer: 2,
+    explanation: 'Perubahan metode harus didasarkan pada hasil cek dan dokumentasi yang jelas. Setelah itu baru dilakukan evaluasi dan pemilihan metode yang sesuai.'
+  },
+
+  {
+    type: 'pipeline',
+    title: 'Soal 19 — Susun Pipeline Adendum Kontrak',
+    caseTitle: 'Perubahan Volume dan Waktu Pelaksanaan',
+    desc: 'Kontrak sedang berjalan. Terdapat kebutuhan perubahan volume dan penyesuaian waktu pelaksanaan. Susun alur adendum kontrak yang tertib.',
+    budget: 'Nilai kontrak berjalan',
+    difficulty: 'Level 10 - Expert',
+    ideal: [
+      'kontrak',
+      'monitoringKontrak',
+      'identifikasiPerubahan',
+      'kajiKontrak',
+      'justifikasiTeknis',
+      'negosiasiPerubahan',
+      'adendumKontrak',
+      'pemeriksaan',
+      'bast',
+      'pembayaran',
+      'realisasi'
+    ],
+    traps: [
+      'adendumTanpaDasar',
+      'bayarSebelumAdendum',
+      'bastTanpaCek',
+      'realisasiLupa'
+    ],
+    explanation: 'Adendum kontrak harus didahului identifikasi perubahan, kajian klausul kontrak, justifikasi teknis/administratif, dan negosiasi dampak perubahan. Setelah adendum tertib, pelaksanaan dapat dilanjutkan sampai pemeriksaan, BAST, pembayaran, dan realisasi.'
+  },
+
+  {
+    type: 'quiz',
+    title: 'Soal 20 — Adendum Kontrak',
+    caseTitle: 'Perubahan Kontrak Berjalan',
+    desc: 'Dalam pelaksanaan kontrak ditemukan kebutuhan perubahan volume dan waktu.',
+    question: 'Apa yang paling tepat dilakukan sebelum membuat adendum kontrak?',
+    options: [
+      'Membayar dulu agar penyedia tetap bekerja',
+      'Membuat justifikasi dan memastikan perubahan sesuai ketentuan/klausul kontrak',
+      'Langsung BAST agar pekerjaan cepat selesai',
+      'Membiarkan perubahan terjadi tanpa dokumen'
+    ],
+    answer: 1,
+    explanation: 'Adendum kontrak membutuhkan dasar yang jelas, termasuk kajian kontrak dan justifikasi perubahan. Perubahan tidak boleh berjalan tanpa dasar dan dokumen yang tertib.'
   }
 ];
 
@@ -572,7 +740,8 @@ const GAME_STATE = {
   risk: 0,
   wrong: 0,
   progress: 0,
-  logs: []
+  logs: [],
+  finished: false
 };
 
 function escapeHtml(value) {
@@ -619,6 +788,48 @@ function scheduleAutoNext(message = 'Otomatis lanjut ke soal berikutnya...') {
     autoNextTimer = null;
     nextChallenge();
   }, AUTO_NEXT_DELAY_MS);
+}
+
+function calculateMaxScore() {
+  return CHALLENGES.reduce((total, challenge) => {
+    if (challenge.type === 'pipeline') {
+      return total + (challenge.idealIds.length * 10) + 20;
+    }
+
+    return total + 20;
+  }, 0);
+}
+
+function getResultGrade(percent) {
+  if (percent >= 90 && GAME_STATE.risk <= 20) {
+    return {
+      label: 'Sangat Baik',
+      icon: '🏆',
+      text: 'Pemahaman alur PBJ sudah kuat. Risiko rendah dan keputusan relatif aman.'
+    };
+  }
+
+  if (percent >= 75) {
+    return {
+      label: 'Baik',
+      icon: '🥇',
+      text: 'Pemahaman sudah baik, tetapi masih ada beberapa risiko yang perlu dikurangi.'
+    };
+  }
+
+  if (percent >= 60) {
+    return {
+      label: 'Cukup',
+      icon: '🥈',
+      text: 'Dasar sudah mulai terbentuk, namun perlu latihan ulang pada studi kasus yang salah.'
+    };
+  }
+
+  return {
+    label: 'Perlu Pembinaan',
+    icon: '📚',
+    text: 'Disarankan mengulang dari awal agar alur dan prinsip PBJ lebih kuat.'
+  };
 }
 
 function injectProcurementCss() {
@@ -1281,6 +1492,73 @@ function injectProcurementCss() {
       transform:none;
     }
 
+    .ps-result-hero{
+      border-radius:30px;
+      padding:26px;
+      color:#fff;
+      background:
+        radial-gradient(circle at top right, rgba(34,211,238,.25), transparent 34%),
+        linear-gradient(135deg,#102544,#123a72 58%,#0f766e);
+      box-shadow:0 24px 56px rgba(15,23,42,.18);
+      margin-bottom:16px;
+    }
+
+    .ps-result-hero h2{
+      margin:0;
+      font-size:34px;
+      line-height:1.1;
+      font-weight:950;
+    }
+
+    .ps-result-hero p{
+      margin:10px 0 0;
+      color:rgba(255,255,255,.82);
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .ps-result-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .ps-result-card{
+      background:#f8fbff;
+      border:1px solid #dbeafe;
+      border-radius:20px;
+      padding:16px;
+    }
+
+    .ps-result-card label{
+      display:block;
+      color:#64748b;
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:10px;
+    }
+
+    .ps-result-card strong{
+      display:block;
+      font-size:28px;
+      line-height:1;
+      color:#102544;
+      font-weight:950;
+    }
+
+    .ps-result-note{
+      background:#f8fbff;
+      border:1px solid #dbeafe;
+      border-radius:20px;
+      padding:16px;
+      color:#475569;
+      line-height:1.7;
+      margin-bottom:16px;
+    }
+
     .ps-toast{
       position:fixed;
       right:22px;
@@ -1433,7 +1711,8 @@ function injectProcurementCss() {
 
     @media (max-width:1280px){
       .ps-case-panel,
-      .ps-score-grid{
+      .ps-score-grid,
+      .ps-result-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
       }
 
@@ -1539,6 +1818,7 @@ function startGame() {
   GAME_STATE.score = 0;
   GAME_STATE.risk = 0;
   GAME_STATE.wrong = 0;
+  GAME_STATE.finished = false;
 
   loadChallenge();
 }
@@ -1554,6 +1834,7 @@ function loadChallenge() {
   GAME_STATE.answered = false;
   GAME_STATE.selectedAnswer = null;
   GAME_STATE.logs = [];
+  GAME_STATE.finished = false;
 
   if (challenge.type === 'pipeline') {
     GAME_STATE.stage = 'pipeline';
@@ -1582,21 +1863,39 @@ function loadChallenge() {
   renderGame();
 }
 
+function finishGame() {
+  clearAutoNextTimer();
+
+  GAME_STATE.finished = true;
+  GAME_STATE.stage = 'result';
+  GAME_STATE.current = null;
+  GAME_STATE.progress = 100;
+
+  renderGame();
+  spawnConfetti();
+  showToast('Semua soal selesai. Hasil akhir ditampilkan.', 'ok');
+}
+
 function nextChallenge() {
   clearAutoNextTimer();
 
   if (GAME_STATE.index < GAME_STATE.order.length - 1) {
     GAME_STATE.index += 1;
+    loadChallenge();
   } else {
-    GAME_STATE.index = 0;
+    finishGame();
   }
-
-  loadChallenge();
 }
 
 function renderGame() {
   const root = document.getElementById('procurementGameRoot');
   if (!root) return;
+
+  if (GAME_STATE.stage === 'result') {
+    root.innerHTML = renderResultScreen();
+    bindResultEvents();
+    return;
+  }
 
   const challenge = getCurrentChallenge();
 
@@ -1681,6 +1980,94 @@ function renderGame() {
   `;
 
   bindGameEvents();
+}
+
+function renderResultScreen() {
+  const maxScore = calculateMaxScore();
+  const percent = maxScore > 0 ? Math.round((GAME_STATE.score / maxScore) * 100) : 0;
+  const grade = getResultGrade(percent);
+  const totalQuestions = CHALLENGES.length;
+  const riskLabel = GAME_STATE.risk <= 20
+    ? 'Rendah'
+    : GAME_STATE.risk <= 60
+      ? 'Sedang'
+      : 'Tinggi';
+
+  return `
+    <section class="ps-card">
+      <div class="ps-result-hero">
+        <div class="ps-kicker">Hasil Akhir Procurement Stacker</div>
+        <h2>${grade.icon} ${grade.label}</h2>
+        <p>${escapeHtml(grade.text)}</p>
+      </div>
+
+      <div class="ps-result-grid">
+        <div class="ps-result-card">
+          <label>Nilai Akhir</label>
+          <strong>${percent}%</strong>
+        </div>
+
+        <div class="ps-result-card">
+          <label>Skor</label>
+          <strong>${GAME_STATE.score}/${maxScore}</strong>
+        </div>
+
+        <div class="ps-result-card">
+          <label>Risiko</label>
+          <strong>${GAME_STATE.risk}</strong>
+        </div>
+
+        <div class="ps-result-card">
+          <label>Salah</label>
+          <strong>${GAME_STATE.wrong}</strong>
+        </div>
+      </div>
+
+      <div class="ps-result-note">
+        <strong>Ringkasan:</strong><br>
+        Kamu sudah menyelesaikan ${totalQuestions} soal/challenge. Level risiko kamu saat ini: <strong>${riskLabel}</strong>.
+        Studi kasus yang sudah dilalui meliputi dasar pengadaan, e-Purchasing, konsolidasi, spesifikasi mengarah,
+        jasa konsultansi, konstruksi, swakelola, penyedia terlambat, perubahan metode dari e-Purchasing, dan adendum kontrak.
+      </div>
+
+      <div class="ps-result-note">
+        <strong>Catatan pembelajaran:</strong><br>
+        Dalam praktik PBJ, keputusan tidak cukup hanya cepat. Harus ada alur yang tertib, bukti yang jelas,
+        pemilihan metode yang sesuai, serta dokumentasi saat terjadi perubahan kondisi seperti katalog tidak tersedia
+        atau kontrak perlu diadendum.
+      </div>
+
+      <div class="ps-buttons">
+        <button type="button" class="ps-btn ps-btn-primary" id="btnPlayAgain">
+          Main Lagi dari Soal 1
+        </button>
+        <button type="button" class="ps-btn ps-btn-soft" data-quick="monitoring-sirup">
+          Buka Monitoring SiRUP
+        </button>
+        <button type="button" class="ps-btn ps-btn-soft" data-quick="simulasi-timeline">
+          Buka Simulasi Timeline
+        </button>
+      </div>
+    </section>
+  `;
+}
+
+function bindResultEvents() {
+  const btnPlayAgain = document.getElementById('btnPlayAgain');
+
+  if (btnPlayAgain) {
+    btnPlayAgain.addEventListener('click', () => {
+      clearAutoNextTimer();
+      startGame();
+    });
+  }
+
+  document.querySelectorAll('[data-quick]').forEach(item => {
+    item.addEventListener('click', () => {
+      clearAutoNextTimer();
+      loadPage(item.dataset.quick);
+    });
+  });
 }
 
 function renderPipelineChallenge(challenge) {
@@ -2066,6 +2453,9 @@ function getCorrectMessage(cardId) {
     hps: 'HPS/referensi harga menjadi dasar kewajaran biaya.',
     'cek-pdn': 'PDN/TKDN perlu diperhatikan untuk mendukung produk dalam negeri.',
     'cek-katalog': 'Cek katalog membantu menentukan apakah e-Purchasing dapat digunakan.',
+    'katalog-tidak-sesuai': 'Jika katalog tidak menyediakan produk/penyedia sesuai, kondisi itu harus dicatat sebelum mengganti metode.',
+    'dokumentasi-gagal-katalog': 'Dokumentasi hasil cek katalog menjadi dasar perubahan metode.',
+    'evaluasi-metode': 'Evaluasi metode diperlukan agar metode baru sesuai nilai, jenis, dan kondisi paket.',
     'pilih-metode': 'Metode dipilih setelah kebutuhan, nilai, jadwal, dan pasar dipahami.',
     'metode-pl': 'Pengadaan Langsung tepat bila nilai dan kondisi paket sesuai.',
     'metode-epurchasing': 'e-Purchasing tepat jika tersedia di katalog dan sesuai kebutuhan.',
@@ -2076,6 +2466,11 @@ function getCorrectMessage(cardId) {
     proses: 'Proses pemilihan dilakukan setelah dokumen dan metode siap.',
     kontrak: 'Kontrak/SPK menjadi dasar pelaksanaan setelah proses pengadaan.',
     'monitoring-kontrak': 'Monitoring kontrak mengendalikan waktu, mutu, dan kewajiban penyedia.',
+    'identifikasi-perubahan': 'Perubahan kontrak harus diawali identifikasi kondisi perubahan.',
+    'kaji-kontrak': 'Klausul kontrak perlu dikaji sebelum adendum.',
+    'justifikasi-teknis': 'Justifikasi teknis menjadi dasar perubahan kontrak.',
+    'negosiasi-perubahan': 'Negosiasi perubahan membahas dampak harga, waktu, dan volume.',
+    'adendum-kontrak': 'Adendum dituangkan secara tertulis sebelum perubahan dilaksanakan lebih lanjut.',
     teguran: 'Teguran/evaluasi diperlukan saat penyedia terlambat atau bermasalah.',
     pemeriksaan: 'Pemeriksaan hasil mencegah barang/jasa tidak sesuai langsung diterima.',
     bast: 'BAST dilakukan setelah hasil diperiksa dan sesuai.',
@@ -2152,6 +2547,7 @@ function renderDashboard() {
           <p>
             Mulai dari Soal 1 yang paling mudah, lalu naik bertahap ke soal berikutnya.
             Setelah selesai atau menjawab, sistem otomatis lanjut ke level berikutnya.
+            Di akhir, hasil pembelajaran akan ditampilkan.
           </p>
         </div>
       </section>
