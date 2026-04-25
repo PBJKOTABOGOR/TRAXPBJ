@@ -89,6 +89,9 @@ let currentModuleDestroy = null;
 let activeFlyout = null;
 let scrollLuxuryDestroy = null;
 
+const AUTO_NEXT_DELAY_MS = 1500;
+let autoNextTimer = null;
+
 const CARD_LIBRARY = {
   rup: {
     id: 'rup',
@@ -598,6 +601,24 @@ function getCurrentChallenge() {
 
 function getPlacedCount() {
   return GAME_STATE.placed.filter(Boolean).length;
+}
+
+function clearAutoNextTimer() {
+  if (autoNextTimer) {
+    clearTimeout(autoNextTimer);
+    autoNextTimer = null;
+  }
+}
+
+function scheduleAutoNext(message = 'Otomatis lanjut ke soal berikutnya...') {
+  clearAutoNextTimer();
+
+  showToast(message, 'info');
+
+  autoNextTimer = setTimeout(() => {
+    autoNextTimer = null;
+    nextChallenge();
+  }, AUTO_NEXT_DELAY_MS);
 }
 
 function injectProcurementCss() {
@@ -1511,15 +1532,20 @@ function addLog(type, title, text) {
 }
 
 function startGame() {
+  clearAutoNextTimer();
+
   GAME_STATE.order = CHALLENGES.map((_, index) => index);
   GAME_STATE.index = 0;
   GAME_STATE.score = 0;
   GAME_STATE.risk = 0;
   GAME_STATE.wrong = 0;
+
   loadChallenge();
 }
 
 function loadChallenge() {
+  clearAutoNextTimer();
+
   const challengeIndex = GAME_STATE.order[GAME_STATE.index];
   const challenge = CHALLENGES[challengeIndex];
 
@@ -1557,6 +1583,8 @@ function loadChallenge() {
 }
 
 function nextChallenge() {
+  clearAutoNextTimer();
+
   if (GAME_STATE.index < GAME_STATE.order.length - 1) {
     GAME_STATE.index += 1;
   } else {
@@ -1851,9 +1879,26 @@ function bindGameEvents() {
   const btnReset = document.getElementById('btnResetChallenge');
   const btnShuffle = document.getElementById('btnShuffleCards');
 
-  if (btnNext) btnNext.addEventListener('click', nextChallenge);
-  if (btnRestart) btnRestart.addEventListener('click', startGame);
-  if (btnReset) btnReset.addEventListener('click', loadChallenge);
+  if (btnNext) {
+    btnNext.addEventListener('click', () => {
+      clearAutoNextTimer();
+      nextChallenge();
+    });
+  }
+
+  if (btnRestart) {
+    btnRestart.addEventListener('click', () => {
+      clearAutoNextTimer();
+      startGame();
+    });
+  }
+
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      clearAutoNextTimer();
+      loadChallenge();
+    });
+  }
 
   if (btnShuffle) {
     btnShuffle.addEventListener('click', () => {
@@ -1925,8 +1970,10 @@ function placeCard(cardId, slotIndex, slotEl) {
   if (completed) {
     GAME_STATE.score += 20;
     addLog('ok', 'Pipeline selesai', challenge.explanation);
-    showToast('Pipeline benar 100%. Lanjut soal berikutnya.', 'ok');
+    showToast('Pipeline benar 100%. Otomatis lanjut...', 'ok');
     spawnConfetti();
+
+    scheduleAutoNext('Pipeline selesai. Otomatis lanjut ke soal berikutnya...');
   }
 
   renderGame();
@@ -1988,18 +2035,22 @@ function answerQuiz(selectedIndex, buttonEl) {
   if (selectedIndex === challenge.answer) {
     GAME_STATE.score += 20;
     addLog('ok', 'Jawaban benar', challenge.explanation);
-    showToast('Jawaban benar.', 'ok');
+    showToast('Jawaban benar. Otomatis lanjut...', 'ok');
     flashScreen('ok');
     popScore(buttonEl || document.body, '+20', 'ok');
     spawnConfetti();
+
+    scheduleAutoNext('Jawaban benar. Otomatis lanjut ke soal berikutnya...');
   } else {
     GAME_STATE.risk += 8;
     GAME_STATE.wrong += 1;
     GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
     addLog('bad', 'Jawaban belum tepat', challenge.explanation);
-    showToast('Jawaban belum tepat. Pembahasan terbuka.', 'bad');
+    showToast('Jawaban belum tepat. Otomatis lanjut setelah pembahasan.', 'bad');
     flashScreen('bad');
     popScore(buttonEl || document.body, '+8 Risiko', 'bad');
+
+    scheduleAutoNext('Pembahasan terbuka. Otomatis lanjut ke soal berikutnya...');
   }
 
   renderGame();
@@ -2100,7 +2151,7 @@ function renderDashboard() {
           <h3>Procurement Stacker</h3>
           <p>
             Mulai dari Soal 1 yang paling mudah, lalu naik bertahap ke soal berikutnya.
-            Jenis soal bisa berupa susun pipeline atau pilihan ABCD, tapi urutan soal tetap berlevel.
+            Setelah selesai atau menjawab, sistem otomatis lanjut ke level berikutnya.
           </p>
         </div>
       </section>
@@ -2214,6 +2265,7 @@ function closeFlyout() {
 
 function cleanupDynamicModule() {
   closeFlyout();
+  clearAutoNextTimer();
 
   if (typeof scrollLuxuryDestroy === 'function') {
     scrollLuxuryDestroy();
