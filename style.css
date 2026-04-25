@@ -1826,3 +1826,314 @@ textarea{
     text-align:left;
   }
 }
+
+/* =========================================================
+   HEADER UX / FX REFLEX - gaya premium seperti Procurement Stacker
+   ========================================================= */
+.hero-card--dashboard{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  border-radius:30px;
+  padding:28px 28px 30px;
+  color:#fff;
+  background:
+    radial-gradient(circle at top right, rgba(34,211,238,.22), transparent 28%),
+    radial-gradient(circle at left top, rgba(255,255,255,.10), transparent 22%),
+    linear-gradient(135deg,#102544 0%, #123a72 48%, #245a9b 78%, #0f766e 100%);
+  box-shadow:0 22px 58px rgba(18,58,114,.20);
+  border:1px solid rgba(255,255,255,.20);
+}
+
+.hero-card--dashboard::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:
+    linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px),
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.18), transparent 24%),
+    radial-gradient(circle at 88% 12%, rgba(34,211,238,.16), transparent 28%);
+  background-size:
+    42px 42px,
+    42px 42px,
+    auto,
+    auto;
+  mask-image:linear-gradient(135deg, rgba(0,0,0,.88), transparent 86%);
+  opacity:.80;
+}
+
+.hero-card--dashboard::after{
+  content:"";
+  position:absolute;
+  top:-70%;
+  left:-42%;
+  width:34%;
+  height:240%;
+  z-index:0;
+  pointer-events:none;
+  background:linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,.06) 18%,
+    rgba(255,255,255,.34) 48%,
+    rgba(34,211,238,.16) 62%,
+    transparent 100%
+  );
+  filter:blur(.2px);
+  transform:rotate(24deg) translateX(-120%);
+  animation:dashboardHeroReflex 5.2s ease-in-out infinite;
+}
+
+@keyframes dashboardHeroReflex{
+  0%, 36%{
+    transform:rotate(24deg) translateX(-145%);
+    opacity:0;
+  }
+
+  48%{
+    opacity:.95;
+  }
+
+  68%{
+    transform:rotate(24deg) translateX(460%);
+    opacity:0;
+  }
+
+  100%{
+    transform:rotate(24deg) translateX(460%);
+    opacity:0;
+  }
+}
+
+.hero-card--dashboard > *{
+  position:relative;
+  z-index:1;
+}
+
+.hero-glow{
+  position:absolute;
+  width:420px;
+  height:420px;
+  right:-130px;
+  top:-160px;
+  z-index:0;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(34,211,238,.22), rgba(255,255,255,.16) 32%, transparent 66%);
+  filter:blur(2px);
+  pointer-events:none;
+  animation:dashboardHeroGlowPulse 3.8s ease-in-out infinite;
+}
+
+.hero-glow::before{
+  content:"";
+  position:absolute;
+  inset:76px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:
+    0 0 0 18px rgba(255,255,255,.035),
+    0 0 70px rgba(34,211,238,.20);
+}
+
+@keyframes dashboardHeroGlowPulse{
+  0%,100%{
+    transform:scale(.96);
+    opacity:.76;
+  }
+
+  50%{
+    transform:scale(1.06);
+    opacity:1;
+  }
+}
+
+.hero-kicker{
+  display:inline-flex;
+  align-items:center;
+  min-height:30px;
+  padding:0 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+  color:#dbeafe;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
+}
+
+.hero-card--dashboard h3{
+  margin:14px 0 8px;
+  max-width:980px;
+  font-size:42px;
+  line-height:1.05;
+  font-weight:950;
+  letter-spacing:-.04em;
+  color:#fff;
+}
+
+.hero-card--dashboard p{
+  margin:0;
+  max-width:960px;
+  color:rgba(255,255,255,.88);
+  font-size:15px;
+  line-height:1.75;
+}
+
+.hero-badge{
+  min-width:188px;
+  padding:14px 16px;
+  border-radius:20px;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    0 16px 30px rgba(15,23,42,.08);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  text-align:right;
+}
+
+.stat-card--lux{
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11);
+}
+
+.stat-card--lux::before{
+  content:"";
+  position:absolute;
+  left:14px;
+  right:14px;
+  top:0;
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.58), rgba(34,211,238,.38), transparent);
+}
+
+.stat-card--lux::after{
+  content:"";
+  position:absolute;
+  width:150px;
+  height:150px;
+  right:-62px;
+  top:-62px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(255,255,255,.18), transparent 68%);
+}
+
+.stat-card--lux .label,
+.stat-card--lux .value,
+.stat-card--lux .desc,
+.stat-card--lux .stat-icon{
+  position:relative;
+  z-index:1;
+}
+
+.stat-card--lux .value{
+  font-size:28px;
+  font-weight:950;
+  letter-spacing:-.03em;
+}
+
+.card,
+.embed-card,
+.quick-card,
+.ps-like-reflex{
+  position:relative;
+  overflow:hidden;
+}
+
+.card::before,
+.embed-card::before,
+.quick-card::before,
+.ps-like-reflex::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(37,99,235,.45), rgba(34,211,238,.45), transparent);
+  z-index:2;
+  pointer-events:none;
+}
+
+.card::after,
+.embed-card::after,
+.quick-card::after,
+.ps-like-reflex::after{
+  content:"";
+  position:absolute;
+  top:-90px;
+  left:-170px;
+  width:90px;
+  height:280px;
+  pointer-events:none;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.50), transparent);
+  transform:rotate(24deg) translateX(-120%);
+  opacity:0;
+  transition:opacity .18s ease;
+}
+
+.card:hover::after,
+.embed-card:hover::after,
+.quick-card:hover::after,
+.ps-like-reflex:hover::after{
+  animation:dashboardCardReflex .85s ease forwards;
+}
+
+@keyframes dashboardCardReflex{
+  0%{
+    transform:rotate(24deg) translateX(-120%);
+    opacity:0;
+  }
+
+  28%{
+    opacity:.85;
+  }
+
+  100%{
+    transform:rotate(24deg) translateX(780%);
+    opacity:0;
+  }
+}
+
+.lux-button{
+  position:relative;
+  overflow:hidden;
+}
+
+.lux-button::after{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-42%;
+  width:34%;
+  height:190%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+  transform:rotate(24deg) translateX(-120%);
+  transition:transform .55s ease;
+}
+
+.lux-button:hover::after{
+  transform:rotate(24deg) translateX(480%);
+}
+
+@media (max-width:900px){
+  .hero-card--dashboard{
+    padding:24px 20px;
+  }
+
+  .hero-card--dashboard h3{
+    font-size:34px;
+  }
+
+  .hero-badge{
+    text-align:left;
+    min-width:0;
+  }
+}
