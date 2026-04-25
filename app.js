@@ -1,13 +1,62 @@
 const APP_ROUTES = {
   dashboard: {
-    title: 'Dashboard TRAXPBJ',
-    subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
+    title: 'Dashboard SIPPBJ',
+    subtitle: 'Ringkasan profil pengadaan barang/jasa Kota Bogor.',
     type: 'internal'
   },
 
+  'monitoring-sirup': {
+    title: 'Monitoring SiRUP',
+    subtitle: 'Monitoring indikator pemanfaatan SiRUP dalam capaian ITKP Perangkat Daerah.',
+    type: 'module',
+    html: 'modules/monitoring/itkp-sirup/itkp-sirup.html',
+    css: 'modules/monitoring/itkp-sirup/itkp-sirup.css',
+    js: 'modules/monitoring/itkp-sirup/itkp-sirup.js'
+  },
+
+  'monitoring-ekatalog': {
+    title: 'Monitoring eKatalog',
+    subtitle: 'Monitoring indikator pemanfaatan eKatalog dalam capaian ITKP Perangkat Daerah.',
+    type: 'module',
+    html: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.html',
+    css: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.css',
+    js: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.js'
+  },
+
+  'monitoring-etendering': {
+    title: 'Monitoring eTendering',
+    subtitle: 'Monitoring indikator pemanfaatan eTendering dalam capaian ITKP Perangkat Daerah.',
+    type: 'module',
+    html: 'modules/monitoring/itkp-etendering/itkp-etendering.html',
+    css: 'modules/monitoring/itkp-etendering/itkp-etendering.css',
+    js: 'modules/monitoring/itkp-etendering/itkp-etendering.js'
+  },
+
+  'monitoring-ekontrak': {
+    title: 'Monitoring eKontrak',
+    subtitle: 'Monitoring indikator pemanfaatan eKontrak dalam capaian ITKP Perangkat Daerah.',
+    type: 'module',
+    html: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.html',
+    css: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.css',
+    js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
+  },
+
+  'monitoring-nontender': {
+    title: 'Non eTendering/Non ePurchasing',
+    subtitle: 'Halaman ini disiapkan untuk monitoring Non eTendering/Non ePurchasing.',
+    type: 'placeholder'
+  },
+
+  'rapor-pbj': {
+    title: 'Rapor PBJ',
+    subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
+    type: 'iframe',
+    url: 'https://pbjkotabogor.github.io/raporpbj/'
+  },
+
   'monitoring-perencanaan': {
-    title: 'Monitoring Perencanaan',
-    subtitle: 'Pemantauan progres perencanaan pengadaan perangkat daerah.',
+    title: 'Monitoring Realisasi',
+    subtitle: 'Pemantauan progres realisasi paket pengadaan perangkat daerah.',
     type: 'module',
     html: 'modules/monitoring/perencanaan/monitoring.html',
     css: 'modules/monitoring/perencanaan/monitoring.css',
@@ -18,49 +67,18 @@ const APP_ROUTES = {
   },
 
   'monitoring-konsolidasi': {
-    title: 'Monitoring Paket Konsolidasi',
-    subtitle: 'Halaman ini disiapkan untuk monitoring paket konsolidasi.',
+    title: 'Konsolidasi',
+    subtitle: 'Monitoring paket konsolidasi dan informasi konsolidasi pengadaan.',
     type: 'placeholder'
   },
 
-  'monitoring-sirup': {
-    title: 'Monitoring SiRUP',
-    subtitle: 'Monitoring paket perencanaan yang diumumkan di SIRUP dan indikator ITKP SIRUP.',
+  'simulasi-procurement-stacker': {
+    title: 'Procurement Stacker',
+    subtitle: 'Game edukasi interaktif untuk memahami alur, metode, risiko, adendum, dan keputusan PBJ.',
     type: 'module',
-    html: 'modules/monitoring/itkp-sirup/itkp-sirup.html',
-    css: 'modules/monitoring/itkp-sirup/itkp-sirup.css',
-    js: 'modules/monitoring/itkp-sirup/itkp-sirup.js'
-  },
-
-  'monitoring-ekatalog': {
-    title: 'Monitoring eKatalog',
-    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKatalog.',
-    type: 'placeholder'
-  },
-
-  'monitoring-etendering': {
-    title: 'Monitoring eTendering',
-    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eTendering.',
-    type: 'placeholder'
-  },
-
-  'monitoring-nontender': {
-    title: 'Monitoring Non Tender',
-    subtitle: 'Halaman ini disiapkan untuk monitoring Non eTendering/Non ePurchasing.',
-    type: 'placeholder'
-  },
-
-  'monitoring-ekontrak': {
-    title: 'Monitoring eKontrak',
-    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKontrak.',
-    type: 'placeholder'
-  },
-
-  'rapor-pbj': {
-    title: 'Rapor PBJ',
-    subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
-    type: 'iframe',
-    url: 'https://pbjkotabogor.github.io/raporpbj/'
+    html: 'modules/simulasi/procurement-stacker/procurement-stacker.html',
+    css: 'modules/simulasi/procurement-stacker/procurement-stacker.css',
+    js: 'modules/simulasi/procurement-stacker/procurement-stacker.js'
   },
 
   'simulasi-timeline': {
@@ -87,665 +105,12 @@ const sidebarToggleButton = document.getElementById('sidebarToggleButton');
 let activeModuleToken = 0;
 let currentModuleDestroy = null;
 let activeFlyout = null;
-let scrollLuxuryDestroy = null;
+let activePageKey = '';
+let loadingPageKey = '';
+let scrollAnimationDestroy = null;
 
-const AUTO_NEXT_DELAY_MS = 1500;
-let autoNextTimer = null;
-
-const CARD_LIBRARY = {
-  rup: {
-    id: 'rup',
-    label: 'Cek RUP',
-    icon: '📋',
-    note: 'Pastikan paket sudah ada dan sesuai perencanaan.'
-  },
-  identifikasi: {
-    id: 'identifikasi',
-    label: 'Identifikasi Kebutuhan',
-    icon: '🧠',
-    note: 'Validasi kebutuhan, volume, lokasi, dan jadwal.'
-  },
-  konsolidasi: {
-    id: 'konsolidasi',
-    label: 'Konsolidasi',
-    icon: '🧲',
-    note: 'Gabungkan kebutuhan sejenis bila tepat.'
-  },
-  reviewSpek: {
-    id: 'review-spek',
-    label: 'Review Spesifikasi',
-    icon: '🧐',
-    note: 'Cegah spesifikasi mengarah.'
-  },
-  kak: {
-    id: 'kak',
-    label: 'KAK / Spesifikasi',
-    icon: '🧩',
-    note: 'Susun kebutuhan teknis secara jelas dan adil.'
-  },
-  hps: {
-    id: 'hps',
-    label: 'HPS / Referensi Harga',
-    icon: '💰',
-    note: 'Susun harga perkiraan dengan dasar wajar.'
-  },
-  cekPdn: {
-    id: 'cek-pdn',
-    label: 'Cek PDN / TKDN',
-    icon: '🇮🇩',
-    note: 'Perhatikan produk dalam negeri.'
-  },
-  cekKatalog: {
-    id: 'cek-katalog',
-    label: 'Cek e-Katalog',
-    icon: '🔎',
-    note: 'Pastikan barang/jasa tersedia dan sesuai.'
-  },
-  katalogTidakSesuai: {
-    id: 'katalog-tidak-sesuai',
-    label: 'Katalog Tidak Sesuai',
-    icon: '🛑',
-    note: 'Produk/penyedia tidak tersedia atau tidak sesuai kebutuhan.'
-  },
-  dokumentasiGagalKatalog: {
-    id: 'dokumentasi-gagal-katalog',
-    label: 'Dokumentasi Hasil Cek',
-    icon: '📝',
-    note: 'Catat bukti hasil pengecekan katalog sebelum ganti metode.'
-  },
-  evaluasiMetode: {
-    id: 'evaluasi-metode',
-    label: 'Evaluasi Metode',
-    icon: '🧭',
-    note: 'Evaluasi metode awal bila kondisi pasar tidak sesuai rencana.'
-  },
-  pilihMetode: {
-    id: 'pilih-metode',
-    label: 'Pilih Metode',
-    icon: '⚙️',
-    note: 'Tentukan metode berdasarkan nilai, jenis, dan kondisi paket.'
-  },
-  metodePl: {
-    id: 'metode-pl',
-    label: 'Pengadaan Langsung',
-    icon: '🛠️',
-    note: 'Digunakan bila nilai dan kondisi paket sesuai.'
-  },
-  metodeEpurchasing: {
-    id: 'metode-epurchasing',
-    label: 'e-Purchasing',
-    icon: '🛒',
-    note: 'Gunakan katalog bila sesuai.'
-  },
-  tender: {
-    id: 'tender',
-    label: 'Tender',
-    icon: '🏗️',
-    note: 'Untuk paket yang membutuhkan proses pemilihan formal.'
-  },
-  seleksi: {
-    id: 'seleksi',
-    label: 'Seleksi',
-    icon: '📐',
-    note: 'Umumnya untuk jasa konsultansi.'
-  },
-  swakelola: {
-    id: 'swakelola',
-    label: 'Swakelola',
-    icon: '🤲',
-    note: 'Dipilih bila memenuhi kriteria swakelola.'
-  },
-  klarifikasi: {
-    id: 'klarifikasi',
-    label: 'Klarifikasi / Negosiasi',
-    icon: '🤝',
-    note: 'Pastikan harga, spek, dan kemampuan pelaksanaan.'
-  },
-  proses: {
-    id: 'proses',
-    label: 'Proses Pemilihan',
-    icon: '🚦',
-    note: 'Laksanakan proses sesuai metode.'
-  },
-  kontrak: {
-    id: 'kontrak',
-    label: 'SPK / Kontrak',
-    icon: '📑',
-    note: 'Ikat hasil proses secara tertulis.'
-  },
-  monitoringKontrak: {
-    id: 'monitoring-kontrak',
-    label: 'Monitoring Kontrak',
-    icon: '📡',
-    note: 'Pantau waktu, mutu, volume, dan kewajiban.'
-  },
-  identifikasiPerubahan: {
-    id: 'identifikasi-perubahan',
-    label: 'Identifikasi Perubahan',
-    icon: '🔍',
-    note: 'Cek perubahan volume, waktu, spesifikasi, atau kondisi lapangan.'
-  },
-  kajiKontrak: {
-    id: 'kaji-kontrak',
-    label: 'Kaji Klausul Kontrak',
-    icon: '📖',
-    note: 'Pastikan perubahan memungkinkan secara kontraktual.'
-  },
-  justifikasiTeknis: {
-    id: 'justifikasi-teknis',
-    label: 'Justifikasi Teknis',
-    icon: '🧾',
-    note: 'Susun alasan teknis dan administrasi perubahan.'
-  },
-  negosiasiPerubahan: {
-    id: 'negosiasi-perubahan',
-    label: 'Negosiasi Perubahan',
-    icon: '🤝',
-    note: 'Bahas dampak harga, waktu, volume, dan mutu.'
-  },
-  adendumKontrak: {
-    id: 'adendum-kontrak',
-    label: 'Adendum Kontrak',
-    icon: '✍️',
-    note: 'Tuangkan perubahan kontrak secara tertulis.'
-  },
-  teguran: {
-    id: 'teguran',
-    label: 'Teguran / Evaluasi',
-    icon: '📣',
-    note: 'Dilakukan saat ada keterlambatan atau masalah.'
-  },
-  pemeriksaan: {
-    id: 'pemeriksaan',
-    label: 'Pemeriksaan Hasil',
-    icon: '🔬',
-    note: 'Cek kesesuaian sebelum diterima.'
-  },
-  bast: {
-    id: 'bast',
-    label: 'BAST',
-    icon: '📦',
-    note: 'Serah terima setelah barang/jasa sesuai.'
-  },
-  pembayaran: {
-    id: 'pembayaran',
-    label: 'Pembayaran',
-    icon: '💳',
-    note: 'Dilakukan sesuai dokumen pendukung.'
-  },
-  realisasi: {
-    id: 'realisasi',
-    label: 'Catat Realisasi',
-    icon: '✅',
-    note: 'Pastikan realisasi tercatat.'
-  },
-
-  kontrakAwal: {
-    id: 'kontrak-awal',
-    label: 'Kontrak Dulu',
-    icon: '🚨',
-    note: 'Jebakan: lompat proses.',
-    type: 'trap'
-  },
-  pecahPaket: {
-    id: 'pecah-paket',
-    label: 'Pecah Paket',
-    icon: '💣',
-    note: 'Jebakan: rawan menghindari metode.',
-    type: 'trap'
-  },
-  spekMengarah: {
-    id: 'spek-mengarah',
-    label: 'Spek Mengarah',
-    icon: '🚫',
-    note: 'Jebakan: persaingan tidak sehat.',
-    type: 'trap'
-  },
-  abaikanKatalog: {
-    id: 'abaikan-katalog',
-    label: 'Abaikan Katalog',
-    icon: '⚠️',
-    note: 'Jebakan: tidak cek kanal tersedia.',
-    type: 'trap'
-  },
-  lanjutEpurchasingPaksa: {
-    id: 'lanjut-epurchasing-paksa',
-    label: 'Paksa e-Purchasing',
-    icon: '🚧',
-    note: 'Jebakan: tetap memaksa katalog padahal tidak sesuai.',
-    type: 'trap'
-  },
-  gantiMetodeTanpaBukti: {
-    id: 'ganti-metode-tanpa-bukti',
-    label: 'Ganti Metode Tanpa Bukti',
-    icon: '⚡',
-    note: 'Jebakan: perubahan metode tanpa dokumentasi hasil cek.',
-    type: 'trap'
-  },
-  lewatiRup: {
-    id: 'lewati-rup',
-    label: 'Lewati RUP',
-    icon: '⛔',
-    note: 'Jebakan: proses tanpa cek perencanaan.',
-    type: 'trap'
-  },
-  bastTanpaCek: {
-    id: 'bast-tanpa-cek',
-    label: 'BAST Tanpa Pemeriksaan',
-    icon: '📦',
-    note: 'Jebakan: menerima tanpa verifikasi.',
-    type: 'trap'
-  },
-  bayarDulu: {
-    id: 'bayar-dulu',
-    label: 'Bayar Dulu',
-    icon: '💸',
-    note: 'Jebakan: pembayaran sebelum bukti memadai.',
-    type: 'trap'
-  },
-  tundaDokumen: {
-    id: 'tunda-dokumen',
-    label: 'Tunda Dokumen',
-    icon: '🧨',
-    note: 'Jebakan: risiko administrasi meningkat.',
-    type: 'trap'
-  },
-  metodeAsalCepat: {
-    id: 'metode-asal-cepat',
-    label: 'Metode Asal Cepat',
-    icon: '🏃',
-    note: 'Jebakan: cepat belum tentu tepat.',
-    type: 'trap'
-  },
-  realisasiLupa: {
-    id: 'realisasi-lupa',
-    label: 'Lupakan Realisasi',
-    icon: '🕳️',
-    note: 'Jebakan: monitoring bolong.',
-    type: 'trap'
-  },
-  adendumTanpaDasar: {
-    id: 'adendum-tanpa-dasar',
-    label: 'Adendum Tanpa Dasar',
-    icon: '🔥',
-    note: 'Jebakan: perubahan kontrak tanpa kajian/justifikasi.',
-    type: 'trap'
-  },
-  bayarSebelumAdendum: {
-    id: 'bayar-sebelum-adendum',
-    label: 'Bayar Sebelum Adendum',
-    icon: '💸',
-    note: 'Jebakan: pembayaran sebelum perubahan kontrak tertib.',
-    type: 'trap'
-  }
-};
-
-function card(key) {
-  const item = CARD_LIBRARY[key];
-
-  if (!item) return null;
-
-  return {
-    ...item,
-    type: item.type || 'action'
-  };
-}
-
-const CHALLENGE_RAW = [
-  {
-    type: 'pipeline',
-    title: 'Soal 1 — Susun Pipeline Dasar Pengadaan',
-    caseTitle: 'Belanja ATK Kantor',
-    desc: 'OPD akan melakukan belanja ATK kantor senilai Rp45 juta. Susun alur pengadaan paling aman dari awal sampai realisasi.',
-    budget: 'Rp45.000.000',
-    difficulty: 'Level 1 - Pemula',
-    ideal: ['rup', 'kak', 'hps', 'metodePl', 'proses', 'kontrak', 'bast', 'realisasi'],
-    traps: ['kontrakAwal', 'lewatiRup', 'bayarDulu'],
-    explanation: 'Alur dasar dimulai dari cek RUP, penyusunan KAK/spesifikasi, HPS, penentuan metode, proses pengadaan, kontrak, BAST, lalu realisasi.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 2 — Ruang Lingkup PBJ',
-    caseTitle: 'Konsep Dasar PBJ',
-    desc: 'Jawab pertanyaan berikut berdasarkan konsep dasar PBJ Pemerintah.',
-    question: 'PBJ Pemerintah dimulai dari tahap apa sampai tahap apa?',
-    options: [
-      'Identifikasi kebutuhan sampai kontrak',
-      'Perencanaan sampai pembayaran',
-      'Identifikasi kebutuhan sampai serah terima hasil pekerjaan',
-      'Penyusunan HPS sampai serah terima'
-    ],
-    answer: 2,
-    explanation: 'PBJ Pemerintah dimulai dari identifikasi kebutuhan sampai serah terima hasil pekerjaan.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 3 — Susun Pipeline e-Purchasing',
-    caseTitle: 'Pengadaan Laptop Pelayanan Publik',
-    desc: 'OPD membutuhkan laptop untuk layanan publik. Barang tersedia di e-Katalog dan nilai paket Rp350 juta.',
-    budget: 'Rp350.000.000',
-    difficulty: 'Level 2 - Pemula+',
-    ideal: ['rup', 'kak', 'hps', 'cekPdn', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
-    traps: ['metodePl', 'tender', 'abaikanKatalog', 'kontrakAwal'],
-    explanation: 'Untuk barang tersedia di katalog, alur aman adalah tetap cek RUP, siapkan KAK/HPS, cek PDN/TKDN, cek katalog, lakukan e-Purchasing, klarifikasi/negosiasi, kontrak, BAST, realisasi.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 4 — Tujuan PBJ',
-    caseTitle: 'Laptop TKDN + BMP 42%',
-    desc: 'PPK membeli laptop melalui katalog elektronik dengan TKDN + BMP 42%.',
-    question: 'Tujuan PBJ yang paling didukung oleh kondisi tersebut adalah?',
-    options: [
-      'Menghasilkan barang sesuai nilai uang',
-      'Meningkatkan penggunaan produk dalam negeri',
-      'Meningkatkan peran UMK',
-      'Meningkatkan peran pelaku usaha lokal'
-    ],
-    answer: 1,
-    explanation: 'TKDN/BMP menunjukkan keberpihakan pada produk dalam negeri.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 5 — Susun Pipeline Konsolidasi',
-    caseTitle: 'Komputer Beberapa Bidang',
-    desc: 'Beberapa bidang mengusulkan komputer dengan kebutuhan sejenis. Total nilai Rp650 juta.',
-    budget: 'Rp650.000.000',
-    difficulty: 'Level 3 - Menengah',
-    ideal: ['rup', 'identifikasi', 'konsolidasi', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'kontrak', 'bast', 'realisasi'],
-    traps: ['pecahPaket', 'metodePl', 'metodeAsalCepat', 'kontrakAwal'],
-    explanation: 'Kebutuhan sejenis perlu diidentifikasi dan dapat dikonsolidasikan agar tidak terjadi pemecahan paket yang tidak wajar.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 6 — Pemaketan',
-    caseTitle: 'Strategi Pemaketan PBJ',
-    desc: 'Jawab pertanyaan tentang dasar pemaketan barang/jasa.',
-    question: 'Pemaketan barang/jasa dilakukan dengan mempertimbangkan apa?',
-    options: [
-      'Keluaran, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran',
-      'Keinginan bidang, kecepatan proses, dan kemudahan administrasi',
-      'Jumlah penyedia yang dikenal PPK',
-      'Nilai paket agar selalu bisa pengadaan langsung'
-    ],
-    answer: 0,
-    explanation: 'Pemaketan perlu mempertimbangkan output, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 7 — Susun Pipeline Spek Mengarah',
-    caseTitle: 'Laptop dengan Spek Terlalu Spesifik',
-    desc: 'Spesifikasi awal mengarah ke merek tertentu. Susun langkah korektif sebelum proses.',
-    budget: 'Rp420.000.000',
-    difficulty: 'Level 4 - Menengah',
-    ideal: ['rup', 'reviewSpek', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
-    traps: ['spekMengarah', 'kontrakAwal', 'abaikanKatalog', 'metodeAsalCepat'],
-    explanation: 'Jika spesifikasi mengarah, lakukan review spek dulu agar kebutuhan teknis lebih fair sebelum lanjut HPS dan metode.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 8 — Spesifikasi Teknis',
-    caseTitle: 'Fungsi Spesifikasi',
-    desc: 'Jawab pertanyaan tentang fungsi spesifikasi teknis dalam PBJ.',
-    question: 'Salah satu fungsi spesifikasi teknis adalah?',
-    options: [
-      'Menentukan pemenang sebelum proses',
-      'Memberikan informasi kebutuhan kepada pelaku usaha',
-      'Mengunci merek tertentu agar barang sesuai selera',
-      'Menghindari persaingan agar proses cepat'
-    ],
-    answer: 1,
-    explanation: 'Spesifikasi teknis harus memberi informasi kebutuhan kepada pelaku usaha.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 9 — Susun Pipeline Jasa Konsultansi',
-    caseTitle: 'Kajian Teknis Perencanaan',
-    desc: 'OPD akan menyusun kajian teknis perencanaan dengan nilai Rp280 juta.',
-    budget: 'Rp280.000.000',
-    difficulty: 'Level 5 - Menengah',
-    ideal: ['rup', 'identifikasi', 'kak', 'hps', 'seleksi', 'proses', 'kontrak', 'monitoringKontrak', 'bast', 'realisasi'],
-    traps: ['metodeEpurchasing', 'metodePl', 'kontrakAwal', 'abaikanKatalog'],
-    explanation: 'Jasa konsultansi menggunakan pendekatan KAK, HPS, seleksi, proses, kontrak, monitoring, BAST, dan realisasi.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 10 — Jenis Pengadaan',
-    caseTitle: 'Kajian Teknis / Studi Kelayakan',
-    desc: 'Jawab pertanyaan tentang jenis pengadaan.',
-    question: 'Penyusunan studi kelayakan/kajian teknis termasuk jenis pengadaan apa?',
-    options: [
-      'Barang',
-      'Pekerjaan konstruksi',
-      'Jasa lainnya',
-      'Jasa konsultansi'
-    ],
-    answer: 3,
-    explanation: 'Kajian teknis/studi kelayakan merupakan jasa profesional berbasis keahlian, sehingga termasuk jasa konsultansi.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 11 — Susun Pipeline Konstruksi Ringan',
-    caseTitle: 'Rehabilitasi Ruang Pelayanan',
-    desc: 'Pekerjaan konstruksi ringan dengan nilai Rp760 juta membutuhkan proses formal dan pemeriksaan hasil.',
-    budget: 'Rp760.000.000',
-    difficulty: 'Level 6 - Sulit',
-    ideal: ['rup', 'identifikasi', 'kak', 'hps', 'tender', 'proses', 'kontrak', 'monitoringKontrak', 'pemeriksaan', 'bast', 'realisasi'],
-    traps: ['metodePl', 'kontrakAwal', 'bastTanpaCek', 'bayarDulu'],
-    explanation: 'Pekerjaan konstruksi membutuhkan dokumen teknis, HPS, pemilihan, kontrak, monitoring, pemeriksaan hasil, BAST, dan realisasi.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 12 — Prinsip PBJ',
-    caseTitle: 'Barang Tidak Sesuai',
-    desc: 'Barang/pekerjaan tidak sesuai spesifikasi sehingga tidak dapat digunakan.',
-    question: 'Prinsip PBJ yang tidak terpenuhi adalah?',
-    options: [
-      'Efisien',
-      'Efektif',
-      'Transparan',
-      'Akuntabel'
-    ],
-    answer: 1,
-    explanation: 'Efektif berarti barang/jasa harus sesuai kebutuhan dan tujuan.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 13 — Susun Pipeline Swakelola',
-    caseTitle: 'Pelatihan Internal Pegawai',
-    desc: 'OPD akan melaksanakan kegiatan pelatihan internal pegawai. Susun alur yang sesuai untuk skema swakelola.',
-    budget: 'Rp95.000.000',
-    difficulty: 'Level 7 - Menengah',
-    ideal: ['rup', 'identifikasi', 'kak', 'hps', 'swakelola', 'proses', 'bast', 'realisasi'],
-    traps: ['metodeEpurchasing', 'tender', 'kontrakAwal', 'bayarDulu'],
-    explanation: 'Swakelola tetap perlu perencanaan, identifikasi kebutuhan, KAK, anggaran/HPS, pelaksanaan, BAST, dan realisasi.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 14 — Swakelola',
-    caseTitle: 'Kriteria Swakelola',
-    desc: 'Jawab pertanyaan tentang penggunaan swakelola.',
-    question: 'Contoh pengadaan yang dapat dilakukan secara swakelola adalah?',
-    options: [
-      'Kegiatan yang memenuhi kriteria swakelola dan dapat dilaksanakan sendiri/oleh pihak sesuai ketentuan',
-      'Semua pengadaan barang elektronik',
-      'Semua pekerjaan yang ingin dipercepat',
-      'Paket yang sengaja dipecah agar nilainya kecil'
-    ],
-    answer: 0,
-    explanation: 'Swakelola tidak dipilih asal cepat. Swakelola dipilih bila karakter kegiatan dan pelaksanaannya memenuhi kriteria.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 15 — Susun Pipeline Penyedia Terlambat',
-    caseTitle: 'Penyedia Terlambat Mengirim Barang',
-    desc: 'Kontrak sudah berjalan, namun penyedia terlambat mengirim barang. Jangan langsung BAST atau bayar.',
-    budget: 'Rp190.000.000',
-    difficulty: 'Level 8 - Sulit',
-    ideal: ['kontrak', 'monitoringKontrak', 'teguran', 'pemeriksaan', 'bast', 'pembayaran', 'realisasi'],
-    traps: ['bastTanpaCek', 'bayarDulu', 'realisasiLupa'],
-    explanation: 'Saat kontrak bermasalah, lakukan monitoring kontrak, teguran/evaluasi, pemeriksaan hasil, BAST jika sesuai, pembayaran, dan realisasi.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 16 — Aspek Hukum Kontrak',
-    caseTitle: 'Sengketa Pelaksanaan Kontrak',
-    desc: 'PPK dan penyedia berselisih dalam pelaksanaan kontrak.',
-    question: 'Perselisihan PPK dan penyedia dalam pelaksanaan kontrak terutama termasuk aspek hukum apa?',
-    options: [
-      'Hukum pidana',
-      'Hukum perdata',
-      'Hukum persaingan usaha',
-      'Hukum tata negara'
-    ],
-    answer: 1,
-    explanation: 'Hubungan PPK dan penyedia dalam pelaksanaan kontrak pada dasarnya adalah hubungan perdata.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 17 — Susun Pipeline Ganti Metode dari e-Purchasing',
-    caseTitle: 'e-Purchasing Tidak Bisa Dilanjutkan',
-    desc: 'Paket awalnya direncanakan e-Purchasing, tetapi setelah dicek tidak ada produk/penyedia yang sesuai di katalog. Susun langkah paling aman sebelum mengganti metode.',
-    budget: 'Rp480.000.000',
-    difficulty: 'Level 9 - Sulit',
-    ideal: [
-      'rup',
-      'kak',
-      'hps',
-      'cekPdn',
-      'cekKatalog',
-      'katalogTidakSesuai',
-      'dokumentasiGagalKatalog',
-      'evaluasiMetode',
-      'pilihMetode',
-      'proses',
-      'kontrak',
-      'bast',
-      'realisasi'
-    ],
-    traps: [
-      'lanjutEpurchasingPaksa',
-      'gantiMetodeTanpaBukti',
-      'kontrakAwal',
-      'metodeAsalCepat'
-    ],
-    explanation: 'Jika rencana awal e-Purchasing tidak bisa dilakukan karena tidak ada produk/penyedia sesuai di katalog, PPK perlu mendokumentasikan hasil pengecekan, mengevaluasi metode, lalu memilih metode lain yang sesuai nilai, jenis, dan kondisi paket. Jangan langsung ganti metode tanpa bukti.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 18 — Perubahan Metode dari e-Purchasing',
-    caseTitle: 'Tidak Ada Penyedia di Katalog',
-    desc: 'Rencana awal paket adalah e-Purchasing, namun hasil cek katalog menunjukkan produk/penyedia tidak sesuai kebutuhan.',
-    question: 'Langkah paling aman sebelum mengganti metode dari e-Purchasing adalah?',
-    options: [
-      'Langsung tunjuk penyedia yang dikenal agar cepat',
-      'Tetap memaksa e-Purchasing walaupun produk tidak sesuai',
-      'Dokumentasikan hasil cek katalog, evaluasi metode, lalu pilih metode yang sesuai',
-      'Pecah paket agar bisa memakai metode yang lebih sederhana'
-    ],
-    answer: 2,
-    explanation: 'Perubahan metode harus didasarkan pada hasil cek dan dokumentasi yang jelas. Setelah itu baru dilakukan evaluasi dan pemilihan metode yang sesuai.'
-  },
-
-  {
-    type: 'pipeline',
-    title: 'Soal 19 — Susun Pipeline Adendum Kontrak',
-    caseTitle: 'Perubahan Volume dan Waktu Pelaksanaan',
-    desc: 'Kontrak sedang berjalan. Terdapat kebutuhan perubahan volume dan penyesuaian waktu pelaksanaan. Susun alur adendum kontrak yang tertib.',
-    budget: 'Nilai kontrak berjalan',
-    difficulty: 'Level 10 - Expert',
-    ideal: [
-      'kontrak',
-      'monitoringKontrak',
-      'identifikasiPerubahan',
-      'kajiKontrak',
-      'justifikasiTeknis',
-      'negosiasiPerubahan',
-      'adendumKontrak',
-      'pemeriksaan',
-      'bast',
-      'pembayaran',
-      'realisasi'
-    ],
-    traps: [
-      'adendumTanpaDasar',
-      'bayarSebelumAdendum',
-      'bastTanpaCek',
-      'realisasiLupa'
-    ],
-    explanation: 'Adendum kontrak harus didahului identifikasi perubahan, kajian klausul kontrak, justifikasi teknis/administratif, dan negosiasi dampak perubahan. Setelah adendum tertib, pelaksanaan dapat dilanjutkan sampai pemeriksaan, BAST, pembayaran, dan realisasi.'
-  },
-
-  {
-    type: 'quiz',
-    title: 'Soal 20 — Adendum Kontrak',
-    caseTitle: 'Perubahan Kontrak Berjalan',
-    desc: 'Dalam pelaksanaan kontrak ditemukan kebutuhan perubahan volume dan waktu.',
-    question: 'Apa yang paling tepat dilakukan sebelum membuat adendum kontrak?',
-    options: [
-      'Membayar dulu agar penyedia tetap bekerja',
-      'Membuat justifikasi dan memastikan perubahan sesuai ketentuan/klausul kontrak',
-      'Langsung BAST agar pekerjaan cepat selesai',
-      'Membiarkan perubahan terjadi tanpa dokumen'
-    ],
-    answer: 1,
-    explanation: 'Adendum kontrak membutuhkan dasar yang jelas, termasuk kajian kontrak dan justifikasi perubahan. Perubahan tidak boleh berjalan tanpa dasar dan dokumen yang tertib.'
-  }
-];
-
-function buildChallenge(raw) {
-  if (raw.type === 'quiz') {
-    return raw;
-  }
-
-  const idealCards = raw.ideal.map(key => card(key)).filter(Boolean);
-  const trapCards = (raw.traps || []).map(key => card(key)).filter(Boolean);
-
-  return {
-    ...raw,
-    idealIds: idealCards.map(item => item.id),
-    cards: [...idealCards, ...trapCards]
-  };
-}
-
-const CHALLENGES = CHALLENGE_RAW.map(buildChallenge);
-
-const GAME_STATE = {
-  order: [],
-  index: 0,
-  current: null,
-  stage: 'ready',
-  placed: [],
-  shuffledCards: [],
-  selectedCardId: null,
-  answered: false,
-  selectedAnswer: null,
-  score: 0,
-  risk: 0,
-  wrong: 0,
-  progress: 0,
-  logs: [],
-  finished: false
-};
-
-function escapeHtml(value) {
-  return String(value ?? '')
+function escapeHtml(text) {
+  return String(text || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -753,1844 +118,170 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
-function shuffleArray(items) {
-  const result = [...items];
-
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-
-  return result;
+function cacheBust(url) {
+  const joiner = url.includes('?') ? '&' : '?';
+  return `${url}${joiner}v=${Date.now()}`;
 }
 
-function getCurrentChallenge() {
-  return GAME_STATE.current;
-}
-
-function getPlacedCount() {
-  return GAME_STATE.placed.filter(Boolean).length;
-}
-
-function clearAutoNextTimer() {
-  if (autoNextTimer) {
-    clearTimeout(autoNextTimer);
-    autoNextTimer = null;
-  }
-}
-
-function scheduleAutoNext(message = 'Otomatis lanjut ke soal berikutnya...') {
-  clearAutoNextTimer();
-
-  showToast(message, 'info');
-
-  autoNextTimer = setTimeout(() => {
-    autoNextTimer = null;
-    nextChallenge();
-  }, AUTO_NEXT_DELAY_MS);
-}
-
-function calculateMaxScore() {
-  return CHALLENGES.reduce((total, challenge) => {
-    if (challenge.type === 'pipeline') {
-      return total + (challenge.idealIds.length * 10) + 20;
-    }
-
-    return total + 20;
-  }, 0);
-}
-
-function getResultGrade(percent) {
-  if (percent >= 90 && GAME_STATE.risk <= 20) {
-    return {
-      label: 'Sangat Baik',
-      icon: '🏆',
-      text: 'Pemahaman alur PBJ sudah kuat. Risiko rendah dan keputusan relatif aman.'
-    };
-  }
-
-  if (percent >= 75) {
-    return {
-      label: 'Baik',
-      icon: '🥇',
-      text: 'Pemahaman sudah baik, tetapi masih ada beberapa risiko yang perlu dikurangi.'
-    };
-  }
-
-  if (percent >= 60) {
-    return {
-      label: 'Cukup',
-      icon: '🥈',
-      text: 'Dasar sudah mulai terbentuk, namun perlu latihan ulang pada studi kasus yang salah.'
-    };
-  }
-
-  return {
-    label: 'Perlu Pembinaan',
-    icon: '📚',
-    text: 'Disarankan mengulang dari awal agar alur dan prinsip PBJ lebih kuat.'
-  };
-}
-
-function injectProcurementCss() {
-  if (document.getElementById('procurement-stacker-css')) return;
-
-  const style = document.createElement('style');
-  style.id = 'procurement-stacker-css';
-  style.textContent = `
-    .lux-scroll-progress{
-      position:fixed;
-      left:0;
-      top:0;
-      width:0%;
-      height:4px;
-      z-index:99999;
-      background:linear-gradient(90deg,#123a72,#2563eb,#22d3ee);
-      box-shadow:0 0 22px rgba(34,211,238,.55);
-      transition:width .08s linear;
-    }
-
-    .ps-dashboard{
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-      position:relative;
-      isolation:isolate;
-    }
-
-    .ps-dashboard::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(circle at 12% 8%, rgba(37,99,235,.12), transparent 28%),
-        radial-gradient(circle at 90% 18%, rgba(34,211,238,.10), transparent 26%),
-        radial-gradient(circle at 50% 92%, rgba(15,118,110,.08), transparent 34%);
-      z-index:-1;
-      animation:luxBgMove 12s ease-in-out infinite alternate;
-    }
-
-    @keyframes luxBgMove{
-      from{transform:translate3d(0,0,0) scale(1);opacity:.85;}
-      to{transform:translate3d(0,-16px,0) scale(1.04);opacity:1;}
-    }
-
-    .lux-reveal{
-      opacity:0;
-      transform:translateY(34px) scale(.985);
-      filter:blur(8px);
-      transition:
-        opacity .75s cubic-bezier(.2,.8,.2,1),
-        transform .75s cubic-bezier(.2,.8,.2,1),
-        filter .75s cubic-bezier(.2,.8,.2,1);
-      transition-delay:var(--lux-delay,0ms);
-    }
-
-    .lux-reveal.is-visible{
-      opacity:1;
-      transform:translateY(0) scale(1);
-      filter:blur(0);
-    }
-
-    .ps-hero{
-      min-height:320px;
-      display:flex;
-      align-items:center;
-      position:relative;
-      overflow:hidden;
-      border-radius:34px;
-      padding:36px;
-      color:#fff;
-      background:
-        radial-gradient(circle at top right, rgba(34,211,238,.25), transparent 30%),
-        radial-gradient(circle at 12% 12%, rgba(255,255,255,.11), transparent 24%),
-        linear-gradient(135deg,#102544 0%,#123a72 48%,#245a9b 78%,#0f766e 100%);
-      box-shadow:0 26px 68px rgba(18,58,114,.22);
-    }
-
-    .ps-hero::before{
-      content:"";
-      position:absolute;
-      inset:-40%;
-      background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,.14) 46%, transparent 56%);
-      transform:rotate(10deg);
-      animation:psHeroShine 5.8s ease-in-out infinite;
-      pointer-events:none;
-    }
-
-    .ps-hero::after{
-      content:"";
-      position:absolute;
-      width:460px;
-      height:460px;
-      right:-120px;
-      top:-140px;
-      border-radius:999px;
-      background:radial-gradient(circle, rgba(34,211,238,.27), transparent 65%);
-      filter:blur(4px);
-      transform:translateY(var(--hero-parallax,0px));
-    }
-
-    @keyframes psHeroShine{
-      0%,70%{transform:translateX(-24%) rotate(10deg);opacity:0;}
-      78%{opacity:1;}
-      100%{transform:translateX(24%) rotate(10deg);opacity:0;}
-    }
-
-    .ps-kicker{
-      position:relative;
-      z-index:2;
-      display:inline-flex;
-      align-items:center;
-      min-height:31px;
-      padding:0 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.13);
-      border:1px solid rgba(255,255,255,.20);
-      color:#dff7ff;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-
-    .ps-hero h3{
-      position:relative;
-      z-index:2;
-      margin:16px 0 0;
-      font-size:44px;
-      line-height:1.03;
-      font-weight:950;
-      letter-spacing:-.05em;
-    }
-
-    .ps-hero p{
-      position:relative;
-      z-index:2;
-      margin:12px 0 0;
-      max-width:980px;
-      color:rgba(255,255,255,.84);
-      font-size:14px;
-      line-height:1.75;
-    }
-
-    .lux-section-label{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin:4px 0 0;
-      color:#64748b;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-    }
-
-    .lux-section-label::before{
-      content:"";
-      width:34px;
-      height:2px;
-      border-radius:999px;
-      background:linear-gradient(90deg,#123a72,#22d3ee);
-      box-shadow:0 0 14px rgba(34,211,238,.38);
-    }
-
-    .ps-card{
-      background:rgba(255,255,255,.88);
-      border:1px solid rgba(255,255,255,.72);
-      border-radius:28px;
-      padding:18px;
-      box-shadow:0 10px 28px rgba(15,23,42,.07);
-      backdrop-filter:blur(12px);
-      position:relative;
-      overflow:hidden;
-    }
-
-    .ps-card::before{
-      content:"";
-      position:absolute;
-      left:0;
-      top:0;
-      right:0;
-      height:1px;
-      background:linear-gradient(90deg,transparent,rgba(37,99,235,.45),rgba(34,211,238,.45),transparent);
-    }
-
-    .ps-card-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:16px;
-    }
-
-    .ps-card h3{
-      margin:0;
-      color:#102544;
-      font-size:22px;
-      line-height:1.2;
-      font-weight:950;
-      letter-spacing:-.02em;
-    }
-
-    .ps-card p{
-      margin:6px 0 0;
-      color:#64748b;
-      font-size:13px;
-      line-height:1.65;
-    }
-
-    .ps-pill-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      justify-content:flex-end;
-    }
-
-    .ps-pill{
-      display:inline-flex;
-      align-items:center;
-      min-height:36px;
-      padding:0 12px;
-      border-radius:999px;
-      background:#eff6ff;
-      color:#123a72;
-      font-size:12px;
-      font-weight:900;
-      white-space:nowrap;
-      border:1px solid #dbeafe;
-    }
-
-    .ps-pill.warn{
-      background:#fef3c7;
-      color:#92400e;
-      border-color:#fde68a;
-    }
-
-    .ps-pill.green{
-      background:#dcfce7;
-      color:#166534;
-      border-color:#86efac;
-    }
-
-    .ps-case-panel{
-      display:grid;
-      grid-template-columns:1fr 150px 150px 150px;
-      gap:10px;
-      margin-bottom:16px;
-    }
-
-    .ps-case-box{
-      min-height:76px;
-      padding:12px;
-      border-radius:18px;
-      background:#f8fbff;
-      border:1px solid #dbeafe;
-    }
-
-    .ps-case-box label,
-    .ps-score-card label{
-      display:block;
-      color:#64748b;
-      font-size:11px;
-      font-weight:850;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-      margin-bottom:7px;
-    }
-
-    .ps-case-box strong{
-      display:block;
-      color:#102544;
-      font-size:15px;
-      font-weight:950;
-      line-height:1.25;
-    }
-
-    .ps-case-box span{
-      display:block;
-      color:#475569;
-      font-size:12px;
-      line-height:1.45;
-      margin-top:4px;
-    }
-
-    .ps-score-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:10px;
-      margin-bottom:16px;
-    }
-
-    .ps-score-card{
-      position:relative;
-      overflow:hidden;
-      border-radius:18px;
-      padding:12px;
-      background:#f8fbff;
-      border:1px solid #dbeafe;
-    }
-
-    .ps-score-card strong{
-      display:block;
-      margin-top:8px;
-      color:#102544;
-      font-size:25px;
-      line-height:1;
-      font-weight:950;
-    }
-
-    .ps-progress-track{
-      height:11px;
-      border-radius:999px;
-      background:#e5edf5;
-      overflow:hidden;
-      margin-bottom:16px;
-    }
-
-    .ps-progress-bar{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,#123a72,#2563eb,#22d3ee);
-      border-radius:999px;
-      transition:.25s ease;
-      box-shadow:0 0 18px rgba(34,211,238,.32);
-    }
-
-    .ps-pipeline{
-      display:grid;
-      grid-template-columns:repeat(5,minmax(0,1fr));
-      gap:10px;
-      margin-bottom:16px;
-    }
-
-    .ps-slot{
-      min-height:126px;
-      border-radius:20px;
-      border:2px dashed #c9d8e8;
-      background:#f8fbff;
-      padding:10px;
-      position:relative;
-      transition:.18s ease;
-      cursor:pointer;
-    }
-
-    .ps-slot.drag-over,
-    .ps-slot.click-ready{
-      border-color:#2563eb;
-      background:#eff6ff;
-      box-shadow:0 0 0 4px rgba(37,99,235,.10);
-      transform:translateY(-2px);
-    }
-
-    .ps-slot.correct{
-      border-style:solid;
-      border-color:#86efac;
-      background:#ecfdf5;
-    }
-
-    .ps-slot.fx-correct{
-      animation:psSlotCorrect .46s ease;
-    }
-
-    @keyframes psSlotCorrect{
-      0%{transform:scale(.96);box-shadow:0 0 0 rgba(34,197,94,0);}
-      55%{transform:scale(1.04);box-shadow:0 0 0 8px rgba(34,197,94,.14);}
-      100%{transform:scale(1);box-shadow:0 0 0 rgba(34,197,94,0);}
-    }
-
-    .ps-slot-number{
-      position:absolute;
-      top:8px;
-      right:9px;
-      width:24px;
-      height:24px;
-      border-radius:9px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#64748b;
-      background:#e5edf5;
-      font-size:11px;
-      font-weight:950;
-      z-index:3;
-    }
-
-    .ps-slot-placeholder{
-      height:100%;
-      min-height:96px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      color:#94a3b8;
-      font-size:12px;
-      font-weight:850;
-      padding:10px;
-    }
-
-    .ps-bank{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      min-height:130px;
-      padding:14px;
-      border-radius:22px;
-      background:#f8fbff;
-      border:1px solid #dbeafe;
-      margin-bottom:16px;
-    }
-
-    .ps-action-card{
-      width:152px;
-      min-height:104px;
-      border:none;
-      cursor:grab;
-      border-radius:18px;
-      padding:12px;
-      background:#fff;
-      border:1px solid #dbe5f0;
-      box-shadow:0 8px 20px rgba(15,23,42,.06);
-      text-align:left;
-      transition:.18s ease;
-      user-select:none;
-      -webkit-user-select:none;
-      touch-action:none;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .ps-action-card:hover{
-      transform:translateY(-2px);
-      box-shadow:0 14px 26px rgba(15,23,42,.10);
-    }
-
-    .ps-action-card.selected{
-      border-color:#2563eb;
-      box-shadow:
-        0 0 0 4px rgba(37,99,235,.13),
-        0 16px 28px rgba(37,99,235,.14);
-      transform:translateY(-3px);
-    }
-
-    .ps-action-card.used{
-      opacity:.33;
-      pointer-events:none;
-      transform:scale(.98);
-      filter:grayscale(.35);
-    }
-
-    .ps-action-card.wrong{
-      animation:psShake .30s ease;
-      border-color:#fecaca;
-      background:#fff1f2;
-    }
-
-    .ps-action-card.correct-card{
-      background:#dcfce7;
-      border-color:#86efac;
-    }
-
-    .ps-action-card.trap-card{
-      background:linear-gradient(180deg,#ffffff 0%,#fff1f2 100%);
-      border-color:#fecaca;
-    }
-
-    @keyframes psShake{
-      0%{transform:translateX(0);}
-      20%{transform:translateX(-8px);}
-      40%{transform:translateX(8px);}
-      60%{transform:translateX(-6px);}
-      80%{transform:translateX(4px);}
-      100%{transform:translateX(0);}
-    }
-
-    .ps-card-icon{
-      width:35px;
-      height:35px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:13px;
-      background:#eff6ff;
-      margin-bottom:8px;
-      font-size:17px;
-    }
-
-    .ps-action-card strong{
-      display:block;
-      color:#102544;
-      font-size:13px;
-      font-weight:950;
-      line-height:1.2;
-    }
-
-    .ps-action-card span{
-      display:block;
-      margin-top:5px;
-      color:#64748b;
-      font-size:11px;
-      line-height:1.35;
-    }
-
-    .ps-slot .ps-action-card{
-      width:100%;
-      min-height:102px;
-      cursor:default;
-      box-shadow:none;
-      touch-action:auto;
-    }
-
-    .ps-quiz-question{
-      color:#102544;
-      font-size:20px;
-      font-weight:950;
-      line-height:1.45;
-      margin:12px 0 16px;
-    }
-
-    .ps-quiz-options{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-      margin-bottom:16px;
-    }
-
-    .ps-quiz-option{
-      border:none;
-      cursor:pointer;
-      border-radius:18px;
-      background:#fff;
-      border:1px solid #dbe5f0;
-      padding:16px;
-      text-align:left;
-      color:#102544;
-      font-size:14px;
-      line-height:1.45;
-      font-weight:800;
-      transition:.18s ease;
-      min-height:78px;
-    }
-
-    .ps-quiz-option:hover{
-      transform:translateY(-2px);
-      box-shadow:0 10px 22px rgba(15,23,42,.08);
-    }
-
-    .ps-quiz-option.correct{
-      background:#dcfce7;
-      border-color:#86efac;
-      color:#166534;
-    }
-
-    .ps-quiz-option.wrong{
-      background:#fee2e2;
-      border-color:#fecaca;
-      color:#991b1b;
-    }
-
-    .ps-explanation,
-    .ps-log-box{
-      padding:14px;
-      border-radius:18px;
-      background:#f8fbff;
-      border:1px solid #dbeafe;
-      color:#475569;
-      font-size:13px;
-      line-height:1.65;
-      margin-bottom:16px;
-    }
-
-    .ps-log-list{
-      display:grid;
-      gap:8px;
-    }
-
-    .ps-log-item{
-      display:grid;
-      grid-template-columns:34px 1fr;
-      gap:10px;
-      align-items:start;
-      padding:11px;
-      border-radius:16px;
-      background:#fff;
-      border:1px solid #e5edf5;
-      color:#334155;
-      font-size:12px;
-      line-height:1.5;
-      animation:psLogIn .25s ease;
-    }
-
-    @keyframes psLogIn{
-      from{opacity:0;transform:translateY(8px);}
-      to{opacity:1;transform:translateY(0);}
-    }
-
-    .ps-log-icon{
-      width:34px;
-      height:34px;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#fff;
-      font-weight:950;
-    }
-
-    .ps-log-icon.ok{background:#16a34a;}
-    .ps-log-icon.bad{background:#dc2626;}
-    .ps-log-icon.info{background:#2563eb;}
-
-    .ps-log-title{
-      font-weight:950;
-      color:#102544;
-      margin-bottom:3px;
-    }
-
-    .ps-log-sub{
-      color:#64748b;
-      line-height:1.55;
-    }
-
-    .ps-buttons{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .ps-btn{
-      border:none;
-      min-height:42px;
-      padding:0 16px;
-      border-radius:14px;
-      cursor:pointer;
-      font-size:13px;
-      font-weight:900;
-      transition:.18s ease;
-    }
-
-    .ps-btn-primary{
-      background:linear-gradient(135deg,#123a72,#2563eb);
-      color:#fff;
-      box-shadow:0 12px 24px rgba(18,58,114,.16);
-    }
-
-    .ps-btn-soft{
-      background:#eef4fb;
-      color:#123a72;
-      border:1px solid #d9e6f4;
-    }
-
-    .ps-btn:hover{
-      transform:translateY(-1px);
-    }
-
-    .ps-btn:disabled{
-      opacity:.45;
-      cursor:not-allowed;
-      transform:none;
-    }
-
-    .ps-result-hero{
-      border-radius:30px;
-      padding:26px;
-      color:#fff;
-      background:
-        radial-gradient(circle at top right, rgba(34,211,238,.25), transparent 34%),
-        linear-gradient(135deg,#102544,#123a72 58%,#0f766e);
-      box-shadow:0 24px 56px rgba(15,23,42,.18);
-      margin-bottom:16px;
-    }
-
-    .ps-result-hero h2{
-      margin:0;
-      font-size:34px;
-      line-height:1.1;
-      font-weight:950;
-    }
-
-    .ps-result-hero p{
-      margin:10px 0 0;
-      color:rgba(255,255,255,.82);
-      line-height:1.7;
-      font-size:14px;
-    }
-
-    .ps-result-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:12px;
-      margin-bottom:16px;
-    }
-
-    .ps-result-card{
-      background:#f8fbff;
-      border:1px solid #dbeafe;
-      border-radius:20px;
-      padding:16px;
-    }
-
-    .ps-result-card label{
-      display:block;
-      color:#64748b;
-      font-size:11px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.06em;
-      margin-bottom:10px;
-    }
-
-    .ps-result-card strong{
-      display:block;
-      font-size:28px;
-      line-height:1;
-      color:#102544;
-      font-weight:950;
-    }
-
-    .ps-result-note{
-      background:#f8fbff;
-      border:1px solid #dbeafe;
-      border-radius:20px;
-      padding:16px;
-      color:#475569;
-      line-height:1.7;
-      margin-bottom:16px;
-    }
-
-    .ps-toast{
-      position:fixed;
-      right:22px;
-      bottom:22px;
-      z-index:99999;
-      min-width:280px;
-      max-width:420px;
-      padding:14px 16px;
-      border-radius:18px;
-      color:#fff;
-      box-shadow:0 18px 42px rgba(15,23,42,.22);
-      transform:translateY(20px);
-      opacity:0;
-      pointer-events:none;
-      transition:.22s ease;
-      font-size:13px;
-      line-height:1.55;
-      font-weight:800;
-    }
-
-    .ps-toast.show{
-      transform:translateY(0);
-      opacity:1;
-    }
-
-    .ps-toast.ok{background:linear-gradient(135deg,#15803d,#16a34a);}
-    .ps-toast.bad{background:linear-gradient(135deg,#991b1b,#dc2626);}
-    .ps-toast.info{background:linear-gradient(135deg,#123a72,#2563eb);}
-
-    .ps-screen-flash{
-      position:fixed;
-      inset:0;
-      z-index:99998;
-      pointer-events:none;
-      opacity:0;
-    }
-
-    .ps-screen-flash.ok{
-      background:rgba(34,197,94,.14);
-      animation:psFlash .34s ease;
-    }
-
-    .ps-screen-flash.bad{
-      background:rgba(220,38,38,.13);
-      animation:psFlash .34s ease;
-    }
-
-    @keyframes psFlash{
-      0%{opacity:0;}
-      35%{opacity:1;}
-      100%{opacity:0;}
-    }
-
-    .ps-floating-score{
-      position:fixed;
-      z-index:99999;
-      font-size:13px;
-      font-weight:950;
-      color:#fff;
-      padding:8px 11px;
-      border-radius:999px;
-      pointer-events:none;
-      animation:psFloatScore .75s ease forwards;
-      box-shadow:0 12px 28px rgba(15,23,42,.18);
-    }
-
-    .ps-floating-score.ok{background:#16a34a;}
-    .ps-floating-score.bad{background:#dc2626;}
-
-    @keyframes psFloatScore{
-      from{opacity:0;transform:translateY(8px) scale(.92);}
-      20%{opacity:1;}
-      to{opacity:0;transform:translateY(-34px) scale(1.05);}
-    }
-
-    .ps-confetti{
-      position:fixed;
-      width:8px;
-      height:12px;
-      z-index:99999;
-      pointer-events:none;
-      animation:psConfettiFall .9s ease forwards;
-      border-radius:2px;
-    }
-
-    @keyframes psConfettiFall{
-      from{opacity:1;transform:translateY(0) rotate(0deg);}
-      to{opacity:0;transform:translateY(110px) rotate(220deg);}
-    }
-
-    .ps-quick-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:12px;
-    }
-
-    .quick-card{
-      width:100%;
-      border:none;
-      cursor:pointer;
-      background:rgba(255,255,255,.88);
-      border:1px solid rgba(255,255,255,.72);
-      border-radius:22px;
-      padding:16px;
-      box-shadow:0 8px 20px rgba(15,23,42,.06);
-      display:grid;
-      grid-template-columns:54px 1fr 18px;
-      gap:12px;
-      align-items:center;
-      text-align:left;
-    }
-
-    .quick-icon{
-      width:54px;
-      height:54px;
-      border-radius:18px;
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-      box-shadow:0 12px 22px rgba(15,23,42,.14);
-    }
-
-    .quick-title{
-      font-size:16px;
-      font-weight:900;
-      color:#102544;
-    }
-
-    .quick-text{
-      margin-top:4px;
-      font-size:13px;
-      line-height:1.55;
-      color:#64748b;
-    }
-
-    .quick-arrow{
-      font-size:22px;
-      color:#94a3b8;
-      font-weight:900;
-    }
-
-    .footer-note{
-      text-align:center;
-      color:#64748b;
-      font-size:13px;
-      margin:12px 0 8px;
-    }
-
-    @media (max-width:1280px){
-      .ps-case-panel,
-      .ps-score-grid,
-      .ps-result-grid{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-      }
-
-      .ps-pipeline{
-        grid-template-columns:repeat(4,minmax(0,1fr));
-      }
-
-      .ps-quiz-options,
-      .ps-quick-grid{
-        grid-template-columns:1fr;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-function showToast(message, type = 'info') {
-  let toast = document.getElementById('psToast');
-
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'psToast';
-    toast.className = 'ps-toast';
-    document.body.appendChild(toast);
-  }
-
-  toast.textContent = message;
-  toast.className = `ps-toast ${type}`;
-
-  requestAnimationFrame(() => {
-    toast.classList.add('show');
-  });
-
-  clearTimeout(toast._hideTimer);
-  toast._hideTimer = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 1800);
-}
-
-function flashScreen(type) {
-  let flash = document.getElementById('psScreenFlash');
-
-  if (!flash) {
-    flash = document.createElement('div');
-    flash.id = 'psScreenFlash';
-    flash.className = 'ps-screen-flash';
-    document.body.appendChild(flash);
-  }
-
-  flash.className = `ps-screen-flash ${type}`;
-
-  setTimeout(() => {
-    flash.className = 'ps-screen-flash';
-  }, 360);
-}
-
-function popScore(target, text, type) {
-  if (!target || !target.getBoundingClientRect) return;
-
-  const rect = target.getBoundingClientRect();
-  const el = document.createElement('div');
-
-  el.className = `ps-floating-score ${type}`;
-  el.textContent = text;
-  el.style.left = `${rect.left + Math.min(80, rect.width / 2)}px`;
-  el.style.top = `${rect.top + 8}px`;
-
-  document.body.appendChild(el);
-
-  setTimeout(() => el.remove(), 850);
-}
-
-function spawnConfetti() {
-  const colors = ['#2563eb', '#22d3ee', '#16a34a', '#f59e0b', '#ef4444'];
-  const centerX = window.innerWidth / 2;
-  const startY = 90;
-
-  for (let i = 0; i < 42; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'ps-confetti';
-    piece.style.left = `${centerX + (Math.random() * 520 - 260)}px`;
-    piece.style.top = `${startY + Math.random() * 40}px`;
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.animationDelay = `${Math.random() * .18}s`;
-
-    document.body.appendChild(piece);
-
-    setTimeout(() => piece.remove(), 1100);
-  }
-}
-
-function addLog(type, title, text) {
-  GAME_STATE.logs.unshift({ type, title, text });
-  GAME_STATE.logs = GAME_STATE.logs.slice(0, 8);
-}
-
-function startGame() {
-  clearAutoNextTimer();
-
-  GAME_STATE.order = CHALLENGES.map((_, index) => index);
-  GAME_STATE.index = 0;
-  GAME_STATE.score = 0;
-  GAME_STATE.risk = 0;
-  GAME_STATE.wrong = 0;
-  GAME_STATE.finished = false;
-
-  loadChallenge();
-}
-
-function loadChallenge() {
-  clearAutoNextTimer();
-
-  const challengeIndex = GAME_STATE.order[GAME_STATE.index];
-  const challenge = CHALLENGES[challengeIndex];
-
-  GAME_STATE.current = challenge;
-  GAME_STATE.selectedCardId = null;
-  GAME_STATE.answered = false;
-  GAME_STATE.selectedAnswer = null;
-  GAME_STATE.logs = [];
-  GAME_STATE.finished = false;
-
-  if (challenge.type === 'pipeline') {
-    GAME_STATE.stage = 'pipeline';
-    GAME_STATE.placed = Array(challenge.idealIds.length).fill(null);
-    GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
-    GAME_STATE.progress = 0;
-
-    addLog(
-      'info',
-      'Challenge pipeline dimulai',
-      'Susun kartu dari kiri ke kanan. Kartu jebakan akan menaikkan risiko.'
-    );
-  } else {
-    GAME_STATE.stage = 'quiz';
-    GAME_STATE.placed = [];
-    GAME_STATE.shuffledCards = [];
-    GAME_STATE.progress = 100;
-
-    addLog(
-      'info',
-      'Challenge ABCD dimulai',
-      'Pilih jawaban yang paling tepat.'
-    );
-  }
-
-  renderGame();
-}
-
-function finishGame() {
-  clearAutoNextTimer();
-
-  GAME_STATE.finished = true;
-  GAME_STATE.stage = 'result';
-  GAME_STATE.current = null;
-  GAME_STATE.progress = 100;
-
-  renderGame();
-  spawnConfetti();
-  showToast('Semua soal selesai. Hasil akhir ditampilkan.', 'ok');
-}
-
-function nextChallenge() {
-  clearAutoNextTimer();
-
-  if (GAME_STATE.index < GAME_STATE.order.length - 1) {
-    GAME_STATE.index += 1;
-    loadChallenge();
-  } else {
-    finishGame();
-  }
-}
-
-function renderGame() {
-  const root = document.getElementById('procurementGameRoot');
-  if (!root) return;
-
-  if (GAME_STATE.stage === 'result') {
-    root.innerHTML = renderResultScreen();
-    bindResultEvents();
-    return;
-  }
-
-  const challenge = getCurrentChallenge();
-
-  root.innerHTML = `
-    <section class="ps-card">
-      <div class="ps-card-head">
-        <div>
-          <h3>${escapeHtml(challenge.title)}</h3>
-          <p>${escapeHtml(challenge.desc)}</p>
-        </div>
-
-        <div class="ps-pill-row">
-          <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : ''}">
-            ${challenge.type === 'pipeline' ? 'Pipeline' : 'ABCD'}
-          </div>
-          <div class="ps-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
-          ${GAME_STATE.selectedCardId ? '<div class="ps-pill warn">Kartu dipilih</div>' : ''}
-        </div>
-      </div>
-
-      <div class="ps-case-panel">
-        <div class="ps-case-box">
-          <label>Kasus / Topik</label>
-          <strong>${escapeHtml(challenge.caseTitle)}</strong>
-          <span>${escapeHtml(challenge.desc)}</span>
-        </div>
-
-        <div class="ps-case-box">
-          <label>Jenis Soal</label>
-          <strong>${challenge.type === 'pipeline' ? 'Susun Pipeline' : 'Pilihan ABCD'}</strong>
-        </div>
-
-        <div class="ps-case-box">
-          <label>Skor</label>
-          <strong>${GAME_STATE.score}</strong>
-        </div>
-
-        <div class="ps-case-box">
-          <label>Risiko</label>
-          <strong>${GAME_STATE.risk}</strong>
-        </div>
-      </div>
-
-      <div class="ps-score-grid">
-        <div class="ps-score-card">
-          <label>Progress</label>
-          <strong>${GAME_STATE.progress}%</strong>
-        </div>
-        <div class="ps-score-card">
-          <label>Benar / Skor</label>
-          <strong>${GAME_STATE.score}</strong>
-        </div>
-        <div class="ps-score-card">
-          <label>Risiko</label>
-          <strong>${GAME_STATE.risk}</strong>
-        </div>
-        <div class="ps-score-card">
-          <label>Salah</label>
-          <strong>${GAME_STATE.wrong}</strong>
-        </div>
-      </div>
-
-      <div class="ps-progress-track">
-        <div class="ps-progress-bar" style="width:${GAME_STATE.progress}%"></div>
-      </div>
-
-      ${challenge.type === 'pipeline' ? renderPipelineChallenge(challenge) : renderQuizChallenge(challenge)}
-
-      ${renderLogs()}
-
-      <div class="ps-buttons">
-        <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Mulai Ulang dari Soal 1</button>
-        ${challenge.type === 'pipeline'
-          ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
-          : ''
-        }
-        <button type="button" class="ps-btn ps-btn-primary" id="btnNextChallenge" ${canGoNext() ? '' : 'disabled'}>
-          Lanjut Soal Berikutnya
-        </button>
-      </div>
-    </section>
-  `;
-
-  bindGameEvents();
-}
-
-function renderResultScreen() {
-  const maxScore = calculateMaxScore();
-  const percent = maxScore > 0 ? Math.round((GAME_STATE.score / maxScore) * 100) : 0;
-  const grade = getResultGrade(percent);
-  const totalQuestions = CHALLENGES.length;
-  const riskLabel = GAME_STATE.risk <= 20
-    ? 'Rendah'
-    : GAME_STATE.risk <= 60
-      ? 'Sedang'
-      : 'Tinggi';
-
-  return `
-    <section class="ps-card">
-      <div class="ps-result-hero">
-        <div class="ps-kicker">Hasil Akhir Procurement Stacker</div>
-        <h2>${grade.icon} ${grade.label}</h2>
-        <p>${escapeHtml(grade.text)}</p>
-      </div>
-
-      <div class="ps-result-grid">
-        <div class="ps-result-card">
-          <label>Nilai Akhir</label>
-          <strong>${percent}%</strong>
-        </div>
-
-        <div class="ps-result-card">
-          <label>Skor</label>
-          <strong>${GAME_STATE.score}/${maxScore}</strong>
-        </div>
-
-        <div class="ps-result-card">
-          <label>Risiko</label>
-          <strong>${GAME_STATE.risk}</strong>
-        </div>
-
-        <div class="ps-result-card">
-          <label>Salah</label>
-          <strong>${GAME_STATE.wrong}</strong>
-        </div>
-      </div>
-
-      <div class="ps-result-note">
-        <strong>Ringkasan:</strong><br>
-        Kamu sudah menyelesaikan ${totalQuestions} soal/challenge. Level risiko kamu saat ini: <strong>${riskLabel}</strong>.
-        Studi kasus yang sudah dilalui meliputi dasar pengadaan, e-Purchasing, konsolidasi, spesifikasi mengarah,
-        jasa konsultansi, konstruksi, swakelola, penyedia terlambat, perubahan metode dari e-Purchasing, dan adendum kontrak.
-      </div>
-
-      <div class="ps-result-note">
-        <strong>Catatan pembelajaran:</strong><br>
-        Dalam praktik PBJ, keputusan tidak cukup hanya cepat. Harus ada alur yang tertib, bukti yang jelas,
-        pemilihan metode yang sesuai, serta dokumentasi saat terjadi perubahan kondisi seperti katalog tidak tersedia
-        atau kontrak perlu diadendum.
-      </div>
-
-      <div class="ps-buttons">
-        <button type="button" class="ps-btn ps-btn-primary" id="btnPlayAgain">
-          Main Lagi dari Soal 1
-        </button>
-        <button type="button" class="ps-btn ps-btn-soft" data-quick="monitoring-sirup">
-          Buka Monitoring SiRUP
-        </button>
-        <button type="button" class="ps-btn ps-btn-soft" data-quick="simulasi-timeline">
-          Buka Simulasi Timeline
-        </button>
-      </div>
+function showModuleLoading(title = 'Memuat modul...') {
+  contentArea.innerHTML = `
+    <section class="card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
     </section>
   `;
 }
 
-function bindResultEvents() {
-  const btnPlayAgain = document.getElementById('btnPlayAgain');
-
-  if (btnPlayAgain) {
-    btnPlayAgain.addEventListener('click', () => {
-      clearAutoNextTimer();
-      startGame();
-    });
+function initScrollAnimation() {
+  if (typeof scrollAnimationDestroy === 'function') {
+    scrollAnimationDestroy();
+    scrollAnimationDestroy = null;
   }
 
-  document.querySelectorAll('[data-quick]').forEach(item => {
-    item.addEventListener('click', () => {
-      clearAutoNextTimer();
-      loadPage(item.dataset.quick);
-    });
-  });
-}
+  let progress = document.getElementById('luxScrollProgress');
 
-function renderPipelineChallenge(challenge) {
-  const placedIds = new Set(GAME_STATE.placed.filter(Boolean).map(item => item.id));
-
-  return `
-    <div class="ps-pipeline">
-      ${challenge.idealIds.map((id, index) => renderSlot(index)).join('')}
-    </div>
-
-    <div class="ps-card-head">
-      <div>
-        <h3>Kartu Pipeline Acak</h3>
-        <p>Drag kartu ke slot, atau klik kartu lalu klik slot biru. Urutan harus dari kiri ke kanan.</p>
-      </div>
-      <button type="button" class="ps-btn ps-btn-soft" id="btnShuffleCards">
-        Acak Kartu
-      </button>
-    </div>
-
-    <div class="ps-bank">
-      ${GAME_STATE.shuffledCards.map(item => renderPipelineCard(item, placedIds.has(item.id))).join('')}
-    </div>
-
-    ${GAME_STATE.progress === 100 ? `
-      <div class="ps-explanation">
-        <strong>Pipeline selesai:</strong><br>
-        ${escapeHtml(challenge.explanation)}
-      </div>
-    ` : ''}
-  `;
-}
-
-function renderSlot(index) {
-  const placed = GAME_STATE.placed[index];
-  const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
-  const isReady = GAME_STATE.selectedCardId && !placed && index === nextEmpty;
-
-  if (placed) {
-    return `
-      <div class="ps-slot correct" data-slot-index="${index}">
-        <div class="ps-slot-number">${index + 1}</div>
-        ${renderPipelineCard(placed, false, true)}
-      </div>
-    `;
+  if (!progress) {
+    progress = document.createElement('div');
+    progress.id = 'luxScrollProgress';
+    progress.className = 'lux-scroll-progress';
+    document.body.appendChild(progress);
   }
-
-  return `
-    <div class="ps-slot ${isReady ? 'click-ready' : ''}" data-slot-index="${index}">
-      <div class="ps-slot-number">${index + 1}</div>
-      <div class="ps-slot-placeholder">
-        ${isReady ? 'Klik untuk pasang kartu' : `Slot ${index + 1}`}
-      </div>
-    </div>
-  `;
-}
-
-function renderPipelineCard(item, used = false, locked = false) {
-  const selected = GAME_STATE.selectedCardId === item.id ? 'selected' : '';
-  const trapClass = item.type === 'trap' ? 'trap-card' : '';
-
-  return `
-    <div
-      class="ps-action-card ${used ? 'used' : ''} ${locked ? 'correct-card' : ''} ${selected} ${trapClass}"
-      draggable="${used || locked || GAME_STATE.progress === 100 ? 'false' : 'true'}"
-      data-card-id="${escapeHtml(item.id)}"
-    >
-      <div class="ps-card-icon">${item.icon}</div>
-      <strong>${escapeHtml(item.label)}</strong>
-      <span>${escapeHtml(item.note)}</span>
-    </div>
-  `;
-}
-
-function renderQuizChallenge(challenge) {
-  return `
-    <div class="ps-quiz-question">
-      ${escapeHtml(challenge.question)}
-    </div>
-
-    <div class="ps-quiz-options">
-      ${challenge.options.map((option, index) => {
-        let cls = '';
-
-        if (GAME_STATE.answered) {
-          if (index === challenge.answer) cls = 'correct';
-          else if (index === GAME_STATE.selectedAnswer) cls = 'wrong';
-        }
-
-        return `
-          <button
-            type="button"
-            class="ps-quiz-option ${cls}"
-            data-answer-index="${index}"
-            ${GAME_STATE.answered ? 'disabled' : ''}
-          >
-            ${String.fromCharCode(65 + index)}. ${escapeHtml(option)}
-          </button>
-        `;
-      }).join('')}
-    </div>
-
-    ${GAME_STATE.answered ? `
-      <div class="ps-explanation">
-        <strong>Pembahasan:</strong><br>
-        ${escapeHtml(challenge.explanation)}
-      </div>
-    ` : ''}
-  `;
-}
-
-function renderLogs() {
-  if (!GAME_STATE.logs.length) return '';
-
-  return `
-    <div class="ps-log-box">
-      <strong>Log Pembelajaran</strong>
-      <div style="height:10px;"></div>
-      <div class="ps-log-list">
-        ${GAME_STATE.logs.map(item => `
-          <div class="ps-log-item">
-            <div class="ps-log-icon ${item.type}">
-              ${item.type === 'ok' ? '✓' : item.type === 'bad' ? '!' : 'i'}
-            </div>
-            <div>
-              <div class="ps-log-title">${escapeHtml(item.title)}</div>
-              <div class="ps-log-sub">${escapeHtml(item.text)}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function canGoNext() {
-  const challenge = getCurrentChallenge();
-
-  if (!challenge) return false;
-  if (challenge.type === 'pipeline') return GAME_STATE.progress === 100;
-  return GAME_STATE.answered;
-}
-
-function bindGameEvents() {
-  document.querySelectorAll('.ps-action-card[draggable="true"]').forEach(cardEl => {
-    cardEl.addEventListener('dragstart', event => {
-      event.dataTransfer.setData('text/plain', cardEl.dataset.cardId);
-      event.dataTransfer.effectAllowed = 'move';
-      cardEl.classList.add('selected');
-    });
-
-    cardEl.addEventListener('dragend', () => {
-      cardEl.classList.remove('selected');
-    });
-
-    cardEl.addEventListener('click', () => {
-      selectCard(cardEl.dataset.cardId);
-    });
-  });
-
-  document.querySelectorAll('.ps-slot').forEach(slot => {
-    slot.addEventListener('dragover', event => {
-      event.preventDefault();
-      slot.classList.add('drag-over');
-    });
-
-    slot.addEventListener('dragleave', () => {
-      slot.classList.remove('drag-over');
-    });
-
-    slot.addEventListener('drop', event => {
-      event.preventDefault();
-      slot.classList.remove('drag-over');
-
-      const cardId = event.dataTransfer.getData('text/plain');
-      const slotIndex = Number(slot.dataset.slotIndex);
-      placeCard(cardId, slotIndex, slot);
-    });
-
-    slot.addEventListener('click', () => {
-      if (!GAME_STATE.selectedCardId) return;
-
-      const slotIndex = Number(slot.dataset.slotIndex);
-      placeCard(GAME_STATE.selectedCardId, slotIndex, slot);
-    });
-  });
-
-  document.querySelectorAll('[data-answer-index]').forEach(button => {
-    button.addEventListener('click', () => {
-      answerQuiz(Number(button.dataset.answerIndex), button);
-    });
-  });
-
-  const btnNext = document.getElementById('btnNextChallenge');
-  const btnRestart = document.getElementById('btnRestartGame');
-  const btnReset = document.getElementById('btnResetChallenge');
-  const btnShuffle = document.getElementById('btnShuffleCards');
-
-  if (btnNext) {
-    btnNext.addEventListener('click', () => {
-      clearAutoNextTimer();
-      nextChallenge();
-    });
-  }
-
-  if (btnRestart) {
-    btnRestart.addEventListener('click', () => {
-      clearAutoNextTimer();
-      startGame();
-    });
-  }
-
-  if (btnReset) {
-    btnReset.addEventListener('click', () => {
-      clearAutoNextTimer();
-      loadChallenge();
-    });
-  }
-
-  if (btnShuffle) {
-    btnShuffle.addEventListener('click', () => {
-      const challenge = getCurrentChallenge();
-      if (!challenge || challenge.type !== 'pipeline') return;
-
-      GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
-      GAME_STATE.selectedCardId = null;
-      renderGame();
-      showToast('Kartu diacak ulang.', 'info');
-    });
-  }
-}
-
-function selectCard(cardId) {
-  if (GAME_STATE.progress === 100) return;
-
-  GAME_STATE.selectedCardId = GAME_STATE.selectedCardId === cardId ? null : cardId;
-
-  if (GAME_STATE.selectedCardId) {
-    const challenge = getCurrentChallenge();
-    const item = challenge.cards.find(cardItem => cardItem.id === cardId);
-    showToast(`Kartu dipilih: ${item ? item.label : cardId}. Klik slot biru.`, 'info');
-  }
-
-  renderGame();
-}
-
-function placeCard(cardId, slotIndex, slotEl) {
-  const challenge = getCurrentChallenge();
-
-  if (!challenge || challenge.type !== 'pipeline') return;
-  if (GAME_STATE.progress === 100) return;
-
-  const expectedId = challenge.idealIds[slotIndex];
-  const item = challenge.cards.find(cardItem => cardItem.id === cardId);
-
-  if (!item) return;
-
-  const alreadyPlaced = GAME_STATE.placed.some(placedItem => placedItem && placedItem.id === cardId);
-  if (alreadyPlaced) return;
-
-  const nextEmpty = GAME_STATE.placed.findIndex(placedItem => placedItem === null);
-
-  if (slotIndex !== nextEmpty) {
-    wrongMove(cardId, `Isi pipeline dari kiri ke kanan. Slot berikutnya adalah nomor ${nextEmpty + 1}.`);
-    return;
-  }
-
-  if (cardId !== expectedId) {
-    const expected = challenge.cards.find(cardItem => cardItem.id === expectedId);
-    wrongMove(cardId, `Belum tepat. Kamu memilih "${item.label}", posisi ini seharusnya "${expected ? expected.label : expectedId}".`);
-    return;
-  }
-
-  GAME_STATE.placed[slotIndex] = item;
-  GAME_STATE.selectedCardId = null;
-  GAME_STATE.progress = Math.round((getPlacedCount() / challenge.idealIds.length) * 100);
-  GAME_STATE.score += 10;
-
-  addLog('ok', `${item.label} benar`, getCorrectMessage(item.id));
-
-  showToast(`Benar: ${item.label}`, 'ok');
-  flashScreen('ok');
-  popScore(slotEl || document.body, '+10', 'ok');
-
-  const completed = GAME_STATE.progress === 100;
-
-  if (completed) {
-    GAME_STATE.score += 20;
-    addLog('ok', 'Pipeline selesai', challenge.explanation);
-    showToast('Pipeline benar 100%. Otomatis lanjut...', 'ok');
-    spawnConfetti();
-
-    scheduleAutoNext('Pipeline selesai. Otomatis lanjut ke soal berikutnya...');
-  }
-
-  renderGame();
-  pulseSlot(slotIndex);
-}
-
-function pulseSlot(slotIndex) {
-  requestAnimationFrame(() => {
-    const slot = document.querySelector(`.ps-slot[data-slot-index="${slotIndex}"]`);
-
-    if (!slot) return;
-
-    slot.classList.add('fx-correct');
-
-    setTimeout(() => {
-      slot.classList.remove('fx-correct');
-    }, 520);
-  });
-}
-
-function shakeCard(cardId) {
-  requestAnimationFrame(() => {
-    const cardEl = document.querySelector(`.ps-action-card[data-card-id="${cardId}"]`);
-
-    if (!cardEl) return;
-
-    cardEl.classList.remove('wrong');
-    void cardEl.offsetWidth;
-    cardEl.classList.add('wrong');
-
-    setTimeout(() => cardEl.classList.remove('wrong'), 360);
-  });
-}
-
-function wrongMove(cardId, message) {
-  GAME_STATE.risk += 10;
-  GAME_STATE.wrong += 1;
-  GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
-  GAME_STATE.selectedCardId = null;
-
-  addLog('bad', 'Urutan belum tepat', message);
-
-  showToast('Belum tepat. Risiko naik.', 'bad');
-  flashScreen('bad');
-
-  renderGame();
-  shakeCard(cardId);
-}
-
-function answerQuiz(selectedIndex, buttonEl) {
-  const challenge = getCurrentChallenge();
-
-  if (!challenge || challenge.type !== 'quiz') return;
-  if (GAME_STATE.answered) return;
-
-  GAME_STATE.selectedAnswer = selectedIndex;
-  GAME_STATE.answered = true;
-
-  if (selectedIndex === challenge.answer) {
-    GAME_STATE.score += 20;
-    addLog('ok', 'Jawaban benar', challenge.explanation);
-    showToast('Jawaban benar. Otomatis lanjut...', 'ok');
-    flashScreen('ok');
-    popScore(buttonEl || document.body, '+20', 'ok');
-    spawnConfetti();
-
-    scheduleAutoNext('Jawaban benar. Otomatis lanjut ke soal berikutnya...');
-  } else {
-    GAME_STATE.risk += 8;
-    GAME_STATE.wrong += 1;
-    GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
-    addLog('bad', 'Jawaban belum tepat', challenge.explanation);
-    showToast('Jawaban belum tepat. Otomatis lanjut setelah pembahasan.', 'bad');
-    flashScreen('bad');
-    popScore(buttonEl || document.body, '+8 Risiko', 'bad');
-
-    scheduleAutoNext('Pembahasan terbuka. Otomatis lanjut ke soal berikutnya...');
-  }
-
-  renderGame();
-}
-
-function getCorrectMessage(cardId) {
-  const messages = {
-    rup: 'RUP menjadi pintu awal untuk memastikan paket, jadwal, pagu, dan metode.',
-    identifikasi: 'Identifikasi kebutuhan mencegah paket dobel, tidak relevan, atau tidak sesuai prioritas.',
-    konsolidasi: 'Konsolidasi membantu mengelola kebutuhan sejenis agar tidak terpecah tanpa alasan.',
-    kak: 'KAK/spesifikasi harus berbasis kebutuhan dan tidak mengarah.',
-    'review-spek': 'Review spesifikasi penting agar persaingan sehat.',
-    hps: 'HPS/referensi harga menjadi dasar kewajaran biaya.',
-    'cek-pdn': 'PDN/TKDN perlu diperhatikan untuk mendukung produk dalam negeri.',
-    'cek-katalog': 'Cek katalog membantu menentukan apakah e-Purchasing dapat digunakan.',
-    'katalog-tidak-sesuai': 'Jika katalog tidak menyediakan produk/penyedia sesuai, kondisi itu harus dicatat sebelum mengganti metode.',
-    'dokumentasi-gagal-katalog': 'Dokumentasi hasil cek katalog menjadi dasar perubahan metode.',
-    'evaluasi-metode': 'Evaluasi metode diperlukan agar metode baru sesuai nilai, jenis, dan kondisi paket.',
-    'pilih-metode': 'Metode dipilih setelah kebutuhan, nilai, jadwal, dan pasar dipahami.',
-    'metode-pl': 'Pengadaan Langsung tepat bila nilai dan kondisi paket sesuai.',
-    'metode-epurchasing': 'e-Purchasing tepat jika tersedia di katalog dan sesuai kebutuhan.',
-    tender: 'Tender dipakai saat karakter paket membutuhkan proses pemilihan formal.',
-    seleksi: 'Seleksi relevan untuk jasa konsultansi.',
-    swakelola: 'Swakelola dapat dipilih jika memenuhi kriteria.',
-    klarifikasi: 'Klarifikasi/negosiasi memastikan harga, spesifikasi, dan kemampuan pelaksanaan.',
-    proses: 'Proses pemilihan dilakukan setelah dokumen dan metode siap.',
-    kontrak: 'Kontrak/SPK menjadi dasar pelaksanaan setelah proses pengadaan.',
-    'monitoring-kontrak': 'Monitoring kontrak mengendalikan waktu, mutu, dan kewajiban penyedia.',
-    'identifikasi-perubahan': 'Perubahan kontrak harus diawali identifikasi kondisi perubahan.',
-    'kaji-kontrak': 'Klausul kontrak perlu dikaji sebelum adendum.',
-    'justifikasi-teknis': 'Justifikasi teknis menjadi dasar perubahan kontrak.',
-    'negosiasi-perubahan': 'Negosiasi perubahan membahas dampak harga, waktu, dan volume.',
-    'adendum-kontrak': 'Adendum dituangkan secara tertulis sebelum perubahan dilaksanakan lebih lanjut.',
-    teguran: 'Teguran/evaluasi diperlukan saat penyedia terlambat atau bermasalah.',
-    pemeriksaan: 'Pemeriksaan hasil mencegah barang/jasa tidak sesuai langsung diterima.',
-    bast: 'BAST dilakukan setelah hasil diperiksa dan sesuai.',
-    pembayaran: 'Pembayaran dilakukan setelah dokumen pendukung memadai.',
-    realisasi: 'Pencatatan realisasi memastikan data monitoring tidak bolong.'
-  };
-
-  return messages[cardId] || 'Langkah ini benar pada posisi pipeline saat ini.';
-}
-
-function initScrollLuxuryAnimation() {
-  if (typeof scrollLuxuryDestroy === 'function') {
-    scrollLuxuryDestroy();
-    scrollLuxuryDestroy = null;
-  }
-
-  const progress = document.getElementById('luxScrollProgress');
-  const hero = document.querySelector('.ps-hero');
 
   const updateProgress = () => {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-
-    if (progress) {
-      progress.style.width = `${Math.min(100, Math.max(0, percent))}%`;
-    }
-
-    if (hero) {
-      const move = Math.min(80, scrollTop * 0.12);
-      hero.style.setProperty('--hero-parallax', `${move}px`);
-    }
+    progress.style.width = `${Math.min(100, Math.max(0, percent))}%`;
   };
 
-  updateProgress();
-  window.addEventListener('scroll', updateProgress, { passive: true });
+  const revealItems = contentArea.querySelectorAll(
+    '.hero-card, .card, .quick-card, .embed-card, .module-page--native > *'
+  );
 
-  const revealItems = document.querySelectorAll('.lux-reveal');
+  revealItems.forEach((item, index) => {
+    item.classList.add('lux-reveal');
+    item.style.transitionDelay = `${Math.min(index * 45, 260)}ms`;
+  });
 
   const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
+    entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.add('is-visible');
         observer.unobserve(entry.target);
       }
     });
   }, {
-    threshold: 0.16,
-    rootMargin: '0px 0px -40px 0px'
+    threshold: 0.12,
+    rootMargin: '0px 0px -30px 0px'
   });
 
-  revealItems.forEach((item, index) => {
-    item.style.setProperty('--lux-delay', `${Math.min(index * 70, 420)}ms`);
-    observer.observe(item);
-  });
+  revealItems.forEach((item) => observer.observe(item));
 
-  scrollLuxuryDestroy = () => {
+  updateProgress();
+  window.addEventListener('scroll', updateProgress, { passive:true });
+
+  scrollAnimationDestroy = () => {
     window.removeEventListener('scroll', updateProgress);
     observer.disconnect();
   };
 }
 
 function renderDashboard() {
-  injectProcurementCss();
-
   contentArea.innerHTML = `
-    <div class="lux-scroll-progress" id="luxScrollProgress"></div>
+    <section class="hero-card">
+      <h3>Selamat datang di SIPPBJ</h3>
+      <p>Ringkasan utama profil pengadaan barang/jasa Kota Bogor, pemanfaatan sistem, realisasi paket, konsolidasi, dan Rapor PBJ.</p>
 
-    <section class="ps-dashboard">
-      <section class="ps-hero lux-reveal">
-        <div>
-          <div class="ps-kicker">TRAXPBJ Academy • Level Challenge Mode</div>
-          <h3>Procurement Stacker</h3>
-          <p>
-            Mulai dari Soal 1 yang paling mudah, lalu naik bertahap ke soal berikutnya.
-            Setelah selesai atau menjawab, sistem otomatis lanjut ke level berikutnya.
-            Di akhir, hasil pembelajaran akan ditampilkan.
-          </p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">Skor ITKP</div>
+          <div class="value">86,42%</div>
+          <div class="desc">Indikator pemanfaatan sistem pengadaan</div>
         </div>
-      </section>
+        <div class="stat-card">
+          <div class="label">Konsolidasi</div>
+          <div class="value">128</div>
+          <div class="desc">Paket terindikasi/termonitor konsolidasi</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Paket Belum Berjalan</div>
+          <div class="value">6.666</div>
+          <div class="desc">Breakdown per metode pengadaan</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Rapor PBJ</div>
+          <div class="value">44</div>
+          <div class="desc">Laporan rapor perangkat daerah</div>
+        </div>
+      </div>
+    </section>
 
-      <div class="lux-section-label lux-reveal">Interactive Procurement Challenge</div>
+    <section class="grid-main">
+      <div class="card">
+        <h3>Profil Pengadaan Barang/Jasa Kota Bogor</h3>
+        <div class="summary-panels">
+          <div class="mini-card">
+            <h4>Skor ITKP</h4>
+            <div class="big-number">86,42%</div>
+            <div class="progress-scale">
+              <div class="progress-track">
+                <div class="progress-bar" style="width:86.42%"></div>
+              </div>
+            </div>
+            <div class="dimensions">
+              ${renderDimension('SiRUP', 92.10)}
+              ${renderDimension('eKatalog', 84.33)}
+              ${renderDimension('eTendering', 83.21)}
+              ${renderDimension('eKontrak', 79.45)}
+              ${renderDimension('Non Tender', 88.60)}
+            </div>
+          </div>
 
-      <div class="lux-reveal" id="procurementGameRoot"></div>
-
-      <section class="ps-card lux-reveal">
-        <div class="ps-card-head">
-          <div>
-            <h3>Akses Cepat TRAXPBJ</h3>
-            <p>Setelah latihan, lanjut ke modul monitoring dan simulasi yang tersedia.</p>
+          <div class="mini-card">
+            <h4>Paket Belum Berjalan per Metode</h4>
+            <div class="table-lite">
+              <div class="table-row table-head"><div>Metode</div><div>Jumlah</div></div>
+              <div class="table-row"><div>Pengadaan Langsung</div><div>3.821</div></div>
+              <div class="table-row"><div>e-Purchasing</div><div>1.744</div></div>
+              <div class="table-row"><div>Tender</div><div>633</div></div>
+              <div class="table-row"><div>Seleksi</div><div>214</div></div>
+              <div class="table-row"><div>Lainnya</div><div>254</div></div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="ps-quick-grid">
-          ${renderQuickCard('📊', 'linear-gradient(135deg,#1d4ed8,#22d3ee)', 'ITKP - SIRUP', 'Monitoring indikator ITKP dari modul SIRUP.', 'monitoring-sirup')}
-          ${renderQuickCard('📋', 'linear-gradient(135deg,#123a72,#3b82f6)', 'Monitoring Perencanaan', 'Pantau progres paket perangkat daerah.', 'monitoring-perencanaan')}
-          ${renderQuickCard('🧾', 'linear-gradient(135deg,#0f766e,#22c55e)', 'Rapor PBJ', 'Lihat laporan rapor kinerja PBJ.', 'rapor-pbj')}
-          ${renderQuickCard('🗓️', 'linear-gradient(135deg,#111827,#2563eb)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan.', 'simulasi-timeline')}
+      <div class="card">
+        <h3>Aktivitas / Informasi</h3>
+        <div class="activities">
+          ${renderActivity('#2ab56f', '✓', 'Rapor PBJ Bulan April 2026 telah tersedia', 'Laporan rapor untuk perangkat daerah telah berhasil dibuat.', '2 jam lalu')}
+          ${renderActivity('#4c7df2', '📊', 'Update Dashboard ITKP', 'Data monitoring ITKP diperbarui pada portal.', '3 jam lalu')}
+          ${renderActivity('#8e61e9', '🧾', 'Monitoring Realisasi diperbarui', 'Sinkronisasi data realisasi paket berhasil dimuat.', '5 jam lalu')}
+          ${renderActivity('#ef8d21', '📜', 'Konsolidasi sedang disiapkan', 'Menu konsolidasi masih dalam proses pengembangan.', '1 hari lalu')}
+          ${renderActivity('#12a8a1', '📝', 'Rapor PBJ aktif', 'Portal rapor PBJ tetap dapat diakses.', '1 hari lalu')}
         </div>
-      </section>
-
-      <div class="footer-note lux-reveal">© 2026 TRAXPBJ - Level Pipeline & ABCD Challenge</div>
+      </div>
     </section>
+
+    <section class="quick-grid">
+      ${renderQuickCard('📊', 'linear-gradient(135deg,#2665df,#3a8bff)', 'ITKP - SiRUP', 'Lihat monitoring indikator ITKP dari modul SiRUP.', 'monitoring-sirup')}
+      ${renderQuickCard('🧠', 'linear-gradient(135deg,#123a72,#2f9a8f)', 'Procurement Stacker', 'Latihan interaktif alur dan keputusan PBJ.', 'simulasi-procurement-stacker')}
+      ${renderQuickCard('📦', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Monitoring Realisasi', 'Pantau progres realisasi paket perangkat daerah.', 'monitoring-perencanaan')}
+      ${renderQuickCard('🗓️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
+    </section>
+
+    <div class="footer-note">© BenRama 2026 SIPPBJ - Simulasi & Monitoring Pengadaan Barang/Jasa</div>
   `;
 
-  startGame();
-
-  contentArea.querySelectorAll('[data-quick]').forEach(item => {
+  contentArea.querySelectorAll('[data-quick]').forEach((item) => {
     item.addEventListener('click', () => loadPage(item.dataset.quick));
-  });
-
-  requestAnimationFrame(() => {
-    initScrollLuxuryAnimation();
   });
 }
 
 function renderIframePage(page) {
   contentArea.innerHTML = `
     <section class="embed-card">
-      <h3>${page.title}</h3>
+      <h3>${escapeHtml(page.title)}</h3>
       <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
       <div class="embed-frame-wrap">
         <iframe
@@ -2607,7 +298,7 @@ function renderIframePage(page) {
 function renderPlaceholderPage(pageKey, page) {
   contentArea.innerHTML = `
     <section class="card">
-      <h3>${page.title}</h3>
+      <h3>${escapeHtml(page.title)}</h3>
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Modul belum dihubungkan</h4>
@@ -2615,20 +306,43 @@ function renderPlaceholderPage(pageKey, page) {
         </div>
         <div class="placeholder-box">
           <h4>Langkah berikutnya</h4>
-          <p>Cari route <b>${pageKey}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b>.</p>
+          <p>Cari route <b>${escapeHtml(pageKey)}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b>.</p>
         </div>
       </div>
     </section>
   `;
 }
 
+function renderDimension(name, value) {
+  return `
+    <div class="dim-row">
+      <div>${escapeHtml(name)}</div>
+      <div class="bar"><span style="width:${value}%"></span></div>
+      <div>${value.toFixed(2).replace('.', ',')}%</div>
+    </div>
+  `;
+}
+
+function renderActivity(color, icon, title, text, time) {
+  return `
+    <div class="activity-item">
+      <div class="activity-icon" style="background:${color}">${icon}</div>
+      <div>
+        <div class="activity-title">${escapeHtml(title)}</div>
+        <div class="activity-text">${escapeHtml(text)}</div>
+      </div>
+      <div class="activity-time">${escapeHtml(time)}</div>
+    </div>
+  `;
+}
+
 function renderQuickCard(icon, bg, title, text, route) {
   return `
-    <button class="quick-card" type="button" data-quick="${route}">
+    <button class="quick-card" type="button" data-quick="${escapeHtml(route)}">
       <div class="quick-icon" style="background:${bg}">${icon}</div>
       <div>
-        <div class="quick-title">${title}</div>
-        <div class="quick-text">${text}</div>
+        <div class="quick-title">${escapeHtml(title)}</div>
+        <div class="quick-text">${escapeHtml(text)}</div>
       </div>
       <div class="quick-arrow">›</div>
     </button>
@@ -2636,14 +350,16 @@ function renderQuickCard(icon, bg, title, text, route) {
 }
 
 function updateActiveMenu(key) {
-  document.querySelectorAll('.nav-link, .submenu-link').forEach(el => {
+  document.querySelectorAll('.nav-link, .submenu-link').forEach((el) => {
     el.classList.remove('active');
   });
 
   const directButton = document.querySelector(`.nav-link[data-page="${key}"]`);
   const subButton = document.querySelector(`.submenu-link[data-page="${key}"]`);
 
-  if (directButton) directButton.classList.add('active');
+  if (directButton) {
+    directButton.classList.add('active');
+  }
 
   if (subButton) {
     subButton.classList.add('active');
@@ -2661,31 +377,35 @@ function closeFlyout() {
 
 function cleanupDynamicModule() {
   closeFlyout();
-  clearAutoNextTimer();
 
-  if (typeof scrollLuxuryDestroy === 'function') {
-    scrollLuxuryDestroy();
-    scrollLuxuryDestroy = null;
+  if (typeof scrollAnimationDestroy === 'function') {
+    scrollAnimationDestroy();
+    scrollAnimationDestroy = null;
   }
 
   if (typeof currentModuleDestroy === 'function') {
     try {
       currentModuleDestroy();
     } catch (err) {
-      console.error('Gagal destroy module lama:', err);
+      console.warn('Cleanup module lama gagal:', err);
     }
   }
 
   currentModuleDestroy = null;
-  window.__moduleInit = undefined;
 
-  document.querySelectorAll('[data-dynamic-module-css]').forEach(el => el.remove());
-  document.querySelectorAll('[data-dynamic-module-js]').forEach(el => el.remove());
+  try {
+    delete window.__moduleInit;
+  } catch (err) {
+    window.__moduleInit = undefined;
+  }
+
+  document.querySelectorAll('[data-dynamic-module-css]').forEach((el) => el.remove());
+  document.querySelectorAll('[data-dynamic-module-js]').forEach((el) => el.remove());
 }
 
 function loadExternalScriptOnce(src) {
   return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[data-dynamic-external-script="true"][src="${src}"]`);
+    const existing = document.querySelector(`script[data-external-src="${src}"]`);
 
     if (existing) {
       if (existing.dataset.loaded === 'true') {
@@ -2694,14 +414,14 @@ function loadExternalScriptOnce(src) {
       }
 
       existing.addEventListener('load', () => resolve(), { once: true });
-      existing.addEventListener('error', () => reject(new Error(`Gagal memuat ${src}`)), { once: true });
+      existing.addEventListener('error', () => reject(new Error(`Gagal memuat external script: ${src}`)), { once: true });
       return;
     }
 
     const script = document.createElement('script');
     script.src = src;
     script.async = false;
-    script.dataset.dynamicExternalScript = 'true';
+    script.dataset.externalSrc = src;
     script.dataset.loaded = 'false';
 
     script.onload = () => {
@@ -2709,39 +429,91 @@ function loadExternalScriptOnce(src) {
       resolve();
     };
 
-    script.onerror = () => reject(new Error(`Gagal memuat ${src}`));
+    script.onerror = () => reject(new Error(`Gagal memuat external script: ${src}`));
+    document.body.appendChild(script);
+  });
+}
+
+function loadModuleCss(href) {
+  return new Promise((resolve, reject) => {
+    if (!href) {
+      resolve();
+      return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = cacheBust(href);
+    link.setAttribute('data-dynamic-module-css', 'true');
+
+    link.onload = () => resolve();
+    link.onerror = () => reject(new Error(`Gagal memuat CSS: ${href}`));
+
+    document.head.appendChild(link);
+  });
+}
+
+function loadModuleJs(src) {
+  return new Promise((resolve, reject) => {
+    if (!src) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = cacheBust(src);
+    script.async = false;
+    script.setAttribute('data-dynamic-module-js', 'true');
+
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Gagal memuat JS: ${src}`));
 
     document.body.appendChild(script);
   });
 }
 
+async function fetchModuleHtml(path) {
+  const response = await fetch(cacheBust(path), { cache: 'no-store' });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} saat memuat HTML: ${path}`);
+  }
+
+  return response.text();
+}
+
+function extractModuleBody(rawHtml) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(rawHtml, 'text/html');
+
+  if (doc.body && doc.body.innerHTML.trim()) {
+    return doc.body.innerHTML;
+  }
+
+  return rawHtml;
+}
+
 async function renderModulePage(page) {
   const token = ++activeModuleToken;
+
   cleanupDynamicModule();
+  showModuleLoading(page.title || 'Memuat modul...');
 
   try {
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
       for (const src of page.externalScripts) {
         await loadExternalScriptOnce(src);
+        if (token !== activeModuleToken) return false;
       }
     }
 
-    const response = await fetch(page.html, { cache: 'no-cache' });
+    const rawHtml = await fetchModuleHtml(page.html);
+    if (token !== activeModuleToken) return false;
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} saat memuat ${page.html}`);
-    }
+    await loadModuleCss(page.css);
+    if (token !== activeModuleToken) return false;
 
-    const rawHtml = await response.text();
-
-    if (token !== activeModuleToken) return;
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(rawHtml, 'text/html');
-
-    const moduleContent = doc.body && doc.body.innerHTML.trim()
-      ? doc.body.innerHTML
-      : rawHtml;
+    const moduleContent = extractModuleBody(rawHtml);
 
     contentArea.innerHTML = `
       <section class="module-page module-page--native">
@@ -2749,45 +521,17 @@ async function renderModulePage(page) {
       </section>
     `;
 
-    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    if (token !== activeModuleToken) return false;
 
-    if (token !== activeModuleToken) return;
+    await loadModuleJs(page.js);
+    if (token !== activeModuleToken) return false;
 
-    if (page.css) {
-      await new Promise((resolve, reject) => {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = `${page.css}?v=${Date.now()}`;
-        link.setAttribute('data-dynamic-module-css', 'true');
-
-        link.onload = resolve;
-        link.onerror = () => reject(new Error(`Gagal memuat CSS ${page.css}`));
-
-        document.head.appendChild(link);
-      });
-    }
-
-    if (token !== activeModuleToken) return;
-
-    if (page.js) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = `${page.js}?v=${Date.now()}`;
-        script.defer = true;
-        script.setAttribute('data-dynamic-module-js', 'true');
-
-        script.onload = resolve;
-        script.onerror = () => reject(new Error(`Gagal memuat JS ${page.js}`));
-
-        document.body.appendChild(script);
-      });
-    }
-
-    if (token !== activeModuleToken) return;
+    const moduleContainer = contentArea.querySelector('.module-page--native') || contentArea;
 
     if (typeof window.__moduleInit === 'function') {
       const destroyFn = window.__moduleInit({
-        container: contentArea,
+        container: moduleContainer,
         route: page
       });
 
@@ -2795,56 +539,90 @@ async function renderModulePage(page) {
     } else {
       currentModuleDestroy = null;
     }
+
+    return true;
   } catch (error) {
     console.error('Gagal memuat module:', error);
+
+    if (token !== activeModuleToken) return false;
 
     contentArea.innerHTML = `
       <section class="card">
         <h3>Gagal memuat modul</h3>
-        <p>File modul tidak bisa dimuat. Cek path HTML, CSS, JS, atau inisialisasi modul.</p>
-        <p><b>Detail:</b> ${error.message}</p>
+        <p>File modul tidak bisa dimuat atau script modul gagal dijalankan.</p>
+        <p><b>Detail:</b> ${escapeHtml(error.message)}</p>
       </section>
     `;
+
+    return false;
   }
 }
 
 async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
 
+  if (loadingPageKey === key) {
+    return;
+  }
+
+  if (activePageKey === key) {
+    updateActiveMenu(key);
+    return;
+  }
+
+  loadingPageKey = key;
   updateActiveMenu(key);
 
-  if (page.type !== 'module') {
-    cleanupDynamicModule();
-    contentArea.classList.remove('module-mode');
-  } else {
-    contentArea.classList.add('module-mode');
-  }
+  try {
+    let success = true;
 
-  if (page.type === 'iframe') {
-    renderIframePage(page);
-  } else if (page.type === 'module') {
-    await renderModulePage(page);
-  } else if (page.type === 'placeholder') {
-    renderPlaceholderPage(key, page);
-  } else {
-    renderDashboard();
-  }
+    if (page.type !== 'module') {
+      activeModuleToken++;
+      cleanupDynamicModule();
+      contentArea.classList.remove('module-mode');
+    } else {
+      contentArea.classList.add('module-mode');
+    }
 
-  if (window.innerWidth <= 980 && sidebar) {
-    sidebar.classList.remove('mobile-open');
+    if (page.type === 'iframe') {
+      renderIframePage(page);
+    } else if (page.type === 'module') {
+      success = await renderModulePage(page);
+    } else if (page.type === 'placeholder') {
+      renderPlaceholderPage(key, page);
+    } else {
+      renderDashboard();
+    }
+
+    if (success) {
+      activePageKey = key;
+    }
+
+    initScrollAnimation();
+
+    if (window.innerWidth <= 980 && sidebar) {
+      sidebar.classList.remove('mobile-open');
+    }
+  } finally {
+    if (loadingPageKey === key) {
+      loadingPageKey = '';
+    }
   }
 }
 
 function bindMenu() {
-  document.querySelectorAll('[data-page]').forEach(button => {
-    button.addEventListener('click', () => loadPage(button.dataset.page));
+  document.querySelectorAll('[data-page]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const pageKey = button.dataset.page;
+      if (!pageKey) return;
+      loadPage(pageKey);
+    });
   });
 
-  document.querySelectorAll('[data-toggle-group]').forEach(button => {
-    button.addEventListener('click', event => {
+  document.querySelectorAll('[data-toggle-group]').forEach((button) => {
+    button.addEventListener('click', (event) => {
       const groupName = button.dataset.toggleGroup;
       const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
-
       if (!group) return;
 
       if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 980) {
@@ -2868,7 +646,7 @@ function bindMenu() {
     });
   }
 
-  document.addEventListener('click', event => {
+  document.addEventListener('click', (event) => {
     if (!activeFlyout) return;
 
     const clickedInsideFlyout = activeFlyout.contains(event.target);
@@ -2899,11 +677,9 @@ function toggleFlyout(toggleButton, groupName) {
   closeFlyout();
 
   const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
-
   if (!group) return;
 
   const submenuLinks = group.querySelectorAll('.submenu-link');
-
   if (!submenuLinks.length) return;
 
   const flyout = document.createElement('div');
@@ -2911,18 +687,18 @@ function toggleFlyout(toggleButton, groupName) {
   flyout.dataset.group = groupName;
 
   const titleMap = {
-    monitoring: 'Monitoring',
+    itkp: 'ITKP',
+    realisasi: 'Realisasi Paket',
     simulasi: 'Simulasi'
   };
 
   flyout.innerHTML = `
-    <div class="sidebar-flyout-title">${titleMap[groupName] || 'Menu'}</div>
-    ${Array.from(submenuLinks).map(link => {
+    <div class="sidebar-flyout-title">${escapeHtml(titleMap[groupName] || 'Menu')}</div>
+    ${Array.from(submenuLinks).map((link) => {
       const isActive = link.classList.contains('active') ? ' active' : '';
-
       return `
-        <button class="flyout-link${isActive}" type="button" data-page="${link.dataset.page}">
-          ${link.textContent}
+        <button class="flyout-link${isActive}" type="button" data-page="${escapeHtml(link.dataset.page)}">
+          ${escapeHtml(link.textContent)}
         </button>
       `;
     }).join('')}
@@ -2931,11 +707,10 @@ function toggleFlyout(toggleButton, groupName) {
   document.body.appendChild(flyout);
 
   const rect = toggleButton.getBoundingClientRect();
-
   flyout.style.top = `${rect.top}px`;
   flyout.style.left = `${rect.right + 12}px`;
 
-  flyout.querySelectorAll('[data-page]').forEach(btn => {
+  flyout.querySelectorAll('[data-page]').forEach((btn) => {
     btn.addEventListener('click', () => {
       closeFlyout();
       loadPage(btn.dataset.page);
