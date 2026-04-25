@@ -886,40 +886,31 @@
     }
   }
 
-function showPanji(message, mood = 'thinking') {
-  if (!panjiEl || !panjiTextEl) return;
+  function showPanji(message, mood = 'thinking') {
+    if (!panjiEl || !panjiTextEl) return;
 
-  panjiEl.classList.remove('panji-hidden');
-  panjiEl.classList.remove('panji-minimized');
+    panjiEl.classList.remove('panji-hidden');
+    panjiEl.classList.remove('panji-minimized');
 
-  panjiEl.classList.remove(
-    'panji-happy',
-    'panji-sad',
-    'panji-thinking',
-    'panji-intro'
-  );
+    panjiEl.classList.remove(
+      'panji-happy',
+      'panji-sad',
+      'panji-thinking',
+      'panji-intro'
+    );
 
-  void panjiEl.offsetWidth;
+    void panjiEl.offsetWidth;
 
-  panjiEl.classList.add(`panji-${mood}`);
+    panjiEl.classList.add(`panji-${mood}`);
 
-  if (panjiEmoteEl) {
-    panjiEmoteEl.textContent =
-      mood === 'happy'
-        ? '😄'
-        : mood === 'sad'
-          ? '😢'
-          : '🤔';
-  }
-
-  panjiTextEl.textContent = message;
-
-  if (panjiBubbleEl) {
-    panjiBubbleEl.classList.remove('burst');
-    void panjiBubbleEl.offsetWidth;
-    panjiBubbleEl.classList.add('burst');
-  }
-}
+    if (panjiEmoteEl) {
+      panjiEmoteEl.textContent =
+        mood === 'happy'
+          ? '😄'
+          : mood === 'sad'
+            ? '😢'
+            : '🤔';
+    }
 
     panjiTextEl.textContent = message;
 
@@ -930,56 +921,47 @@ function showPanji(message, mood = 'thinking') {
     }
   }
 
-function showPanjiIntro() {
-  clearPanjiIntroTimers();
-
-  if (panjiEl) {
-    panjiEl.classList.remove('panji-hidden');
-    panjiEl.classList.remove('panji-minimized');
-    panjiEl.classList.remove(
-      'panji-happy',
-      'panji-sad',
-      'panji-thinking',
-      'panji-intro'
-    );
-
-    void panjiEl.offsetWidth;
-
-    panjiEl.classList.add('panji-intro');
-  }
-
-  showPanji(
-    'Halo! Perkenalkan, aku PANJI.',
-    'happy'
-  );
-
-  panjiIntroTimers.push(setTimeout(() => {
-    if (destroyed) return;
+  function showPanjiIntro() {
+    clearPanjiIntroTimers();
 
     showPanji(
-      'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ sambil main Procurement Stacker.',
-      'thinking'
-    );
-  }, 1700));
-
-  panjiIntroTimers.push(setTimeout(() => {
-    if (destroyed) return;
-
-    showPanji(
-      `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin ya. Jadi pakai bantuanku seperlunya aja.`,
-      'thinking'
-    );
-  }, 3900));
-
-  panjiIntroTimers.push(setTimeout(() => {
-    if (destroyed) return;
-
-    showPanji(
-      'Yuk mulai. Susun pipeline dengan tertib: jangan asal cepat, yang penting sesuai alur, ada bukti, dan risikonya rendah.',
+      'Halo! Perkenalkan, aku PANJI.',
       'happy'
     );
-  }, 6500));
-}
+
+    if (panjiEl) {
+      panjiEl.classList.remove('panji-intro');
+      void panjiEl.offsetWidth;
+      panjiEl.classList.add('panji-intro');
+    }
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ sambil main Procurement Stacker.',
+        'thinking'
+      );
+    }, 1700));
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin ya. Jadi pakai bantuanku seperlunya aja.`,
+        'thinking'
+      );
+    }, 3900));
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        'Yuk mulai. Susun pipeline dengan tertib: jangan asal cepat, yang penting sesuai alur, ada bukti, dan risikonya rendah.',
+        'happy'
+      );
+    }, 6500));
+  }
 
   function getHintMessage(challenge) {
     if (!challenge) {
