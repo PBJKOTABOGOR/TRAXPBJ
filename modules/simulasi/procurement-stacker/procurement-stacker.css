@@ -622,3 +622,357 @@
     grid-template-columns:1fr;
   }
 }
+
+/* ================================
+   PANJI - PENGADAAN JITU ASSISTANT
+   ================================ */
+
+.panji-assistant{
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  z-index:99990;
+  display:flex;
+  align-items:flex-end;
+  gap:12px;
+  font-family:"Inter","Segoe UI",Arial,sans-serif;
+  transition:
+    transform .25s ease,
+    opacity .25s ease;
+}
+
+.panji-assistant.panji-hidden{
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(20px) scale(.96);
+}
+
+.panji-assistant.panji-minimized .panji-bubble{
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(12px) scale(.94);
+  width:0;
+  padding:0;
+  border:0;
+  overflow:hidden;
+}
+
+.panji-bubble{
+  width:330px;
+  min-height:120px;
+  position:relative;
+  padding:16px 16px 14px;
+  border-radius:22px;
+  background:
+    radial-gradient(circle at top left, rgba(59,130,246,.14), transparent 38%),
+    rgba(255,255,255,.94);
+  border:1px solid rgba(219,234,254,.9);
+  box-shadow:
+    0 22px 48px rgba(15,23,42,.16),
+    inset 0 1px 0 rgba(255,255,255,.8);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  transition:
+    opacity .22s ease,
+    transform .22s ease,
+    width .22s ease,
+    padding .22s ease;
+}
+
+.panji-bubble::after{
+  content:"";
+  position:absolute;
+  right:-10px;
+  bottom:34px;
+  width:20px;
+  height:20px;
+  background:rgba(255,255,255,.94);
+  border-right:1px solid rgba(219,234,254,.9);
+  border-bottom:1px solid rgba(219,234,254,.9);
+  transform:rotate(-45deg);
+}
+
+.panji-name{
+  display:inline-flex;
+  align-items:center;
+  min-height:26px;
+  padding:0 10px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#123a72,#2563eb);
+  color:#fff;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.12em;
+  margin-bottom:10px;
+  box-shadow:0 8px 18px rgba(37,99,235,.22);
+}
+
+.panji-text{
+  color:#102544;
+  font-size:13px;
+  line-height:1.65;
+  font-weight:700;
+}
+
+.panji-actions{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+
+.panji-actions button{
+  border:none;
+  min-height:32px;
+  padding:0 11px;
+  border-radius:11px;
+  cursor:pointer;
+  font-size:11px;
+  font-weight:900;
+  background:#eef4fb;
+  color:#123a72;
+  border:1px solid #dbeafe;
+  transition:.18s ease;
+}
+
+.panji-actions button:hover{
+  transform:translateY(-1px);
+  background:#dbeafe;
+}
+
+.panji-close{
+  position:absolute;
+  right:-8px;
+  top:-8px;
+  width:28px;
+  height:28px;
+  z-index:5;
+  border:none;
+  border-radius:999px;
+  cursor:pointer;
+  background:#102544;
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  box-shadow:0 8px 18px rgba(15,23,42,.22);
+}
+
+.panji-character{
+  width:104px;
+  height:128px;
+  position:relative;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  padding:0;
+  flex-shrink:0;
+  animation:panjiFloat 2.8s ease-in-out infinite;
+}
+
+@keyframes panjiFloat{
+  0%,100%{
+    transform:translateY(0);
+  }
+  50%{
+    transform:translateY(-8px);
+  }
+}
+
+.panji-glow{
+  position:absolute;
+  inset:24px 8px 0;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(37,99,235,.28), transparent 68%);
+  filter:blur(10px);
+}
+
+.panji-head{
+  position:absolute;
+  left:16px;
+  top:8px;
+  width:72px;
+  height:72px;
+  border-radius:26px 26px 24px 24px;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
+    linear-gradient(135deg,#f8fbff,#c7ddff);
+  border:2px solid #123a72;
+  box-shadow:
+    0 14px 28px rgba(18,58,114,.20),
+    inset 0 -8px 18px rgba(37,99,235,.10);
+}
+
+.panji-hat{
+  position:absolute;
+  left:8px;
+  top:-14px;
+  width:56px;
+  height:25px;
+  border-radius:12px 12px 8px 8px;
+  background:linear-gradient(135deg,#123a72,#2563eb);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.08em;
+  box-shadow:0 8px 16px rgba(18,58,114,.22);
+}
+
+.panji-eye{
+  position:absolute;
+  top:31px;
+  width:11px;
+  height:15px;
+  border-radius:999px;
+  background:#102544;
+  animation:panjiBlink 4.8s infinite;
+}
+
+@keyframes panjiBlink{
+  0%,92%,100%{
+    transform:scaleY(1);
+  }
+  95%{
+    transform:scaleY(.12);
+  }
+}
+
+.panji-eye-left{
+  left:20px;
+}
+
+.panji-eye-right{
+  right:20px;
+}
+
+.panji-mouth{
+  position:absolute;
+  left:29px;
+  bottom:17px;
+  width:15px;
+  height:8px;
+  border-bottom:3px solid #102544;
+  border-radius:0 0 999px 999px;
+}
+
+.panji-body{
+  position:absolute;
+  left:23px;
+  top:76px;
+  width:58px;
+  height:42px;
+  border-radius:20px 20px 16px 16px;
+  background:linear-gradient(135deg,#123a72,#2f9a8f);
+  border:2px solid rgba(255,255,255,.88);
+  box-shadow:0 14px 24px rgba(15,23,42,.18);
+}
+
+.panji-badge{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  background:#fff;
+  color:#123a72;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:950;
+}
+
+.panji-hand{
+  position:absolute;
+  top:84px;
+  width:18px;
+  height:32px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#c7ddff,#f8fbff);
+  border:2px solid #123a72;
+}
+
+.panji-hand-left{
+  left:8px;
+  transform:rotate(24deg);
+}
+
+.panji-hand-right{
+  right:8px;
+  transform-origin:top center;
+  animation:panjiWave 1.8s ease-in-out infinite;
+}
+
+@keyframes panjiWave{
+  0%,100%{
+    transform:rotate(-18deg);
+  }
+  50%{
+    transform:rotate(-46deg);
+  }
+}
+
+.panji-assistant.panji-happy .panji-head{
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
+    linear-gradient(135deg,#ecfdf5,#bbf7d0);
+  border-color:#16a34a;
+}
+
+.panji-assistant.panji-happy .panji-mouth{
+  height:12px;
+  border-bottom-color:#166534;
+}
+
+.panji-assistant.panji-warn .panji-head{
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
+    linear-gradient(135deg,#fff7ed,#fed7aa);
+  border-color:#f97316;
+}
+
+.panji-assistant.panji-warn .panji-mouth{
+  width:18px;
+  height:2px;
+  border-bottom:3px solid #9a3412;
+  border-radius:999px;
+}
+
+.panji-assistant.panji-thinking .panji-head{
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
+    linear-gradient(135deg,#eff6ff,#bfdbfe);
+}
+
+.panji-assistant.panji-thinking .panji-character::after{
+  content:"?";
+  position:absolute;
+  right:0;
+  top:0;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fef3c7;
+  color:#92400e;
+  font-weight:950;
+  box-shadow:0 8px 18px rgba(15,23,42,.14);
+}
+
+@media (max-width:900px){
+  .panji-assistant{
+    right:14px;
+    bottom:14px;
+    transform:scale(.88);
+    transform-origin:right bottom;
+  }
+
+  .panji-bubble{
+    width:280px;
+  }
+}
