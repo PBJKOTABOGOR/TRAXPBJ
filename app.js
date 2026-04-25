@@ -89,6 +89,10 @@ let currentModuleDestroy = null;
 let activeFlyout = null;
 let scrollLuxuryDestroy = null;
 
+/* =========================================================
+   DATA KARTU
+========================================================= */
+
 const STACKER_CARD_LIBRARY_RAW = {
   rup: ['rup', 'Cek RUP', '📋', 'Pastikan paket, pagu, metode, dan jadwal sesuai.'],
   identifikasi: ['identifikasi', 'Identifikasi Kebutuhan', '🧠', 'Pastikan kebutuhan jelas, valid, dan tidak dobel.'],
@@ -125,6 +129,26 @@ const STACKER_CARD_LIBRARY_RAW = {
   metodeAsalCepat: ['metode-asal-cepat', 'Metode Asal Cepat', '🏃', 'Jebakan: cepat belum tentu tepat.'],
   realisasiLupa: ['realisasi-lupa', 'Lupakan Realisasi', '🕳️', 'Jebakan: monitoring bolong.']
 };
+
+const STACKER_CARD_LIBRARY = Object.fromEntries(
+  Object.entries(STACKER_CARD_LIBRARY_RAW).map(([key, item]) => [
+    key,
+    {
+      id: item[0],
+      label: item[1],
+      icon: item[2],
+      note: item[3]
+    }
+  ])
+);
+
+function c(key) {
+  return STACKER_CARD_LIBRARY[key];
+}
+
+/* =========================================================
+   DATA LEVEL
+========================================================= */
 
 const LEVEL_DATA = [
   [
@@ -294,6 +318,38 @@ const LEVEL_DATA = [
   ]
 ];
 
+function makeLevel(config) {
+  const idealCards = config.ideal
+    .map(id => c(id))
+    .filter(Boolean);
+
+  const trapCards = (config.traps || [])
+    .map(id => c(id))
+    .filter(Boolean);
+
+  return {
+    ...config,
+    ideal: idealCards.map(card => card.id),
+    cards: [...idealCards, ...trapCards]
+  };
+}
+
+const STACKER_LEVELS = LEVEL_DATA.map(row => makeLevel({
+  title: row[0],
+  caseTitle: row[1],
+  caseDesc: row[2],
+  concept: row[3],
+  budget: row[4],
+  deadline: row[5],
+  difficulty: row[6],
+  ideal: row[7],
+  traps: row[8]
+}));
+
+/* =========================================================
+   DATA SOAL TRYOUT
+========================================================= */
+
 const QUESTION_DATA = [
   ['Rantai Pasok', 'Segmen rantai pasok yang dilakukan oleh organisasi/korporasi/institusi pemasok disebut sebagai apa?', ['Rantai pasok hilir', 'Rantai pasok hulu', 'Rantai pasok eksternal', 'Rantai pasok internal'], 1, 'Pemasok berada pada sisi hulu karena menyediakan input sebelum digunakan organisasi pembeli.'],
   ['Rantai Pasok', 'Pembangunan puskesmas oleh pemerintah daerah termasuk contoh rantai pasok pengadaan dengan kategori apa?', ['Rantai pasok panjang', 'Rantai pasok kompleks', 'Rantai pasok pendek', 'Rantai pasok sederhana'], 0, 'Pekerjaan pembangunan melibatkan banyak tahapan, material, pelaksana, dan pengawasan.'],
@@ -341,50 +397,6 @@ const QUESTION_DATA = [
   ['Persiapan Pemilihan', 'Reviu dokumen persiapan pengadaan oleh Pokja merupakan aktivitas pada tahap apa?', ['Perencanaan pengadaan', 'Persiapan pemilihan', 'Pemilihan penyedia', 'Pelaksanaan pengadaan'], 1, 'Reviu dokumen persiapan pengadaan oleh Pokja dilakukan pada tahap persiapan pemilihan.']
 ];
 
-const STACKER_CARD_LIBRARY = Object.fromEntries(
-  Object.entries(STACKER_CARD_LIBRARY_RAW).map(([key, item]) => [
-    key,
-    {
-      id: item[0],
-      label: item[1],
-      icon: item[2],
-      note: item[3]
-    }
-  ])
-);
-
-function c(key) {
-  return STACKER_CARD_LIBRARY[key];
-}
-
-function makeLevel(config) {
-  const idealCards = config.ideal
-    .map(id => c(id))
-    .filter(Boolean);
-
-  const trapCards = (config.traps || [])
-    .map(id => c(id))
-    .filter(Boolean);
-
-  return {
-    ...config,
-    ideal: idealCards.map(card => card.id),
-    cards: [...idealCards, ...trapCards]
-  };
-}
-
-const STACKER_LEVELS = LEVEL_DATA.map(row => makeLevel({
-  title: row[0],
-  caseTitle: row[1],
-  caseDesc: row[2],
-  concept: row[3],
-  budget: row[4],
-  deadline: row[5],
-  difficulty: row[6],
-  ideal: row[7],
-  traps: row[8]
-}));
-
 const TRYOUT_QUESTIONS = QUESTION_DATA.map((row, index) => ({
   id: index + 1,
   topic: row[0],
@@ -393,6 +405,10 @@ const TRYOUT_QUESTIONS = QUESTION_DATA.map((row, index) => ({
   answer: row[3],
   explanation: row[4]
 }));
+
+/* =========================================================
+   STATE
+========================================================= */
 
 const STACKER_STATE = {
   levelIndex: 0,
@@ -409,8 +425,13 @@ const STACKER_STATE = {
   currentQuiz: null,
   currentQuizAnswered: false,
   currentQuizSelected: null,
-  usedQuestionIds: []
+  usedQuestionIds: [],
+  selectedCardId: null
 };
+
+/* =========================================================
+   HELPER
+========================================================= */
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -431,6 +452,18 @@ function shuffleArray(items) {
 
   return result;
 }
+
+function getStackerLevel() {
+  return STACKER_LEVELS[STACKER_STATE.levelIndex] || STACKER_LEVELS[0];
+}
+
+function getPlacedCount() {
+  return STACKER_STATE.placed.filter(Boolean).length;
+}
+
+/* =========================================================
+   CSS
+========================================================= */
 
 function injectProcurementCss() {
   if (document.getElementById('procurement-stacker-css')) return;
@@ -598,7 +631,7 @@ function injectProcurementCss() {
 
     .ps-game-grid{
       display:grid;
-      grid-template-columns:minmax(0,1.45fr) minmax(370px,.75fr);
+      grid-template-columns:minmax(0,1.45fr) minmax(390px,.78fr);
       gap:16px;
       align-items:start;
     }
@@ -661,6 +694,12 @@ function injectProcurementCss() {
       font-weight:900;
       white-space:nowrap;
       border:1px solid #dbeafe;
+    }
+
+    .ps-level-pill.warn{
+      background:#fef3c7;
+      color:#92400e;
+      border-color:#fde68a;
     }
 
     .ps-case-panel{
@@ -731,6 +770,16 @@ function injectProcurementCss() {
       font-weight:950;
     }
 
+    .ps-score-card.fx-pop strong{
+      animation:psScorePop .38s ease;
+    }
+
+    @keyframes psScorePop{
+      0%{transform:scale(1);}
+      50%{transform:scale(1.18);}
+      100%{transform:scale(1);}
+    }
+
     .ps-progress-track{
       height:11px;
       border-radius:999px;
@@ -763,9 +812,11 @@ function injectProcurementCss() {
       padding:10px;
       position:relative;
       transition:.18s ease;
+      cursor:pointer;
     }
 
-    .ps-slot.drag-over{
+    .ps-slot.drag-over,
+    .ps-slot.click-ready{
       border-color:#2563eb;
       background:#eff6ff;
       box-shadow:0 0 0 4px rgba(37,99,235,.10);
@@ -782,6 +833,16 @@ function injectProcurementCss() {
       border-style:solid;
       border-color:#facc15;
       background:#fefce8;
+    }
+
+    .ps-slot.fx-correct{
+      animation:psSlotCorrect .46s ease;
+    }
+
+    @keyframes psSlotCorrect{
+      0%{transform:scale(.96);box-shadow:0 0 0 rgba(34,197,94,0);}
+      55%{transform:scale(1.04);box-shadow:0 0 0 8px rgba(34,197,94,.14);}
+      100%{transform:scale(1);box-shadow:0 0 0 rgba(34,197,94,0);}
     }
 
     .ps-slot-number{
@@ -838,6 +899,8 @@ function injectProcurementCss() {
       text-align:left;
       transition:.18s ease;
       user-select:none;
+      -webkit-user-select:none;
+      touch-action:none;
       position:relative;
       overflow:hidden;
     }
@@ -845,6 +908,14 @@ function injectProcurementCss() {
     .ps-action-card:hover{
       transform:translateY(-2px);
       box-shadow:0 14px 26px rgba(15,23,42,.10);
+    }
+
+    .ps-action-card.selected{
+      border-color:#2563eb;
+      box-shadow:
+        0 0 0 4px rgba(37,99,235,.13),
+        0 16px 28px rgba(37,99,235,.14);
+      transform:translateY(-3px);
     }
 
     .ps-action-card.used{
@@ -907,6 +978,7 @@ function injectProcurementCss() {
       min-height:94px;
       cursor:default;
       box-shadow:none;
+      touch-action:auto;
     }
 
     .ps-side{
@@ -995,6 +1067,12 @@ function injectProcurementCss() {
       color:#334155;
       font-size:12px;
       line-height:1.5;
+      animation:psLogIn .25s ease;
+    }
+
+    @keyframes psLogIn{
+      from{opacity:0;transform:translateY(8px);}
+      to{opacity:1;transform:translateY(0);}
     }
 
     .ps-log-icon{
@@ -1145,6 +1223,96 @@ function injectProcurementCss() {
       line-height:1.6;
     }
 
+    .ps-toast{
+      position:fixed;
+      right:22px;
+      bottom:22px;
+      z-index:99999;
+      min-width:280px;
+      max-width:420px;
+      padding:14px 16px;
+      border-radius:18px;
+      color:#fff;
+      box-shadow:0 18px 42px rgba(15,23,42,.22);
+      transform:translateY(20px);
+      opacity:0;
+      pointer-events:none;
+      transition:.22s ease;
+      font-size:13px;
+      line-height:1.55;
+      font-weight:800;
+    }
+
+    .ps-toast.show{
+      transform:translateY(0);
+      opacity:1;
+    }
+
+    .ps-toast.ok{background:linear-gradient(135deg,#15803d,#16a34a);}
+    .ps-toast.bad{background:linear-gradient(135deg,#991b1b,#dc2626);}
+    .ps-toast.info{background:linear-gradient(135deg,#123a72,#2563eb);}
+
+    .ps-screen-flash{
+      position:fixed;
+      inset:0;
+      z-index:99998;
+      pointer-events:none;
+      opacity:0;
+    }
+
+    .ps-screen-flash.ok{
+      background:rgba(34,197,94,.14);
+      animation:psFlash .34s ease;
+    }
+
+    .ps-screen-flash.bad{
+      background:rgba(220,38,38,.13);
+      animation:psFlash .34s ease;
+    }
+
+    @keyframes psFlash{
+      0%{opacity:0;}
+      35%{opacity:1;}
+      100%{opacity:0;}
+    }
+
+    .ps-floating-score{
+      position:fixed;
+      z-index:99999;
+      font-size:13px;
+      font-weight:950;
+      color:#fff;
+      padding:8px 11px;
+      border-radius:999px;
+      pointer-events:none;
+      animation:psFloatScore .75s ease forwards;
+      box-shadow:0 12px 28px rgba(15,23,42,.18);
+    }
+
+    .ps-floating-score.ok{background:#16a34a;}
+    .ps-floating-score.bad{background:#dc2626;}
+
+    @keyframes psFloatScore{
+      from{opacity:0;transform:translateY(8px) scale(.92);}
+      20%{opacity:1;}
+      to{opacity:0;transform:translateY(-34px) scale(1.05);}
+    }
+
+    .ps-confetti{
+      position:fixed;
+      width:8px;
+      height:12px;
+      z-index:99999;
+      pointer-events:none;
+      animation:psConfettiFall .9s ease forwards;
+      border-radius:2px;
+    }
+
+    @keyframes psConfettiFall{
+      from{opacity:1;transform:translateY(0) rotate(0deg);}
+      to{opacity:0;transform:translateY(110px) rotate(220deg);}
+    }
+
     .ps-quick-grid{
       display:grid;
       grid-template-columns:repeat(4,minmax(0,1fr));
@@ -1205,50 +1373,6 @@ function injectProcurementCss() {
       margin:12px 0 8px;
     }
 
-    .ps-toast{
-      position:fixed;
-      right:22px;
-      bottom:22px;
-      z-index:99999;
-      min-width:280px;
-      max-width:420px;
-      padding:14px 16px;
-      border-radius:18px;
-      color:#fff;
-      box-shadow:0 18px 42px rgba(15,23,42,.22);
-      transform:translateY(20px);
-      opacity:0;
-      pointer-events:none;
-      transition:.22s ease;
-      font-size:13px;
-      line-height:1.55;
-      font-weight:800;
-    }
-
-    .ps-toast.show{
-      transform:translateY(0);
-      opacity:1;
-    }
-
-    .ps-toast.ok{background:linear-gradient(135deg,#15803d,#16a34a);}
-    .ps-toast.bad{background:linear-gradient(135deg,#991b1b,#dc2626);}
-    .ps-toast.info{background:linear-gradient(135deg,#123a72,#2563eb);}
-
-    .ps-confetti{
-      position:fixed;
-      width:8px;
-      height:12px;
-      z-index:99999;
-      pointer-events:none;
-      animation:psConfettiFall .9s ease forwards;
-      border-radius:2px;
-    }
-
-    @keyframes psConfettiFall{
-      from{opacity:1;transform:translateY(0) rotate(0deg);}
-      to{opacity:0;transform:translateY(110px) rotate(220deg);}
-    }
-
     @media (max-width:1280px){
       .ps-game-grid{
         grid-template-columns:1fr;
@@ -1275,6 +1399,10 @@ function injectProcurementCss() {
   document.head.appendChild(style);
 }
 
+/* =========================================================
+   FX
+========================================================= */
+
 function showToast(message, type = 'info') {
   let toast = document.getElementById('psToast');
 
@@ -1298,6 +1426,39 @@ function showToast(message, type = 'info') {
   }, 1800);
 }
 
+function flashScreen(type) {
+  let flash = document.getElementById('psScreenFlash');
+
+  if (!flash) {
+    flash = document.createElement('div');
+    flash.id = 'psScreenFlash';
+    flash.className = 'ps-screen-flash';
+    document.body.appendChild(flash);
+  }
+
+  flash.className = `ps-screen-flash ${type}`;
+
+  setTimeout(() => {
+    flash.className = 'ps-screen-flash';
+  }, 360);
+}
+
+function popScore(target, text, type) {
+  if (!target || !target.getBoundingClientRect) return;
+
+  const rect = target.getBoundingClientRect();
+  const el = document.createElement('div');
+
+  el.className = `ps-floating-score ${type}`;
+  el.textContent = text;
+  el.style.left = `${rect.left + Math.min(80, rect.width / 2)}px`;
+  el.style.top = `${rect.top + 8}px`;
+
+  document.body.appendChild(el);
+
+  setTimeout(() => el.remove(), 850);
+}
+
 function spawnConfetti() {
   const colors = ['#2563eb', '#22d3ee', '#16a34a', '#f59e0b', '#ef4444'];
   const centerX = window.innerWidth / 2;
@@ -1317,9 +1478,37 @@ function spawnConfetti() {
   }
 }
 
-function getStackerLevel() {
-  return STACKER_LEVELS[STACKER_STATE.levelIndex] || STACKER_LEVELS[0];
+function pulseSlot(slotIndex) {
+  requestAnimationFrame(() => {
+    const slot = document.querySelector(`.ps-slot[data-slot-index="${slotIndex}"]`);
+
+    if (!slot) return;
+
+    slot.classList.add('fx-correct');
+
+    setTimeout(() => {
+      slot.classList.remove('fx-correct');
+    }, 520);
+  });
 }
+
+function shakeCard(cardId) {
+  requestAnimationFrame(() => {
+    const cardEl = document.querySelector(`.ps-action-card[data-card-id="${cardId}"]`);
+
+    if (!cardEl) return;
+
+    cardEl.classList.remove('wrong');
+    void cardEl.offsetWidth;
+    cardEl.classList.add('wrong');
+
+    setTimeout(() => cardEl.classList.remove('wrong'), 360);
+  });
+}
+
+/* =========================================================
+   GAME LOGIC
+========================================================= */
 
 function resetStackerLevel() {
   const level = getStackerLevel();
@@ -1338,11 +1527,12 @@ function resetStackerLevel() {
   STACKER_STATE.currentQuizAnswered = false;
   STACKER_STATE.currentQuizSelected = null;
   STACKER_STATE.usedQuestionIds = [];
+  STACKER_STATE.selectedCardId = null;
 
   addStackerLog({
     type: 'info',
     title: 'Misi dimulai',
-    text: `${level.caseTitle}. Kartu sudah diacak. Setelah langkah benar, jawab soal validasi sebelum lanjut.`
+    text: `${level.caseTitle}. Kartu sudah diacak. Bisa drag kartu atau klik kartu lalu klik slot.`
   });
 
   renderStackerGame();
@@ -1387,6 +1577,7 @@ function renderStackerGame() {
           <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
             <div class="ps-mode-pill">Pipeline + Tryout</div>
             <div class="ps-level-pill">${STACKER_STATE.levelIndex + 1} / ${STACKER_LEVELS.length}</div>
+            ${STACKER_STATE.selectedCardId ? '<div class="ps-level-pill warn">Kartu dipilih</div>' : ''}
           </div>
         </div>
 
@@ -1441,8 +1632,8 @@ function renderStackerGame() {
           <div>
             <h3>Kartu Aksi Acak</h3>
             <p>
-              Drag kartu ke pipeline. Setelah langkah benar, kamu wajib jawab soal validasi.
-              Kalau belum jawab soal, pipeline dikunci sementara.
+              Drag kartu ke pipeline, atau klik kartu lalu klik slot berikutnya.
+              Setelah langkah benar, jawab soal validasi dulu.
             </p>
           </div>
           <button type="button" class="ps-btn ps-btn-soft" id="psShuffleBtn" ${STACKER_STATE.awaitingQuiz ? 'disabled' : ''}>
@@ -1504,7 +1695,9 @@ function renderStackerGame() {
 
 function renderStackerSlot(index) {
   const placed = STACKER_STATE.placed[index];
-  const isPendingSlot = STACKER_STATE.awaitingQuiz && index === STACKER_STATE.placed.filter(Boolean).length - 1;
+  const isPendingSlot = STACKER_STATE.awaitingQuiz && index === getPlacedCount() - 1;
+  const nextEmptyIndex = STACKER_STATE.placed.findIndex(item => item === null);
+  const isClickReady = STACKER_STATE.selectedCardId && !placed && index === nextEmptyIndex && !STACKER_STATE.awaitingQuiz;
 
   if (placed) {
     return `
@@ -1516,17 +1709,21 @@ function renderStackerSlot(index) {
   }
 
   return `
-    <div class="ps-slot" data-slot-index="${index}">
+    <div class="ps-slot ${isClickReady ? 'click-ready' : ''}" data-slot-index="${index}">
       <div class="ps-slot-number">${index + 1}</div>
-      <div class="ps-slot-placeholder">Drop aksi ke-${index + 1}</div>
+      <div class="ps-slot-placeholder">
+        ${isClickReady ? 'Klik untuk pasang kartu' : `Drop aksi ke-${index + 1}`}
+      </div>
     </div>
   `;
 }
 
 function renderStackerCard(card, used = false, locked = false) {
+  const selected = STACKER_STATE.selectedCardId === card.id ? 'selected' : '';
+
   return `
     <div
-      class="ps-action-card ${used ? 'used' : ''} ${locked ? 'correct-card' : ''}"
+      class="ps-action-card ${used ? 'used' : ''} ${locked ? 'correct-card' : ''} ${selected}"
       draggable="${used || locked || STACKER_STATE.awaitingQuiz ? 'false' : 'true'}"
       data-card-id="${escapeHtml(card.id)}"
     >
@@ -1651,6 +1848,15 @@ function bindStackerEvents() {
     card.addEventListener('dragstart', event => {
       event.dataTransfer.setData('text/plain', card.dataset.cardId);
       event.dataTransfer.effectAllowed = 'move';
+      card.classList.add('selected');
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('selected');
+    });
+
+    card.addEventListener('click', () => {
+      selectCardForClickMode(card.dataset.cardId);
     });
   });
 
@@ -1671,13 +1877,20 @@ function bindStackerEvents() {
       const cardId = event.dataTransfer.getData('text/plain');
       const slotIndex = Number(slot.dataset.slotIndex);
 
-      handleStackerDrop(cardId, slotIndex);
+      handleStackerPlace(cardId, slotIndex, slot);
+    });
+
+    slot.addEventListener('click', () => {
+      if (!STACKER_STATE.selectedCardId) return;
+
+      const slotIndex = Number(slot.dataset.slotIndex);
+      handleStackerPlace(STACKER_STATE.selectedCardId, slotIndex, slot);
     });
   });
 
   document.querySelectorAll('[data-quiz-answer]').forEach(btn => {
     btn.addEventListener('click', () => {
-      handleQuizAnswer(Number(btn.dataset.quizAnswer));
+      handleQuizAnswer(Number(btn.dataset.quizAnswer), btn);
     });
   });
 
@@ -1702,13 +1915,32 @@ function bindStackerEvents() {
       const level = getStackerLevel();
       STACKER_STATE.shuffledCards = shuffleArray(level.cards);
       STACKER_STATE.shuffledLevelIndex = STACKER_STATE.levelIndex;
+      STACKER_STATE.selectedCardId = null;
       renderStackerGame();
       showToast('Kartu diacak ulang.', 'info');
     });
   }
 }
 
-function handleStackerDrop(cardId, slotIndex) {
+function selectCardForClickMode(cardId) {
+  if (STACKER_STATE.awaitingQuiz) {
+    showToast('Jawab soal validasi dulu sebelum pilih kartu lagi.', 'bad');
+    return;
+  }
+
+  if (STACKER_STATE.finished) return;
+
+  STACKER_STATE.selectedCardId = STACKER_STATE.selectedCardId === cardId ? null : cardId;
+
+  if (STACKER_STATE.selectedCardId) {
+    const card = getStackerLevel().cards.find(item => item.id === cardId);
+    showToast(`Kartu dipilih: ${card ? card.label : cardId}. Klik slot berikutnya.`, 'info');
+  }
+
+  renderStackerGame();
+}
+
+function handleStackerPlace(cardId, slotIndex, slotEl) {
   if (STACKER_STATE.finished) return;
 
   if (STACKER_STATE.awaitingQuiz) {
@@ -1744,11 +1976,12 @@ function handleStackerDrop(cardId, slotIndex) {
   }
 
   STACKER_STATE.placed[slotIndex] = card;
-  STACKER_STATE.progress = Math.round((STACKER_STATE.placed.filter(Boolean).length / level.ideal.length) * 100);
+  STACKER_STATE.progress = Math.round((getPlacedCount() / level.ideal.length) * 100);
   STACKER_STATE.awaitingQuiz = true;
   STACKER_STATE.currentQuiz = pickQuizForStep(cardId);
   STACKER_STATE.currentQuizAnswered = false;
   STACKER_STATE.currentQuizSelected = null;
+  STACKER_STATE.selectedCardId = null;
 
   addStackerLog({
     type: 'ok',
@@ -1757,13 +1990,18 @@ function handleStackerDrop(cardId, slotIndex) {
   });
 
   showToast(`Benar: ${card.label}. Jawab soal validasi.`, 'ok');
+  flashScreen('ok');
+  popScore(slotEl || document.body, '+10 Step', 'ok');
+
   renderStackerGame();
+  pulseSlot(slotIndex);
 }
 
 function wrongStackerMove(cardId, message) {
   STACKER_STATE.risk += 10;
   STACKER_STATE.compliance = Math.max(0, STACKER_STATE.compliance - 5);
   STACKER_STATE.wrong += 1;
+  STACKER_STATE.selectedCardId = null;
 
   addStackerLog({
     type: 'bad',
@@ -1772,15 +2010,10 @@ function wrongStackerMove(cardId, message) {
   });
 
   showToast('Belum tepat. Risiko naik.', 'bad');
-  renderStackerGame();
+  flashScreen('bad');
 
-  requestAnimationFrame(() => {
-    const cardEl = document.querySelector(`.ps-action-card[data-card-id="${cardId}"]`);
-    if (cardEl) {
-      cardEl.classList.add('wrong');
-      setTimeout(() => cardEl.classList.remove('wrong'), 360);
-    }
-  });
+  renderStackerGame();
+  shakeCard(cardId);
 }
 
 function pickQuizForStep(cardId) {
@@ -1811,6 +2044,7 @@ function pickQuizForStep(cardId) {
   };
 
   const topics = topicMap[cardId] || [];
+
   let candidates = TRYOUT_QUESTIONS.filter(q =>
     topics.includes(q.topic) && !STACKER_STATE.usedQuestionIds.includes(q.id)
   );
@@ -1830,10 +2064,11 @@ function pickQuizForStep(cardId) {
   return picked;
 }
 
-function handleQuizAnswer(selectedIndex) {
+function handleQuizAnswer(selectedIndex, btnEl) {
   if (!STACKER_STATE.awaitingQuiz || !STACKER_STATE.currentQuiz || STACKER_STATE.currentQuizAnswered) return;
 
   const q = STACKER_STATE.currentQuiz;
+
   STACKER_STATE.currentQuizSelected = selectedIndex;
   STACKER_STATE.currentQuizAnswered = true;
 
@@ -1847,6 +2082,8 @@ function handleQuizAnswer(selectedIndex) {
     });
 
     showToast('Jawaban benar. Kepatuhan naik.', 'ok');
+    flashScreen('ok');
+    popScore(btnEl || document.body, '+10 Kepatuhan', 'ok');
     spawnConfetti();
   } else {
     STACKER_STATE.risk += 5;
@@ -1859,6 +2096,8 @@ function handleQuizAnswer(selectedIndex) {
     });
 
     showToast('Jawaban belum tepat. Risiko naik, tapi pembahasan terbuka.', 'bad');
+    flashScreen('bad');
+    popScore(btnEl || document.body, '+5 Risiko', 'bad');
   }
 
   renderStackerGame();
@@ -1876,7 +2115,7 @@ function continueAfterQuiz() {
   STACKER_STATE.currentQuizSelected = null;
 
   const level = getStackerLevel();
-  const completed = STACKER_STATE.placed.filter(Boolean).length === level.ideal.length;
+  const completed = getPlacedCount() === level.ideal.length;
 
   if (completed) {
     STACKER_STATE.finished = true;
@@ -1889,6 +2128,7 @@ function continueAfterQuiz() {
     });
 
     showToast('Mission Complete. Pipeline selesai.', 'ok');
+    flashScreen('ok');
     spawnConfetti();
   } else {
     addStackerLog({
@@ -1957,6 +2197,10 @@ function getWrongMessage(cardId, expectedId) {
   return trapMessages[cardId] || `Belum tepat. Kamu memilih "${cardLabel}", padahal langkah berikutnya seharusnya "${expectedLabel}". Konsep: ${level.concept}`;
 }
 
+/* =========================================================
+   SCROLL FX
+========================================================= */
+
 function initScrollLuxuryAnimation() {
   if (typeof scrollLuxuryDestroy === 'function') {
     scrollLuxuryDestroy();
@@ -2009,6 +2253,10 @@ function initScrollLuxuryAnimation() {
   };
 }
 
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
 function renderDashboard() {
   injectProcurementCss();
 
@@ -2022,8 +2270,7 @@ function renderDashboard() {
           <h3>Procurement Stacker</h3>
           <p>
             Game edukasi pengadaan berbasis studi kasus. Drag kartu aksi ke pipeline yang benar,
-            lalu jawab soal validasi agar bisa lanjut ke langkah berikutnya. Jadi bukan cuma hafal urutan,
-            tapi juga paham konsep PBJ.
+            atau klik kartu lalu klik slot berikutnya. Setelah itu jawab soal validasi agar bisa lanjut.
           </p>
         </div>
       </section>
@@ -2062,6 +2309,10 @@ function renderDashboard() {
     initScrollLuxuryAnimation();
   });
 }
+
+/* =========================================================
+   ROUTER
+========================================================= */
 
 function renderIframePage(page) {
   contentArea.innerHTML = `
