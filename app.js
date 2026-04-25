@@ -91,59 +91,39 @@ let scrollLuxuryDestroy = null;
 
 const CARD_LIBRARY_RAW = {
   rup: ['rup', 'Cek RUP', '📋', 'Pastikan paket, pagu, metode, dan jadwal sesuai.'],
-  identifikasi: ['identifikasi', 'Identifikasi Kebutuhan', '🧠', 'Pastikan kebutuhan jelas, valid, dan tidak dobel.'],
+  identifikasi: ['identifikasi', 'Identifikasi Kebutuhan', '🧠', 'Validasi kebutuhan, volume, lokasi, jadwal, dan pengguna.'],
   konsolidasi: ['konsolidasi', 'Konsolidasi', '🧲', 'Gabungkan kebutuhan sejenis bila tepat.'],
-  kak: ['kak', 'KAK / Spesifikasi', '🧩', 'Susun kebutuhan teknis secara jelas dan adil.'],
-  reviewSpek: ['review-spek', 'Review Spesifikasi', '🧐', 'Cek apakah spek terlalu mengarah atau tidak relevan.'],
+  kak: ['kak', 'KAK / Spesifikasi', '🧩', 'Susun kebutuhan teknis secara jelas, wajar, dan tidak mengarah.'],
+  reviewSpek: ['review-spek', 'Review Spesifikasi', '🧐', 'Cek apakah spesifikasi terlalu mengarah atau tidak relevan.'],
   hps: ['hps', 'HPS / Referensi Harga', '💰', 'Susun harga perkiraan dengan dasar yang wajar.'],
+  cekPdn: ['cek-pdn', 'Cek PDN / TKDN', '🇮🇩', 'Perhatikan produk dalam negeri dan TKDN/BMP.'],
   cekKatalog: ['cek-katalog', 'Cek e-Katalog', '🔎', 'Pastikan barang/jasa tersedia dan sesuai kebutuhan.'],
-  cekPdn: ['cek-pdn', 'Cek PDN/TKDN', '🇮🇩', 'Perhatikan produk dalam negeri.'],
-  pilihMetode: ['pilih-metode', 'Pilih Metode', '⚙️', 'Tentukan metode berdasarkan jenis, nilai, dan kondisi paket.'],
+  pilihMetode: ['pilih-metode', 'Pilih Metode', '⚙️', 'Tentukan metode berdasarkan jenis, nilai, kondisi, dan karakter paket.'],
   metodePl: ['metode-pl', 'Pengadaan Langsung', '🛠️', 'Digunakan bila kondisi dan nilai paket sesuai.'],
-  metodeEpurchasing: ['metode-epurchasing', 'e-Purchasing', '🛒', 'Gunakan katalog bila tersedia dan sesuai.'],
+  metodeEpurchasing: ['metode-epurchasing', 'e-Purchasing', '🛒', 'Gunakan katalog bila tersedia dan sesuai kebutuhan.'],
   tender: ['tender', 'Tender', '🏗️', 'Untuk paket yang membutuhkan proses pemilihan formal.'],
   seleksi: ['seleksi', 'Seleksi', '📐', 'Umumnya untuk jasa konsultansi.'],
   swakelola: ['swakelola', 'Swakelola', '🤲', 'Dipilih jika pelaksanaan memenuhi kriteria swakelola.'],
-  klarifikasi: ['klarifikasi', 'Klarifikasi / Negosiasi', '🤝', 'Pastikan harga, spek, dan kemampuan pelaksanaan.'],
+  klarifikasi: ['klarifikasi', 'Klarifikasi / Negosiasi', '🤝', 'Pastikan harga, spesifikasi, dan kemampuan pelaksanaan.'],
   proses: ['proses', 'Proses Pemilihan', '🚦', 'Laksanakan proses sesuai metode.'],
   kontrak: ['kontrak', 'SPK / Kontrak', '📑', 'Ikat hasil proses secara tertulis.'],
-  monitoringKontrak: ['monitoring-kontrak', 'Monitoring Kontrak', '📡', 'Pantau waktu, mutu, dan kewajiban penyedia.'],
-  teguran: ['teguran', 'Teguran / Evaluasi', '📣', 'Digunakan saat ada keterlambatan atau masalah.'],
+  monitoringKontrak: ['monitoring-kontrak', 'Monitoring Kontrak', '📡', 'Pantau waktu, mutu, volume, dan kewajiban penyedia.'],
+  teguran: ['teguran', 'Teguran / Evaluasi', '📣', 'Digunakan saat ada keterlambatan atau masalah pelaksanaan.'],
   pemeriksaan: ['pemeriksaan', 'Pemeriksaan Hasil', '🔬', 'Cek kesesuaian sebelum diterima.'],
   bast: ['bast', 'BAST', '📦', 'Serah terima setelah barang/jasa sesuai.'],
   pembayaran: ['pembayaran', 'Pembayaran', '💳', 'Pembayaran sesuai dokumen pendukung.'],
   realisasi: ['realisasi', 'Catat Realisasi', '✅', 'Pastikan realisasi tercatat dalam monitoring.'],
 
-  qRup: ['q-rup', 'Soal: Ruang Lingkup PBJ', '❓', 'PBJ dimulai dari identifikasi kebutuhan sampai serah terima hasil pekerjaan.'],
-  qPerencanaan: ['q-perencanaan', 'Soal: Perencanaan PBJ', '❓', 'Identifikasi kebutuhan dan anggaran meningkatkan kualitas perencanaan.'],
-  qKak: ['q-kak', 'Soal: KAK / Spesifikasi', '❓', 'KAK menjelaskan apa, mengapa, siapa, kapan, di mana, bagaimana, dan biaya.'],
-  qSpek: ['q-spek', 'Soal: Spesifikasi Teknis', '❓', 'Spesifikasi teknis memberi informasi kebutuhan kepada pelaku usaha.'],
-  qHps: ['q-hps', 'Soal: HPS', '❓', 'HPS tidak digunakan sebagai dasar perhitungan kerugian negara.'],
-  qRab: ['q-rab', 'Soal: RAB', '❓', 'RAB disusun dari data, komponen pekerjaan, harga satuan, lalu rincian.'],
-  qKatalog: ['q-katalog', 'Soal: Katalog Elektronik', '❓', 'Katalog sektoral dikelola oleh kementerian/lembaga tertentu.'],
-  qPdn: ['q-pdn', 'Soal: PDN / TKDN', '❓', 'TKDN/BMP menunjukkan keberpihakan pada produk dalam negeri.'],
-  qMetode: ['q-metode', 'Soal: Cara Pengadaan', '❓', 'Metode dipilih berdasarkan jenis, nilai, kondisi, dan karakter paket.'],
-  qPelaku: ['q-pelaku', 'Soal: Pelaku PBJ', '❓', 'PPK menetapkan spesifikasi teknis/KAK, HPS, dan rancangan kontrak.'],
-  qEtika: ['q-etika', 'Soal: Etika PBJ', '❓', 'Intervensi memenangkan pihak tertentu menciptakan persaingan tidak sehat.'],
-  qPrinsip: ['q-prinsip', 'Soal: Prinsip PBJ', '❓', 'Barang tidak sesuai kebutuhan berarti prinsip efektif tidak terpenuhi.'],
-  qSanggah: ['q-sanggah', 'Soal: Sanggah Tender', '❓', 'Sanggah pada proses pemilihan dijawab oleh Pokja Pemilihan.'],
-  qKontrak: ['q-kontrak', 'Soal: Aspek Hukum Kontrak', '❓', 'Sengketa pelaksanaan kontrak pada dasarnya merupakan hubungan perdata.'],
-  qKonsolidasi: ['q-konsolidasi', 'Soal: Konsolidasi', '❓', 'Konsolidasi dapat dilakukan sejak tahap perencanaan oleh KPA/PPK.'],
-  qPemaketan: ['q-pemaketan', 'Soal: Pemaketan', '❓', 'Pemaketan mempertimbangkan output, volume, ketersediaan, pelaku usaha, dan anggaran.'],
-  qSwakelola: ['q-swakelola', 'Soal: Swakelola', '❓', 'Swakelola dipilih bila pelaksanaan memenuhi kriteria.'],
-  qBast: ['q-bast', 'Soal: Pemeriksaan & BAST', '❓', 'BAST dilakukan setelah hasil pekerjaan diperiksa dan sesuai.'],
-  qRealisasi: ['q-realisasi', 'Soal: Realisasi', '❓', 'Pencatatan realisasi membuat data monitoring tidak bolong.'],
-
-  kontrakAwal: ['kontrak-awal', 'Kontrak Dulu', '🚨', 'Jebakan: lompat proses.'],
-  pecahPaket: ['pecah-paket', 'Pecah Paket', '💣', 'Jebakan: rawan menghindari metode.'],
+  kontrakAwal: ['kontrak-awal', 'Kontrak Dulu', '🚨', 'Jebakan: lompat proses sebelum dokumen/metode siap.'],
+  pecahPaket: ['pecah-paket', 'Pecah Paket', '💣', 'Jebakan: rawan menghindari metode yang seharusnya.'],
   spekMengarah: ['spek-mengarah', 'Spek Mengarah', '🚫', 'Jebakan: risiko persaingan tidak sehat.'],
-  abaikanKatalog: ['abaikan-katalog', 'Abaikan Katalog', '⚠️', 'Jebakan: tidak cek kanal tersedia.'],
+  abaikanKatalog: ['abaikan-katalog', 'Abaikan Katalog', '⚠️', 'Jebakan: tidak cek kanal pengadaan yang tersedia.'],
   lewatiRup: ['lewati-rup', 'Lewati RUP', '⛔', 'Jebakan: proses tanpa cek perencanaan.'],
   bastTanpaCek: ['bast-tanpa-cek', 'BAST Tanpa Pemeriksaan', '📦', 'Jebakan: menerima tanpa verifikasi.'],
   bayarDulu: ['bayar-dulu', 'Bayar Dulu', '💸', 'Jebakan: pembayaran sebelum bukti memadai.'],
   tundaDokumen: ['tunda-dokumen', 'Tunda Dokumen', '🧨', 'Jebakan: risiko administrasi meningkat.'],
   metodeAsalCepat: ['metode-asal-cepat', 'Metode Asal Cepat', '🏃', 'Jebakan: cepat belum tentu tepat.'],
-  realisasiLupa: ['realisasi-lupa', 'Lupakan Realisasi', '🕳️', 'Jebakan: monitoring bolong.']
+  realisasiLupa: ['realisasi-lupa', 'Lupakan Realisasi', '🕳️', 'Jebakan: monitoring jadi bolong.']
 };
 
 const CARD_LIBRARY = Object.fromEntries(
@@ -151,10 +131,22 @@ const CARD_LIBRARY = Object.fromEntries(
     key,
     {
       id: item[0],
+      key,
       label: item[1],
       icon: item[2],
       note: item[3],
-      type: item[0].startsWith('q-') ? 'quiz' : item[0].includes('awal') || item[0].includes('pecah') || item[0].includes('mengarah') || item[0].includes('abaikan') || item[0].includes('lewati') || item[0].includes('tanpa') || item[0].includes('bayar') || item[0].includes('tunda') || item[0].includes('asal') || item[0].includes('lupa') ? 'trap' : 'action'
+      type: [
+        'kontrakAwal',
+        'pecahPaket',
+        'spekMengarah',
+        'abaikanKatalog',
+        'lewatiRup',
+        'bastTanpaCek',
+        'bayarDulu',
+        'tundaDokumen',
+        'metodeAsalCepat',
+        'realisasiLupa'
+      ].includes(key) ? 'trap' : 'action'
     }
   ])
 );
@@ -163,288 +155,253 @@ function c(key) {
   return CARD_LIBRARY[key];
 }
 
-const LEVEL_DATA = [
+const QUESTION_LEVELS_RAW = [
   {
-    title: 'Level 1 — Dasar Pengadaan',
+    no: 1,
+    title: 'Soal 1 — Dasar Pengadaan',
     caseTitle: 'Belanja ATK Kantor',
-    caseDesc: 'Paket sederhana nilai kecil. Bukan cuma urutan dokumen, tapi juga konsep dasar PBJ.',
-    concept: 'RUP, KAK, HPS, metode, kontrak, BAST, dan realisasi.',
+    caseDesc: 'OPD akan melakukan belanja ATK kantor senilai Rp45 juta. Susun alur pengadaan paling aman dari awal sampai realisasi.',
     budget: 'Rp45.000.000',
     deadline: '60 hari',
     difficulty: 'Pemula',
-    ideal: [
-      'rup',
-      'qRup',
-      'kak',
-      'qKak',
-      'hps',
-      'qHps',
-      'metodePl',
-      'proses',
-      'qPrinsip',
-      'kontrak',
-      'bast',
-      'qBast',
-      'realisasi',
-      'qRealisasi'
+    concept: 'Alur dasar: RUP, KAK, HPS, metode, proses, kontrak, BAST, dan realisasi.',
+    pipeline: ['rup', 'kak', 'hps', 'metodePl', 'proses', 'kontrak', 'bast', 'realisasi'],
+    traps: ['kontrakAwal', 'lewatiRup', 'bayarDulu'],
+    question: 'PBJ Pemerintah dimulai dari tahap apa sampai tahap apa?',
+    options: [
+      'Identifikasi kebutuhan sampai kontrak',
+      'Perencanaan sampai pembayaran',
+      'Identifikasi kebutuhan sampai serah terima hasil pekerjaan',
+      'Penyusunan HPS sampai serah terima'
     ],
-    traps: ['kontrakAwal', 'lewatiRup', 'bayarDulu']
+    answer: 2,
+    explanation: 'PBJ Pemerintah dimulai dari identifikasi kebutuhan sampai serah terima hasil pekerjaan. Karena itu pipeline tidak boleh langsung lompat ke kontrak atau pembayaran.'
   },
 
   {
-    title: 'Level 2 — Paket Katalog',
-    caseTitle: 'Laptop Pelayanan Publik',
-    caseDesc: 'Barang tersedia di e-Katalog. User harus paham e-Purchasing dan PDN/TKDN.',
-    concept: 'Katalog elektronik, PDN, e-Purchasing, negosiasi, kontrak, BAST.',
+    no: 2,
+    title: 'Soal 2 — Paket Katalog',
+    caseTitle: 'Pengadaan Laptop Pelayanan Publik',
+    caseDesc: 'OPD membutuhkan laptop untuk layanan publik. Barang tersedia di e-Katalog dan nilai paket Rp350 juta.',
     budget: 'Rp350.000.000',
     deadline: '45 hari',
     difficulty: 'Pemula+',
-    ideal: [
-      'rup',
-      'qPerencanaan',
-      'kak',
-      'hps',
-      'cekPdn',
-      'qPdn',
-      'cekKatalog',
-      'qKatalog',
-      'metodeEpurchasing',
-      'klarifikasi',
-      'kontrak',
-      'bast',
-      'realisasi'
+    concept: 'Cek PDN/TKDN, cek katalog, e-Purchasing, klarifikasi/negosiasi, kontrak, BAST, realisasi.',
+    pipeline: ['rup', 'kak', 'hps', 'cekPdn', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
+    traps: ['metodePl', 'tender', 'abaikanKatalog', 'kontrakAwal'],
+    question: 'PPK membeli laptop melalui katalog elektronik dengan TKDN + BMP 42%. Tujuan PBJ yang paling didukung adalah?',
+    options: [
+      'Menghasilkan barang sesuai nilai uang',
+      'Meningkatkan penggunaan produk dalam negeri',
+      'Meningkatkan peran UMK',
+      'Meningkatkan peran pelaku usaha lokal'
     ],
-    traps: ['metodePl', 'tender', 'abaikanKatalog', 'kontrakAwal']
+    answer: 1,
+    explanation: 'TKDN/BMP menunjukkan keberpihakan pada produk dalam negeri, sehingga tujuan yang paling kuat adalah meningkatkan penggunaan produk dalam negeri.'
   },
 
   {
-    title: 'Level 3 — Deadline Mepet',
+    no: 3,
+    title: 'Soal 3 — Deadline Mepet',
     caseTitle: 'Meubelair Ruang Layanan',
-    caseDesc: 'Waktu pendek. Pemain harus memilih jalur realistis dan tidak menunda dokumen.',
-    concept: 'Kontrol waktu, kesiapan dokumen, dan pemilihan metode.',
+    caseDesc: 'OPD butuh meubelair untuk ruang layanan. Waktu tinggal 25 hari, nilai paket Rp180 juta, dan barang tersedia di katalog.',
     budget: 'Rp180.000.000',
     deadline: '25 hari',
     difficulty: 'Menengah',
-    ideal: [
-      'rup',
-      'kak',
-      'qSpek',
-      'hps',
-      'cekKatalog',
-      'qKatalog',
-      'metodeEpurchasing',
-      'kontrak',
-      'bast',
-      'realisasi'
+    concept: 'Saat waktu terbatas, pastikan dokumen siap dan pilih kanal/metode yang realistis.',
+    pipeline: ['rup', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'kontrak', 'bast', 'realisasi'],
+    traps: ['tender', 'tundaDokumen', 'kontrakAwal', 'abaikanKatalog'],
+    question: 'Dalam kondisi barang tersedia di katalog dan dibutuhkan cepat, langkah penting sebelum e-Purchasing adalah?',
+    options: [
+      'Langsung kontrak agar cepat',
+      'Abaikan katalog dan lakukan tender',
+      'Pastikan spesifikasi, HPS/referensi harga, dan kesesuaian barang di katalog',
+      'Pecah paket agar bisa pengadaan langsung'
     ],
-    traps: ['tender', 'tundaDokumen', 'kontrakAwal']
+    answer: 2,
+    explanation: 'Cepat bukan berarti boleh lompat proses. Spesifikasi, referensi harga, dan kesesuaian barang tetap harus dicek.'
   },
 
   {
-    title: 'Level 4 — Konsolidasi',
+    no: 4,
+    title: 'Soal 4 — Konsolidasi',
     caseTitle: 'Komputer Beberapa Bidang',
-    caseDesc: 'Kebutuhan sejenis tersebar di beberapa bidang. Pemain harus menghindari pecah paket.',
-    concept: 'Identifikasi kebutuhan, pemaketan, konsolidasi, dan katalog.',
+    caseDesc: 'Beberapa bidang mengusulkan komputer dengan kebutuhan sejenis. Total nilai Rp650 juta.',
     budget: 'Rp650.000.000',
     deadline: '70 hari',
     difficulty: 'Menengah',
-    ideal: [
-      'rup',
-      'identifikasi',
-      'qPemaketan',
-      'konsolidasi',
-      'qKonsolidasi',
-      'kak',
-      'hps',
-      'cekKatalog',
-      'metodeEpurchasing',
-      'kontrak',
-      'bast',
-      'realisasi'
+    concept: 'Identifikasi kebutuhan, pemaketan, dan konsolidasi untuk mencegah pemecahan paket tidak wajar.',
+    pipeline: ['rup', 'identifikasi', 'konsolidasi', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'kontrak', 'bast', 'realisasi'],
+    traps: ['pecahPaket', 'metodePl', 'metodeAsalCepat', 'kontrakAwal'],
+    question: 'Pemaketan barang/jasa dilakukan dengan mempertimbangkan apa?',
+    options: [
+      'Keluaran, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran',
+      'Keinginan bidang, kecepatan proses, dan kemudahan administrasi',
+      'Jumlah penyedia yang dikenal PPK',
+      'Nilai paket agar selalu bisa pengadaan langsung'
     ],
-    traps: ['pecahPaket', 'metodePl', 'metodeAsalCepat']
+    answer: 0,
+    explanation: 'Pemaketan perlu mempertimbangkan keluaran, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran. Memecah paket demi metode tertentu adalah risiko.'
   },
 
   {
-    title: 'Level 5 — Spek Mengarah',
+    no: 5,
+    title: 'Soal 5 — Spek Mengarah',
     caseTitle: 'Laptop dengan Spek Terlalu Spesifik',
-    caseDesc: 'Spesifikasi awal terlalu mengarah. Pemain harus memperbaiki dulu sebelum proses.',
-    concept: 'Review spesifikasi dan pencegahan persaingan tidak sehat.',
+    caseDesc: 'Spesifikasi awal mengarah ke merek tertentu. Nilai paket Rp420 juta.',
     budget: 'Rp420.000.000',
     deadline: '50 hari',
     difficulty: 'Menengah',
-    ideal: [
-      'rup',
-      'reviewSpek',
-      'qSpek',
-      'kak',
-      'hps',
-      'cekKatalog',
-      'metodeEpurchasing',
-      'klarifikasi',
-      'qEtika',
-      'kontrak',
-      'bast',
-      'realisasi'
+    concept: 'Review spesifikasi agar berbasis kebutuhan dan tidak mengarah.',
+    pipeline: ['rup', 'reviewSpek', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
+    traps: ['spekMengarah', 'kontrakAwal', 'abaikanKatalog', 'metodeAsalCepat'],
+    question: 'Salah satu fungsi spesifikasi teknis adalah?',
+    options: [
+      'Menentukan pemenang sebelum proses',
+      'Memberikan informasi kebutuhan kepada pelaku usaha',
+      'Mengunci merek tertentu agar barang sesuai selera',
+      'Menghindari persaingan agar proses cepat'
     ],
-    traps: ['spekMengarah', 'kontrakAwal', 'abaikanKatalog']
+    answer: 1,
+    explanation: 'Spesifikasi teknis harus memberi informasi kebutuhan kepada pelaku usaha, bukan mengunci merek atau mempersempit persaingan secara tidak wajar.'
   },
 
   {
-    title: 'Level 6 — Jasa Konsultansi',
+    no: 6,
+    title: 'Soal 6 — Jasa Konsultansi',
     caseTitle: 'Kajian Teknis Perencanaan',
-    caseDesc: 'Paket jasa konsultansi membutuhkan KAK, HPS, dan metode seleksi yang tepat.',
-    concept: 'Jasa konsultansi, KAK, seleksi, dan kontrak.',
+    caseDesc: 'OPD akan menyusun kajian teknis perencanaan dengan nilai Rp280 juta.',
     budget: 'Rp280.000.000',
     deadline: '75 hari',
     difficulty: 'Menengah',
-    ideal: [
-      'rup',
-      'identifikasi',
-      'kak',
-      'qKak',
-      'hps',
-      'qHps',
-      'seleksi',
-      'proses',
-      'kontrak',
-      'qKontrak',
-      'monitoringKontrak',
-      'bast',
-      'realisasi'
+    concept: 'Jasa konsultansi membutuhkan KAK, HPS, metode seleksi, proses, kontrak, monitoring, BAST, realisasi.',
+    pipeline: ['rup', 'identifikasi', 'kak', 'hps', 'seleksi', 'proses', 'kontrak', 'monitoringKontrak', 'bast', 'realisasi'],
+    traps: ['metodeEpurchasing', 'metodePl', 'kontrakAwal', 'abaikanKatalog'],
+    question: 'Penyusunan studi kelayakan/kajian teknis termasuk jenis pengadaan apa?',
+    options: [
+      'Barang',
+      'Pekerjaan konstruksi',
+      'Jasa lainnya',
+      'Jasa konsultansi'
     ],
-    traps: ['metodeEpurchasing', 'metodePl', 'kontrakAwal']
+    answer: 3,
+    explanation: 'Kajian teknis/studi kelayakan merupakan jasa profesional berbasis keahlian, sehingga termasuk jasa konsultansi.'
   },
 
   {
-    title: 'Level 7 — Konstruksi Ringan',
+    no: 7,
+    title: 'Soal 7 — Konstruksi Ringan',
     caseTitle: 'Rehabilitasi Ruang Pelayanan',
-    caseDesc: 'Pekerjaan konstruksi membutuhkan dokumen teknis, pemilihan, kontrak, dan pemeriksaan.',
-    concept: 'Konstruksi, tender, pemeriksaan hasil, BAST, dan realisasi.',
+    caseDesc: 'Pekerjaan konstruksi ringan dengan nilai Rp760 juta membutuhkan proses formal dan pemeriksaan hasil yang kuat.',
     budget: 'Rp760.000.000',
     deadline: '100 hari',
     difficulty: 'Sulit',
-    ideal: [
-      'rup',
-      'identifikasi',
-      'kak',
-      'hps',
-      'tender',
-      'qSanggah',
-      'proses',
-      'kontrak',
-      'monitoringKontrak',
-      'pemeriksaan',
-      'qBast',
-      'bast',
-      'realisasi'
+    concept: 'Konstruksi membutuhkan dokumen teknis, HPS, tender, kontrak, monitoring, pemeriksaan, BAST, realisasi.',
+    pipeline: ['rup', 'identifikasi', 'kak', 'hps', 'tender', 'proses', 'kontrak', 'monitoringKontrak', 'pemeriksaan', 'bast', 'realisasi'],
+    traps: ['metodePl', 'kontrakAwal', 'bastTanpaCek', 'bayarDulu'],
+    question: 'Barang/pekerjaan tidak sesuai spesifikasi sehingga tidak dapat digunakan. Prinsip PBJ yang tidak terpenuhi adalah?',
+    options: [
+      'Efisien',
+      'Efektif',
+      'Transparan',
+      'Akuntabel'
     ],
-    traps: ['metodePl', 'kontrakAwal', 'bastTanpaCek', 'bayarDulu']
+    answer: 1,
+    explanation: 'Efektif berarti barang/jasa harus sesuai kebutuhan dan tujuan. Jika tidak bisa digunakan, prinsip efektif tidak terpenuhi.'
   },
 
   {
-    title: 'Level 8 — Swakelola',
-    caseTitle: 'Kegiatan Pelatihan Internal',
-    caseDesc: 'Kegiatan lebih tepat dikelola swakelola. Pemain harus memilih cara pengadaan yang sesuai.',
-    concept: 'Swakelola, KAK, HPS, pelaksanaan, BAST, dan realisasi.',
+    no: 8,
+    title: 'Soal 8 — Swakelola',
+    caseTitle: 'Pelatihan Internal Pegawai',
+    caseDesc: 'Kegiatan pelatihan internal lebih tepat dikelola sendiri karena berkaitan dengan kapasitas internal OPD.',
     budget: 'Rp95.000.000',
     deadline: '40 hari',
     difficulty: 'Menengah',
-    ideal: [
-      'rup',
-      'identifikasi',
-      'qSwakelola',
-      'kak',
-      'hps',
-      'swakelola',
-      'proses',
-      'bast',
-      'realisasi'
+    concept: 'Swakelola dipilih bila memenuhi kriteria, tetap perlu perencanaan, KAK, biaya, pelaksanaan, BAST, realisasi.',
+    pipeline: ['rup', 'identifikasi', 'kak', 'hps', 'swakelola', 'proses', 'bast', 'realisasi'],
+    traps: ['metodeEpurchasing', 'tender', 'kontrakAwal', 'bayarDulu'],
+    question: 'Contoh pengadaan yang dapat dilakukan secara swakelola adalah?',
+    options: [
+      'Kegiatan yang memenuhi kriteria swakelola dan dapat dilaksanakan sendiri/oleh pihak sesuai ketentuan',
+      'Semua pengadaan barang elektronik',
+      'Semua pekerjaan yang ingin dipercepat',
+      'Paket yang sengaja dipecah agar nilainya kecil'
     ],
-    traps: ['metodeEpurchasing', 'tender', 'kontrakAwal']
+    answer: 0,
+    explanation: 'Swakelola tidak dipilih asal cepat. Swakelola dipilih bila karakter kegiatan dan pelaksanaannya memenuhi kriteria.'
   },
 
   {
-    title: 'Level 9 — Penyedia Terlambat',
+    no: 9,
+    title: 'Soal 9 — Penyedia Terlambat',
     caseTitle: 'Penyedia Terlambat Mengirim Barang',
-    caseDesc: 'Proses sudah kontrak, tetapi penyedia terlambat. Jangan langsung BAST atau bayar.',
-    concept: 'Monitoring kontrak, teguran, pemeriksaan, BAST, pembayaran, realisasi.',
+    caseDesc: 'Kontrak sudah berjalan, namun penyedia terlambat mengirim barang. Jangan langsung BAST atau bayar.',
     budget: 'Rp190.000.000',
     deadline: 'Sisa 10 hari',
     difficulty: 'Sulit',
-    ideal: [
-      'kontrak',
-      'monitoringKontrak',
-      'qKontrak',
-      'teguran',
-      'pemeriksaan',
-      'qBast',
-      'bast',
-      'pembayaran',
-      'realisasi'
+    concept: 'Saat kontrak bermasalah, lakukan monitoring, teguran/evaluasi, pemeriksaan, BAST jika sesuai, pembayaran, realisasi.',
+    pipeline: ['kontrak', 'monitoringKontrak', 'teguran', 'pemeriksaan', 'bast', 'pembayaran', 'realisasi'],
+    traps: ['bastTanpaCek', 'bayarDulu', 'realisasiLupa'],
+    question: 'Perselisihan PPK dan penyedia dalam pelaksanaan kontrak terutama termasuk aspek hukum apa?',
+    options: [
+      'Hukum pidana',
+      'Hukum perdata',
+      'Hukum persaingan usaha',
+      'Hukum tata negara'
     ],
-    traps: ['bastTanpaCek', 'bayarDulu', 'realisasiLupa']
+    answer: 1,
+    explanation: 'Hubungan PPK dan penyedia dalam pelaksanaan kontrak pada dasarnya adalah hubungan perdata.'
   },
 
   {
-    title: 'Level 10 — Final Boss',
-    caseTitle: 'Alat Kesehatan Bernilai Besar',
-    caseDesc: 'Kasus campuran: spesifikasi, PDN, katalog, metode, kontrak, pemeriksaan, dan realisasi.',
-    concept: 'Studi kasus komprehensif PBJ.',
+    no: 10,
+    title: 'Soal 10 — Final Boss',
+    caseTitle: 'Pengadaan Alat Kesehatan Bernilai Besar',
+    caseDesc: 'Kasus campuran: spesifikasi, PDN, katalog, metode, kontrak, pemeriksaan, pembayaran, dan realisasi.',
     budget: 'Rp1.200.000.000',
     deadline: '90 hari',
     difficulty: 'Boss',
-    ideal: [
-      'rup',
-      'qRup',
-      'identifikasi',
-      'reviewSpek',
-      'qSpek',
-      'kak',
-      'hps',
-      'qHps',
-      'cekPdn',
-      'qPdn',
-      'cekKatalog',
-      'qKatalog',
-      'pilihMetode',
-      'qMetode',
-      'klarifikasi',
-      'kontrak',
-      'monitoringKontrak',
-      'pemeriksaan',
-      'bast',
-      'pembayaran',
-      'realisasi',
-      'qRealisasi'
+    concept: 'Pahami alur besar pengadaan dan hindari jebakan: spek mengarah, pecah paket, kontrak dulu, BAST tanpa cek, bayar dulu.',
+    pipeline: ['rup', 'identifikasi', 'reviewSpek', 'kak', 'hps', 'cekPdn', 'cekKatalog', 'pilihMetode', 'klarifikasi', 'kontrak', 'monitoringKontrak', 'pemeriksaan', 'bast', 'pembayaran', 'realisasi'],
+    traps: ['spekMengarah', 'pecahPaket', 'kontrakAwal', 'bastTanpaCek', 'bayarDulu', 'realisasiLupa'],
+    question: 'PA menginstruksikan Pokja memenangkan penyedia tertentu. Hal ini bertentangan dengan etika apa?',
+    options: [
+      'Tertib dan bertanggung jawab',
+      'Tidak saling mempengaruhi yang menyebabkan persaingan tidak sehat',
+      'Mempercepat proses pengadaan',
+      'Mendahulukan pengalaman penyedia'
     ],
-    traps: ['spekMengarah', 'pecahPaket', 'kontrakAwal', 'bastTanpaCek', 'bayarDulu']
+    answer: 1,
+    explanation: 'Intervensi untuk memenangkan penyedia tertentu merupakan bentuk pengaruh yang menyebabkan persaingan tidak sehat.'
   }
 ];
 
-function makeLevel(config) {
-  const idealCards = config.ideal.map(key => c(key)).filter(Boolean);
+function makeQuestionLevel(config) {
+  const pipelineCards = config.pipeline.map(key => c(key)).filter(Boolean);
   const trapCards = (config.traps || []).map(key => c(key)).filter(Boolean);
 
   return {
     ...config,
-    ideal: idealCards.map(card => card.id),
-    cards: [...idealCards, ...trapCards]
+    ideal: pipelineCards.map(card => card.id),
+    cards: [...pipelineCards, ...trapCards]
   };
 }
 
-const STACKER_LEVELS = LEVEL_DATA.map(makeLevel);
+const QUESTION_LEVELS = QUESTION_LEVELS_RAW.map(makeQuestionLevel);
 
 const STACKER_STATE = {
-  levelIndex: 0,
+  questionIndex: 0,
   placed: [],
+  shuffledCards: [],
+  selectedCardId: null,
+  stage: 'pipeline',
   compliance: 0,
   risk: 0,
   progress: 0,
   wrong: 0,
-  finished: false,
-  shuffledCards: [],
-  selectedCardId: null,
+  quizSelected: null,
+  quizAnswered: false,
   logs: []
 };
 
@@ -468,8 +425,8 @@ function shuffleArray(items) {
   return result;
 }
 
-function getLevel() {
-  return STACKER_LEVELS[STACKER_STATE.levelIndex] || STACKER_LEVELS[0];
+function getCurrentQuestion() {
+  return QUESTION_LEVELS[STACKER_STATE.questionIndex] || QUESTION_LEVELS[0];
 }
 
 function getPlacedCount() {
@@ -642,7 +599,7 @@ function injectProcurementCss() {
 
     .ps-game-grid{
       display:grid;
-      grid-template-columns:minmax(0,1.55fr) minmax(360px,.7fr);
+      grid-template-columns:minmax(0,1.55fr) minmax(390px,.75fr);
       gap:16px;
       align-items:start;
     }
@@ -830,6 +787,11 @@ function injectProcurementCss() {
       background:#ecfdf5;
     }
 
+    .ps-slot.locked{
+      opacity:.58;
+      pointer-events:none;
+    }
+
     .ps-slot.fx-correct{
       animation:psSlotCorrect .46s ease;
     }
@@ -881,6 +843,12 @@ function injectProcurementCss() {
       border:1px solid #dbeafe;
     }
 
+    .ps-bank.locked{
+      opacity:.56;
+      pointer-events:none;
+      filter:grayscale(.25);
+    }
+
     .ps-action-card{
       width:152px;
       min-height:104px;
@@ -929,11 +897,6 @@ function injectProcurementCss() {
     .ps-action-card.correct-card{
       background:#dcfce7;
       border-color:#86efac;
-    }
-
-    .ps-action-card.quiz-card{
-      background:linear-gradient(180deg,#ffffff 0%,#fefce8 100%);
-      border-color:#fde68a;
     }
 
     .ps-action-card.trap-card{
@@ -1036,7 +999,8 @@ function injectProcurementCss() {
       transform:none;
     }
 
-    .ps-concept-box{
+    .ps-concept-box,
+    .ps-quiz-box{
       border-radius:18px;
       padding:12px;
       background:#f8fbff;
@@ -1044,11 +1008,85 @@ function injectProcurementCss() {
       margin-bottom:12px;
     }
 
+    .ps-quiz-box{
+      background:
+        radial-gradient(circle at top right, rgba(34,211,238,.12), transparent 34%),
+        linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+    }
+
+    .ps-concept-box label,
+    .ps-quiz-box label{
+      display:block;
+      color:#64748b;
+      font-size:11px;
+      font-weight:850;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:8px;
+    }
+
     .ps-concept-box strong{
       color:#102544;
       font-size:13px;
       line-height:1.55;
       display:block;
+    }
+
+    .ps-quiz-question{
+      color:#102544;
+      font-size:14px;
+      font-weight:950;
+      line-height:1.55;
+      margin-bottom:12px;
+    }
+
+    .ps-quiz-options{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:8px;
+    }
+
+    .ps-quiz-option{
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid #dbe5f0;
+      padding:11px 12px;
+      text-align:left;
+      color:#102544;
+      font-size:12px;
+      line-height:1.45;
+      font-weight:800;
+      transition:.18s ease;
+    }
+
+    .ps-quiz-option:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(15,23,42,.08);
+    }
+
+    .ps-quiz-option.correct{
+      background:#dcfce7;
+      border-color:#86efac;
+      color:#166534;
+    }
+
+    .ps-quiz-option.wrong{
+      background:#fee2e2;
+      border-color:#fecaca;
+      color:#991b1b;
+    }
+
+    .ps-explanation{
+      margin-top:12px;
+      padding:12px;
+      border-radius:16px;
+      background:#fff;
+      border:1px solid #e5edf5;
+      color:#475569;
+      font-size:12px;
+      line-height:1.6;
     }
 
     .ps-log{
@@ -1104,47 +1142,6 @@ function injectProcurementCss() {
     .ps-log-sub{
       color:#64748b;
       line-height:1.55;
-    }
-
-    .ps-finish{
-      display:none;
-      border-radius:24px;
-      padding:18px;
-      background:
-        radial-gradient(circle at top right, rgba(34,211,238,.22), transparent 32%),
-        linear-gradient(135deg,#102544,#123a72);
-      color:#fff;
-      margin-top:16px;
-      overflow:hidden;
-      position:relative;
-    }
-
-    .ps-finish.show{
-      display:block;
-      animation:psFinishPop .38s ease;
-    }
-
-    @keyframes psFinishPop{
-      from{opacity:0;transform:translateY(16px) scale(.98);}
-      to{opacity:1;transform:translateY(0) scale(1);}
-    }
-
-    .ps-finish h3{
-      margin:0;
-      color:#fff;
-      font-size:23px;
-      font-weight:950;
-    }
-
-    .ps-finish p{
-      color:rgba(255,255,255,.78);
-    }
-
-    .ps-stars{
-      margin-top:10px;
-      font-size:28px;
-      letter-spacing:3px;
-      color:#fde68a;
     }
 
     .ps-toast{
@@ -1426,41 +1423,48 @@ function shakeCard(cardId) {
   });
 }
 
-function resetStackerLevel() {
-  const level = getLevel();
+function addLog(item) {
+  STACKER_STATE.logs.unshift(item);
+  STACKER_STATE.logs = STACKER_STATE.logs.slice(0, 14);
+}
 
-  STACKER_STATE.placed = Array(level.ideal.length).fill(null);
-  STACKER_STATE.compliance = 0;
-  STACKER_STATE.risk = 0;
-  STACKER_STATE.progress = 0;
-  STACKER_STATE.wrong = 0;
-  STACKER_STATE.finished = false;
-  STACKER_STATE.shuffledCards = shuffleArray(level.cards);
+function resetCurrentQuestion() {
+  const q = getCurrentQuestion();
+
+  STACKER_STATE.placed = Array(q.ideal.length).fill(null);
+  STACKER_STATE.shuffledCards = shuffleArray(q.cards);
   STACKER_STATE.selectedCardId = null;
+  STACKER_STATE.stage = 'pipeline';
+  STACKER_STATE.progress = 0;
+  STACKER_STATE.quizSelected = null;
+  STACKER_STATE.quizAnswered = false;
   STACKER_STATE.logs = [];
 
   addLog({
     type: 'info',
-    title: 'Misi dimulai',
-    text: `${level.caseTitle}. Susun kartu aksi dan kartu soal dalam urutan pipeline yang benar.`
+    title: `${q.title} dimulai`,
+    text: 'Susun pipeline sampai selesai. Setelah pipeline benar semua, pertanyaan ABCD akan muncul.'
   });
 
   renderStackerGame();
 }
 
-function nextStackerLevel() {
-  if (STACKER_STATE.levelIndex < STACKER_LEVELS.length - 1) {
-    STACKER_STATE.levelIndex += 1;
+function nextQuestion() {
+  if (STACKER_STATE.questionIndex < QUESTION_LEVELS.length - 1) {
+    STACKER_STATE.questionIndex += 1;
   } else {
-    STACKER_STATE.levelIndex = 0;
+    STACKER_STATE.questionIndex = 0;
   }
 
-  resetStackerLevel();
+  resetCurrentQuestion();
 }
 
-function addLog(item) {
-  STACKER_STATE.logs.unshift(item);
-  STACKER_STATE.logs = STACKER_STATE.logs.slice(0, 14);
+function restartGame() {
+  STACKER_STATE.questionIndex = 0;
+  STACKER_STATE.compliance = 0;
+  STACKER_STATE.risk = 0;
+  STACKER_STATE.wrong = 0;
+  resetCurrentQuestion();
 }
 
 function renderStackerGame() {
@@ -1468,20 +1472,21 @@ function renderStackerGame() {
 
   if (!root) return;
 
-  const level = getLevel();
+  const q = getCurrentQuestion();
   const placedIds = new Set(STACKER_STATE.placed.filter(Boolean).map(item => item.id));
+  const pipelineLocked = STACKER_STATE.stage !== 'pipeline';
 
   root.innerHTML = `
     <section class="ps-game-grid">
       <div class="ps-card">
         <div class="ps-card-head">
           <div>
-            <h3>${escapeHtml(level.title)}</h3>
-            <p>${escapeHtml(level.caseDesc)}</p>
+            <h3>${escapeHtml(q.title)}</h3>
+            <p>${escapeHtml(q.caseDesc)}</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-            <div class="ps-mode-pill">Pipeline Cards</div>
-            <div class="ps-level-pill">${STACKER_STATE.levelIndex + 1} / ${STACKER_LEVELS.length}</div>
+            <div class="ps-mode-pill">${STACKER_STATE.stage === 'pipeline' ? 'Susun Pipeline' : 'Jawab ABCD'}</div>
+            <div class="ps-level-pill">${q.no} / ${QUESTION_LEVELS.length}</div>
             ${STACKER_STATE.selectedCardId ? '<div class="ps-level-pill warn">Kartu dipilih</div>' : ''}
           </div>
         </div>
@@ -1489,26 +1494,26 @@ function renderStackerGame() {
         <div class="ps-case-panel">
           <div class="ps-case-box">
             <label>Kasus</label>
-            <strong>${escapeHtml(level.caseTitle)}</strong>
-            <span>${escapeHtml(level.caseDesc)}</span>
+            <strong>${escapeHtml(q.caseTitle)}</strong>
+            <span>${escapeHtml(q.caseDesc)}</span>
           </div>
           <div class="ps-case-box">
             <label>Pagu</label>
-            <strong>${escapeHtml(level.budget)}</strong>
+            <strong>${escapeHtml(q.budget)}</strong>
           </div>
           <div class="ps-case-box">
             <label>Deadline</label>
-            <strong>${escapeHtml(level.deadline)}</strong>
+            <strong>${escapeHtml(q.deadline)}</strong>
           </div>
           <div class="ps-case-box">
             <label>Tingkat</label>
-            <strong>${escapeHtml(level.difficulty)}</strong>
+            <strong>${escapeHtml(q.difficulty)}</strong>
           </div>
         </div>
 
         <div class="ps-score-grid">
           <div class="ps-score-card">
-            <label>Progress</label>
+            <label>Progress Pipeline</label>
             <strong>${STACKER_STATE.progress}%</strong>
           </div>
           <div class="ps-score-card">
@@ -1530,28 +1535,24 @@ function renderStackerGame() {
         </div>
 
         <div class="ps-pipeline" id="psPipeline">
-          ${level.ideal.map((stepId, index) => renderSlot(index)).join('')}
+          ${q.ideal.map((stepId, index) => renderSlot(index, pipelineLocked)).join('')}
         </div>
 
         <div class="ps-card-head">
           <div>
-            <h3>Kartu Acak</h3>
+            <h3>Kartu Pipeline Acak</h3>
             <p>
-              Ada kartu aksi, kartu soal, dan kartu jebakan. Susun semuanya dalam urutan pipeline yang benar.
-              Bisa drag-drop atau klik kartu lalu klik slot biru.
+              Susun kartu aksi dari kiri ke kanan sesuai kasus. Setelah semua slot benar,
+              baru pertanyaan ABCD muncul di kanan.
             </p>
           </div>
-          <button type="button" class="ps-btn ps-btn-soft" id="psShuffleBtn">
+          <button type="button" class="ps-btn ps-btn-soft" id="psShuffleBtn" ${pipelineLocked ? 'disabled' : ''}>
             Acak Ulang Kartu
           </button>
         </div>
 
-        <div class="ps-bank" id="psCardBank">
-          ${STACKER_STATE.shuffledCards.map(card => renderCard(card, placedIds.has(card.id))).join('')}
-        </div>
-
-        <div class="ps-finish ${STACKER_STATE.finished ? 'show' : ''}">
-          ${renderFinish()}
+        <div class="ps-bank ${pipelineLocked ? 'locked' : ''}" id="psCardBank">
+          ${STACKER_STATE.shuffledCards.map(card => renderCard(card, placedIds.has(card.id), false)).join('')}
         </div>
       </div>
 
@@ -1559,30 +1560,27 @@ function renderStackerGame() {
         <div class="ps-card">
           <div class="ps-card-head">
             <div>
-              <h3>Petunjuk Level</h3>
-              <p>Soal sekarang bukan panel terpisah. Soal adalah kartu yang ikut disusun di pipeline.</p>
+              <h3>${STACKER_STATE.stage === 'pipeline' ? 'Misi Pipeline' : 'Pertanyaan ABCD'}</h3>
+              <p>
+                ${STACKER_STATE.stage === 'pipeline'
+                  ? 'Selesaikan pipeline dulu. Pertanyaan ABCD belum muncul sebelum pipeline benar.'
+                  : 'Pipeline sudah benar. Sekarang jawab pertanyaan konsep dari kasus ini.'}
+              </p>
             </div>
           </div>
 
           <div class="ps-concept-box">
             <label>Konsep yang dilatih</label>
-            <strong>${escapeHtml(level.concept)}</strong>
+            <strong>${escapeHtml(q.concept)}</strong>
           </div>
 
-          <div class="ps-concept-box">
-            <label>Mode Main</label>
-            <strong>
-              1. Pilih kartu aksi atau soal.<br>
-              2. Letakkan ke slot pipeline berikutnya.<br>
-              3. Kartu soal harus berada pada titik konsep yang tepat.<br>
-              4. Kartu jebakan akan menaikkan risiko.
-            </strong>
-          </div>
+          ${renderQuizPanel()}
 
           <div class="ps-buttons">
-            <button type="button" class="ps-btn ps-btn-soft" id="psResetBtn">Reset Level</button>
-            <button type="button" class="ps-btn ps-btn-primary" id="psNextBtn" ${STACKER_STATE.finished ? '' : 'disabled'}>
-              Level Berikutnya
+            <button type="button" class="ps-btn ps-btn-soft" id="psResetBtn">Reset Soal Ini</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="psRestartBtn">Ulang dari Soal 1</button>
+            <button type="button" class="ps-btn ps-btn-primary" id="psNextBtn" ${STACKER_STATE.quizAnswered ? '' : 'disabled'}>
+              Lanjut Soal Berikutnya
             </button>
           </div>
         </div>
@@ -1591,7 +1589,7 @@ function renderStackerGame() {
           <div class="ps-card-head">
             <div>
               <h3>Pembahasan</h3>
-              <p>Setiap kartu yang benar/salah akan dijelaskan di sini.</p>
+              <p>Setiap langkah pipeline dan jawaban ABCD dijelaskan di sini.</p>
             </div>
           </div>
 
@@ -1606,14 +1604,14 @@ function renderStackerGame() {
   bindStackerEvents();
 }
 
-function renderSlot(index) {
+function renderSlot(index, locked) {
   const placed = STACKER_STATE.placed[index];
   const nextEmptyIndex = STACKER_STATE.placed.findIndex(item => item === null);
-  const isClickReady = STACKER_STATE.selectedCardId && !placed && index === nextEmptyIndex;
+  const isClickReady = STACKER_STATE.selectedCardId && !placed && index === nextEmptyIndex && STACKER_STATE.stage === 'pipeline';
 
   if (placed) {
     return `
-      <div class="ps-slot correct" data-slot-index="${index}">
+      <div class="ps-slot correct ${locked ? 'locked' : ''}" data-slot-index="${index}">
         <div class="ps-slot-number">${index + 1}</div>
         ${renderCard(placed, false, true)}
       </div>
@@ -1621,7 +1619,7 @@ function renderSlot(index) {
   }
 
   return `
-    <div class="ps-slot ${isClickReady ? 'click-ready' : ''}" data-slot-index="${index}">
+    <div class="ps-slot ${isClickReady ? 'click-ready' : ''} ${locked ? 'locked' : ''}" data-slot-index="${index}">
       <div class="ps-slot-number">${index + 1}</div>
       <div class="ps-slot-placeholder">
         ${isClickReady ? 'Klik untuk pasang kartu' : `Slot pipeline ${index + 1}`}
@@ -1632,18 +1630,68 @@ function renderSlot(index) {
 
 function renderCard(card, used = false, locked = false) {
   const selected = STACKER_STATE.selectedCardId === card.id ? 'selected' : '';
-  const quizClass = card.type === 'quiz' ? 'quiz-card' : '';
   const trapClass = card.type === 'trap' ? 'trap-card' : '';
 
   return `
     <div
-      class="ps-action-card ${used ? 'used' : ''} ${locked ? 'correct-card' : ''} ${selected} ${quizClass} ${trapClass}"
-      draggable="${used || locked ? 'false' : 'true'}"
+      class="ps-action-card ${used ? 'used' : ''} ${locked ? 'correct-card' : ''} ${selected} ${trapClass}"
+      draggable="${used || locked || STACKER_STATE.stage !== 'pipeline' ? 'false' : 'true'}"
       data-card-id="${escapeHtml(card.id)}"
     >
       <div class="ps-card-icon">${card.icon}</div>
       <strong>${escapeHtml(card.label)}</strong>
       <span>${escapeHtml(card.note)}</span>
+    </div>
+  `;
+}
+
+function renderQuizPanel() {
+  const q = getCurrentQuestion();
+
+  if (STACKER_STATE.stage === 'pipeline') {
+    return `
+      <div class="ps-quiz-box">
+        <label>Status</label>
+        <div class="ps-quiz-question">
+          Pertanyaan ABCD terkunci. Selesaikan pipeline dulu sampai 100%.
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="ps-quiz-box">
+      <label>Pertanyaan setelah pipeline benar</label>
+      <div class="ps-quiz-question">${escapeHtml(q.question)}</div>
+
+      <div class="ps-quiz-options">
+        ${q.options.map((option, index) => {
+          let cls = '';
+
+          if (STACKER_STATE.quizAnswered) {
+            if (index === q.answer) cls = 'correct';
+            else if (index === STACKER_STATE.quizSelected) cls = 'wrong';
+          }
+
+          return `
+            <button
+              type="button"
+              class="ps-quiz-option ${cls}"
+              data-quiz-option="${index}"
+              ${STACKER_STATE.quizAnswered ? 'disabled' : ''}
+            >
+              ${String.fromCharCode(65 + index)}. ${escapeHtml(option)}
+            </button>
+          `;
+        }).join('')}
+      </div>
+
+      ${STACKER_STATE.quizAnswered ? `
+        <div class="ps-explanation">
+          <strong>Pembahasan:</strong><br>
+          ${escapeHtml(q.explanation)}
+        </div>
+      ` : ''}
     </div>
   `;
 }
@@ -1654,8 +1702,8 @@ function renderLogs() {
       <div class="ps-log-item">
         <div class="ps-log-icon info">i</div>
         <div>
-          <div class="ps-log-title">Mulai susun kartu</div>
-          <div class="ps-log-sub">Drag kartu aksi dan kartu soal ke pipeline dari kiri ke kanan.</div>
+          <div class="ps-log-title">Mulai susun pipeline</div>
+          <div class="ps-log-sub">Drag kartu ke slot dari kiri ke kanan.</div>
         </div>
       </div>
     `;
@@ -1672,32 +1720,6 @@ function renderLogs() {
       </div>
     </div>
   `).join('');
-}
-
-function renderFinish() {
-  if (!STACKER_STATE.finished) return '';
-
-  const stars = getStars();
-  const title = stars >= 3
-    ? 'Mission Complete — PPK Aman'
-    : stars === 2
-      ? 'Mission Complete — Aman dengan Catatan'
-      : 'Mission Complete — Perlu Pembinaan';
-
-  return `
-    <h3>${title}</h3>
-    <div class="ps-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
-    <p>
-      Kepatuhan ${STACKER_STATE.compliance}, Risiko ${STACKER_STATE.risk}, salah langkah ${STACKER_STATE.wrong}.
-      Ulangi level untuk mengejar 3 bintang.
-    </p>
-  `;
-}
-
-function getStars() {
-  if (STACKER_STATE.risk <= 10 && STACKER_STATE.wrong === 0) return 3;
-  if (STACKER_STATE.risk <= 35 && STACKER_STATE.wrong <= 2) return 2;
-  return 1;
 }
 
 function bindStackerEvents() {
@@ -1719,6 +1741,8 @@ function bindStackerEvents() {
 
   document.querySelectorAll('.ps-slot').forEach(slot => {
     slot.addEventListener('dragover', event => {
+      if (STACKER_STATE.stage !== 'pipeline') return;
+
       event.preventDefault();
       slot.classList.add('drag-over');
     });
@@ -1728,6 +1752,8 @@ function bindStackerEvents() {
     });
 
     slot.addEventListener('drop', event => {
+      if (STACKER_STATE.stage !== 'pipeline') return;
+
       event.preventDefault();
       slot.classList.remove('drag-over');
 
@@ -1738,6 +1764,7 @@ function bindStackerEvents() {
     });
 
     slot.addEventListener('click', () => {
+      if (STACKER_STATE.stage !== 'pipeline') return;
       if (!STACKER_STATE.selectedCardId) return;
 
       const slotIndex = Number(slot.dataset.slotIndex);
@@ -1745,16 +1772,24 @@ function bindStackerEvents() {
     });
   });
 
+  document.querySelectorAll('[data-quiz-option]').forEach(button => {
+    button.addEventListener('click', () => {
+      answerQuiz(Number(button.dataset.quizOption), button);
+    });
+  });
+
   const resetBtn = document.getElementById('psResetBtn');
+  const restartBtn = document.getElementById('psRestartBtn');
   const nextBtn = document.getElementById('psNextBtn');
   const shuffleBtn = document.getElementById('psShuffleBtn');
 
-  if (resetBtn) resetBtn.addEventListener('click', resetStackerLevel);
-  if (nextBtn) nextBtn.addEventListener('click', nextStackerLevel);
+  if (resetBtn) resetBtn.addEventListener('click', resetCurrentQuestion);
+  if (restartBtn) restartBtn.addEventListener('click', restartGame);
+  if (nextBtn) nextBtn.addEventListener('click', nextQuestion);
 
   if (shuffleBtn) {
     shuffleBtn.addEventListener('click', () => {
-      STACKER_STATE.shuffledCards = shuffleArray(getLevel().cards);
+      STACKER_STATE.shuffledCards = shuffleArray(getCurrentQuestion().cards);
       STACKER_STATE.selectedCardId = null;
       renderStackerGame();
       showToast('Kartu diacak ulang.', 'info');
@@ -1763,12 +1798,12 @@ function bindStackerEvents() {
 }
 
 function selectCard(cardId) {
-  if (STACKER_STATE.finished) return;
+  if (STACKER_STATE.stage !== 'pipeline') return;
 
   STACKER_STATE.selectedCardId = STACKER_STATE.selectedCardId === cardId ? null : cardId;
 
   if (STACKER_STATE.selectedCardId) {
-    const card = getLevel().cards.find(item => item.id === cardId);
+    const card = getCurrentQuestion().cards.find(item => item.id === cardId);
     showToast(`Kartu dipilih: ${card ? card.label : cardId}. Klik slot biru.`, 'info');
   }
 
@@ -1776,11 +1811,11 @@ function selectCard(cardId) {
 }
 
 function placeCard(cardId, slotIndex, slotEl) {
-  if (STACKER_STATE.finished) return;
+  if (STACKER_STATE.stage !== 'pipeline') return;
 
-  const level = getLevel();
-  const expectedId = level.ideal[slotIndex];
-  const card = level.cards.find(item => item.id === cardId);
+  const q = getCurrentQuestion();
+  const expectedId = q.ideal[slotIndex];
+  const card = q.cards.find(item => item.id === cardId);
 
   if (!card) return;
 
@@ -1801,37 +1836,31 @@ function placeCard(cardId, slotIndex, slotEl) {
 
   STACKER_STATE.placed[slotIndex] = card;
   STACKER_STATE.selectedCardId = null;
-  STACKER_STATE.progress = Math.round((getPlacedCount() / level.ideal.length) * 100);
-
-  if (card.type === 'quiz') {
-    STACKER_STATE.compliance += 12;
-  } else {
-    STACKER_STATE.compliance += 10;
-  }
+  STACKER_STATE.progress = Math.round((getPlacedCount() / q.ideal.length) * 100);
+  STACKER_STATE.compliance += 10;
 
   addLog({
     type: 'ok',
     title: `${card.label} benar`,
-    text: getCorrectMessage(card)
+    text: getCorrectMessage(card.id)
   });
 
   showToast(`Benar: ${card.label}`, 'ok');
   flashScreen('ok');
-  popScore(slotEl || document.body, card.type === 'quiz' ? '+12 Konsep' : '+10 Step', 'ok');
+  popScore(slotEl || document.body, '+10 Pipeline', 'ok');
 
-  const completed = getPlacedCount() === level.ideal.length;
+  const completed = getPlacedCount() === q.ideal.length;
 
   if (completed) {
-    STACKER_STATE.finished = true;
-    STACKER_STATE.compliance += 10;
+    STACKER_STATE.stage = 'quiz';
 
     addLog({
       type: 'ok',
       title: 'Pipeline selesai',
-      text: 'Semua kartu aksi dan kartu soal sudah tersusun benar. Lanjutkan ke level berikutnya.'
+      text: 'Pipeline sudah benar 100%. Sekarang jawab pertanyaan ABCD di panel kanan.'
     });
 
-    showToast('Mission Complete. Pipeline selesai.', 'ok');
+    showToast('Pipeline benar. Pertanyaan ABCD terbuka.', 'ok');
     spawnConfetti();
   }
 
@@ -1858,7 +1887,47 @@ function wrongMove(cardId, message) {
   shakeCard(cardId);
 }
 
-function getCorrectMessage(card) {
+function answerQuiz(selectedIndex, buttonEl) {
+  const q = getCurrentQuestion();
+
+  if (STACKER_STATE.stage !== 'quiz') return;
+  if (STACKER_STATE.quizAnswered) return;
+
+  STACKER_STATE.quizSelected = selectedIndex;
+  STACKER_STATE.quizAnswered = true;
+
+  if (selectedIndex === q.answer) {
+    STACKER_STATE.compliance += 20;
+
+    addLog({
+      type: 'ok',
+      title: 'Jawaban ABCD benar',
+      text: q.explanation
+    });
+
+    showToast('Jawaban benar. Kepatuhan naik.', 'ok');
+    flashScreen('ok');
+    popScore(buttonEl || document.body, '+20 Konsep', 'ok');
+    spawnConfetti();
+  } else {
+    STACKER_STATE.risk += 8;
+    STACKER_STATE.wrong += 1;
+
+    addLog({
+      type: 'bad',
+      title: 'Jawaban ABCD belum tepat',
+      text: q.explanation
+    });
+
+    showToast('Jawaban belum tepat. Pembahasan terbuka.', 'bad');
+    flashScreen('bad');
+    popScore(buttonEl || document.body, '+8 Risiko', 'bad');
+  }
+
+  renderStackerGame();
+}
+
+function getCorrectMessage(cardId) {
   const messages = {
     rup: 'RUP menjadi pintu awal untuk memastikan paket, jadwal, pagu, dan metode.',
     identifikasi: 'Identifikasi kebutuhan mencegah paket dobel, tidak relevan, atau tidak sesuai prioritas.',
@@ -1866,8 +1935,8 @@ function getCorrectMessage(card) {
     kak: 'KAK/spesifikasi harus berbasis kebutuhan dan tidak mengarah.',
     'review-spek': 'Review spesifikasi penting agar persaingan sehat.',
     hps: 'HPS/referensi harga menjadi dasar kewajaran biaya.',
-    'cek-katalog': 'Cek katalog membantu menentukan apakah e-Purchasing dapat digunakan.',
     'cek-pdn': 'PDN/TKDN perlu diperhatikan untuk mendukung produk dalam negeri.',
+    'cek-katalog': 'Cek katalog membantu menentukan apakah e-Purchasing dapat digunakan.',
     'pilih-metode': 'Metode dipilih setelah kebutuhan, nilai, jadwal, dan pasar dipahami.',
     'metode-pl': 'Pengadaan Langsung tepat bila nilai dan kondisi paket sesuai.',
     'metode-epurchasing': 'e-Purchasing tepat jika tersedia di katalog dan sesuai kebutuhan.',
@@ -1882,35 +1951,16 @@ function getCorrectMessage(card) {
     pemeriksaan: 'Pemeriksaan hasil mencegah barang/jasa tidak sesuai langsung diterima.',
     bast: 'BAST dilakukan setelah hasil diperiksa dan sesuai.',
     pembayaran: 'Pembayaran dilakukan setelah dokumen pendukung memadai.',
-    realisasi: 'Pencatatan realisasi memastikan data monitoring tidak bolong.',
-    'q-rup': 'Soal RUP tepat ditempatkan setelah konsep RUP agar user paham ruang lingkup PBJ.',
-    'q-perencanaan': 'Soal perencanaan tepat ditempatkan pada bagian awal sebelum persiapan teknis.',
-    'q-kak': 'Soal KAK tepat ditempatkan setelah KAK/spesifikasi.',
-    'q-spek': 'Soal spesifikasi tepat untuk menguji apakah spek sudah berbasis kebutuhan.',
-    'q-hps': 'Soal HPS tepat ditempatkan setelah penyusunan HPS/referensi harga.',
-    'q-rab': 'Soal RAB tepat setelah konsep biaya dan harga satuan.',
-    'q-katalog': 'Soal katalog tepat setelah cek e-Katalog.',
-    'q-pdn': 'Soal PDN tepat setelah cek PDN/TKDN.',
-    'q-metode': 'Soal metode tepat saat pemain akan memilih cara/metode pengadaan.',
-    'q-pelaku': 'Soal pelaku PBJ tepat untuk menguji kewenangan PA/KPA/PPK/Pokja/PP.',
-    'q-etika': 'Soal etika tepat saat ada risiko intervensi atau persaingan tidak sehat.',
-    'q-prinsip': 'Soal prinsip PBJ tepat setelah proses pemilihan untuk menguji efektif, efisien, adil, transparan.',
-    'q-sanggah': 'Soal sanggah tepat pada area tender/proses pemilihan.',
-    'q-kontrak': 'Soal kontrak tepat pada area pelaksanaan kontrak.',
-    'q-konsolidasi': 'Soal konsolidasi tepat setelah pemain melakukan konsolidasi.',
-    'q-pemaketan': 'Soal pemaketan tepat setelah identifikasi kebutuhan.',
-    'q-swakelola': 'Soal swakelola tepat saat memilih cara pengadaan swakelola.',
-    'q-bast': 'Soal BAST tepat sebelum/sekitar pemeriksaan dan serah terima.',
-    'q-realisasi': 'Soal realisasi tepat di akhir pipeline agar monitoring tidak bolong.'
+    realisasi: 'Pencatatan realisasi memastikan data monitoring tidak bolong.'
   };
 
-  return messages[card.id] || card.note || 'Kartu ini tepat pada posisi pipeline saat ini.';
+  return messages[cardId] || 'Langkah ini tepat pada posisi pipeline saat ini.';
 }
 
 function getWrongMessage(cardId, expectedId) {
-  const level = getLevel();
-  const card = level.cards.find(item => item.id === cardId);
-  const expectedCard = level.cards.find(item => item.id === expectedId);
+  const q = getCurrentQuestion();
+  const card = q.cards.find(item => item.id === cardId);
+  const expectedCard = q.cards.find(item => item.id === expectedId);
 
   const cardLabel = card ? card.label : cardId;
   const expectedLabel = expectedCard ? expectedCard.label : expectedId;
@@ -1928,7 +1978,7 @@ function getWrongMessage(cardId, expectedId) {
     'realisasi-lupa': 'Realisasi yang tidak dicatat membuat monitoring tidak lengkap.'
   };
 
-  return trapMessages[cardId] || `Belum tepat. Kamu memilih "${cardLabel}", padahal posisi ini seharusnya "${expectedLabel}". Konsep level: ${level.concept}`;
+  return trapMessages[cardId] || `Belum tepat. Kamu memilih "${cardLabel}", padahal posisi ini seharusnya "${expectedLabel}". Konsep soal: ${q.concept}`;
 }
 
 function initScrollLuxuryAnimation() {
@@ -1992,16 +2042,16 @@ function renderDashboard() {
     <section class="ps-dashboard">
       <section class="ps-hero lux-reveal">
         <div>
-          <div class="ps-kicker">TRAXPBJ Academy • Pipeline Cards Mode</div>
+          <div class="ps-kicker">TRAXPBJ Academy • Case Pipeline + ABCD</div>
           <h3>Procurement Stacker</h3>
           <p>
-            Game edukasi pengadaan berbasis studi kasus. Sekarang soal tidak dipisah lagi.
-            Kartu soal ikut masuk ke pipeline, sehingga pemain harus paham urutan proses sekaligus konsep PBJ.
+            Setiap nomor adalah satu kasus. Selesaikan susunan pipeline dulu sampai benar 100%,
+            lalu jawab pertanyaan ABCD dari kasus tersebut. Setelah itu baru lanjut ke soal berikutnya.
           </p>
         </div>
       </section>
 
-      <div class="lux-section-label lux-reveal">Interactive Procurement Pipeline</div>
+      <div class="lux-section-label lux-reveal">Interactive Procurement Case</div>
 
       <div class="lux-reveal" id="procurementStackerRoot"></div>
 
@@ -2021,11 +2071,11 @@ function renderDashboard() {
         </div>
       </section>
 
-      <div class="footer-note lux-reveal">© 2026 TRAXPBJ - Procurement Stacker Pipeline Cards Mode</div>
+      <div class="footer-note lux-reveal">© 2026 TRAXPBJ - Procurement Stacker Case Pipeline + ABCD</div>
     </section>
   `;
 
-  resetStackerLevel();
+  restartGame();
 
   contentArea.querySelectorAll('[data-quick]').forEach(item => {
     item.addEventListener('click', () => loadPage(item.dataset.quick));
