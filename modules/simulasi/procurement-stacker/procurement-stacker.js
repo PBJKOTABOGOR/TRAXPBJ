@@ -1,5 +1,5 @@
 (() => {
-  const AUTO_NEXT_DELAY_MS = 1600;
+  const AUTO_NEXT_DELAY_MS = 1800;
   const HINT_PENALTY = 3;
 
   let containerRef = null;
@@ -8,6 +8,7 @@
   let toastEl = null;
   let autoNextTimer = null;
   let panjiIntroTimers = [];
+  let panjiTalkTimer = null;
 
   let panjiEl = null;
   let panjiTextEl = null;
@@ -59,7 +60,13 @@
       id: 'cek-pdn',
       label: 'Cek PDN / TKDN',
       icon: '🇮🇩',
-      note: 'Perhatikan produk dalam negeri.'
+      note: 'Perhatikan produk dalam negeri dan TKDN/BMP.'
+    },
+    cekUmkk: {
+      id: 'cek-umkk',
+      label: 'Cek UMK/Koperasi',
+      icon: '🏪',
+      note: 'Perhatikan afirmasi usaha mikro, kecil, dan koperasi.'
     },
     cekKatalog: {
       id: 'cek-katalog',
@@ -101,7 +108,13 @@
       id: 'metode-epurchasing',
       label: 'e-Purchasing',
       icon: '🛒',
-      note: 'Gunakan katalog bila sesuai.'
+      note: 'Gunakan katalog bila tersedia dan sesuai.'
+    },
+    miniKompetisi: {
+      id: 'mini-kompetisi',
+      label: 'Mini Kompetisi',
+      icon: '🏁',
+      note: 'Kompetisikan penyedia katalog bila diwajibkan/tepat.'
     },
     tender: {
       id: 'tender',
@@ -120,6 +133,24 @@
       label: 'Swakelola',
       icon: '🤲',
       note: 'Dipilih bila memenuhi kriteria swakelola.'
+    },
+    timPersiapan: {
+      id: 'tim-persiapan',
+      label: 'Tim Persiapan',
+      icon: '🧑‍💼',
+      note: 'Siapkan rencana, KAK, jadwal, dan kebutuhan swakelola.'
+    },
+    timPelaksana: {
+      id: 'tim-pelaksana',
+      label: 'Tim Pelaksana',
+      icon: '👷',
+      note: 'Laksanakan pekerjaan swakelola.'
+    },
+    timPengawas: {
+      id: 'tim-pengawas',
+      label: 'Tim Pengawas',
+      icon: '🕵️',
+      note: 'Awasi mutu, waktu, dan output swakelola.'
     },
     klarifikasi: {
       id: 'klarifikasi',
@@ -144,6 +175,12 @@
       label: 'Monitoring Kontrak',
       icon: '📡',
       note: 'Pantau waktu, mutu, volume, dan kewajiban.'
+    },
+    uangMuka: {
+      id: 'uang-muka',
+      label: 'Uang Muka / Jaminan',
+      icon: '🧾',
+      note: 'Kelola uang muka, jaminan, dan syarat kontraktual.'
     },
     identifikasiPerubahan: {
       id: 'identifikasi-perubahan',
@@ -303,6 +340,20 @@
       icon: '💸',
       note: 'Jebakan: pembayaran sebelum perubahan kontrak tertib.',
       type: 'trap'
+    },
+    swakelolaTanpaTim: {
+      id: 'swakelola-tanpa-tim',
+      label: 'Swakelola Tanpa Tim',
+      icon: '🙈',
+      note: 'Jebakan: tim swakelola tidak dibentuk jelas.',
+      type: 'trap'
+    },
+    abaikanPdn: {
+      id: 'abaikan-pdn',
+      label: 'Abaikan PDN',
+      icon: '🚫',
+      note: 'Jebakan: tidak memperhatikan afirmasi PDN/TKDN.',
+      type: 'trap'
     }
   };
 
@@ -343,7 +394,7 @@
       ],
       answer: 2,
       hint: 'Fokus pada ruang lingkup PBJ yang paling lengkap, bukan yang berhenti di kontrak.',
-      explanation: 'PBJ Pemerintah dimulai dari identifikasi kebutuhan sampai serah terima hasil pekerjaan.'
+      explanation: 'PBJ Pemerintah adalah proses dari identifikasi kebutuhan sampai dengan serah terima hasil pekerjaan.'
     },
     {
       type: 'pipeline',
@@ -352,9 +403,9 @@
       desc: 'OPD membutuhkan laptop untuk layanan publik. Barang tersedia di e-Katalog dan nilai paket Rp350 juta.',
       budget: 'Rp350.000.000',
       difficulty: 'Level 2 - Pemula+',
-      ideal: ['rup', 'kak', 'hps', 'cekPdn', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
-      traps: ['metodePl', 'tender', 'abaikanKatalog', 'kontrakAwal'],
-      explanation: 'Untuk barang tersedia di katalog, alur aman adalah tetap cek RUP, siapkan KAK/HPS, cek PDN/TKDN, cek katalog, lakukan e-Purchasing, klarifikasi/negosiasi, kontrak, BAST, realisasi.'
+      ideal: ['rup', 'kak', 'hps', 'cekPdn', 'cekUmkk', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
+      traps: ['metodePl', 'tender', 'abaikanKatalog', 'kontrakAwal', 'abaikanPdn'],
+      explanation: 'Untuk barang tersedia di katalog, alur aman adalah cek RUP, siapkan KAK/HPS, perhatikan PDN/TKDN dan UMK/Koperasi, cek katalog, lakukan e-Purchasing, klarifikasi/negosiasi, kontrak, BAST, realisasi.'
     },
     {
       type: 'quiz',
@@ -365,8 +416,8 @@
       options: [
         'Menghasilkan barang sesuai nilai uang',
         'Meningkatkan penggunaan produk dalam negeri',
-        'Meningkatkan peran UMK',
-        'Meningkatkan peran pelaku usaha lokal'
+        'Meningkatkan peran konsultan perencana',
+        'Mengurangi jumlah paket pengadaan'
       ],
       answer: 1,
       hint: 'Kata kunci utama ada pada TKDN dan BMP.',
@@ -406,7 +457,7 @@
       desc: 'Spesifikasi awal mengarah ke merek tertentu. Susun langkah korektif sebelum proses.',
       budget: 'Rp420.000.000',
       difficulty: 'Level 4 - Menengah',
-      ideal: ['rup', 'reviewSpek', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
+      ideal: ['rup', 'reviewSpek', 'kak', 'hps', 'cekPdn', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
       traps: ['spekMengarah', 'kontrakAwal', 'abaikanKatalog', 'metodeAsalCepat'],
       explanation: 'Jika spesifikasi mengarah, lakukan review spek dulu agar kebutuhan teknis lebih fair sebelum lanjut HPS dan metode.'
     },
@@ -487,25 +538,25 @@
       desc: 'OPD akan melaksanakan kegiatan pelatihan internal pegawai. Susun alur yang sesuai untuk skema swakelola.',
       budget: 'Rp95.000.000',
       difficulty: 'Level 7 - Menengah',
-      ideal: ['rup', 'identifikasi', 'kak', 'hps', 'swakelola', 'proses', 'bast', 'realisasi'],
-      traps: ['metodeEpurchasing', 'tender', 'kontrakAwal', 'bayarDulu'],
-      explanation: 'Swakelola tetap perlu perencanaan, identifikasi kebutuhan, KAK, anggaran/HPS, pelaksanaan, BAST, dan realisasi.'
+      ideal: ['rup', 'identifikasi', 'kak', 'hps', 'timPersiapan', 'timPelaksana', 'timPengawas', 'swakelola', 'bast', 'realisasi'],
+      traps: ['metodeEpurchasing', 'tender', 'kontrakAwal', 'swakelolaTanpaTim'],
+      explanation: 'Swakelola tetap perlu perencanaan, identifikasi kebutuhan, KAK, anggaran/HPS, tim persiapan/pelaksana/pengawas, pelaksanaan, BAST, dan realisasi.'
     },
     {
       type: 'quiz',
       title: 'Soal 14 — Swakelola',
       caseTitle: 'Kriteria Swakelola',
       desc: 'Jawab pertanyaan tentang penggunaan swakelola.',
-      question: 'Contoh pengadaan yang dapat dilakukan secara swakelola adalah?',
+      question: 'Ruang lingkup pedoman swakelola meliputi apa?',
       options: [
-        'Kegiatan yang memenuhi kriteria swakelola dan dapat dilaksanakan sendiri/oleh pihak sesuai ketentuan',
-        'Semua pengadaan barang elektronik',
-        'Semua pekerjaan yang ingin dipercepat',
-        'Paket yang sengaja dipecah agar nilainya kecil'
+        'Perencanaan, persiapan, pelaksanaan, pengawasan, dan serah terima hasil pekerjaan',
+        'Tender, seleksi, katalog, dan kontrak',
+        'Perencanaan, tender, evaluasi harga, dan pembayaran',
+        'KAK, HPS, sanggah, kontrak, dan pembayaran'
       ],
       answer: 0,
-      hint: 'Swakelola bukan dipilih karena paling cepat, tapi karena memang memenuhi kriteria.',
-      explanation: 'Swakelola tidak dipilih asal cepat. Swakelola dipilih bila karakter kegiatan dan pelaksanaannya memenuhi kriteria.'
+      hint: 'Swakelola tidak hanya pelaksanaan; ada persiapan, pengawasan, dan serah terima.',
+      explanation: 'Ruang lingkup swakelola mencakup perencanaan pengadaan melalui swakelola, persiapan, pelaksanaan, pengawasan, dan serah terima hasil pekerjaan.'
     },
     {
       type: 'pipeline',
@@ -562,7 +613,7 @@
         'kontrakAwal',
         'metodeAsalCepat'
       ],
-      explanation: 'Jika rencana awal e-Purchasing tidak bisa dilakukan karena tidak ada produk/penyedia sesuai di katalog, PPK perlu mendokumentasikan hasil pengecekan, mengevaluasi metode, lalu memilih metode lain yang sesuai nilai, jenis, dan kondisi paket. Jangan langsung ganti metode tanpa bukti.'
+      explanation: 'Jika rencana awal e-Purchasing tidak bisa dilakukan karena tidak ada produk/penyedia sesuai di katalog, PPK perlu mendokumentasikan hasil pengecekan, mengevaluasi metode, lalu memilih metode lain yang sesuai nilai, jenis, dan kondisi paket.'
     },
     {
       type: 'quiz',
@@ -623,11 +674,59 @@
       answer: 1,
       hint: 'Adendum butuh dasar, bukan sekadar kesepakatan lisan.',
       explanation: 'Adendum kontrak membutuhkan dasar yang jelas, termasuk kajian kontrak dan justifikasi perubahan. Perubahan tidak boleh berjalan tanpa dasar dan dokumen yang tertib.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 21 — Katalog Konstruksi dengan Mini Kompetisi',
+      caseTitle: 'Produk Konstruksi di Katalog Elektronik',
+      desc: 'OPD akan membeli produk sektor konstruksi melalui katalog elektronik. Susun alur yang lebih aman dengan memperhatikan kewajiban mini kompetisi.',
+      budget: 'Rp1.200.000.000',
+      difficulty: 'Level 11 - Expert',
+      ideal: [
+        'rup',
+        'identifikasi',
+        'kak',
+        'hps',
+        'cekPdn',
+        'cekKatalog',
+        'miniKompetisi',
+        'klarifikasi',
+        'kontrak',
+        'monitoringKontrak',
+        'pemeriksaan',
+        'bast',
+        'realisasi'
+      ],
+      traps: [
+        'abaikanKatalog',
+        'kontrakAwal',
+        'metodeAsalCepat',
+        'bayarDulu'
+      ],
+      explanation: 'Untuk produk sektor konstruksi di katalog, perlu memperhatikan tata kelola katalog, persaingan sehat, mini kompetisi bila diwajibkan, kontrak, monitoring, pemeriksaan, BAST, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 22 — Afirmasi Belanja',
+      caseTitle: 'Belanja Melalui Katalog',
+      desc: 'Dalam belanja katalog, pemerintah mendorong afirmasi tertentu.',
+      question: 'Afirmasi belanja melalui e-Purchasing terutama diarahkan untuk mendukung apa?',
+      options: [
+        'Produk dalam negeri serta usaha mikro, kecil, dan koperasi',
+        'Penyedia yang paling dekat dengan kantor',
+        'Barang impor karena lebih cepat',
+        'Pemilihan penyedia tanpa kompetisi'
+      ],
+      answer: 0,
+      hint: 'Ingat kata kunci PDN, UMK, dan koperasi.',
+      explanation: 'Afirmasi belanja melalui e-Purchasing diarahkan untuk mendukung produk dalam negeri serta usaha mikro, kecil, dan koperasi.'
     }
   ];
 
   function buildChallenge(raw) {
-    if (raw.type === 'quiz') return raw;
+    if (raw.type === 'quiz') {
+      return raw;
+    }
 
     const idealCards = raw.ideal.map(key => card(key)).filter(Boolean);
     const trapCards = (raw.traps || []).map(key => card(key)).filter(Boolean);
@@ -699,6 +798,13 @@
   function clearPanjiIntroTimers() {
     panjiIntroTimers.forEach(timer => clearTimeout(timer));
     panjiIntroTimers = [];
+  }
+
+  function clearPanjiTalkTimer() {
+    if (panjiTalkTimer) {
+      clearTimeout(panjiTalkTimer);
+      panjiTalkTimer = null;
+    }
   }
 
   function scheduleAutoNext(message, delay = AUTO_NEXT_DELAY_MS) {
@@ -842,7 +948,50 @@
     }
   }
 
+  function ensurePanjiMarkup(scope) {
+    if (scope.querySelector('#panjiAssistant')) return;
+
+    const panji = document.createElement('div');
+    panji.id = 'panjiAssistant';
+    panji.className = 'panji-assistant panji-hidden';
+    panji.innerHTML = `
+      <div class="panji-bubble" id="panjiBubble">
+        <button type="button" class="panji-close" id="panjiClose" aria-label="Tutup PANJI">×</button>
+        <div class="panji-bubble-top">
+          <div class="panji-name">PANJI • PENGADAAN JITU</div>
+          <div class="panji-emote" id="panjiEmote">🤔</div>
+        </div>
+        <div class="panji-text" id="panjiText">
+          Halo, aku PANJI.
+        </div>
+        <div class="panji-actions">
+          <button type="button" id="panjiHintBtn">Tanya PANJI</button>
+          <button type="button" id="panjiMiniBtn">Minimize</button>
+        </div>
+      </div>
+
+      <button type="button" class="panji-character" id="panjiCharacter" aria-label="PANJI">
+        <div class="panji-glow"></div>
+        <div class="panji-head">
+          <div class="panji-hat">PBJ</div>
+          <div class="panji-eye panji-eye-left"></div>
+          <div class="panji-eye panji-eye-right"></div>
+          <div class="panji-mouth"></div>
+        </div>
+        <div class="panji-body">
+          <div class="panji-badge">PJ</div>
+        </div>
+        <div class="panji-hand panji-hand-left"></div>
+        <div class="panji-hand panji-hand-right"></div>
+      </button>
+    `;
+
+    scope.appendChild(panji);
+  }
+
   function initPanji(scope) {
+    ensurePanjiMarkup(scope);
+
     panjiEl = scope.querySelector('#panjiAssistant');
     panjiTextEl = scope.querySelector('#panjiText');
     panjiEmoteEl = scope.querySelector('#panjiEmote');
@@ -872,7 +1021,7 @@
 
         if (panjiEl.classList.contains('panji-minimized')) {
           panjiEl.classList.remove('panji-minimized');
-          showPanji('Aku balik lagi. Kalau bingung, klik tombol "Tanya PANJI".', 'thinking');
+          showPanji('Aku balik lagi. Kalau bingung, klik tombol "Tanya PANJI". Tapi ingat, minta hint mengurangi skor ya.', 'thinking');
         } else {
           panjiEl.classList.add('panji-minimized');
         }
@@ -889,6 +1038,8 @@
   function showPanji(message, mood = 'thinking') {
     if (!panjiEl || !panjiTextEl) return;
 
+    clearPanjiTalkTimer();
+
     panjiEl.classList.remove('panji-hidden');
     panjiEl.classList.remove('panji-minimized');
 
@@ -896,19 +1047,21 @@
       'panji-happy',
       'panji-sad',
       'panji-thinking',
-      'panji-intro'
+      'panji-intro',
+      'panji-talking'
     );
 
     void panjiEl.offsetWidth;
 
     panjiEl.classList.add(`panji-${mood}`);
+    panjiEl.classList.add('panji-talking');
 
     if (panjiEmoteEl) {
       panjiEmoteEl.textContent =
         mood === 'happy'
           ? '😄'
           : mood === 'sad'
-            ? '😢'
+            ? '😭'
             : '🤔';
     }
 
@@ -919,6 +1072,18 @@
       void panjiBubbleEl.offsetWidth;
       panjiBubbleEl.classList.add('burst');
     }
+
+    const talkDuration = Math.min(
+      6200,
+      Math.max(1300, String(message || '').length * 34)
+    );
+
+    panjiTalkTimer = setTimeout(() => {
+      if (!panjiEl) return;
+
+      panjiEl.classList.remove('panji-talking');
+      panjiTalkTimer = null;
+    }, talkDuration);
   }
 
   function showPanjiIntro() {
@@ -939,7 +1104,7 @@
       if (destroyed) return;
 
       showPanji(
-        'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ sambil main Procurement Stacker.',
+        'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ, mulai dari identifikasi kebutuhan, RUP, KAK, HPS, metode, kontrak, BAST, sampai realisasi.',
         'thinking'
       );
     }, 1700));
@@ -948,19 +1113,19 @@
       if (destroyed) return;
 
       showPanji(
-        `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin ya. Jadi pakai bantuanku seperlunya aja.`,
+        `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin. Jadi pakai bantuanku seperlunya aja.`,
         'thinking'
       );
-    }, 3900));
+    }, 4500));
 
     panjiIntroTimers.push(setTimeout(() => {
       if (destroyed) return;
 
       showPanji(
-        'Yuk mulai. Susun pipeline dengan tertib: jangan asal cepat, yang penting sesuai alur, ada bukti, dan risikonya rendah.',
+        'Yuk mulai. Jangan cuma cepat, yang penting tertib, ada dasar, ada bukti, dan risikonya rendah.',
         'happy'
       );
-    }, 6500));
+    }, 7200));
   }
 
   function getHintMessage(challenge) {
@@ -978,13 +1143,13 @@
       }
 
       if (nextEmpty === 0) {
-        return `Hint PANJI: untuk posisi pertama, fokus cari kartu "${expectedCard.label}".`;
+        return `Hint PANJI: untuk posisi pertama, fokus cari kartu "${expectedCard.label}". Biasanya alur aman dimulai dari dasar perencanaan atau kondisi kontrak yang sedang berjalan.`;
       }
 
       const prev = GAME_STATE.placed[nextEmpty - 1];
 
       if (prev) {
-        return `Hint PANJI: setelah "${prev.label}", langkah yang lebih aman untuk posisi berikutnya adalah "${expectedCard.label}".`;
+        return `Hint PANJI: setelah "${prev.label}", langkah yang lebih aman untuk posisi berikutnya adalah "${expectedCard.label}". Jangan lompat ke tahap akhir sebelum dasarnya siap.`;
       }
 
       return `Hint PANJI: fokus cari kartu "${expectedCard.label}" untuk posisi ${nextEmpty + 1}.`;
@@ -994,7 +1159,7 @@
       return `Hint PANJI: ${challenge.hint}`;
     }
 
-    return 'Baca kata kunci soal dan pilih jawaban yang paling sesuai prinsip PBJ.';
+    return 'Baca kata kunci soal dan pilih jawaban yang paling sesuai prinsip PBJ: efektif, efisien, transparan, terbuka, bersaing, adil, dan akuntabel.';
   }
 
   function requestHintFromPanji() {
@@ -1005,7 +1170,7 @@
     if (!challenge || GAME_STATE.finished) return;
 
     if (GAME_STATE.hintUsed) {
-      showPanji('Untuk soal ini kamu sudah pakai hint dari PANJI ya. Coba lanjutkan dulu.', 'thinking');
+      showPanji('Untuk soal ini kamu sudah pakai hint dari PANJI ya. Coba lanjutkan dulu dengan logika alur PBJ.', 'thinking');
       showToast('Hint soal ini sudah dipakai.', 'info');
       return;
     }
@@ -1032,12 +1197,12 @@
 
     if (challenge.type === 'pipeline') {
       showPanji(
-        'Ini soal pipeline. Susun kartu dari kiri ke kanan secara tertib. Kalau bingung urutan berikutnya, kamu bisa tanya aku.',
+        'Ini soal pipeline. Susun kartu dari kiri ke kanan secara tertib. Aku akan jelasin setiap langkah benar supaya kamu paham, bukan cuma hafal.',
         'thinking'
       );
     } else {
       showPanji(
-        'Ini soal ABCD. Baca kata kuncinya pelan-pelan. Pilih jawaban yang paling sesuai prinsip PBJ, bukan yang sekadar paling cepat.',
+        'Ini soal ABCD. Baca kata kuncinya pelan-pelan. Pilih jawaban yang paling sesuai prinsip dan tahapan PBJ, bukan yang sekadar paling cepat.',
         'thinking'
       );
     }
@@ -1117,7 +1282,7 @@
 
     renderGame();
     spawnConfetti();
-    showPanji('Selesai! Hasil akhir kamu sudah keluar. Kalau mau nilai lebih bagus, coba ulangi lagi dan kurangi risiko ya.', 'happy');
+    showPanji('Selesai! Hasil akhir kamu sudah keluar. Kalau mau nilai lebih bagus, coba ulangi lagi dan kurangi risiko. PANJI bangga kalau kamu paham alurnya, bukan cuma ngejar cepat.', 'happy');
     showToast('Semua soal selesai. Hasil akhir ditampilkan.', 'ok');
   }
 
@@ -1598,7 +1763,7 @@
 
     if (cardId !== expectedId) {
       const expected = challenge.cards.find(cardItem => cardItem.id === expectedId);
-      wrongMove(cardId, `Belum tepat. Kamu memilih "${item.label}", posisi ini seharusnya "${expected ? expected.label : expectedId}".`);
+      wrongMove(cardId, `Kamu memilih "${item.label}", posisi ini seharusnya "${expected ? expected.label : expectedId}".`);
       return;
     }
 
@@ -1610,7 +1775,7 @@
     addLog('ok', `${item.label} benar`, getCorrectMessage(item.id));
 
     showToast(`Benar: ${item.label}`, 'ok');
-    showPanji(`Yes! "${item.label}" tepat di posisi ini. Lanjutkan urutan berikutnya ya.`, 'happy');
+    showPanji(getPanjiReactionMessage(item.id), 'happy');
     flashScreen('ok');
     popScore(slotEl || document.body, '+10', 'ok');
 
@@ -1622,7 +1787,7 @@
     if (completed) {
       GAME_STATE.score += 20;
       addLog('ok', 'Pipeline selesai', challenge.explanation);
-      showPanji('Mantap! Pipeline ini selesai dengan benar. Kita lanjut ke soal berikutnya ya.', 'happy');
+      showPanji('Mantap! Pipeline ini selesai dengan benar. Kamu sudah menyusun alur PBJ secara tertib. Kita lanjut ke soal berikutnya ya.', 'happy');
       showToast('Pipeline benar 100%. Otomatis lanjut...', 'ok');
       spawnConfetti();
 
@@ -1671,7 +1836,7 @@
     addLog('bad', 'Urutan belum tepat', message);
 
     showToast('Belum tepat. Risiko naik.', 'bad');
-    showPanji(`Aduh, belum tepat. ${message}`, 'sad');
+    showPanji(getPanjiWrongMessage(cardId, message), 'sad');
     flashScreen('bad');
 
     renderGame();
@@ -1695,7 +1860,7 @@
       addLog('ok', 'Jawaban benar', challenge.explanation);
 
       showToast('Jawaban benar. Otomatis lanjut...', 'ok');
-      showPanji('Jawabanmu benar! Keren, kamu makin paham pola pikir PBJ.', 'happy');
+      showPanji(`Jawabanmu benar! ${challenge.explanation}`, 'happy');
       flashScreen('ok');
       popScore(buttonEl || document.body, '+20', 'ok');
       spawnConfetti();
@@ -1715,33 +1880,39 @@
       popScore(buttonEl || document.body, '+8 Risiko', 'bad');
 
       renderGame();
-      scheduleAutoNext('Pembahasan terbuka. Otomatis lanjut ke soal berikutnya...', 2200);
+      scheduleAutoNext('Pembahasan terbuka. Otomatis lanjut ke soal berikutnya...', 2500);
     }
   }
 
   function getCorrectMessage(cardId) {
     const messages = {
-      rup: 'RUP menjadi pintu awal untuk memastikan paket, jadwal, pagu, dan metode.',
-      identifikasi: 'Identifikasi kebutuhan mencegah paket dobel, tidak relevan, atau tidak sesuai prioritas.',
+      rup: 'RUP menjadi pintu awal untuk memastikan paket, jadwal, pagu, metode, dan satker.',
+      identifikasi: 'Identifikasi kebutuhan mencegah paket tidak relevan, dobel, atau tidak sesuai prioritas.',
       konsolidasi: 'Konsolidasi membantu mengelola kebutuhan sejenis agar tidak terpecah tanpa alasan.',
       kak: 'KAK/spesifikasi harus berbasis kebutuhan dan tidak mengarah.',
       'review-spek': 'Review spesifikasi penting agar persaingan sehat.',
       hps: 'HPS/referensi harga menjadi dasar kewajaran biaya.',
       'cek-pdn': 'PDN/TKDN perlu diperhatikan untuk mendukung produk dalam negeri.',
+      'cek-umkk': 'UMK/Koperasi perlu diperhatikan dalam afirmasi belanja pemerintah.',
       'cek-katalog': 'Cek katalog membantu menentukan apakah e-Purchasing dapat digunakan.',
-      'katalog-tidak-sesuai': 'Jika katalog tidak menyediakan produk/penyedia sesuai, kondisi itu harus dicatat sebelum mengganti metode.',
+      'katalog-tidak-sesuai': 'Jika katalog tidak menyediakan produk/penyedia sesuai, kondisi itu harus dicatat.',
       'dokumentasi-gagal-katalog': 'Dokumentasi hasil cek katalog menjadi dasar perubahan metode.',
       'evaluasi-metode': 'Evaluasi metode diperlukan agar metode baru sesuai nilai, jenis, dan kondisi paket.',
       'pilih-metode': 'Metode dipilih setelah kebutuhan, nilai, jadwal, dan pasar dipahami.',
       'metode-pl': 'Pengadaan Langsung tepat bila nilai dan kondisi paket sesuai.',
       'metode-epurchasing': 'e-Purchasing tepat jika tersedia di katalog dan sesuai kebutuhan.',
+      'mini-kompetisi': 'Mini kompetisi mendukung transparansi dan persaingan sehat pada katalog tertentu.',
       tender: 'Tender dipakai saat karakter paket membutuhkan proses pemilihan formal.',
       seleksi: 'Seleksi relevan untuk jasa konsultansi.',
       swakelola: 'Swakelola dapat dipilih jika memenuhi kriteria.',
+      'tim-persiapan': 'Tim persiapan penting dalam penyelenggaraan swakelola.',
+      'tim-pelaksana': 'Tim pelaksana menjalankan pekerjaan swakelola.',
+      'tim-pengawas': 'Tim pengawas memastikan swakelola terkendali.',
       klarifikasi: 'Klarifikasi/negosiasi memastikan harga, spesifikasi, dan kemampuan pelaksanaan.',
       proses: 'Proses pemilihan dilakukan setelah dokumen dan metode siap.',
       kontrak: 'Kontrak/SPK menjadi dasar pelaksanaan setelah proses pengadaan.',
-      'monitoring-kontrak': 'Monitoring kontrak mengendalikan waktu, mutu, dan kewajiban penyedia.',
+      'monitoring-kontrak': 'Monitoring kontrak mengendalikan waktu, mutu, volume, dan kewajiban penyedia.',
+      'uang-muka': 'Uang muka, jaminan, dan syarat kontrak perlu dikelola tertib.',
       'identifikasi-perubahan': 'Perubahan kontrak harus diawali identifikasi kondisi perubahan.',
       'kaji-kontrak': 'Klausul kontrak perlu dikaji sebelum adendum.',
       'justifikasi-teknis': 'Justifikasi teknis menjadi dasar perubahan kontrak.',
@@ -1757,13 +1928,202 @@
     return messages[cardId] || 'Langkah ini benar pada posisi pipeline saat ini.';
   }
 
+  function getPanjiReactionMessage(cardId) {
+    const messages = {
+      rup:
+        'Betul. Cek RUP dulu di SiRUP untuk memastikan paket sudah diumumkan, pagu, metode, jadwal, dan satkernya sesuai sebelum proses lanjut. Dari RUP ini kita tahu prosesnya tidak loncat dari perencanaan.',
+
+      identifikasi:
+        'Betul. Identifikasi kebutuhan itu pondasi awal. PPK perlu memastikan barang atau jasa memang dibutuhkan, volumenya jelas, lokasinya jelas, waktunya masuk akal, dan tidak dobel dengan paket lain.',
+
+      konsolidasi:
+        'Betul. Kalau kebutuhannya sejenis, pikirkan konsolidasi dulu. Ini bisa membantu efisiensi, menguatkan posisi belanja pemerintah, dan mencegah paket dipecah-pecah tanpa alasan yang kuat.',
+
+      'review-spek':
+        'Betul. Spesifikasi perlu direview supaya tidak mengarah ke merek atau penyedia tertentu. Spek harus menjelaskan kebutuhan dan standar kinerja, bukan mengunci calon pemenang.',
+
+      kak:
+        'Betul. KAK atau spesifikasi menjelaskan kebutuhan secara teknis, ruang lingkup, output, jadwal, lokasi, dan standar yang harus dipenuhi. KAK yang rapi bikin proses berikutnya lebih aman.',
+
+      hps:
+        'Betul. Setelah KAK jelas, HPS atau referensi harga disusun sebagai dasar kewajaran harga. Jangan asal ambil angka tanpa survei, pembanding, katalog, pasar, atau dasar yang masuk akal.',
+
+      'cek-pdn':
+        'Betul. Cek PDN dan TKDN penting untuk mendukung penggunaan produk dalam negeri. Kalau produk dalam negeri tersedia dan sesuai, jangan langsung lari ke produk impor.',
+
+      'cek-umkk':
+        'Betul. Afirmasi UMK dan koperasi perlu diperhatikan. Belanja pemerintah bukan cuma mengejar barang cepat datang, tapi juga mendorong pelaku usaha kecil dan koperasi bila sesuai.',
+
+      'cek-katalog':
+        'Betul. Cek e-Katalog dulu untuk melihat apakah barang atau jasa tersedia, spesifikasinya sesuai, penyedianya ada, harganya wajar, TKDN-nya cocok, dan proses e-Purchasing bisa dipertanggungjawabkan.',
+
+      'katalog-tidak-sesuai':
+        'Betul. Kalau katalog tidak menyediakan produk atau penyedia yang sesuai, kondisi itu harus dicatat. Jangan memaksakan e-Purchasing kalau barangnya tidak cocok dengan kebutuhan.',
+
+      'dokumentasi-gagal-katalog':
+        'Betul. Dokumentasi hasil cek katalog penting sebagai bukti kenapa metode awal tidak bisa dilanjutkan. Simpan dasar pengecekan agar perubahan metode tidak terlihat asal-asalan.',
+
+      'evaluasi-metode':
+        'Betul. Setelah ada bukti katalog tidak sesuai, metode perlu dievaluasi ulang berdasarkan nilai paket, jenis pengadaan, kondisi pasar, ketersediaan penyedia, dan ketentuan yang berlaku.',
+
+      'pilih-metode':
+        'Betul. Metode dipilih setelah kebutuhan, HPS, kondisi pasar, jenis pengadaan, dan nilai paket jelas. Jangan pilih metode hanya karena paling cepat atau paling gampang.',
+
+      'metode-pl':
+        'Betul. Pengadaan Langsung bisa dipakai kalau nilai dan kondisinya sesuai. Kalau nilainya melewati batas atau paketnya kompleks, jangan dipaksa jadi Pengadaan Langsung.',
+
+      'metode-epurchasing':
+        'Betul. e-Purchasing tepat kalau barang atau jasa tersedia di katalog, spesifikasinya sesuai, penyedianya ada, dan prosesnya bisa dipertanggungjawabkan.',
+
+      'mini-kompetisi':
+        'Betul. Mini kompetisi dipakai untuk memberi kesempatan yang sama kepada penyedia katalog dan menjaga persaingan sehat, terutama pada sektor yang mewajibkan mekanisme tersebut.',
+
+      tender:
+        'Betul. Tender dipakai untuk paket yang memerlukan proses pemilihan formal dan kompetitif, terutama jika nilai atau karakter pekerjaannya tidak cocok dengan metode sederhana.',
+
+      seleksi:
+        'Betul. Untuk jasa konsultansi, metode seleksi sering digunakan karena yang dinilai bukan cuma harga, tapi juga kualitas keahlian, pengalaman, dan pendekatan teknis.',
+
+      swakelola:
+        'Betul. Swakelola digunakan kalau kegiatan memenuhi kriteria swakelola. Tetap harus ada perencanaan, KAK, anggaran, pelaksanaan, pengawasan, dan pertanggungjawaban.',
+
+      'tim-persiapan':
+        'Betul. Dalam swakelola, tim persiapan penting untuk menyusun sasaran, rencana kegiatan, KAK, jadwal, dan kebutuhan pelaksanaan secara jelas.',
+
+      'tim-pelaksana':
+        'Betul. Tim pelaksana menjalankan pekerjaan swakelola. Jadi tidak cukup cuma niat swakelola, pelaksananya harus jelas.',
+
+      'tim-pengawas':
+        'Betul. Tim pengawas menjaga agar pelaksanaan swakelola sesuai rencana, mutu, waktu, dan output yang sudah ditetapkan.',
+
+      klarifikasi:
+        'Betul. Klarifikasi atau negosiasi memastikan harga, spesifikasi, jadwal, dan kemampuan pelaksanaan benar-benar masuk akal sebelum kontrak dilakukan.',
+
+      proses:
+        'Betul. Proses pemilihan dilakukan setelah dokumen dan metode siap. Jangan lompat ke kontrak sebelum proses pemilihannya tertib dan bisa dipertanggungjawabkan.',
+
+      kontrak:
+        'Betul. Kontrak atau SPK menjadi dasar pelaksanaan pekerjaan. Ini dilakukan setelah proses pengadaan selesai dan penyedia atau pelaksana sudah ditetapkan.',
+
+      'monitoring-kontrak':
+        'Betul. Setelah kontrak berjalan, PPK wajib memantau waktu, mutu, volume, progres, dan kewajiban penyedia. Jangan baru sadar bermasalah saat mau BAST.',
+
+      'uang-muka':
+        'Betul. Kalau ada uang muka atau jaminan, pengelolaannya harus sesuai ketentuan kontrak. Ini bagian penting dari pengendalian risiko pelaksanaan.',
+
+      teguran:
+        'Betul. Kalau penyedia terlambat atau tidak sesuai, lakukan teguran atau evaluasi. Masalah kontrak harus dikendalikan, bukan dibiarkan sampai akhir.',
+
+      pemeriksaan:
+        'Betul. Pemeriksaan hasil dilakukan sebelum BAST. Barang atau pekerjaan harus dicek dulu kesesuaiannya dengan kontrak, spesifikasi, volume, dan kualitas.',
+
+      bast:
+        'Betul. BAST dilakukan setelah hasil pekerjaan atau barang sesuai. Jangan BAST kalau barang belum diperiksa, belum lengkap, atau masih bermasalah.',
+
+      pembayaran:
+        'Betul. Pembayaran dilakukan setelah dokumen pendukung lengkap, prestasi pekerjaan sesuai, dan proses serah terima tertib.',
+
+      realisasi:
+        'Betul. Realisasi harus dicatat supaya data monitoring tidak bolong, termasuk untuk evaluasi, laporan, dan pemantauan kinerja pengadaan.',
+
+      'identifikasi-perubahan':
+        'Betul. Kalau ada perubahan kontrak, mulai dari identifikasi dulu: apa yang berubah, kenapa berubah, dan dampaknya ke volume, waktu, mutu, atau biaya.',
+
+      'kaji-kontrak':
+        'Betul. Sebelum adendum, klausul kontrak harus dikaji. Tidak semua perubahan bisa langsung ditulis jadi adendum tanpa dasar kontraktual.',
+
+      'justifikasi-teknis':
+        'Betul. Justifikasi teknis menjelaskan alasan perubahan secara tertib. Ini penting supaya adendum tidak terlihat asal mengubah kontrak.',
+
+      'negosiasi-perubahan':
+        'Betul. Perubahan kontrak perlu dibahas dampaknya, termasuk harga, waktu, volume, mutu, dan risiko. Jangan sampai perubahan merugikan atau tidak jelas dasarnya.',
+
+      'adendum-kontrak':
+        'Betul. Adendum kontrak menuangkan perubahan secara tertulis. Setelah itu pelaksanaan lanjut sesuai perubahan yang sudah disepakati.'
+    };
+
+    return messages[cardId] || 'Betul. Langkah itu sudah tepat di posisi pipeline ini. Lanjutkan dengan urutan yang tertib dan jangan lompat proses.';
+  }
+
+  function getPanjiWrongMessage(cardId, fallbackMessage) {
+    const messages = {
+      'kontrak-awal':
+        'Aduh, jangan kontrak dulu. Kontrak atau SPK baru aman setelah dokumen siap, metode jelas, proses pemilihan selesai, dan penyedia sudah ditetapkan.',
+
+      'pecah-paket':
+        'Waduh, hati-hati. Pecah paket tanpa alasan kuat bisa dianggap menghindari metode yang seharusnya. Kalau kebutuhan sejenis, pikirkan konsolidasi.',
+
+      'spek-mengarah':
+        'Jangan pakai spek mengarah. Spesifikasi harus menjelaskan kebutuhan, bukan mengunci merek atau penyedia tertentu.',
+
+      'abaikan-katalog':
+        'Jangan abaikan katalog. Untuk barang atau jasa yang berpotensi tersedia di e-Katalog, cek dulu kesesuaian produk, penyedia, harga, TKDN, dan kebutuhan.',
+
+      'lanjut-epurchasing-paksa':
+        'Jangan memaksa e-Purchasing kalau produk atau penyedia di katalog tidak sesuai kebutuhan. Dokumentasikan hasil cek dulu, baru evaluasi metode.',
+
+      'ganti-metode-tanpa-bukti':
+        'Jangan ganti metode tanpa bukti. Perubahan metode harus punya dasar, misalnya hasil cek katalog tidak sesuai dan dokumentasi pendukungnya jelas.',
+
+      'lewati-rup':
+        'Jangan lewati RUP. RUP di SiRUP adalah pintu awal untuk memastikan paket memang sudah direncanakan dan diumumkan.',
+
+      'bast-tanpa-cek':
+        'Jangan BAST tanpa pemeriksaan. Barang atau pekerjaan harus dicek dulu kesesuaiannya dengan kontrak, volume, spesifikasi, dan kualitas.',
+
+      'bayar-dulu':
+        'Jangan bayar dulu. Pembayaran harus menunggu prestasi pekerjaan, dokumen pendukung, dan serah terima yang tertib.',
+
+      'tunda-dokumen':
+        'Jangan tunda dokumen. Dalam PBJ, bukti dan administrasi itu bagian dari akuntabilitas, bukan pelengkap belakangan.',
+
+      'metode-asal-cepat':
+        'Jangan pilih metode hanya karena cepat. Metode harus sesuai nilai paket, jenis pengadaan, kondisi pasar, dan ketentuan.',
+
+      'realisasi-lupa':
+        'Jangan lupa catat realisasi. Kalau realisasi tidak dicatat, monitoring dan laporan kinerja pengadaan jadi bolong.',
+
+      'adendum-tanpa-dasar':
+        'Jangan membuat adendum tanpa dasar. Perubahan kontrak harus diawali identifikasi, kajian klausul, justifikasi teknis, dan kesepakatan yang tertib.',
+
+      'bayar-sebelum-adendum':
+        'Jangan bayar sebelum perubahan kontrak tertib. Kalau ada perubahan volume, waktu, atau nilai, rapikan dasar dan adendumnya dulu.',
+
+      'swakelola-tanpa-tim':
+        'Jangan swakelola tanpa tim yang jelas. Swakelola perlu tim persiapan, tim pelaksana, dan tim pengawas agar peran dan kontrolnya tertib.',
+
+      'abaikan-pdn':
+        'Jangan abaikan PDN/TKDN. Afirmasi produk dalam negeri menjadi bagian penting dalam kebijakan PBJ dan belanja katalog.'
+    };
+
+    return messages[cardId] || `Aduh, belum tepat. ${fallbackMessage}`;
+  }
+
   window.__moduleInit = function ({ container }) {
     destroyed = false;
     containerRef = container;
     root = container.querySelector('#procstackRoot');
 
     if (!root) {
-      return function destroy() {};
+      const wrapper = document.createElement('div');
+      wrapper.className = 'procstack-shell';
+      wrapper.innerHTML = `
+        <section class="procstack-hero">
+          <div class="procstack-kicker">TRAXPBJ Academy • Interactive PBJ Challenge</div>
+          <h2>Procurement Stacker</h2>
+          <p>
+            Susun pipeline pengadaan, jawab studi kasus, dan belajar alur PBJ bersama PANJI.
+            Game ini melatih logika tahapan: perencanaan, pemilihan, kontrak, serah terima, dan realisasi.
+          </p>
+        </section>
+
+        <section class="procstack-game-card">
+          <div id="procstackRoot"></div>
+        </section>
+      `;
+
+      container.appendChild(wrapper);
+      root = container.querySelector('#procstackRoot');
     }
 
     initPanji(container);
@@ -1774,6 +2134,7 @@
 
       clearAutoNextTimer();
       clearPanjiIntroTimers();
+      clearPanjiTalkTimer();
 
       if (toastEl) {
         toastEl.remove();
