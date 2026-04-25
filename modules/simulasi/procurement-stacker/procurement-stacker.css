@@ -28,7 +28,7 @@
   flex-direction:column;
   gap:18px;
   position:relative;
-  padding-bottom:260px;
+  padding-bottom:280px;
 }
 
 .procstack-hero{
@@ -157,9 +157,9 @@
   border-color:#fde68a;
 }
 
-/* =========================
+/* =========================================================
    KASUS / TOPIK DIPERBESAR
-   ========================= */
+   ========================================================= */
 
 .ps-case-panel{
   display:grid;
@@ -179,7 +179,7 @@
 }
 
 .ps-case-box:first-child{
-  min-height:130px;
+  min-height:136px;
   border-color:#93c5fd;
   background:
     radial-gradient(circle at top left, rgba(37,99,235,.10), transparent 32%),
@@ -549,7 +549,21 @@
   color:#991b1b;
 }
 
-.ps-explanation,
+.ps-explanation{
+  padding:14px;
+  border-radius:18px;
+  background:#f8fbff;
+  border:1px solid #dbeafe;
+  color:#475569;
+  font-size:13px;
+  line-height:1.65;
+  margin-bottom:16px;
+}
+
+/* =========================================================
+   LOG PEMBELAJARAN DIBATASI
+   ========================================================= */
+
 .ps-log-box{
   padding:14px;
   border-radius:18px;
@@ -559,6 +573,25 @@
   font-size:13px;
   line-height:1.65;
   margin-bottom:16px;
+  max-height:210px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:#93c5fd #eaf2ff;
+}
+
+.ps-log-box::-webkit-scrollbar{
+  width:8px;
+}
+
+.ps-log-box::-webkit-scrollbar-track{
+  background:#eaf2ff;
+  border-radius:999px;
+}
+
+.ps-log-box::-webkit-scrollbar-thumb{
+  background:#93c5fd;
+  border-radius:999px;
 }
 
 .ps-log-list{
@@ -858,14 +891,14 @@
 
 /* =========================================================
    PANJI FLOATING ASSISTANT
-   POSISI TENGAH KANAN, NGIKUT VIEWPORT / SCROLL
+   KANAN BAWAH + AUTO NAIK/TURUN VIA JS
    ========================================================= */
 
 .panji-assistant{
   position:fixed !important;
   right:34px !important;
-  top:54% !important;
-  bottom:auto !important;
+  top:auto !important;
+  bottom:var(--panji-bottom, 86px) !important;
   z-index:999999 !important;
   display:flex !important;
   align-items:flex-end !important;
@@ -873,7 +906,11 @@
   opacity:1 !important;
   visibility:visible !important;
   pointer-events:none !important;
-  transform:translateY(-50%) !important;
+  transform:none !important;
+  transition:
+    bottom .22s ease,
+    transform .22s ease,
+    opacity .22s ease !important;
 }
 
 .panji-assistant *{
@@ -884,7 +921,7 @@
   opacity:1 !important;
   visibility:visible !important;
   pointer-events:auto !important;
-  transform:translateY(-50%) !important;
+  transform:none !important;
 }
 
 .panji-assistant.panji-minimized .panji-bubble{
@@ -893,15 +930,16 @@
   width:0 !important;
   min-width:0 !important;
   min-height:0 !important;
+  max-height:0 !important;
   padding:0 !important;
   border:0 !important;
   overflow:hidden !important;
 }
 
 .panji-bubble{
-  width:380px !important;
-  min-height:132px !important;
-  max-height:360px !important;
+  width:340px !important;
+  min-height:118px !important;
+  max-height:260px !important;
   position:relative;
   padding:16px;
   border-radius:22px;
@@ -916,10 +954,15 @@
   box-shadow:0 22px 48px rgba(15,23,42,.16);
   backdrop-filter:blur(14px);
   -webkit-backdrop-filter:blur(14px);
-  transition:opacity .22s ease, transform .22s ease, width .22s ease, padding .22s ease;
+  transition:
+    opacity .22s ease,
+    transform .22s ease,
+    width .22s ease,
+    padding .22s ease;
   animation:panjiBubbleIdle 3.8s ease-in-out infinite;
   will-change:transform;
-  overflow:auto;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 
 .panji-bubble.burst{
@@ -1063,8 +1106,8 @@
 }
 
 .panji-character{
-  width:118px !important;
-  height:148px !important;
+  width:108px !important;
+  height:138px !important;
   position:relative;
   border:none;
   background:transparent;
@@ -1133,10 +1176,10 @@
 
 .panji-head{
   position:absolute;
-  left:18px !important;
+  left:16px !important;
   top:8px !important;
-  width:82px !important;
-  height:82px !important;
+  width:76px !important;
+  height:76px !important;
   border-radius:28px 28px 25px 25px;
   background:
     radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
@@ -1163,9 +1206,9 @@
 
 .panji-hat{
   position:absolute;
-  left:10px;
+  left:9px;
   top:-14px;
-  width:60px;
+  width:58px;
   height:26px;
   border-radius:12px 12px 8px 8px;
   background:linear-gradient(135deg,#123a72,#2563eb);
@@ -1181,7 +1224,7 @@
 
 .panji-eye{
   position:absolute;
-  top:36px;
+  top:34px;
   width:12px;
   height:16px;
   border-radius:999px;
@@ -1191,11 +1234,11 @@
 }
 
 .panji-eye-left{
-  left:23px;
+  left:21px;
 }
 
 .panji-eye-right{
-  right:23px;
+  right:21px;
 }
 
 @keyframes panjiBlink{
@@ -1214,8 +1257,8 @@
 
 .panji-mouth{
   position:absolute;
-  left:34px;
-  bottom:18px;
+  left:31px;
+  bottom:17px;
   width:16px;
   height:8px;
   border-bottom:3px solid #102544;
@@ -1225,10 +1268,10 @@
 
 .panji-body{
   position:absolute;
-  left:27px !important;
-  top:88px !important;
-  width:64px !important;
-  height:48px !important;
+  left:24px !important;
+  top:84px !important;
+  width:60px !important;
+  height:45px !important;
   border-radius:21px 21px 17px 17px;
   background:linear-gradient(135deg,#123a72,#2f9a8f);
   border:2px solid rgba(255,255,255,.88);
@@ -1267,7 +1310,7 @@
 
 .panji-hand{
   position:absolute;
-  top:98px !important;
+  top:94px !important;
   width:18px;
   height:34px;
   border-radius:999px;
@@ -1276,12 +1319,12 @@
 }
 
 .panji-hand-left{
-  left:10px !important;
+  left:8px !important;
   transform:rotate(24deg);
 }
 
 .panji-hand-right{
-  right:10px !important;
+  right:8px !important;
   transform-origin:top center;
   animation:panjiWave 1.8s ease-in-out infinite;
 }
@@ -1305,8 +1348,8 @@
   0%,100%{
     height:5px;
     width:15px;
-    left:34px;
-    bottom:18px;
+    left:31px;
+    bottom:17px;
     border-bottom:3px solid currentColor;
     border-top:none;
     border-left:none;
@@ -1318,8 +1361,8 @@
   50%{
     height:15px;
     width:20px;
-    left:31px;
-    bottom:13px;
+    left:28px;
+    bottom:12px;
     border:3px solid currentColor;
     border-radius:999px;
     background:rgba(15,23,42,.08);
@@ -1386,7 +1429,7 @@
 
 .panji-assistant.panji-happy .panji-eye{
   height:8px;
-  top:42px;
+  top:40px;
   border-radius:999px;
   transform:rotate(0deg);
   background:transparent;
@@ -1517,7 +1560,7 @@
 .panji-assistant.panji-sad .panji-mouth{
   width:18px;
   height:4px;
-  left:32px;
+  left:29px;
   bottom:16px;
   border-bottom:none;
   border-top:3px solid #991b1b;
@@ -1727,61 +1770,48 @@
 
 @keyframes panjiLookAroundLeft{
   0%,100%{
-    left:23px;
+    left:21px;
   }
 
   35%{
-    left:20px;
+    left:18px;
   }
 
   70%{
-    left:26px;
+    left:24px;
   }
 }
 
 @keyframes panjiLookAroundRight{
   0%,100%{
-    right:23px;
+    right:21px;
   }
 
   35%{
-    right:26px;
+    right:24px;
   }
 
   70%{
-    right:20px;
+    right:18px;
   }
 }
 
 @media (max-width:1400px){
   .panji-assistant{
     right:24px !important;
-    top:56% !important;
-    bottom:auto !important;
-    transform:translateY(-50%) !important;
+    bottom:var(--panji-bottom, 82px) !important;
+    top:auto !important;
+    transform:none !important;
   }
 
   .panji-bubble{
-    width:320px !important;
-    max-height:320px !important;
+    width:310px !important;
+    max-height:245px !important;
   }
 
   .panji-character{
-    width:106px !important;
-    height:136px !important;
-  }
-
-  .panji-head{
-    left:16px !important;
-    width:76px !important;
-    height:76px !important;
-  }
-
-  .panji-body{
-    left:24px !important;
-    top:84px !important;
-    width:60px !important;
-    height:45px !important;
+    width:102px !important;
+    height:132px !important;
   }
 
   .ps-case-box:first-child strong{
@@ -1810,11 +1840,14 @@
 
   .panji-assistant{
     right:18px !important;
-    top:58% !important;
+    bottom:var(--panji-bottom, 78px) !important;
+    top:auto !important;
+    transform:none !important;
   }
 
   .panji-bubble{
-    width:300px !important;
+    width:292px !important;
+    max-height:230px !important;
   }
 }
 
@@ -1835,8 +1868,8 @@
 
   .panji-assistant{
     right:12px !important;
+    bottom:var(--panji-bottom, 92px) !important;
     top:auto !important;
-    bottom:92px !important;
     transform:none !important;
   }
 
