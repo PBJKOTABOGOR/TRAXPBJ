@@ -28,7 +28,7 @@
   flex-direction:column;
   gap:18px;
   position:relative;
-  min-height:100vh;
+  padding-bottom:260px;
 }
 
 .procstack-hero{
@@ -44,32 +44,6 @@
   box-shadow:0 22px 58px rgba(18,58,114,.20);
 }
 
-.procstack-hero::before{
-  content:"";
-  position:absolute;
-  inset:-40%;
-  background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,.14) 46%, transparent 56%);
-  transform:rotate(10deg);
-  animation:psHeroShine 6s ease-in-out infinite;
-  pointer-events:none;
-}
-
-@keyframes psHeroShine{
-  0%,70%{
-    transform:translateX(-24%) rotate(10deg);
-    opacity:0;
-  }
-
-  78%{
-    opacity:1;
-  }
-
-  100%{
-    transform:translateX(24%) rotate(10deg);
-    opacity:0;
-  }
-}
-
 .procstack-kicker{
   display:inline-flex;
   align-items:center;
@@ -83,8 +57,6 @@
   font-weight:900;
   letter-spacing:.1em;
   text-transform:uppercase;
-  position:relative;
-  z-index:2;
 }
 
 .procstack-hero h2{
@@ -93,18 +65,14 @@
   line-height:1.05;
   font-weight:950;
   letter-spacing:-.04em;
-  position:relative;
-  z-index:2;
 }
 
 .procstack-hero p{
   margin:0;
-  max-width:900px;
-  color:rgba(255,255,255,.86);
-  font-size:14px;
+  max-width:960px;
+  color:rgba(255,255,255,.88);
+  font-size:15px;
   line-height:1.75;
-  position:relative;
-  z-index:2;
 }
 
 .procstack-game-card{
@@ -120,7 +88,7 @@
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
   position:relative;
-  overflow:hidden;
+  overflow:visible;
 }
 
 .ps-card::before{
@@ -144,16 +112,16 @@
 .ps-card h3{
   margin:0;
   color:var(--ps-text);
-  font-size:22px;
-  line-height:1.2;
+  font-size:30px;
+  line-height:1.18;
   font-weight:950;
 }
 
 .ps-card p{
-  margin:6px 0 0;
-  color:var(--ps-muted);
-  font-size:13px;
-  line-height:1.6;
+  margin:8px 0 0;
+  color:#475569;
+  font-size:16px;
+  line-height:1.7;
 }
 
 .ps-pill-row{
@@ -189,47 +157,79 @@
   border-color:#fde68a;
 }
 
+/* =========================
+   KASUS / TOPIK DIPERBESAR
+   ========================= */
+
 .ps-case-panel{
   display:grid;
-  grid-template-columns:1fr 150px 150px 150px;
-  gap:10px;
-  margin-bottom:16px;
+  grid-template-columns:1fr 170px 170px 170px;
+  gap:12px;
+  margin-bottom:18px;
 }
 
 .ps-case-box{
-  min-height:78px;
-  padding:12px;
-  border-radius:18px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
+  min-height:118px;
+  padding:18px;
+  border-radius:20px;
+  background:
+    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
+  border:1px solid #bfdbfe;
+  box-shadow:0 8px 20px rgba(15,23,42,.035);
+}
+
+.ps-case-box:first-child{
+  min-height:130px;
+  border-color:#93c5fd;
+  background:
+    radial-gradient(circle at top left, rgba(37,99,235,.10), transparent 32%),
+    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
 }
 
 .ps-case-box label,
 .ps-score-card label,
 .ps-result-card label{
   display:block;
-  color:var(--ps-muted);
-  font-size:11px;
-  font-weight:900;
+  color:#475569;
+  font-size:14px;
+  font-weight:950;
   text-transform:uppercase;
-  letter-spacing:.06em;
-  margin-bottom:7px;
+  letter-spacing:.08em;
+  margin-bottom:10px;
+}
+
+.ps-case-box:first-child label{
+  color:#123a72;
+  font-size:15px;
 }
 
 .ps-case-box strong{
   display:block;
   color:var(--ps-text);
-  font-size:15px;
+  font-size:22px;
   font-weight:950;
-  line-height:1.25;
+  line-height:1.22;
+}
+
+.ps-case-box:first-child strong{
+  font-size:28px;
+  letter-spacing:-.02em;
+  color:#0f1f38;
 }
 
 .ps-case-box span{
   display:block;
-  color:#475569;
-  font-size:12px;
-  line-height:1.45;
-  margin-top:4px;
+  color:#334155;
+  font-size:16px;
+  line-height:1.65;
+  margin-top:9px;
+}
+
+.ps-case-box:first-child span{
+  font-size:18px;
+  line-height:1.65;
+  font-weight:650;
+  color:#334155;
 }
 
 .ps-score-grid{
@@ -243,7 +243,7 @@
   position:relative;
   overflow:hidden;
   border-radius:18px;
-  padding:12px;
+  padding:14px;
   background:#f8fbff;
   border:1px solid #dbeafe;
 }
@@ -252,7 +252,7 @@
   display:block;
   margin-top:6px;
   color:var(--ps-text);
-  font-size:25px;
+  font-size:28px;
   line-height:1;
   font-weight:950;
 }
@@ -284,7 +284,7 @@
 
 .ps-helper-note{
   color:var(--ps-muted);
-  font-size:12px;
+  font-size:13px;
   line-height:1.5;
 }
 
@@ -503,7 +503,7 @@
 
 .ps-quiz-question{
   color:var(--ps-text);
-  font-size:20px;
+  font-size:24px;
   font-weight:950;
   line-height:1.45;
   margin:12px 0 16px;
@@ -522,14 +522,14 @@
   border-radius:18px;
   background:#fff;
   border:1px solid #dbe5f0;
-  padding:16px;
+  padding:18px;
   text-align:left;
   color:var(--ps-text);
-  font-size:14px;
-  line-height:1.45;
+  font-size:16px;
+  line-height:1.48;
   font-weight:800;
   transition:.18s ease;
-  min-height:78px;
+  min-height:82px;
 }
 
 .ps-quiz-option:hover{
@@ -728,7 +728,7 @@
   position:fixed;
   right:24px;
   bottom:24px;
-  z-index:99998;
+  z-index:999998;
   min-width:280px;
   max-width:420px;
   padding:14px 16px;
@@ -764,7 +764,7 @@
 .ps-screen-flash{
   position:fixed;
   inset:0;
-  z-index:99997;
+  z-index:999997;
   pointer-events:none;
   opacity:0;
 }
@@ -795,7 +795,7 @@
 
 .ps-floating-score{
   position:fixed;
-  z-index:99999;
+  z-index:999999;
   font-size:13px;
   font-weight:950;
   color:#fff;
@@ -838,7 +838,7 @@
   position:fixed;
   width:8px;
   height:12px;
-  z-index:99999;
+  z-index:999999;
   pointer-events:none;
   animation:psConfettiFall .9s ease forwards;
   border-radius:2px;
@@ -856,41 +856,59 @@
   }
 }
 
-/* PANJI */
+/* =========================================================
+   PANJI FLOATING ASSISTANT
+   POSISI TENGAH KANAN, NGIKUT VIEWPORT / SCROLL
+   ========================================================= */
 
 .panji-assistant{
-  position:fixed;
-  right:20px;
-  bottom:18px;
-  z-index:99996;
-  display:flex;
-  align-items:flex-end;
-  gap:12px;
-  transition:transform .25s ease, opacity .25s ease;
+  position:fixed !important;
+  right:34px !important;
+  top:54% !important;
+  bottom:auto !important;
+  z-index:999999 !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  gap:14px !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:none !important;
+  transform:translateY(-50%) !important;
+}
+
+.panji-assistant *{
+  pointer-events:auto !important;
 }
 
 .panji-assistant.panji-hidden{
-  opacity:0;
-  pointer-events:none;
-  transform:translateY(20px) scale(.95);
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:auto !important;
+  transform:translateY(-50%) !important;
 }
 
 .panji-assistant.panji-minimized .panji-bubble{
-  opacity:0;
-  pointer-events:none;
-  transform:translateY(12px) scale(.95);
-  width:0;
-  padding:0;
-  border:0;
-  overflow:hidden;
+  opacity:0 !important;
+  visibility:hidden !important;
+  width:0 !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  overflow:hidden !important;
 }
 
 .panji-bubble{
-  width:360px;
-  min-height:132px;
+  width:380px !important;
+  min-height:132px !important;
+  max-height:360px !important;
   position:relative;
   padding:16px;
   border-radius:22px;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  transform:none !important;
   background:
     radial-gradient(circle at top left, rgba(59,130,246,.14), transparent 38%),
     rgba(255,255,255,.96);
@@ -901,6 +919,7 @@
   transition:opacity .22s ease, transform .22s ease, width .22s ease, padding .22s ease;
   animation:panjiBubbleIdle 3.8s ease-in-out infinite;
   will-change:transform;
+  overflow:auto;
 }
 
 .panji-bubble.burst{
@@ -992,9 +1011,9 @@
 
 .panji-text{
   color:#102544;
-  font-size:13px;
-  line-height:1.65;
-  font-weight:700;
+  font-size:14px;
+  line-height:1.68;
+  font-weight:750;
 }
 
 .panji-actions{
@@ -1038,17 +1057,23 @@
   font-size:18px;
   font-weight:900;
   box-shadow:0 8px 18px rgba(15,23,42,.22);
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
 }
 
 .panji-character{
-  width:104px;
-  height:128px;
+  width:118px !important;
+  height:148px !important;
   position:relative;
   border:none;
   background:transparent;
   cursor:pointer;
   padding:0;
-  flex-shrink:0;
+  flex-shrink:0 !important;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
   animation:
     panjiFloat 2.8s ease-in-out infinite,
     panjiIdleTilt 4.2s ease-in-out infinite;
@@ -1086,7 +1111,7 @@
 
 .panji-glow{
   position:absolute;
-  inset:24px 8px 0;
+  inset:22px 4px 0 !important;
   border-radius:999px;
   background:radial-gradient(circle, rgba(37,99,235,.28), transparent 68%);
   filter:blur(10px);
@@ -1108,11 +1133,11 @@
 
 .panji-head{
   position:absolute;
-  left:16px;
-  top:8px;
-  width:72px;
-  height:72px;
-  border-radius:26px 26px 24px 24px;
+  left:18px !important;
+  top:8px !important;
+  width:82px !important;
+  height:82px !important;
+  border-radius:28px 28px 25px 25px;
   background:
     radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
     linear-gradient(135deg,#f8fbff,#c7ddff);
@@ -1138,10 +1163,10 @@
 
 .panji-hat{
   position:absolute;
-  left:8px;
+  left:10px;
   top:-14px;
-  width:56px;
-  height:25px;
+  width:60px;
+  height:26px;
   border-radius:12px 12px 8px 8px;
   background:linear-gradient(135deg,#123a72,#2563eb);
   color:#fff;
@@ -1156,9 +1181,9 @@
 
 .panji-eye{
   position:absolute;
-  top:31px;
-  width:11px;
-  height:15px;
+  top:36px;
+  width:12px;
+  height:16px;
   border-radius:999px;
   background:#102544;
   animation:panjiBlink 4.8s infinite;
@@ -1166,11 +1191,11 @@
 }
 
 .panji-eye-left{
-  left:20px;
+  left:23px;
 }
 
 .panji-eye-right{
-  right:20px;
+  right:23px;
 }
 
 @keyframes panjiBlink{
@@ -1189,9 +1214,9 @@
 
 .panji-mouth{
   position:absolute;
-  left:29px;
-  bottom:17px;
-  width:15px;
+  left:34px;
+  bottom:18px;
+  width:16px;
   height:8px;
   border-bottom:3px solid #102544;
   border-radius:0 0 999px 999px;
@@ -1200,11 +1225,11 @@
 
 .panji-body{
   position:absolute;
-  left:23px;
-  top:76px;
-  width:58px;
-  height:42px;
-  border-radius:20px 20px 16px 16px;
+  left:27px !important;
+  top:88px !important;
+  width:64px !important;
+  height:48px !important;
+  border-radius:21px 21px 17px 17px;
   background:linear-gradient(135deg,#123a72,#2f9a8f);
   border:2px solid rgba(255,255,255,.88);
   box-shadow:0 14px 24px rgba(15,23,42,.18);
@@ -1228,8 +1253,8 @@
   left:50%;
   top:50%;
   transform:translate(-50%,-50%);
-  width:28px;
-  height:28px;
+  width:30px;
+  height:30px;
   border-radius:999px;
   background:#fff;
   color:#123a72;
@@ -1242,21 +1267,21 @@
 
 .panji-hand{
   position:absolute;
-  top:84px;
+  top:98px !important;
   width:18px;
-  height:32px;
+  height:34px;
   border-radius:999px;
   background:linear-gradient(135deg,#c7ddff,#f8fbff);
   border:2px solid #123a72;
 }
 
 .panji-hand-left{
-  left:8px;
+  left:10px !important;
   transform:rotate(24deg);
 }
 
 .panji-hand-right{
-  right:8px;
+  right:10px !important;
   transform-origin:top center;
   animation:panjiWave 1.8s ease-in-out infinite;
 }
@@ -1272,7 +1297,6 @@
 }
 
 /* PANJI TALKING */
-
 .panji-assistant.panji-talking .panji-mouth{
   animation:panjiTalkMouth .22s ease-in-out infinite;
 }
@@ -1280,9 +1304,9 @@
 @keyframes panjiTalkMouth{
   0%,100%{
     height:5px;
-    width:14px;
-    left:29px;
-    bottom:17px;
+    width:15px;
+    left:34px;
+    bottom:18px;
     border-bottom:3px solid currentColor;
     border-top:none;
     border-left:none;
@@ -1292,9 +1316,9 @@
   }
 
   50%{
-    height:14px;
-    width:18px;
-    left:27px;
+    height:15px;
+    width:20px;
+    left:31px;
     bottom:13px;
     border:3px solid currentColor;
     border-radius:999px;
@@ -1302,8 +1326,19 @@
   }
 }
 
-/* PANJI INTRO */
+.panji-assistant.panji-happy .panji-mouth{
+  color:#166534;
+}
 
+.panji-assistant.panji-sad .panji-mouth{
+  color:#991b1b;
+}
+
+.panji-assistant.panji-thinking .panji-mouth{
+  color:#102544;
+}
+
+/* INTRO */
 .panji-assistant.panji-intro .panji-character{
   animation:panjiIntroCome .85s cubic-bezier(.2,.8,.2,1);
 }
@@ -1341,8 +1376,7 @@
   }
 }
 
-/* PANJI HAPPY */
-
+/* HAPPY */
 .panji-assistant.panji-happy .panji-head{
   background:
     radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
@@ -1352,7 +1386,7 @@
 
 .panji-assistant.panji-happy .panji-eye{
   height:8px;
-  top:35px;
+  top:42px;
   border-radius:999px;
   transform:rotate(0deg);
   background:transparent;
@@ -1361,7 +1395,6 @@
 }
 
 .panji-assistant.panji-happy .panji-mouth{
-  color:#166534;
   height:12px;
   border-bottom-color:#166534;
 }
@@ -1423,8 +1456,7 @@
   }
 }
 
-/* PANJI SAD / NANGIS */
-
+/* SAD + CRY */
 .panji-assistant.panji-sad .panji-head{
   background:
     radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
@@ -1483,11 +1515,10 @@
 }
 
 .panji-assistant.panji-sad .panji-mouth{
-  color:#991b1b;
   width:18px;
   height:4px;
-  left:27px;
-  bottom:15px;
+  left:32px;
+  bottom:16px;
   border-bottom:none;
   border-top:3px solid #991b1b;
   border-left:none;
@@ -1599,16 +1630,11 @@
   }
 }
 
-/* PANJI THINKING */
-
+/* THINKING */
 .panji-assistant.panji-thinking .panji-head{
   background:
     radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
     linear-gradient(135deg,#eff6ff,#bfdbfe);
-}
-
-.panji-assistant.panji-thinking .panji-mouth{
-  color:#102544;
 }
 
 .panji-assistant.panji-thinking .panji-character{
@@ -1687,7 +1713,6 @@
 }
 
 /* IDLE LOOK AROUND */
-
 .panji-assistant:not(.panji-hidden):not(.panji-sad):not(.panji-happy):not(.panji-thinking) .panji-eye-left{
   animation:
     panjiBlink 4.8s infinite,
@@ -1702,29 +1727,69 @@
 
 @keyframes panjiLookAroundLeft{
   0%,100%{
-    left:20px;
+    left:23px;
   }
 
   35%{
-    left:18px;
+    left:20px;
   }
 
   70%{
-    left:22px;
+    left:26px;
   }
 }
 
 @keyframes panjiLookAroundRight{
   0%,100%{
-    right:20px;
+    right:23px;
   }
 
   35%{
-    right:22px;
+    right:26px;
   }
 
   70%{
-    right:18px;
+    right:20px;
+  }
+}
+
+@media (max-width:1400px){
+  .panji-assistant{
+    right:24px !important;
+    top:56% !important;
+    bottom:auto !important;
+    transform:translateY(-50%) !important;
+  }
+
+  .panji-bubble{
+    width:320px !important;
+    max-height:320px !important;
+  }
+
+  .panji-character{
+    width:106px !important;
+    height:136px !important;
+  }
+
+  .panji-head{
+    left:16px !important;
+    width:76px !important;
+    height:76px !important;
+  }
+
+  .panji-body{
+    left:24px !important;
+    top:84px !important;
+    width:60px !important;
+    height:45px !important;
+  }
+
+  .ps-case-box:first-child strong{
+    font-size:25px;
+  }
+
+  .ps-case-box:first-child span{
+    font-size:16px;
   }
 }
 
@@ -1741,6 +1806,15 @@
 
   .ps-quiz-options{
     grid-template-columns:1fr;
+  }
+
+  .panji-assistant{
+    right:18px !important;
+    top:58% !important;
+  }
+
+  .panji-bubble{
+    width:300px !important;
   }
 }
 
@@ -1760,13 +1834,13 @@
   }
 
   .panji-assistant{
-    right:12px;
-    bottom:12px;
-    transform:scale(.88);
-    transform-origin:right bottom;
+    right:12px !important;
+    top:auto !important;
+    bottom:92px !important;
+    transform:none !important;
   }
 
   .panji-bubble{
-    width:286px;
+    width:286px !important;
   }
 }
