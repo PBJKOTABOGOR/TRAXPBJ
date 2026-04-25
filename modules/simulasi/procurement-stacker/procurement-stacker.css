@@ -28,7 +28,7 @@
   flex-direction:column;
   gap:18px;
   position:relative;
-  padding-bottom:260px;
+  padding-bottom:300px;
 }
 
 .procstack-hero{
@@ -112,16 +112,16 @@
 .ps-card h3{
   margin:0;
   color:var(--ps-text);
-  font-size:30px;
-  line-height:1.18;
+  font-size:26px;
+  line-height:1.2;
   font-weight:950;
 }
 
 .ps-card p{
-  margin:8px 0 0;
-  color:#475569;
-  font-size:16px;
-  line-height:1.7;
+  margin:7px 0 0;
+  color:var(--ps-muted);
+  font-size:15px;
+  line-height:1.65;
 }
 
 .ps-pill-row{
@@ -157,79 +157,47 @@
   border-color:#fde68a;
 }
 
-/* =========================
-   KASUS / TOPIK DIPERBESAR
-   ========================= */
-
 .ps-case-panel{
   display:grid;
-  grid-template-columns:1fr 170px 170px 170px;
-  gap:12px;
-  margin-bottom:18px;
+  grid-template-columns:1fr 150px 150px 150px;
+  gap:10px;
+  margin-bottom:16px;
 }
 
 .ps-case-box{
-  min-height:118px;
-  padding:18px;
-  border-radius:20px;
-  background:
-    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
-  border:1px solid #bfdbfe;
-  box-shadow:0 8px 20px rgba(15,23,42,.035);
-}
-
-.ps-case-box:first-child{
-  min-height:130px;
-  border-color:#93c5fd;
-  background:
-    radial-gradient(circle at top left, rgba(37,99,235,.10), transparent 32%),
-    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
+  min-height:94px;
+  padding:16px;
+  border-radius:18px;
+  background:#f8fbff;
+  border:1px solid #dbeafe;
 }
 
 .ps-case-box label,
 .ps-score-card label,
 .ps-result-card label{
   display:block;
-  color:#475569;
-  font-size:14px;
+  color:var(--ps-muted);
+  font-size:13px;
   font-weight:950;
   text-transform:uppercase;
-  letter-spacing:.08em;
-  margin-bottom:10px;
-}
-
-.ps-case-box:first-child label{
-  color:#123a72;
-  font-size:15px;
+  letter-spacing:.07em;
+  margin-bottom:9px;
 }
 
 .ps-case-box strong{
   display:block;
   color:var(--ps-text);
-  font-size:22px;
+  font-size:20px;
   font-weight:950;
-  line-height:1.22;
-}
-
-.ps-case-box:first-child strong{
-  font-size:28px;
-  letter-spacing:-.02em;
-  color:#0f1f38;
+  line-height:1.25;
 }
 
 .ps-case-box span{
   display:block;
-  color:#334155;
-  font-size:16px;
-  line-height:1.65;
-  margin-top:9px;
-}
-
-.ps-case-box:first-child span{
-  font-size:18px;
-  line-height:1.65;
-  font-weight:650;
-  color:#334155;
+  color:#475569;
+  font-size:15px;
+  line-height:1.55;
+  margin-top:7px;
 }
 
 .ps-score-grid{
@@ -503,7 +471,7 @@
 
 .ps-quiz-question{
   color:var(--ps-text);
-  font-size:24px;
+  font-size:22px;
   font-weight:950;
   line-height:1.45;
   margin:12px 0 16px;
@@ -522,14 +490,14 @@
   border-radius:18px;
   background:#fff;
   border:1px solid #dbe5f0;
-  padding:18px;
+  padding:16px;
   text-align:left;
   color:var(--ps-text);
-  font-size:16px;
-  line-height:1.48;
+  font-size:15px;
+  line-height:1.45;
   font-weight:800;
   transition:.18s ease;
-  min-height:82px;
+  min-height:78px;
 }
 
 .ps-quiz-option:hover{
@@ -857,15 +825,13 @@
 }
 
 /* =========================================================
-   PANJI FLOATING ASSISTANT
-   POSISI TENGAH KANAN, NGIKUT VIEWPORT / SCROLL
+   PANJI FLOATING ASSISTANT - FIXED SELALU KELIHATAN
    ========================================================= */
 
 .panji-assistant{
   position:fixed !important;
-  right:34px !important;
-  top:54% !important;
-  bottom:auto !important;
+  right:38px !important;
+  bottom:96px !important;
   z-index:999999 !important;
   display:flex !important;
   align-items:flex-end !important;
@@ -873,7 +839,7 @@
   opacity:1 !important;
   visibility:visible !important;
   pointer-events:none !important;
-  transform:translateY(-50%) !important;
+  transform:none !important;
 }
 
 .panji-assistant *{
@@ -884,7 +850,7 @@
   opacity:1 !important;
   visibility:visible !important;
   pointer-events:auto !important;
-  transform:translateY(-50%) !important;
+  transform:none !important;
 }
 
 .panji-assistant.panji-minimized .panji-bubble{
@@ -899,9 +865,8 @@
 }
 
 .panji-bubble{
-  width:380px !important;
+  width:390px !important;
   min-height:132px !important;
-  max-height:360px !important;
   position:relative;
   padding:16px;
   border-radius:22px;
@@ -919,7 +884,6 @@
   transition:opacity .22s ease, transform .22s ease, width .22s ease, padding .22s ease;
   animation:panjiBubbleIdle 3.8s ease-in-out infinite;
   will-change:transform;
-  overflow:auto;
 }
 
 .panji-bubble.burst{
@@ -1011,9 +975,9 @@
 
 .panji-text{
   color:#102544;
-  font-size:14px;
-  line-height:1.68;
-  font-weight:750;
+  font-size:13px;
+  line-height:1.65;
+  font-weight:700;
 }
 
 .panji-actions{
@@ -1755,15 +1719,12 @@
 
 @media (max-width:1400px){
   .panji-assistant{
-    right:24px !important;
-    top:56% !important;
-    bottom:auto !important;
-    transform:translateY(-50%) !important;
+    right:28px !important;
+    bottom:86px !important;
   }
 
   .panji-bubble{
-    width:320px !important;
-    max-height:320px !important;
+    width:340px !important;
   }
 
   .panji-character{
@@ -1783,14 +1744,6 @@
     width:60px !important;
     height:45px !important;
   }
-
-  .ps-case-box:first-child strong{
-    font-size:25px;
-  }
-
-  .ps-case-box:first-child span{
-    font-size:16px;
-  }
 }
 
 @media (max-width:1280px){
@@ -1806,15 +1759,6 @@
 
   .ps-quiz-options{
     grid-template-columns:1fr;
-  }
-
-  .panji-assistant{
-    right:18px !important;
-    top:58% !important;
-  }
-
-  .panji-bubble{
-    width:300px !important;
   }
 }
 
@@ -1835,7 +1779,6 @@
 
   .panji-assistant{
     right:12px !important;
-    top:auto !important;
     bottom:92px !important;
     transform:none !important;
   }
