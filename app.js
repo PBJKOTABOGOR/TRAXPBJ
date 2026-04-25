@@ -90,8 +90,35 @@ let activeFlyout = null;
 let scrollLuxuryDestroy = null;
 
 /* =========================================================
-   PROCUREMENT STACKER - DATA
-   Studi kasus gaya sertifikasi PBJ, bukan bocoran soal asli.
+   UTIL
+========================================================= */
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function shuffleArray(items) {
+  const result = [...items];
+
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result;
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('id-ID');
+}
+
+/* =========================================================
+   PROCUREMENT STACKER DATA
 ========================================================= */
 
 const STACKER_CARD_LIBRARY = {
@@ -99,7 +126,7 @@ const STACKER_CARD_LIBRARY = {
     id: 'rup',
     label: 'Cek RUP',
     icon: '📋',
-    note: 'Pastikan paket, pagu, metode, dan jadwal sudah sesuai.'
+    note: 'Pastikan paket, pagu, metode, dan jadwal sesuai.'
   },
   identifikasi: {
     id: 'identifikasi',
@@ -141,7 +168,7 @@ const STACKER_CARD_LIBRARY = {
     id: 'cek-pdn',
     label: 'Cek PDN/TKDN',
     icon: '🇮🇩',
-    note: 'Perhatikan produk dalam negeri dan preferensi pengadaan.'
+    note: 'Perhatikan produk dalam negeri.'
   },
   pilihMetode: {
     id: 'pilih-metode',
@@ -153,31 +180,31 @@ const STACKER_CARD_LIBRARY = {
     id: 'metode-pl',
     label: 'Pengadaan Langsung',
     icon: '🛠️',
-    note: 'Digunakan untuk kondisi yang sesuai.'
+    note: 'Digunakan bila kondisi dan nilai paket sesuai.'
   },
   metodeEpurchasing: {
     id: 'metode-epurchasing',
     label: 'e-Purchasing',
     icon: '🛒',
-    note: 'Gunakan katalog bila barang/jasa tersedia dan sesuai.'
+    note: 'Gunakan katalog bila tersedia dan sesuai.'
   },
   tender: {
     id: 'tender',
     label: 'Tender',
     icon: '🏗️',
-    note: 'Untuk paket yang memerlukan proses pemilihan lebih formal.'
+    note: 'Untuk paket yang membutuhkan proses pemilihan formal.'
   },
   seleksi: {
     id: 'seleksi',
     label: 'Seleksi',
     icon: '📐',
-    note: 'Umumnya digunakan untuk jasa konsultansi.'
+    note: 'Umumnya untuk jasa konsultansi.'
   },
   swakelola: {
     id: 'swakelola',
     label: 'Swakelola',
     icon: '🤲',
-    note: 'Digunakan jika pelaksanaan memenuhi kriteria swakelola.'
+    note: 'Dipilih jika pelaksanaan memenuhi kriteria swakelola.'
   },
   klarifikasi: {
     id: 'klarifikasi',
@@ -205,15 +232,9 @@ const STACKER_CARD_LIBRARY = {
   },
   teguran: {
     id: 'teguran',
-    label: 'Teguran / Evaluasi Penyedia',
+    label: 'Teguran / Evaluasi',
     icon: '📣',
-    note: 'Gunakan saat ada keterlambatan atau masalah pelaksanaan.'
-  },
-  bast: {
-    id: 'bast',
-    label: 'BAST',
-    icon: '📦',
-    note: 'Serah terima setelah barang/jasa sesuai.'
+    note: 'Digunakan saat ada keterlambatan atau masalah.'
   },
   pemeriksaan: {
     id: 'pemeriksaan',
@@ -221,11 +242,17 @@ const STACKER_CARD_LIBRARY = {
     icon: '🔬',
     note: 'Cek kesesuaian sebelum diterima.'
   },
+  bast: {
+    id: 'bast',
+    label: 'BAST',
+    icon: '📦',
+    note: 'Serah terima setelah barang/jasa sesuai.'
+  },
   pembayaran: {
     id: 'pembayaran',
     label: 'Pembayaran',
     icon: '💳',
-    note: 'Proses pembayaran sesuai dokumen pendukung.'
+    note: 'Pembayaran sesuai dokumen pendukung.'
   },
   realisasi: {
     id: 'realisasi',
@@ -234,30 +261,29 @@ const STACKER_CARD_LIBRARY = {
     note: 'Pastikan realisasi tercatat dalam monitoring.'
   },
 
-  /* KARTU JEBAKAN */
   kontrakAwal: {
     id: 'kontrak-awal',
     label: 'Kontrak Dulu',
     icon: '🚨',
-    note: 'Jebakan: lompat sebelum dokumen/metode jelas.'
+    note: 'Jebakan: lompat proses.'
   },
   pecahPaket: {
     id: 'pecah-paket',
     label: 'Pecah Paket',
     icon: '💣',
-    note: 'Jebakan: rawan jika untuk menghindari metode.'
+    note: 'Jebakan: rawan menghindari metode.'
   },
   spekMengarah: {
     id: 'spek-mengarah',
     label: 'Spek Mengarah',
     icon: '🚫',
-    note: 'Jebakan: risiko fairness dan persaingan.'
+    note: 'Jebakan: risiko persaingan tidak sehat.'
   },
   abaikanKatalog: {
     id: 'abaikan-katalog',
     label: 'Abaikan Katalog',
     icon: '⚠️',
-    note: 'Jebakan: tidak mengecek kanal yang tersedia.'
+    note: 'Jebakan: tidak cek kanal tersedia.'
   },
   lewatiRup: {
     id: 'lewati-rup',
@@ -275,13 +301,13 @@ const STACKER_CARD_LIBRARY = {
     id: 'bayar-dulu',
     label: 'Bayar Dulu',
     icon: '💸',
-    note: 'Jebakan: pembayaran sebelum dokumen memadai.'
+    note: 'Jebakan: pembayaran sebelum bukti memadai.'
   },
   tundaDokumen: {
     id: 'tunda-dokumen',
     label: 'Tunda Dokumen',
     icon: '🧨',
-    note: 'Jebakan: makin berisiko saat deadline mepet.'
+    note: 'Jebakan: risiko administrasi meningkat.'
   },
   metodeAsalCepat: {
     id: 'metode-asal-cepat',
@@ -293,7 +319,7 @@ const STACKER_CARD_LIBRARY = {
     id: 'realisasi-lupa',
     label: 'Lupakan Realisasi',
     icon: '🕳️',
-    note: 'Jebakan: paket selesai tapi monitoring bolong.'
+    note: 'Jebakan: monitoring bolong.'
   }
 };
 
@@ -339,7 +365,7 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 3 — Deadline Mepet',
     caseTitle: 'Meubelair Ruang Layanan',
-    caseDesc: 'Waktu pendek. User harus memilih jalur yang realistis dan tidak menunda dokumen.',
+    caseDesc: 'Waktu pendek. Pilih jalur realistis dan jangan menunda dokumen.',
     concept: 'Pengendalian risiko waktu dan kesiapan dokumen.',
     budget: 'Rp180.000.000',
     deadline: '25 hari',
@@ -363,8 +389,8 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 5 — Spek Mengarah',
     caseTitle: 'Laptop dengan Spek Terlalu Spesifik',
-    caseDesc: 'Spesifikasi awal terlalu mengarah. Perbaiki proses agar fair dan bisa dipertanggungjawabkan.',
-    concept: 'Penyusunan spesifikasi berbasis kebutuhan, bukan mengarah pada merek tertentu.',
+    caseDesc: 'Spesifikasi awal terlalu mengarah. Perbaiki proses agar fair.',
+    concept: 'Spesifikasi berbasis kebutuhan, bukan mengarah pada merek tertentu.',
     budget: 'Rp420.000.000',
     deadline: '50 hari',
     difficulty: 'Menengah',
@@ -376,7 +402,7 @@ const STACKER_LEVELS = [
     title: 'Level 6 — Jasa Konsultansi',
     caseTitle: 'Kajian Teknis Perencanaan',
     caseDesc: 'Paket jasa konsultansi membutuhkan metode dan dokumen yang tepat.',
-    concept: 'Perbedaan karakteristik jasa konsultansi dengan pengadaan barang.',
+    concept: 'Karakteristik jasa konsultansi dan metode seleksi.',
     budget: 'Rp280.000.000',
     deadline: '75 hari',
     difficulty: 'Menengah',
@@ -388,7 +414,7 @@ const STACKER_LEVELS = [
     title: 'Level 7 — Jasa Kebersihan',
     caseTitle: 'Jasa Kebersihan Gedung',
     caseDesc: 'Paket jasa lainnya rutin dengan kebutuhan layanan berkelanjutan.',
-    concept: 'KAK layanan, HPS, metode, kontrak, dan pengawasan pelaksanaan.',
+    concept: 'KAK layanan, HPS, metode, kontrak, dan pengawasan.',
     budget: 'Rp480.000.000',
     deadline: '80 hari',
     difficulty: 'Menengah',
@@ -399,8 +425,8 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 8 — Konstruksi Ringan',
     caseTitle: 'Rehabilitasi Ruang Pelayanan',
-    caseDesc: 'Pekerjaan konstruksi membutuhkan dokumen teknis dan pemeriksaan hasil yang kuat.',
-    concept: 'Konstruksi, dokumen teknis, metode, kontrak, dan pemeriksaan pekerjaan.',
+    caseDesc: 'Pekerjaan konstruksi membutuhkan dokumen teknis dan pemeriksaan kuat.',
+    concept: 'Konstruksi, dokumen teknis, metode, kontrak, dan pemeriksaan.',
     budget: 'Rp760.000.000',
     deadline: '100 hari',
     difficulty: 'Sulit',
@@ -411,7 +437,7 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 9 — Swakelola',
     caseTitle: 'Kegiatan Pelatihan Internal',
-    caseDesc: 'Kegiatan lebih tepat dikelola secara swakelola dengan dokumen dan pertanggungjawaban jelas.',
+    caseDesc: 'Kegiatan lebih tepat dikelola secara swakelola.',
     concept: 'Kapan swakelola dipertimbangkan dan bagaimana alurnya.',
     budget: 'Rp95.000.000',
     deadline: '40 hari',
@@ -434,8 +460,8 @@ const STACKER_LEVELS = [
 
   makeLevel({
     title: 'Level 11 — RUP Belum Sinkron',
-    caseTitle: 'Paket Sudah Mau Jalan tapi RUP Belum Sesuai',
-    caseDesc: 'OPD ingin segera proses, tetapi data RUP perlu dicek dan disesuaikan.',
+    caseTitle: 'Paket Mau Jalan tapi RUP Belum Sesuai',
+    caseDesc: 'OPD ingin segera proses, tetapi data RUP perlu dicek.',
     concept: 'Kesesuaian RUP sebelum proses pengadaan.',
     budget: 'Rp220.000.000',
     deadline: '45 hari',
@@ -447,7 +473,7 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 12 — Katalog Tidak Sesuai',
     caseTitle: 'Barang Ada di Katalog tapi Spek Tidak Cocok',
-    caseDesc: 'Katalog ditemukan, tetapi barang tidak sepenuhnya sesuai kebutuhan. Jangan asal transaksi.',
+    caseDesc: 'Katalog ditemukan, tetapi barang tidak sepenuhnya sesuai.',
     concept: 'Kesesuaian spesifikasi dan evaluasi kanal pengadaan.',
     budget: 'Rp330.000.000',
     deadline: '60 hari',
@@ -459,8 +485,8 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 13 — Penyedia Terlambat',
     caseTitle: 'Penyedia Terlambat Mengirim Barang',
-    caseDesc: 'Proses sudah kontrak, tetapi penyedia telat. Ambil langkah pengendalian kontrak.',
-    concept: 'Pengendalian kontrak dan respons atas keterlambatan penyedia.',
+    caseDesc: 'Proses sudah kontrak, tetapi penyedia terlambat.',
+    concept: 'Pengendalian kontrak dan respons atas keterlambatan.',
     budget: 'Rp190.000.000',
     deadline: 'Sisa 10 hari',
     difficulty: 'Sulit',
@@ -470,7 +496,7 @@ const STACKER_LEVELS = [
 
   makeLevel({
     title: 'Level 14 — BAST Bermasalah',
-    caseTitle: 'Barang Dikirim tetapi Tidak Sesuai Spesifikasi',
+    caseTitle: 'Barang Dikirim tapi Tidak Sesuai',
     caseDesc: 'Barang datang, tetapi belum sesuai. Jangan langsung BAST.',
     concept: 'Pemeriksaan hasil sebelum serah terima.',
     budget: 'Rp155.000.000',
@@ -483,8 +509,8 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 15 — Realisasi Lupa Dicatat',
     caseTitle: 'Paket Selesai tapi Monitoring Kosong',
-    caseDesc: 'Paket sudah selesai secara fisik, tapi realisasi belum dicatat.',
-    concept: 'Pentingnya pencatatan realisasi untuk monitoring, evaluasi, dan rapor PBJ.',
+    caseDesc: 'Paket selesai fisik, tapi realisasi belum dicatat.',
+    concept: 'Pentingnya pencatatan realisasi untuk monitoring dan evaluasi.',
     budget: 'Rp72.000.000',
     deadline: 'Selesai',
     difficulty: 'Pemula+',
@@ -495,8 +521,8 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 16 — Konsumsi Rapat',
     caseTitle: 'Konsumsi Rapat Berkala',
-    caseDesc: 'Kebutuhan berulang. Jangan langsung transaksi tanpa perencanaan dan harga wajar.',
-    concept: 'Kebutuhan rutin, RUP, HPS, dan metode yang sesuai.',
+    caseDesc: 'Kebutuhan berulang. Jangan langsung transaksi tanpa perencanaan.',
+    concept: 'Kebutuhan rutin, RUP, HPS, dan metode sesuai.',
     budget: 'Rp35.000.000',
     deadline: '30 hari',
     difficulty: 'Pemula',
@@ -507,8 +533,8 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 17 — Servis AC',
     caseTitle: 'Jasa Servis AC Kantor',
-    caseDesc: 'Jasa lainnya nilai kecil, tetapi tetap perlu kebutuhan, harga, proses, dan bukti hasil.',
-    concept: 'Jasa lainnya sederhana dan dokumen minimal yang tetap harus rapi.',
+    caseDesc: 'Jasa lainnya nilai kecil, tetap perlu bukti hasil.',
+    concept: 'Jasa sederhana dan dokumen minimal yang tetap rapi.',
     budget: 'Rp28.000.000',
     deadline: '20 hari',
     difficulty: 'Pemula+',
@@ -519,7 +545,7 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 18 — Event Publikasi',
     caseTitle: 'Jasa Event dan Publikasi',
-    caseDesc: 'Kegiatan punya output layanan, jadwal ketat, dan dokumen harus jelas.',
+    caseDesc: 'Output layanan, jadwal ketat, dan dokumen harus jelas.',
     concept: 'KAK output, HPS, metode, kontrak, dan pemeriksaan hasil jasa.',
     budget: 'Rp310.000.000',
     deadline: '35 hari',
@@ -543,7 +569,7 @@ const STACKER_LEVELS = [
   makeLevel({
     title: 'Level 20 — Master Challenge',
     caseTitle: 'Alat Kesehatan Bernilai Besar',
-    caseDesc: 'Paket kompleks: nilai besar, risiko teknis, PDN/TKDN, katalog, metode, kontrak, pemeriksaan, dan realisasi.',
+    caseDesc: 'Paket kompleks: nilai besar, teknis, PDN/TKDN, katalog, metode, kontrak, pemeriksaan, dan realisasi.',
     concept: 'Studi kasus campuran seperti latihan komprehensif sertifikasi PBJ.',
     budget: 'Rp1.200.000.000',
     deadline: '90 hari',
@@ -562,27 +588,446 @@ const STACKER_STATE = {
   wrong: 0,
   finished: false,
   shuffledCards: [],
-  shuffledLevelIndex: null,
-  lastFxId: 0
+  shuffledLevelIndex: null
 };
 
 /* =========================================================
-   CSS
+   TRYOUT QUESTIONS
+   Catatan: soal diparafrasekan jadi bank latihan interaktif.
 ========================================================= */
 
-function injectProcurementStackerCss() {
+const TRYOUT_QUESTIONS = [
+  {
+    id: 1,
+    topic: 'Rantai Pasok',
+    question: 'Segmen rantai pasok yang dilakukan oleh organisasi/korporasi/institusi pemasok disebut sebagai apa?',
+    options: ['Rantai pasok hilir', 'Rantai pasok hulu', 'Rantai pasok eksternal', 'Rantai pasok internal'],
+    answer: 1,
+    explanation: 'Pemasok berada pada sisi hulu dalam rantai pasok karena menyediakan input sebelum digunakan organisasi pembeli.'
+  },
+  {
+    id: 2,
+    topic: 'Rantai Pasok',
+    question: 'Pembangunan puskesmas oleh pemerintah daerah termasuk contoh rantai pasok pengadaan dengan kategori apa?',
+    options: ['Rantai pasok panjang', 'Rantai pasok kompleks', 'Rantai pasok pendek', 'Rantai pasok sederhana'],
+    answer: 0,
+    explanation: 'Pembangunan melibatkan banyak tahapan, material, pelaksana, dan pengawasan sehingga termasuk rantai pasok panjang.'
+  },
+  {
+    id: 3,
+    topic: 'Manajemen Rantai Pasok',
+    question: 'Penyusunan regulasi dan prosedur pendukung proses operasionalisasi Manajemen Rantai Pasok termasuk penerapan MRP pada level apa?',
+    options: ['Perencanaan', 'Strategis', 'Taktis', 'Operasional'],
+    answer: 1,
+    explanation: 'Regulasi/prosedur menjadi arah kebijakan, sehingga berada pada level strategis.'
+  },
+  {
+    id: 4,
+    topic: 'Ruang Lingkup PBJ',
+    question: 'Pengadaan Barang/Jasa Pemerintah adalah kegiatan PBJ oleh K/L/PD yang dibiayai APBN/APBD, dimulai dari tahap apa sampai tahap apa?',
+    options: ['Identifikasi kebutuhan sampai kontrak', 'Perencanaan sampai serah terima', 'Identifikasi kebutuhan sampai serah terima hasil pekerjaan', 'Identifikasi kebutuhan sampai pemeriksaan hasil'],
+    answer: 2,
+    explanation: 'PBJ dimulai sejak identifikasi kebutuhan sampai dengan serah terima hasil pekerjaan.'
+  },
+  {
+    id: 5,
+    topic: 'Ruang Lingkup PBJ',
+    question: 'Manakah yang bukan termasuk ruang lingkup Pengadaan Barang/Jasa Pemerintah?',
+    options: ['PBJ bersumber APBN', 'PBJ bersumber APBD', 'PBJ bersumber APBDes', 'PBJ bersumber pinjaman/hibah dalam dan luar negeri'],
+    answer: 2,
+    explanation: 'APBDes memiliki tata kelola tersendiri dan bukan ruang lingkup utama PBJ K/L/PD.'
+  },
+  {
+    id: 6,
+    topic: 'Tujuan PBJ',
+    question: 'PPK membeli laptop melalui katalog elektronik dengan TKDN + BMP sebesar 42%. Tujuan PBJ yang didukung adalah?',
+    options: ['Menghasilkan barang/jasa sesuai nilai uang', 'Meningkatkan penggunaan produk dalam negeri', 'Meningkatkan peran UMK dan koperasi', 'Meningkatkan peran pelaku usaha nasional'],
+    answer: 1,
+    explanation: 'TKDN/BMP menunjukkan keberpihakan pada produk dalam negeri.'
+  },
+  {
+    id: 7,
+    topic: 'Tujuan PBJ',
+    question: 'Pokja membuka persyaratan pemilihan secara luas agar banyak pelaku usaha dapat mengikuti pemilihan. Tujuan PBJ yang paling sesuai adalah?',
+    options: ['Meningkatkan industri kreatif', 'Meningkatkan pelaku usaha nasional', 'Meningkatkan UMK', 'Pemerataan ekonomi dan perluasan kesempatan berusaha'],
+    answer: 3,
+    explanation: 'Pembukaan kesempatan luas mendukung pemerataan ekonomi dan perluasan kesempatan berusaha.'
+  },
+  {
+    id: 8,
+    topic: 'Perencanaan PBJ',
+    question: 'Pengguna Anggaran melakukan identifikasi kebutuhan dan menyediakan anggaran secara sekaligus. Hal ini sesuai dengan kebijakan PBJ yang mana?',
+    options: ['PBJ transparan dan kompetitif', 'Meningkatkan kualitas perencanaan PBJ', 'Mendorong PDN dan SNI', 'Mengembangkan e-marketplace PBJ'],
+    answer: 1,
+    explanation: 'Identifikasi kebutuhan dan anggaran merupakan bagian dari peningkatan kualitas perencanaan PBJ.'
+  },
+  {
+    id: 9,
+    topic: 'Spesifikasi Teknis',
+    question: 'PPK menyusun spesifikasi kertas dengan persyaratan ekolabel untuk produk ramah lingkungan. Tujuan PBJ yang didukung adalah?',
+    options: ['Mendorong PDN dan SNI', 'Mendorong penelitian dan industri kreatif', 'Melaksanakan PBJ berkelanjutan', 'Meningkatkan kualitas perencanaan'],
+    answer: 2,
+    explanation: 'Ekolabel dan ramah lingkungan berkaitan dengan pengadaan berkelanjutan.'
+  },
+  {
+    id: 10,
+    topic: 'Prinsip PBJ',
+    question: 'Laptop yang dibeli tidak sesuai spesifikasi sehingga tidak dapat digunakan. Prinsip PBJ yang tidak terpenuhi adalah?',
+    options: ['Efisien', 'Efektif', 'Akuntabel', 'Transparan'],
+    answer: 1,
+    explanation: 'Efektif berarti barang/jasa harus sesuai kebutuhan dan tujuan pengadaan.'
+  },
+  {
+    id: 11,
+    topic: 'Prinsip PBJ',
+    question: 'Pokja melakukan evaluasi yang sama kepada seluruh penyedia. Prinsip PBJ yang diterapkan adalah?',
+    options: ['Transparan', 'Terbuka', 'Bersaing', 'Adil'],
+    answer: 3,
+    explanation: 'Perlakuan yang sama kepada peserta mencerminkan prinsip adil.'
+  },
+  {
+    id: 12,
+    topic: 'Etika PBJ',
+    question: 'Pengguna Anggaran menginstruksikan Pokja untuk memenangkan PT tertentu. Hal ini tidak sesuai etika PBJ karena bertentangan dengan prinsip apa?',
+    options: ['Tertib dan bertanggung jawab', 'Profesional dan menjaga kerahasiaan', 'Tidak saling mempengaruhi yang menyebabkan persaingan tidak sehat', 'Menghindari konflik kepentingan'],
+    answer: 2,
+    explanation: 'Intervensi untuk memenangkan pihak tertentu merupakan pengaruh tidak sehat.'
+  },
+  {
+    id: 13,
+    topic: 'Etika PBJ',
+    question: 'PPK memiliki koperasi pegawai yang ikut sebagai calon penyedia pada paket di dinasnya. Etika yang relevan dijaga adalah?',
+    options: ['Menghindari pertentangan kepentingan', 'Mencegah pemborosan keuangan negara', 'Mencegah kolusi', 'Bertanggung jawab mencapai sasaran'],
+    answer: 0,
+    explanation: 'Keterkaitan PPK dengan calon penyedia berpotensi konflik kepentingan.'
+  },
+  {
+    id: 14,
+    topic: 'Aspek Hukum',
+    question: 'Perselisihan antara PPK dan penyedia pada pelaksanaan kontrak konstruksi terutama berkaitan dengan aspek hukum apa?',
+    options: ['Hukum pidana', 'Hukum perdata', 'Hukum persaingan usaha', 'Hukum administrasi negara'],
+    answer: 1,
+    explanation: 'Sengketa pelaksanaan kontrak pada dasarnya merupakan hubungan perdata para pihak.'
+  },
+  {
+    id: 15,
+    topic: 'Pelaku PBJ',
+    question: 'Pihak yang berwenang menetapkan spesifikasi teknis/KAK, HPS, dan rancangan kontrak adalah?',
+    options: ['PA', 'Pokja Pemilihan', 'PPK', 'Pejabat Pengadaan'],
+    answer: 2,
+    explanation: 'PPK berwenang menyusun/menetapkan spesifikasi teknis/KAK, HPS, dan rancangan kontrak.'
+  },
+  {
+    id: 16,
+    topic: 'Pelaku PBJ',
+    question: 'Siapa pelaku pengadaan yang melaksanakan e-Purchasing seragam batik senilai Rp250 juta?',
+    options: ['PA/KPA', 'PPK', 'Pejabat Pengadaan', 'Pokja Pemilihan'],
+    answer: 1,
+    explanation: 'Untuk e-Purchasing pada nilai tersebut, pelaksanaan berada pada PPK sesuai kewenangan.'
+  },
+  {
+    id: 17,
+    topic: 'Sanggah',
+    question: 'Perusahaan kalah tender dan mengajukan sanggah. Pihak yang berwenang menjawab sanggah tersebut adalah?',
+    options: ['PA', 'KPA', 'PPK', 'Pokja Pemilihan'],
+    answer: 3,
+    explanation: 'Sanggah pada proses pemilihan dijawab oleh Pokja Pemilihan.'
+  },
+  {
+    id: 18,
+    topic: 'UMK dan Koperasi',
+    question: 'DIPA memiliki belanja barang/jasa Rp2 miliar. Alokasi minimal 40% untuk usaha kecil/koperasi produk dalam negeri adalah?',
+    options: ['Rp200.000.000', 'Rp400.000.000', 'Rp600.000.000', 'Rp800.000.000'],
+    answer: 3,
+    explanation: '40% x Rp2.000.000.000 = Rp800.000.000.'
+  },
+  {
+    id: 19,
+    topic: 'Katalog Elektronik',
+    question: 'Katalog obat yang dikelola oleh Kementerian Kesehatan termasuk jenis katalog elektronik apa?',
+    options: ['Nasional', 'Sektoral', 'Lokal', 'Regional'],
+    answer: 1,
+    explanation: 'Katalog yang dikelola kementerian/lembaga tertentu termasuk katalog sektoral.'
+  },
+  {
+    id: 20,
+    topic: 'Ekosistem PBJ',
+    question: 'Yang termasuk sumber daya pendukung ekosistem PBJ adalah?',
+    options: ['Pengelola PBJ', 'Pemberi Keterangan Ahli', 'Pengelola LPSE', 'Personil lainnya'],
+    answer: 1,
+    explanation: 'Pemberi keterangan ahli termasuk sumber daya pendukung dalam ekosistem PBJ.'
+  },
+  {
+    id: 21,
+    topic: 'Pemilihan Penyedia',
+    question: 'Peserta pemilihan mengundurkan diri dengan alasan yang tidak dapat diterima Pokja. Sanksi yang dapat diberikan adalah?',
+    options: ['Digugurkan dalam pemilihan', 'Ganti kerugian', 'Daftar hitam 1 tahun', 'Daftar hitam 2 tahun'],
+    answer: 2,
+    explanation: 'Pengunduran diri tanpa alasan yang dapat diterima dapat dikenakan sanksi daftar hitam 1 tahun.'
+  },
+  {
+    id: 22,
+    topic: 'Identifikasi Kebutuhan',
+    question: 'Dalam identifikasi kebutuhan kendaraan dinas, aspek yang perlu diperhatikan adalah?',
+    options: ['Jumlah tenaga ahli', 'Jadwal kebutuhan', 'Jumlah produsen', 'Keinginan PA/KPA'],
+    answer: 1,
+    explanation: 'Jadwal kebutuhan penting untuk menentukan kapan barang/jasa diperlukan.'
+  },
+  {
+    id: 23,
+    topic: 'Konstruksi',
+    question: 'Dalam identifikasi kebutuhan pekerjaan konstruksi, hal yang perlu diperhatikan antara lain?',
+    options: ['Kontrak pekerjaan konstruksi', 'Kompleksitas pekerjaan konstruksi', 'Dokumen pengadaan konstruksi', 'Rencana anggaran biaya konstruksi'],
+    answer: 1,
+    explanation: 'Kompleksitas pekerjaan menjadi pertimbangan awal dalam identifikasi kebutuhan konstruksi.'
+  },
+  {
+    id: 24,
+    topic: 'Jenis Pengadaan',
+    question: 'Penyusunan studi kelayakan pembangunan bendungan termasuk jenis pengadaan apa?',
+    options: ['Barang', 'Pekerjaan konstruksi', 'Jasa lainnya', 'Jasa konsultansi'],
+    answer: 3,
+    explanation: 'Studi kelayakan merupakan jasa profesional/keahlian sehingga termasuk jasa konsultansi.'
+  },
+  {
+    id: 25,
+    topic: 'Spesifikasi Teknis',
+    question: 'Salah satu fungsi penetapan spesifikasi teknis dalam pembangunan gedung adalah?',
+    options: ['Membandingkan harga penawaran', 'Mengetahui TKDN', 'Memberikan informasi kebutuhan pembeli kepada pelaku usaha', 'Menentukan jumlah tenaga ahli'],
+    answer: 2,
+    explanation: 'Spesifikasi teknis memberi informasi kepada pelaku usaha mengenai kebutuhan yang harus dipenuhi.'
+  },
+  {
+    id: 26,
+    topic: 'Spesifikasi Teknis',
+    question: 'Informasi yang dapat digunakan PPK dalam menyusun spesifikasi teknis/KAK adalah?',
+    options: ['Produk usaha non-kecil', 'Produk ramah lingkungan', 'Produk impor', 'Penyebutan merek untuk tender'],
+    answer: 1,
+    explanation: 'Produk ramah lingkungan dapat digunakan untuk mendukung pengadaan berkelanjutan.'
+  },
+  {
+    id: 27,
+    topic: 'Penyebutan Merek',
+    question: 'Kondisi yang memungkinkan PPK menyebut merek dalam PBJ adalah?',
+    options: ['Pengadaan laptop melalui katalog elektronik', 'Pengadaan mobil melalui tender', 'Pengadaan jasa konsultansi melalui seleksi', 'Pengadaan alat berat melalui tender cepat'],
+    answer: 0,
+    explanation: 'Penyebutan merek dimungkinkan antara lain pada e-Purchasing melalui katalog elektronik.'
+  },
+  {
+    id: 28,
+    topic: 'Spesifikasi',
+    question: 'Yang bukan menjadi pertimbangan PPK dalam menyusun spesifikasi teknis pengadaan mobil dinas adalah?',
+    options: ['Spesifikasi mutu', 'Spesifikasi pelayanan', 'Spesifikasi kualitas', 'Spesifikasi penyedia'],
+    answer: 3,
+    explanation: 'Spesifikasi teknis berfokus pada barang/jasa, bukan menyusun spesifikasi penyedia.'
+  },
+  {
+    id: 29,
+    topic: 'Spesifikasi Fungsi/Kinerja',
+    question: 'Contoh spesifikasi teknis yang mendefinisikan fungsi dan kinerja adalah?',
+    options: ['Kadar maksimal zat berbahaya', 'Mampu mengangkat beban 100 ton', 'Kapasitas ruang penyimpanan 128 GB SSD', 'Menggunakan bahan ramah lingkungan'],
+    answer: 1,
+    explanation: 'Kemampuan mengangkat beban menggambarkan fungsi/kinerja yang harus dicapai.'
+  },
+  {
+    id: 30,
+    topic: 'KAK',
+    question: 'Dokumen perencanaan yang menjelaskan apa, mengapa, siapa, kapan, di mana, bagaimana, dan perkiraan biaya pada jasa konsultansi disebut?',
+    options: ['Spesifikasi teknis', 'Kerangka acuan kerja', 'Harga perkiraan sendiri', 'Dokumen pemilihan'],
+    answer: 1,
+    explanation: 'KAK menjelaskan ruang lingkup, tujuan, output, metode, waktu, dan kebutuhan biaya.'
+  },
+  {
+    id: 31,
+    topic: 'Spesifikasi Pelayanan',
+    question: 'Contoh penerapan spesifikasi pelayanan dalam spesifikasi teknis adalah?',
+    options: ['Pengiriman laptop sebanyak 10 unit', 'Garansi purna jual selama 1 tahun', 'Ukuran layar 42 inch', 'Ketepatan lokasi pengiriman'],
+    answer: 1,
+    explanation: 'Garansi purna jual adalah bentuk spesifikasi pelayanan.'
+  },
+  {
+    id: 32,
+    topic: 'KAK Jasa Konsultansi',
+    question: 'Hal yang harus tercantum dalam KAK jasa konsultansi penyusunan kajian kelayakan lingkungan adalah?',
+    options: ['Kompetensi tenaga ahli', 'Harga perkiraan sendiri', 'Spesifikasi peralatan', 'Remunerasi tenaga ahli'],
+    answer: 0,
+    explanation: 'Kompetensi tenaga ahli merupakan unsur penting dalam KAK jasa konsultansi.'
+  },
+  {
+    id: 33,
+    topic: 'HPS',
+    question: 'Manakah ketentuan yang benar dalam penyusunan dan penetapan HPS?',
+    options: ['Menjadi batas tertinggi penawaran jasa konsultansi', 'Nilai HPS bersifat rahasia', 'Tidak dapat digunakan sebagai dasar perhitungan kerugian negara', 'Memperhitungkan pajak termasuk PPh'],
+    answer: 2,
+    explanation: 'HPS tidak digunakan sebagai dasar perhitungan kerugian negara.'
+  },
+  {
+    id: 34,
+    topic: 'RAB',
+    question: 'Tahapan penyusunan RAB pengadaan barang/jasa yang paling tepat adalah?',
+    options: ['Pengumpulan data, identifikasi komponen pekerjaan, penentuan harga satuan, penyusunan rincian RAB', 'Penentuan harga satuan, rincian RAB, pengumpulan data, identifikasi komponen', 'Identifikasi komponen, harga satuan, RAB, pengumpulan data', 'Identifikasi komponen, pengumpulan data, RAB, harga satuan'],
+    answer: 0,
+    explanation: 'RAB disusun dari pengumpulan data, identifikasi komponen, penentuan harga satuan, lalu rincian RAB.'
+  },
+  {
+    id: 35,
+    topic: 'Perkiraan Harga',
+    question: 'Komponen biaya langsung personel pada pengadaan jasa konsultansi meliputi?',
+    options: ['Gaji dasar, biaya sosial, biaya tidak langsung, dan profit', 'Gaji personel, biaya ekonomi, biaya tidak langsung, dan profit', 'Gaji pegawai, biaya ekonomi, biaya tidak langsung, dan profit', 'Gaji tim konsultan, biaya sosial, biaya langsung, dan profit'],
+    answer: 0,
+    explanation: 'Komponen biaya langsung personel mencakup gaji dasar, biaya sosial, biaya tidak langsung, dan profit.'
+  },
+  {
+    id: 36,
+    topic: 'HPS',
+    question: 'Contoh pengadaan yang menggunakan HPS adalah?',
+    options: ['Tender jasa lainnya senilai Rp201 juta', 'Pengadaan langsung ATK senilai Rp10 juta', 'e-Purchasing APAR senilai Rp210 juta', 'Pekerjaan terintegrasi senilai Rp300 miliar'],
+    answer: 0,
+    explanation: 'Tender jasa lainnya memerlukan HPS dalam proses pengadaannya.'
+  },
+  {
+    id: 37,
+    topic: 'Cara Pengadaan',
+    question: 'Contoh pengadaan yang dapat dilakukan secara swakelola adalah?',
+    options: ['Pemeliharaan kendaraan tempur', 'Pembangunan gedung kantor', 'Pengadaan laptop pegawai', 'Pengadaan ATK kantor'],
+    answer: 0,
+    explanation: 'Kegiatan tertentu yang lebih tepat dilakukan oleh instansi/kelompok terkait dapat dipertimbangkan sebagai swakelola.'
+  },
+  {
+    id: 38,
+    topic: 'Tujuan PBJ',
+    question: 'Strategi pengadaan untuk meningkatkan peran pelaku usaha nasional adalah?',
+    options: ['Mengalokasikan minimal 40% anggaran untuk UMK/koperasi', 'Mendorong inovasi pengadaan', 'Menyelenggarakan LPSE untuk semua jenis pengadaan', 'Memperkuat SDM dan kelembagaan'],
+    answer: 0,
+    explanation: 'Alokasi untuk UMK/koperasi mendukung peran pelaku usaha nasional.'
+  },
+  {
+    id: 39,
+    topic: 'Strategi Pemaketan',
+    question: 'Pemaketan barang/jasa dilakukan dengan mempertimbangkan hal-hal berikut?',
+    options: ['Keluaran, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran', 'Keluaran, volume, tenaga ahli, kemampuan swakelola, dan anggaran', 'Keluaran, volume, barang, kemampuan pelaku pengadaan, dan anggaran', 'Keluaran, volume, barang, dan tata kelola anggaran'],
+    answer: 0,
+    explanation: 'Pemaketan mempertimbangkan output, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran.'
+  },
+  {
+    id: 40,
+    topic: 'Konsolidasi',
+    question: 'Konsolidasi pengadaan dapat dilakukan oleh?',
+    options: ['KPA/PPK pada tahap perencanaan', 'KPA/PA pada tahap persiapan pengadaan', 'PPK/PA pada tahap persiapan pemilihan', 'PPK/UKPBJ pada tahap pemilihan'],
+    answer: 0,
+    explanation: 'Konsolidasi dapat dilakukan sejak tahap perencanaan oleh KPA/PPK sesuai kebutuhan.'
+  },
+  {
+    id: 41,
+    topic: 'UKPBJ',
+    question: 'Pembentukan UKPBJ secara struktural berdasarkan kebutuhan dan regulasi dilakukan oleh?',
+    options: ['Kepala Daerah', 'Kuasa Pengguna Anggaran', 'Pengguna Anggaran', 'Pejabat Pembuat Komitmen'],
+    answer: 0,
+    explanation: 'Pembentukan UKPBJ secara struktural dilakukan oleh Kepala Daerah.'
+  },
+  {
+    id: 42,
+    topic: 'UKPBJ',
+    question: 'Bidang UKPBJ yang menjalankan fungsi pengelolaan sistem informasi PBJ adalah?',
+    options: ['Pengelolaan LPSE', 'Pengelolaan PBJ', 'Pembinaan SDM dan kelembagaan', 'Pendampingan, konsultasi, dan bimtek'],
+    answer: 0,
+    explanation: 'Fungsi sistem informasi pengadaan berada pada pengelolaan LPSE.'
+  },
+  {
+    id: 43,
+    topic: 'UKPBJ',
+    question: 'Dari empat bidang UKPBJ, bidang yang dapat digabungkan adalah?',
+    options: ['Bidang 3 dan 4', 'Bidang 2 dan 3', 'Bidang 2 dan 1', 'Bidang 1 dan 4'],
+    answer: 0,
+    explanation: 'Bidang pembinaan SDM/kelembagaan dan pendampingan/konsultasi dapat digabungkan.'
+  },
+  {
+    id: 44,
+    topic: 'Persiapan Pemilihan',
+    question: 'Reviu dokumen persiapan pengadaan oleh Pokja merupakan aktivitas pada tahap apa?',
+    options: ['Perencanaan pengadaan', 'Persiapan pemilihan', 'Pemilihan penyedia', 'Pelaksanaan pengadaan'],
+    answer: 1,
+    explanation: 'Reviu dokumen persiapan pengadaan oleh Pokja dilakukan pada tahap persiapan pemilihan.'
+  }
+];
+
+const TRYOUT_STATE = {
+  current: 0,
+  score: 0,
+  answered: false,
+  selected: null,
+  order: []
+};
+
+/* =========================================================
+   CSS INJECT
+========================================================= */
+
+function injectProcurementCss() {
   if (document.getElementById('procurement-stacker-css')) return;
 
   const style = document.createElement('style');
   style.id = 'procurement-stacker-css';
   style.textContent = `
+    .lux-scroll-progress{
+      position:fixed;
+      left:0;
+      top:0;
+      width:0%;
+      height:4px;
+      z-index:99999;
+      background:linear-gradient(90deg,#123a72,#2563eb,#22d3ee);
+      box-shadow:0 0 22px rgba(34,211,238,.55);
+      transition:width .08s linear;
+    }
+
     .ps-dashboard{
       display:flex;
       flex-direction:column;
       gap:16px;
+      position:relative;
+      isolation:isolate;
+    }
+
+    .ps-dashboard::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(37,99,235,.12), transparent 28%),
+        radial-gradient(circle at 90% 18%, rgba(34,211,238,.10), transparent 26%),
+        radial-gradient(circle at 50% 92%, rgba(15,118,110,.08), transparent 34%);
+      z-index:-1;
+      animation:luxBgMove 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes luxBgMove{
+      from{transform:translate3d(0,0,0) scale(1);opacity:.85;}
+      to{transform:translate3d(0,-16px,0) scale(1.04);opacity:1;}
+    }
+
+    .lux-reveal{
+      opacity:0;
+      transform:translateY(34px) scale(.985);
+      filter:blur(8px);
+      transition:
+        opacity .75s cubic-bezier(.2,.8,.2,1),
+        transform .75s cubic-bezier(.2,.8,.2,1),
+        filter .75s cubic-bezier(.2,.8,.2,1);
+      transition-delay:var(--lux-delay,0ms);
+    }
+
+    .lux-reveal.is-visible{
+      opacity:1;
+      transform:translateY(0) scale(1);
+      filter:blur(0);
     }
 
     .ps-hero{
+      min-height:360px;
+      display:flex;
+      align-items:center;
       position:relative;
       overflow:hidden;
       border-radius:34px;
@@ -605,10 +1050,23 @@ function injectProcurementStackerCss() {
       pointer-events:none;
     }
 
+    .ps-hero::after{
+      content:"";
+      position:absolute;
+      width:460px;
+      height:460px;
+      right:-120px;
+      top:-140px;
+      border-radius:999px;
+      background:radial-gradient(circle, rgba(34,211,238,.27), transparent 65%);
+      filter:blur(4px);
+      transform:translateY(var(--hero-parallax,0px));
+    }
+
     @keyframes psHeroShine{
-      0%,70%{transform:translateX(-24%) rotate(10deg);opacity:0}
-      78%{opacity:1}
-      100%{transform:translateX(24%) rotate(10deg);opacity:0}
+      0%,70%{transform:translateX(-24%) rotate(10deg);opacity:0;}
+      78%{opacity:1;}
+      100%{transform:translateX(24%) rotate(10deg);opacity:0;}
     }
 
     .ps-kicker{
@@ -648,6 +1106,27 @@ function injectProcurementStackerCss() {
       line-height:1.75;
     }
 
+    .lux-section-label{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin:4px 0 0;
+      color:#64748b;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    .lux-section-label::before{
+      content:"";
+      width:34px;
+      height:2px;
+      border-radius:999px;
+      background:linear-gradient(90deg,#123a72,#22d3ee);
+      box-shadow:0 0 14px rgba(34,211,238,.38);
+    }
+
     .ps-game-grid{
       display:grid;
       grid-template-columns:minmax(0,1.45fr) minmax(370px,.75fr);
@@ -662,6 +1141,18 @@ function injectProcurementStackerCss() {
       padding:18px;
       box-shadow:0 10px 28px rgba(15,23,42,.07);
       backdrop-filter:blur(12px);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .ps-card::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      right:0;
+      height:1px;
+      background:linear-gradient(90deg,transparent,rgba(37,99,235,.45),rgba(34,211,238,.45),transparent);
     }
 
     .ps-card-head{
@@ -760,17 +1251,6 @@ function injectProcurementStackerCss() {
       border:1px solid #dbeafe;
     }
 
-    .ps-score-card::after{
-      content:"";
-      position:absolute;
-      right:-24px;
-      top:-24px;
-      width:70px;
-      height:70px;
-      border-radius:999px;
-      background:radial-gradient(circle,rgba(37,99,235,.13),transparent 70%);
-    }
-
     .ps-score-card label{
       display:block;
       color:#64748b;
@@ -794,9 +1274,9 @@ function injectProcurementStackerCss() {
     }
 
     @keyframes psScorePop{
-      0%{transform:scale(1)}
-      50%{transform:scale(1.18)}
-      100%{transform:scale(1)}
+      0%{transform:scale(1);}
+      50%{transform:scale(1.18);}
+      100%{transform:scale(1);}
     }
 
     .ps-progress-track{
@@ -851,9 +1331,9 @@ function injectProcurementStackerCss() {
     }
 
     @keyframes psSlotCorrect{
-      0%{transform:scale(.96);box-shadow:0 0 0 rgba(34,197,94,0)}
-      55%{transform:scale(1.04);box-shadow:0 0 0 8px rgba(34,197,94,.14)}
-      100%{transform:scale(1);box-shadow:0 0 0 rgba(34,197,94,0)}
+      0%{transform:scale(.96);box-shadow:0 0 0 rgba(34,197,94,0);}
+      55%{transform:scale(1.04);box-shadow:0 0 0 8px rgba(34,197,94,.14);}
+      100%{transform:scale(1);box-shadow:0 0 0 rgba(34,197,94,0);}
     }
 
     .ps-slot-number{
@@ -914,26 +1394,6 @@ function injectProcurementStackerCss() {
       overflow:hidden;
     }
 
-    .ps-action-card::before{
-      content:"";
-      position:absolute;
-      left:0;
-      top:0;
-      right:0;
-      height:2px;
-      background:linear-gradient(90deg,transparent,#2563eb,#22d3ee,transparent);
-      opacity:.0;
-      transition:.18s ease;
-    }
-
-    .ps-action-card:hover::before{
-      opacity:1;
-    }
-
-    .ps-action-card:active{
-      cursor:grabbing;
-    }
-
     .ps-action-card:hover{
       transform:translateY(-2px);
       box-shadow:0 14px 26px rgba(15,23,42,.10);
@@ -958,12 +1418,12 @@ function injectProcurementStackerCss() {
     }
 
     @keyframes psShake{
-      0%{transform:translateX(0)}
-      20%{transform:translateX(-8px)}
-      40%{transform:translateX(8px)}
-      60%{transform:translateX(-6px)}
-      80%{transform:translateX(4px)}
-      100%{transform:translateX(0)}
+      0%{transform:translateX(0);}
+      20%{transform:translateX(-8px);}
+      40%{transform:translateX(8px);}
+      60%{transform:translateX(-6px);}
+      80%{transform:translateX(4px);}
+      100%{transform:translateX(0);}
     }
 
     .ps-card-icon{
@@ -1005,6 +1465,11 @@ function injectProcurementStackerCss() {
       display:flex;
       flex-direction:column;
       gap:16px;
+    }
+
+    .lux-sticky-side{
+      position:sticky;
+      top:18px;
     }
 
     .ps-buttons{
@@ -1080,15 +1545,6 @@ function injectProcurementStackerCss() {
       padding-right:4px;
     }
 
-    .ps-log::-webkit-scrollbar{
-      width:6px;
-    }
-
-    .ps-log::-webkit-scrollbar-thumb{
-      border-radius:999px;
-      background:#cbd5e1;
-    }
-
     .ps-log-item{
       display:grid;
       grid-template-columns:34px 1fr;
@@ -1105,8 +1561,8 @@ function injectProcurementStackerCss() {
     }
 
     @keyframes psLogIn{
-      from{opacity:0;transform:translateY(8px)}
-      to{opacity:1;transform:translateY(0)}
+      from{opacity:0;transform:translateY(8px);}
+      to{opacity:1;transform:translateY(0);}
     }
 
     .ps-log-icon{
@@ -1120,17 +1576,9 @@ function injectProcurementStackerCss() {
       font-weight:950;
     }
 
-    .ps-log-icon.ok{
-      background:#16a34a;
-    }
-
-    .ps-log-icon.bad{
-      background:#dc2626;
-    }
-
-    .ps-log-icon.info{
-      background:#2563eb;
-    }
+    .ps-log-icon.ok{background:#16a34a;}
+    .ps-log-icon.bad{background:#dc2626;}
+    .ps-log-icon.info{background:#2563eb;}
 
     .ps-log-title{
       font-weight:950;
@@ -1156,34 +1604,14 @@ function injectProcurementStackerCss() {
       position:relative;
     }
 
-    .ps-finish::after{
-      content:"";
-      position:absolute;
-      inset:-40%;
-      background:linear-gradient(120deg, transparent, rgba(255,255,255,.12), transparent);
-      animation:psFinishShine 2.6s ease-in-out infinite;
-    }
-
-    @keyframes psFinishShine{
-      from{transform:translateX(-30%) rotate(8deg)}
-      to{transform:translateX(30%) rotate(8deg)}
-    }
-
     .ps-finish.show{
       display:block;
       animation:psFinishPop .38s ease;
     }
 
     @keyframes psFinishPop{
-      from{opacity:0;transform:translateY(16px) scale(.98)}
-      to{opacity:1;transform:translateY(0) scale(1)}
-    }
-
-    .ps-finish h3,
-    .ps-finish p,
-    .ps-stars{
-      position:relative;
-      z-index:2;
+      from{opacity:0;transform:translateY(16px) scale(.98);}
+      to{opacity:1;transform:translateY(0) scale(1);}
     }
 
     .ps-finish h3{
@@ -1193,6 +1621,10 @@ function injectProcurementStackerCss() {
       font-weight:950;
     }
 
+    .ps-finish p{
+      color:rgba(255,255,255,.78);
+    }
+
     .ps-stars{
       margin-top:10px;
       font-size:28px;
@@ -1200,19 +1632,10 @@ function injectProcurementStackerCss() {
       color:#fde68a;
     }
 
-    .ps-finish p{
-      color:rgba(255,255,255,.78);
-    }
-
     .ps-quick-grid{
       display:grid;
       grid-template-columns:repeat(4,minmax(0,1fr));
       gap:12px;
-    }
-
-    .ps-quick-grid .quick-card{
-      background:rgba(255,255,255,.88);
-      border:1px solid rgba(255,255,255,.72);
     }
 
     .ps-toast{
@@ -1240,17 +1663,9 @@ function injectProcurementStackerCss() {
       opacity:1;
     }
 
-    .ps-toast.ok{
-      background:linear-gradient(135deg,#15803d,#16a34a);
-    }
-
-    .ps-toast.bad{
-      background:linear-gradient(135deg,#991b1b,#dc2626);
-    }
-
-    .ps-toast.info{
-      background:linear-gradient(135deg,#123a72,#2563eb);
-    }
+    .ps-toast.ok{background:linear-gradient(135deg,#15803d,#16a34a);}
+    .ps-toast.bad{background:linear-gradient(135deg,#991b1b,#dc2626);}
+    .ps-toast.info{background:linear-gradient(135deg,#123a72,#2563eb);}
 
     .ps-screen-flash{
       position:fixed;
@@ -1271,9 +1686,9 @@ function injectProcurementStackerCss() {
     }
 
     @keyframes psFlash{
-      0%{opacity:0}
-      35%{opacity:1}
-      100%{opacity:0}
+      0%{opacity:0;}
+      35%{opacity:1;}
+      100%{opacity:0;}
     }
 
     .ps-floating-score{
@@ -1289,18 +1704,13 @@ function injectProcurementStackerCss() {
       box-shadow:0 12px 28px rgba(15,23,42,.18);
     }
 
-    .ps-floating-score.ok{
-      background:#16a34a;
-    }
-
-    .ps-floating-score.bad{
-      background:#dc2626;
-    }
+    .ps-floating-score.ok{background:#16a34a;}
+    .ps-floating-score.bad{background:#dc2626;}
 
     @keyframes psFloatScore{
-      from{opacity:0;transform:translateY(8px) scale(.92)}
-      20%{opacity:1}
-      to{opacity:0;transform:translateY(-34px) scale(1.05)}
+      from{opacity:0;transform:translateY(8px) scale(.92);}
+      20%{opacity:1;}
+      to{opacity:0;transform:translateY(-34px) scale(1.05);}
     }
 
     .ps-confetti{
@@ -1314,8 +1724,103 @@ function injectProcurementStackerCss() {
     }
 
     @keyframes psConfettiFall{
-      from{opacity:1;transform:translateY(0) rotate(0deg)}
-      to{opacity:0;transform:translateY(110px) rotate(220deg)}
+      from{opacity:1;transform:translateY(0) rotate(0deg);}
+      to{opacity:0;transform:translateY(110px) rotate(220deg);}
+    }
+
+    .tryout-options{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      padding:14px;
+      border-radius:22px;
+      background:#f8fbff;
+      border:1px solid #dbeafe;
+    }
+
+    .tryout-option{
+      width:100%;
+      min-height:84px;
+      cursor:pointer;
+    }
+
+    .tryout-option:disabled{
+      cursor:not-allowed;
+      opacity:.95;
+    }
+
+    .tryout-topic-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .tryout-topic-chip{
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:0 10px;
+      border-radius:999px;
+      background:#eff6ff;
+      border:1px solid #dbeafe;
+      color:#123a72;
+      font-size:11px;
+      font-weight:850;
+    }
+
+    .quick-card{
+      width:100%;
+      border:none;
+      cursor:pointer;
+      background:rgba(255,255,255,.88);
+      border:1px solid rgba(255,255,255,.72);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:0 8px 20px rgba(15,23,42,.06);
+      display:grid;
+      grid-template-columns:54px 1fr 18px;
+      gap:12px;
+      align-items:center;
+      text-align:left;
+    }
+
+    .quick-icon{
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      box-shadow:0 12px 22px rgba(15,23,42,.14);
+    }
+
+    .quick-title{
+      font-size:16px;
+      font-weight:900;
+      color:#102544;
+    }
+
+    .quick-text{
+      margin-top:4px;
+      font-size:13px;
+      line-height:1.55;
+      color:#64748b;
+    }
+
+    .quick-arrow{
+      font-size:22px;
+      color:#94a3b8;
+      font-weight:900;
+    }
+
+    .footer-note{
+      text-align:center;
+      color:#64748b;
+      font-size:13px;
+      margin:12px 0 8px;
     }
 
     @media (max-width:1280px){
@@ -1340,211 +1845,98 @@ function injectProcurementStackerCss() {
   document.head.appendChild(style);
 }
 
-function injectScrollLuxuryCss() {
-  if (document.getElementById('scroll-luxury-css')) return;
+/* =========================================================
+   FX
+========================================================= */
 
-  const style = document.createElement('style');
-  style.id = 'scroll-luxury-css';
-  style.textContent = `
-    .lux-scroll-progress{
-      position:fixed;
-      left:0;
-      top:0;
-      width:0%;
-      height:4px;
-      z-index:99999;
-      background:linear-gradient(90deg,#123a72,#2563eb,#22d3ee);
-      box-shadow:0 0 22px rgba(34,211,238,.55);
-      transition:width .08s linear;
-    }
+function showToast(message, type = 'info') {
+  let toast = document.getElementById('psToast');
 
-    .lux-dashboard{
-      position:relative;
-      isolation:isolate;
-    }
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'psToast';
+    toast.className = 'ps-toast';
+    document.body.appendChild(toast);
+  }
 
-    .lux-dashboard::before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(circle at 12% 8%, rgba(37,99,235,.12), transparent 28%),
-        radial-gradient(circle at 90% 18%, rgba(34,211,238,.10), transparent 26%),
-        radial-gradient(circle at 50% 92%, rgba(15,118,110,.08), transparent 34%);
-      z-index:-1;
-      animation:luxBgMove 12s ease-in-out infinite alternate;
-    }
+  toast.textContent = message;
+  toast.className = `ps-toast ${type}`;
 
-    @keyframes luxBgMove{
-      from{
-        transform:translate3d(0,0,0) scale(1);
-        opacity:.85;
-      }
-      to{
-        transform:translate3d(0,-16px,0) scale(1.04);
-        opacity:1;
-      }
-    }
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+  });
 
-    .lux-reveal{
-      opacity:0;
-      transform:translateY(34px) scale(.985);
-      filter:blur(8px);
-      transition:
-        opacity .75s cubic-bezier(.2,.8,.2,1),
-        transform .75s cubic-bezier(.2,.8,.2,1),
-        filter .75s cubic-bezier(.2,.8,.2,1);
-      transition-delay:var(--lux-delay,0ms);
-    }
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 1800);
+}
 
-    .lux-reveal.is-visible{
-      opacity:1;
-      transform:translateY(0) scale(1);
-      filter:blur(0);
-    }
+function flashScreen(type) {
+  let flash = document.getElementById('psScreenFlash');
 
-    .lux-hero{
-      min-height:380px;
-      display:flex;
-      align-items:center;
-      position:relative;
-      overflow:hidden;
-    }
+  if (!flash) {
+    flash = document.createElement('div');
+    flash.id = 'psScreenFlash';
+    flash.className = 'ps-screen-flash';
+    document.body.appendChild(flash);
+  }
 
-    .lux-hero::after{
-      content:"";
-      position:absolute;
-      width:460px;
-      height:460px;
-      right:-120px;
-      top:-140px;
-      border-radius:999px;
-      background:radial-gradient(circle, rgba(34,211,238,.27), transparent 65%);
-      filter:blur(4px);
-      transform:translateY(var(--hero-parallax,0px));
-    }
+  flash.className = `ps-screen-flash ${type}`;
 
-    .lux-sticky-side{
-      position:sticky;
-      top:18px;
-    }
+  setTimeout(() => {
+    flash.className = 'ps-screen-flash';
+  }, 360);
+}
 
-    .lux-section-label{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin:4px 0 14px;
-      color:#64748b;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-    }
+function popScore(target, text, type) {
+  const rect = target.getBoundingClientRect();
+  const el = document.createElement('div');
 
-    .lux-section-label::before{
-      content:"";
-      width:34px;
-      height:2px;
-      border-radius:999px;
-      background:linear-gradient(90deg,#123a72,#22d3ee);
-      box-shadow:0 0 14px rgba(34,211,238,.38);
-    }
+  el.className = `ps-floating-score ${type}`;
+  el.textContent = text;
+  el.style.left = `${rect.left + Math.min(80, rect.width / 2)}px`;
+  el.style.top = `${rect.top + 8}px`;
 
-    .lux-premium-card{
-      position:relative;
-      overflow:hidden;
-    }
+  document.body.appendChild(el);
 
-    .lux-premium-card::before{
-      content:"";
-      position:absolute;
-      left:0;
-      top:0;
-      right:0;
-      height:1px;
-      background:linear-gradient(90deg,transparent,rgba(37,99,235,.45),rgba(34,211,238,.45),transparent);
-    }
+  setTimeout(() => el.remove(), 850);
+}
 
-    .lux-premium-card:hover{
-      transform:translateY(-2px);
-      box-shadow:0 18px 42px rgba(15,23,42,.11);
-      transition:.22s ease;
-    }
+function spawnConfetti() {
+  const colors = ['#2563eb', '#22d3ee', '#16a34a', '#f59e0b', '#ef4444'];
+  const centerX = window.innerWidth / 2;
+  const startY = 90;
 
-    .lux-game-stage{
-      position:relative;
-    }
+  for (let i = 0; i < 42; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'ps-confetti';
+    piece.style.left = `${centerX + (Math.random() * 520 - 260)}px`;
+    piece.style.top = `${startY + Math.random() * 40}px`;
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = `${Math.random() * .18}s`;
 
-    .lux-game-stage::before{
-      content:"";
-      position:absolute;
-      inset:-10px;
-      border-radius:34px;
-      background:
-        linear-gradient(135deg, rgba(37,99,235,.12), transparent 32%),
-        radial-gradient(circle at 90% 10%, rgba(34,211,238,.16), transparent 30%);
-      pointer-events:none;
-      z-index:-1;
-    }
+    document.body.appendChild(piece);
 
-    .lux-scroll-hint{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      margin-top:18px;
-      color:rgba(255,255,255,.78);
-      font-size:12px;
-      font-weight:800;
-      position:relative;
-      z-index:2;
-    }
+    setTimeout(() => piece.remove(), 1100);
+  }
+}
 
-    .lux-scroll-hint span{
-      width:20px;
-      height:34px;
-      border:2px solid rgba(255,255,255,.36);
-      border-radius:999px;
-      position:relative;
-    }
+function pulseScoreCard(id) {
+  const el = document.getElementById(id);
 
-    .lux-scroll-hint span::after{
-      content:"";
-      position:absolute;
-      left:50%;
-      top:7px;
-      width:4px;
-      height:7px;
-      border-radius:999px;
-      background:#fff;
-      transform:translateX(-50%);
-      animation:luxWheel 1.4s ease-in-out infinite;
-    }
+  if (!el) return;
 
-    @keyframes luxWheel{
-      0%{opacity:0; transform:translate(-50%,0)}
-      35%{opacity:1}
-      100%{opacity:0; transform:translate(-50%,10px)}
-    }
-  `;
+  el.classList.remove('fx-pop');
+  void el.offsetWidth;
+  el.classList.add('fx-pop');
 
-  document.head.appendChild(style);
+  setTimeout(() => el.classList.remove('fx-pop'), 420);
 }
 
 /* =========================================================
-   STACKER LOGIC + FX
+   STACKER LOGIC
 ========================================================= */
-
-function shuffleArray(items) {
-  const result = [...items];
-
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-
-  return result;
-}
 
 function getStackerLevel() {
   return STACKER_LEVELS[STACKER_STATE.levelIndex] || STACKER_LEVELS[0];
@@ -1589,26 +1981,24 @@ function nextStackerLevel() {
 
 function renderStackerGame() {
   const root = document.getElementById('procurementStackerRoot');
+
   if (!root) return;
 
   const level = getStackerLevel();
   const placedIds = new Set(STACKER_STATE.placed.filter(Boolean).map(item => item.id));
 
-  if (
-    !STACKER_STATE.shuffledCards.length ||
-    STACKER_STATE.shuffledLevelIndex !== STACKER_STATE.levelIndex
-  ) {
+  if (!STACKER_STATE.shuffledCards.length || STACKER_STATE.shuffledLevelIndex !== STACKER_STATE.levelIndex) {
     STACKER_STATE.shuffledCards = shuffleArray(level.cards);
     STACKER_STATE.shuffledLevelIndex = STACKER_STATE.levelIndex;
   }
 
   root.innerHTML = `
     <section class="ps-game-grid">
-      <div class="ps-card lux-premium-card">
+      <div class="ps-card">
         <div class="ps-card-head">
           <div>
-            <h3>${level.title}</h3>
-            <p>${level.caseDesc}</p>
+            <h3>${escapeHtml(level.title)}</h3>
+            <p>${escapeHtml(level.caseDesc)}</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
             <div class="ps-mode-pill">Sertifikasi Mode</div>
@@ -1662,10 +2052,7 @@ function renderStackerGame() {
         <div class="ps-card-head">
           <div>
             <h3>Kartu Aksi Acak</h3>
-            <p>
-              Drag kartu ke slot pipeline. Tidak semua kartu harus dipakai.
-              Kartu jebakan akan menaikkan risiko.
-            </p>
+            <p>Drag kartu ke slot pipeline. Tidak semua kartu harus dipakai. Kartu jebakan akan menaikkan risiko.</p>
           </div>
           <button type="button" class="ps-btn ps-btn-soft" id="psShuffleBtn">Acak Ulang Kartu</button>
         </div>
@@ -1680,11 +2067,11 @@ function renderStackerGame() {
       </div>
 
       <aside class="ps-side lux-sticky-side">
-        <div class="ps-card lux-premium-card">
+        <div class="ps-card">
           <div class="ps-card-head">
             <div>
               <h3>Kontrol Level</h3>
-              <p>Ulang level, acak kartu, atau lanjut ke studi kasus berikutnya.</p>
+              <p>Ulang level, acak kartu, atau lanjut studi kasus berikutnya.</p>
             </div>
           </div>
 
@@ -1701,7 +2088,7 @@ function renderStackerGame() {
           </div>
         </div>
 
-        <div class="ps-card lux-premium-card">
+        <div class="ps-card">
           <div class="ps-card-head">
             <div>
               <h3>Pembahasan</h3>
@@ -1720,6 +2107,7 @@ function renderStackerGame() {
   restoreStackerLog();
 
   const finishBox = document.getElementById('psFinishBox');
+
   if (finishBox && STACKER_STATE.finished) {
     finishBox.classList.add('show');
   }
@@ -1818,13 +2206,8 @@ function bindStackerEvents() {
   const nextBtn = document.getElementById('psNextBtn');
   const shuffleBtn = document.getElementById('psShuffleBtn');
 
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => resetStackerLevel(false));
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener('click', nextStackerLevel);
-  }
+  if (resetBtn) resetBtn.addEventListener('click', () => resetStackerLevel(false));
+  if (nextBtn) nextBtn.addEventListener('click', nextStackerLevel);
 
   if (shuffleBtn) {
     shuffleBtn.addEventListener('click', () => {
@@ -1894,6 +2277,7 @@ function handleStackerDrop(cardId, slotIndex, slotEl) {
 
   requestAnimationFrame(() => {
     const latestSlot = document.querySelector(`.ps-slot[data-slot-index="${slotIndex}"]`);
+
     if (latestSlot) {
       latestSlot.classList.add('fx-correct');
       setTimeout(() => latestSlot.classList.remove('fx-correct'), 500);
@@ -1907,6 +2291,7 @@ function wrongStackerMove(cardId, message, withFx = false) {
   STACKER_STATE.wrong += 1;
 
   const cardEl = document.querySelector(`.ps-action-card[data-card-id="${cardId}"]`);
+
   if (cardEl) {
     cardEl.classList.remove('wrong');
     void cardEl.offsetWidth;
@@ -1937,29 +2322,29 @@ function wrongStackerMove(cardId, message, withFx = false) {
 
 function getCorrectMessage(cardId) {
   const messages = {
-    rup: 'RUP menjadi pintu awal untuk memastikan paket, jadwal, pagu, dan rencana metode sudah terbaca.',
-    identifikasi: 'Identifikasi kebutuhan membantu mencegah paket dobel, tidak relevan, atau tidak sesuai prioritas.',
+    rup: 'RUP menjadi pintu awal untuk memastikan paket, jadwal, pagu, dan metode.',
+    identifikasi: 'Identifikasi kebutuhan mencegah paket dobel, tidak relevan, atau tidak sesuai prioritas.',
     konsolidasi: 'Konsolidasi membantu mengelola kebutuhan sejenis agar tidak terpecah tanpa alasan.',
-    kak: 'KAK/spesifikasi harus disusun berbasis kebutuhan dan tidak mengarah secara tidak wajar.',
-    'review-spek': 'Review spesifikasi penting untuk memastikan persaingan sehat dan kebutuhan teknis masuk akal.',
-    hps: 'HPS/referensi harga menjadi dasar kewajaran biaya sebelum proses dilanjutkan.',
-    'cek-katalog': 'Pengecekan katalog membantu menentukan apakah e-Purchasing dapat digunakan secara efisien.',
-    'cek-pdn': 'PDN/TKDN perlu diperhatikan agar pengadaan mendukung produk dalam negeri sesuai kebijakan.',
-    'pilih-metode': 'Metode dipilih setelah kebutuhan, nilai, jadwal, dan kondisi pasar dipahami.',
-    'metode-pl': 'Pengadaan Langsung tepat bila kondisi dan nilai paket memang sesuai.',
-    'metode-epurchasing': 'e-Purchasing tepat jika barang/jasa tersedia di katalog dan sesuai kebutuhan.',
-    tender: 'Tender dipakai saat karakter paket membutuhkan proses pemilihan penyedia yang lebih formal.',
-    seleksi: 'Seleksi relevan untuk jasa konsultansi yang membutuhkan evaluasi kompetensi.',
-    swakelola: 'Swakelola dapat dipilih jika pelaksanaan dan tanggung jawab memenuhi kriteria.',
-    klarifikasi: 'Klarifikasi/negosiasi membantu memastikan harga, spesifikasi, dan kemampuan pelaksanaan.',
+    kak: 'KAK/spesifikasi harus berbasis kebutuhan dan tidak mengarah.',
+    'review-spek': 'Review spesifikasi penting agar persaingan sehat.',
+    hps: 'HPS/referensi harga menjadi dasar kewajaran biaya.',
+    'cek-katalog': 'Cek katalog membantu menentukan apakah e-Purchasing dapat digunakan.',
+    'cek-pdn': 'PDN/TKDN perlu diperhatikan untuk mendukung produk dalam negeri.',
+    'pilih-metode': 'Metode dipilih setelah kebutuhan, nilai, jadwal, dan pasar dipahami.',
+    'metode-pl': 'Pengadaan Langsung tepat bila nilai dan kondisi paket sesuai.',
+    'metode-epurchasing': 'e-Purchasing tepat jika tersedia di katalog dan sesuai kebutuhan.',
+    tender: 'Tender dipakai saat karakter paket membutuhkan proses pemilihan formal.',
+    seleksi: 'Seleksi relevan untuk jasa konsultansi.',
+    swakelola: 'Swakelola dapat dipilih jika memenuhi kriteria.',
+    klarifikasi: 'Klarifikasi/negosiasi memastikan harga, spesifikasi, dan kemampuan pelaksanaan.',
     proses: 'Proses pemilihan dilakukan setelah dokumen dan metode siap.',
-    kontrak: 'Kontrak/SPK menjadi dasar pelaksanaan setelah proses pengadaan selesai.',
-    'monitoring-kontrak': 'Monitoring kontrak membantu mengendalikan waktu, mutu, dan kewajiban penyedia.',
-    teguran: 'Teguran/evaluasi diperlukan saat penyedia terlambat atau pelaksanaan bermasalah.',
+    kontrak: 'Kontrak/SPK menjadi dasar pelaksanaan setelah proses pengadaan.',
+    'monitoring-kontrak': 'Monitoring kontrak mengendalikan waktu, mutu, dan kewajiban penyedia.',
+    teguran: 'Teguran/evaluasi diperlukan saat penyedia terlambat atau bermasalah.',
     pemeriksaan: 'Pemeriksaan hasil mencegah barang/jasa tidak sesuai langsung diterima.',
-    bast: 'BAST dilakukan setelah hasil pekerjaan/barang diperiksa dan sesuai.',
+    bast: 'BAST dilakukan setelah hasil diperiksa dan sesuai.',
     pembayaran: 'Pembayaran dilakukan setelah dokumen pendukung memadai.',
-    realisasi: 'Pencatatan realisasi memastikan data monitoring dan evaluasi tidak bolong.'
+    realisasi: 'Pencatatan realisasi memastikan data monitoring tidak bolong.'
   };
 
   return messages[cardId] || 'Langkah ini tepat untuk posisi pipeline saat ini.';
@@ -1974,22 +2359,19 @@ function getWrongMessage(cardId, expectedId) {
   const expectedLabel = expectedCard ? expectedCard.label : expectedId;
 
   const trapMessages = {
-    'kontrak-awal': 'Kenapa salah: kontrak dilakukan sebelum dokumen, metode, dan proses jelas. Konsep yang diuji: tahapan persiapan dan pengendalian risiko administrasi.',
-    'pecah-paket': 'Kenapa salah: memecah paket untuk menyesuaikan nilai/metode dapat menurunkan kepatuhan. Konsep yang diuji: konsolidasi dan larangan pemecahan paket yang tidak tepat.',
-    'spek-mengarah': 'Kenapa salah: spesifikasi yang terlalu mengarah dapat mengganggu fairness. Konsep yang diuji: penyusunan spesifikasi berbasis kebutuhan.',
-    'tunda-dokumen': 'Kenapa salah: menunda dokumen saat deadline mepet menaikkan risiko keterlambatan. Konsep yang diuji: manajemen waktu dan kesiapan dokumen.',
-    tender: 'Belum tepat untuk posisi ini. Tender bisa benar pada kasus tertentu, tapi pada studi kasus ini langkah berikutnya belum mengarah ke tender.',
-    'metode-pl': 'Belum tepat. Pengadaan Langsung harus sesuai nilai, jenis, dan kondisi paket; tidak boleh dipilih hanya karena ingin cepat.',
-    'metode-epurchasing': 'Belum tepat untuk posisi ini. e-Purchasing hanya tepat setelah kebutuhan, harga, katalog, dan kesesuaian barang/jasa sudah dicek.',
-    'abaikan-katalog': 'Kenapa salah: mengabaikan katalog membuat analisis metode kurang lengkap. Konsep yang diuji: pemanfaatan sistem pengadaan dan pengecekan kanal yang tersedia.',
-    'lewati-rup': 'Kenapa salah: RUP perlu dicek sebelum paket berjalan. Konsep yang diuji: perencanaan pengadaan.',
-    'bast-tanpa-cek': 'Kenapa salah: BAST tanpa pemeriksaan berisiko menerima barang/jasa yang tidak sesuai. Konsep yang diuji: pengendalian hasil pekerjaan.',
-    'bayar-dulu': 'Kenapa salah: pembayaran perlu didukung dokumen yang benar. Konsep yang diuji: serah terima, bukti dukung, dan tertib administrasi.',
-    'metode-asal-cepat': 'Kenapa salah: metode tidak dipilih hanya karena cepat. Konsep yang diuji: kesesuaian metode dengan kondisi paket.',
-    'realisasi-lupa': 'Kenapa salah: realisasi yang tidak dicatat membuat monitoring tidak lengkap. Konsep yang diuji: akuntabilitas data pengadaan.'
+    'kontrak-awal': 'Kontrak dilakukan sebelum dokumen, metode, dan proses jelas. Ini risiko administrasi.',
+    'pecah-paket': 'Memecah paket untuk menyesuaikan nilai/metode dapat menurunkan kepatuhan.',
+    'spek-mengarah': 'Spesifikasi terlalu mengarah dapat mengganggu fairness dan persaingan.',
+    'tunda-dokumen': 'Menunda dokumen saat deadline mepet menaikkan risiko keterlambatan.',
+    'abaikan-katalog': 'Mengabaikan katalog membuat analisis metode kurang lengkap.',
+    'lewati-rup': 'RUP perlu dicek sebelum paket berjalan.',
+    'bast-tanpa-cek': 'BAST tanpa pemeriksaan berisiko menerima barang/jasa yang tidak sesuai.',
+    'bayar-dulu': 'Pembayaran perlu didukung dokumen yang benar.',
+    'metode-asal-cepat': 'Metode tidak dipilih hanya karena cepat.',
+    'realisasi-lupa': 'Realisasi yang tidak dicatat membuat monitoring tidak lengkap.'
   };
 
-  return trapMessages[cardId] || `Belum tepat. Kamu memilih "${cardLabel}", padahal langkah berikutnya seharusnya "${expectedLabel}". Konsep yang diuji: ${level.concept}`;
+  return trapMessages[cardId] || `Belum tepat. Kamu memilih "${cardLabel}", padahal langkah berikutnya seharusnya "${expectedLabel}". Konsep: ${level.concept}`;
 }
 
 function refreshStackerScore() {
@@ -2002,90 +2384,6 @@ function refreshStackerScore() {
   if (complianceText) complianceText.textContent = STACKER_STATE.compliance;
   if (riskText) riskText.textContent = STACKER_STATE.risk;
   if (progressBar) progressBar.style.width = `${STACKER_STATE.progress}%`;
-}
-
-function pulseScoreCard(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  el.classList.remove('fx-pop');
-  void el.offsetWidth;
-  el.classList.add('fx-pop');
-
-  setTimeout(() => el.classList.remove('fx-pop'), 420);
-}
-
-function flashScreen(type) {
-  let flash = document.getElementById('psScreenFlash');
-
-  if (!flash) {
-    flash = document.createElement('div');
-    flash.id = 'psScreenFlash';
-    flash.className = 'ps-screen-flash';
-    document.body.appendChild(flash);
-  }
-
-  flash.className = `ps-screen-flash ${type}`;
-  setTimeout(() => {
-    flash.className = 'ps-screen-flash';
-  }, 360);
-}
-
-function showToast(message, type = 'info') {
-  let toast = document.getElementById('psToast');
-
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'psToast';
-    toast.className = 'ps-toast';
-    document.body.appendChild(toast);
-  }
-
-  toast.textContent = message;
-  toast.className = `ps-toast ${type}`;
-
-  requestAnimationFrame(() => {
-    toast.classList.add('show');
-  });
-
-  clearTimeout(toast._hideTimer);
-  toast._hideTimer = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 1800);
-}
-
-function popScore(target, text, type) {
-  const rect = target.getBoundingClientRect();
-  const el = document.createElement('div');
-
-  el.className = `ps-floating-score ${type}`;
-  el.textContent = text;
-  el.style.left = `${rect.left + Math.min(80, rect.width / 2)}px`;
-  el.style.top = `${rect.top + 8}px`;
-
-  document.body.appendChild(el);
-
-  setTimeout(() => el.remove(), 850);
-}
-
-function spawnConfetti() {
-  const colors = ['#2563eb', '#22d3ee', '#16a34a', '#f59e0b', '#ef4444'];
-  const centerX = window.innerWidth / 2;
-  const startY = 90;
-
-  for (let i = 0; i < 42; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'ps-confetti';
-    piece.style.left = `${centerX + (Math.random() * 520 - 260)}px`;
-    piece.style.top = `${startY + Math.random() * 40}px`;
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.animationDelay = `${Math.random() * .18}s`;
-    piece.style.transform = `rotate(${Math.random() * 180}deg)`;
-
-    document.body.appendChild(piece);
-
-    setTimeout(() => piece.remove(), 1100);
-  }
 }
 
 function getStackerLogStoreKey() {
@@ -2113,6 +2411,7 @@ function addStackerLog(item) {
 
 function restoreStackerLog() {
   const logEl = document.getElementById('psLog');
+
   if (!logEl) return;
 
   const logs = getStackerLog();
@@ -2144,6 +2443,203 @@ function restoreStackerLog() {
 }
 
 /* =========================================================
+   TRYOUT LOGIC
+========================================================= */
+
+function renderTryoutBankPanel() {
+  const total = TRYOUT_QUESTIONS.length;
+  const topics = [...new Set(TRYOUT_QUESTIONS.map(q => q.topic))];
+
+  return `
+    <section class="ps-card lux-reveal">
+      <div class="ps-card-head">
+        <div>
+          <h3>Tryout PBJ Level 1</h3>
+          <p>
+            Bank soal latihan berbasis materi kompetensi PBJ. Soal dibuat dalam bentuk latihan interaktif,
+            bukan sekadar membaca kunci jawaban.
+          </p>
+        </div>
+        <div class="ps-level-pill">${total} Soal</div>
+      </div>
+
+      <div class="ps-case-panel">
+        <div class="ps-case-box">
+          <label>Mode</label>
+          <strong>Latihan Sertifikasi</strong>
+          <span>Pilih jawaban, lihat pembahasan, lalu lanjut soal berikutnya.</span>
+        </div>
+        <div class="ps-case-box">
+          <label>Topik</label>
+          <strong>${topics.length}</strong>
+          <span>Materi PBJ</span>
+        </div>
+        <div class="ps-case-box">
+          <label>Soal</label>
+          <strong>${total}</strong>
+          <span>Butir latihan</span>
+        </div>
+        <div class="ps-case-box">
+          <label>Status</label>
+          <strong>Aktif</strong>
+          <span>Siap dimainkan</span>
+        </div>
+      </div>
+
+      <div class="tryout-topic-grid">
+        ${topics.map(topic => `<span class="tryout-topic-chip">${escapeHtml(topic)}</span>`).join('')}
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div id="tryoutQuizRoot"></div>
+    </section>
+  `;
+}
+
+function initTryoutQuiz() {
+  TRYOUT_STATE.current = 0;
+  TRYOUT_STATE.score = 0;
+  TRYOUT_STATE.answered = false;
+  TRYOUT_STATE.selected = null;
+  TRYOUT_STATE.order = shuffleArray(TRYOUT_QUESTIONS.map((_, index) => index));
+
+  renderTryoutQuiz();
+}
+
+function getCurrentTryoutQuestion() {
+  const index = TRYOUT_STATE.order[TRYOUT_STATE.current] ?? 0;
+  return TRYOUT_QUESTIONS[index];
+}
+
+function renderTryoutQuiz() {
+  const root = document.getElementById('tryoutQuizRoot');
+
+  if (!root) return;
+
+  const q = getCurrentTryoutQuestion();
+  const nomor = TRYOUT_STATE.current + 1;
+  const total = TRYOUT_QUESTIONS.length;
+  const progress = Math.round((TRYOUT_STATE.current / total) * 100);
+
+  root.innerHTML = `
+    <div class="ps-progress-track">
+      <div class="ps-progress-bar" style="width:${progress}%"></div>
+    </div>
+
+    <div class="ps-score-grid">
+      <div class="ps-score-card">
+        <label>Nomor</label>
+        <strong>${nomor}/${total}</strong>
+      </div>
+      <div class="ps-score-card">
+        <label>Skor</label>
+        <strong>${TRYOUT_STATE.score}</strong>
+      </div>
+      <div class="ps-score-card">
+        <label>Topik</label>
+        <strong style="font-size:16px;line-height:1.25;">${escapeHtml(q.topic)}</strong>
+      </div>
+    </div>
+
+    <div class="ps-concept-box">
+      <label>Soal</label>
+      <strong>${escapeHtml(q.question)}</strong>
+    </div>
+
+    <div class="tryout-options">
+      ${q.options.map((option, index) => {
+        let cls = '';
+
+        if (TRYOUT_STATE.answered) {
+          if (index === q.answer) cls = 'correct-card';
+          else if (index === TRYOUT_STATE.selected) cls = 'wrong';
+        }
+
+        return `
+          <button
+            type="button"
+            class="ps-action-card tryout-option ${cls}"
+            data-tryout-answer="${index}"
+            ${TRYOUT_STATE.answered ? 'disabled' : ''}
+          >
+            <div class="ps-card-icon">${String.fromCharCode(65 + index)}</div>
+            <strong>${escapeHtml(option)}</strong>
+          </button>
+        `;
+      }).join('')}
+    </div>
+
+    ${TRYOUT_STATE.answered ? `
+      <div class="ps-finish show" style="margin-top:14px;">
+        <h3>${TRYOUT_STATE.selected === q.answer ? 'Jawaban Benar' : 'Jawaban Belum Tepat'}</h3>
+        <p>${escapeHtml(q.explanation)}</p>
+      </div>
+    ` : ''}
+
+    <div class="ps-buttons" style="margin-top:14px;">
+      <button type="button" class="ps-btn ps-btn-soft" id="tryoutResetBtn">Acak Ulang Soal</button>
+      <button type="button" class="ps-btn ps-btn-primary" id="tryoutNextBtn" ${TRYOUT_STATE.answered ? '' : 'disabled'}>
+        ${nomor >= total ? 'Selesai / Ulangi' : 'Soal Berikutnya'}
+      </button>
+    </div>
+  `;
+
+  root.querySelectorAll('[data-tryout-answer]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      handleTryoutAnswer(Number(btn.dataset.tryoutAnswer));
+    });
+  });
+
+  const nextBtn = document.getElementById('tryoutNextBtn');
+  const resetBtn = document.getElementById('tryoutResetBtn');
+
+  if (nextBtn) nextBtn.addEventListener('click', nextTryoutQuestion);
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      initTryoutQuiz();
+      showToast('Soal tryout diacak ulang.', 'info');
+    });
+  }
+}
+
+function handleTryoutAnswer(selectedIndex) {
+  if (TRYOUT_STATE.answered) return;
+
+  const q = getCurrentTryoutQuestion();
+
+  TRYOUT_STATE.selected = selectedIndex;
+  TRYOUT_STATE.answered = true;
+
+  if (selectedIndex === q.answer) {
+    TRYOUT_STATE.score += 10;
+    showToast('Benar. Skor naik.', 'ok');
+    flashScreen('ok');
+    spawnConfetti();
+  } else {
+    showToast('Belum tepat. Baca pembahasan.', 'bad');
+    flashScreen('bad');
+  }
+
+  renderTryoutQuiz();
+}
+
+function nextTryoutQuestion() {
+  if (TRYOUT_STATE.current >= TRYOUT_QUESTIONS.length - 1) {
+    initTryoutQuiz();
+    showToast('Tryout selesai. Soal diulang dan diacak lagi.', 'info');
+    return;
+  }
+
+  TRYOUT_STATE.current += 1;
+  TRYOUT_STATE.answered = false;
+  TRYOUT_STATE.selected = null;
+
+  renderTryoutQuiz();
+}
+
+/* =========================================================
    SCROLL FX
 ========================================================= */
 
@@ -2154,7 +2650,7 @@ function initScrollLuxuryAnimation() {
   }
 
   const progress = document.getElementById('luxScrollProgress');
-  const hero = document.querySelector('.lux-hero');
+  const hero = document.querySelector('.ps-hero');
 
   const updateProgress = () => {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -2177,7 +2673,7 @@ function initScrollLuxuryAnimation() {
   const revealItems = document.querySelectorAll('.lux-reveal');
 
   const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
+    entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('is-visible');
         observer.unobserve(entry.target);
@@ -2204,35 +2700,31 @@ function initScrollLuxuryAnimation() {
 ========================================================= */
 
 function renderDashboard() {
-  injectProcurementStackerCss();
-  injectScrollLuxuryCss();
+  injectProcurementCss();
 
   contentArea.innerHTML = `
     <div class="lux-scroll-progress" id="luxScrollProgress"></div>
 
-    <section class="ps-dashboard lux-dashboard">
-      <section class="ps-hero lux-hero lux-reveal">
+    <section class="ps-dashboard">
+      <section class="ps-hero lux-reveal">
         <div>
           <div class="ps-kicker">TRAXPBJ Academy • Interactive Sertifikasi Mode</div>
           <h3>Procurement Stacker</h3>
           <p>
             Game edukasi pengadaan berbasis studi kasus gaya sertifikasi PBJ.
-            Drag kartu aksi ke pipeline yang benar. Kartu diacak, ada kartu jebakan,
-            dan setiap kesalahan langsung memberi pembahasan agar PPK/PPBJ belajar sambil bermain.
+            Drag kartu aksi ke pipeline yang benar, lalu lanjut ke tryout interaktif.
+            Kartu diacak, ada kartu jebakan, dan setiap kesalahan langsung diberi pembahasan.
           </p>
-
-          <div class="lux-scroll-hint">
-            <span></span>
-            Scroll untuk mulai simulasi
-          </div>
         </div>
       </section>
 
       <div class="lux-section-label lux-reveal">Interactive Procurement Game</div>
 
-      <div class="lux-game-stage lux-reveal" id="procurementStackerRoot"></div>
+      <div class="lux-reveal" id="procurementStackerRoot"></div>
 
-      <section class="ps-card lux-premium-card lux-reveal">
+      ${renderTryoutBankPanel()}
+
+      <section class="ps-card lux-reveal">
         <div class="ps-card-head">
           <div>
             <h3>Akses Cepat TRAXPBJ</h3>
@@ -2258,7 +2750,9 @@ function renderDashboard() {
     renderStackerGame();
   }
 
-  contentArea.querySelectorAll('[data-quick]').forEach((item) => {
+  initTryoutQuiz();
+
+  contentArea.querySelectorAll('[data-quick]').forEach(item => {
     item.addEventListener('click', () => loadPage(item.dataset.quick));
   });
 
@@ -2268,7 +2762,7 @@ function renderDashboard() {
 }
 
 /* =========================================================
-   ROUTER + LOADER
+   ROUTER PAGE RENDER
 ========================================================= */
 
 function renderIframePage(page) {
@@ -2320,25 +2814,21 @@ function renderQuickCard(icon, bg, title, text, route) {
 }
 
 function updateActiveMenu(key) {
-  document.querySelectorAll('.nav-link, .submenu-link').forEach((el) => {
+  document.querySelectorAll('.nav-link, .submenu-link').forEach(el => {
     el.classList.remove('active');
   });
 
   const directButton = document.querySelector(`.nav-link[data-page="${key}"]`);
   const subButton = document.querySelector(`.submenu-link[data-page="${key}"]`);
 
-  if (directButton) {
-    directButton.classList.add('active');
-  }
+  if (directButton) directButton.classList.add('active');
 
   if (subButton) {
     subButton.classList.add('active');
 
     const group = subButton.closest('.nav-group');
 
-    if (group) {
-      group.classList.add('open');
-    }
+    if (group) group.classList.add('open');
   }
 }
 
@@ -2368,8 +2858,8 @@ function cleanupDynamicModule() {
   currentModuleDestroy = null;
   window.__moduleInit = undefined;
 
-  document.querySelectorAll('[data-dynamic-module-css]').forEach((el) => el.remove());
-  document.querySelectorAll('[data-dynamic-module-js]').forEach((el) => el.remove());
+  document.querySelectorAll('[data-dynamic-module-css]').forEach(el => el.remove());
+  document.querySelectorAll('[data-dynamic-module-js]').forEach(el => el.remove());
 }
 
 function loadExternalScriptOnce(src) {
@@ -2438,7 +2928,7 @@ async function renderModulePage(page) {
       </section>
     `;
 
-    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
 
     if (token !== activeModuleToken) return;
 
@@ -2499,6 +2989,7 @@ async function renderModulePage(page) {
 
 async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
+
   updateActiveMenu(key);
 
   if (page.type !== 'module') {
@@ -2524,12 +3015,12 @@ async function loadPage(key) {
 }
 
 function bindMenu() {
-  document.querySelectorAll('[data-page]').forEach((button) => {
+  document.querySelectorAll('[data-page]').forEach(button => {
     button.addEventListener('click', () => loadPage(button.dataset.page));
   });
 
-  document.querySelectorAll('[data-toggle-group]').forEach((button) => {
-    button.addEventListener('click', (event) => {
+  document.querySelectorAll('[data-toggle-group]').forEach(button => {
+    button.addEventListener('click', event => {
       const groupName = button.dataset.toggleGroup;
       const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
 
@@ -2556,7 +3047,7 @@ function bindMenu() {
     });
   }
 
-  document.addEventListener('click', (event) => {
+  document.addEventListener('click', event => {
     if (!activeFlyout) return;
 
     const clickedInsideFlyout = activeFlyout.contains(event.target);
@@ -2605,7 +3096,7 @@ function toggleFlyout(toggleButton, groupName) {
 
   flyout.innerHTML = `
     <div class="sidebar-flyout-title">${titleMap[groupName] || 'Menu'}</div>
-    ${Array.from(submenuLinks).map((link) => {
+    ${Array.from(submenuLinks).map(link => {
       const isActive = link.classList.contains('active') ? ' active' : '';
 
       return `
@@ -2623,7 +3114,7 @@ function toggleFlyout(toggleButton, groupName) {
   flyout.style.top = `${rect.top}px`;
   flyout.style.left = `${rect.right + 12}px`;
 
-  flyout.querySelectorAll('[data-page]').forEach((btn) => {
+  flyout.querySelectorAll('[data-page]').forEach(btn => {
     btn.addEventListener('click', () => {
       closeFlyout();
       loadPage(btn.dataset.page);
@@ -2631,15 +3122,6 @@ function toggleFlyout(toggleButton, groupName) {
   });
 
   activeFlyout = flyout;
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 bindMenu();
