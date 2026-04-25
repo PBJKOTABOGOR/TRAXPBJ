@@ -28,7 +28,7 @@
   flex-direction:column;
   gap:18px;
   position:relative;
-  padding-bottom:310px;
+  padding-bottom:260px;
 }
 
 .procstack-hero{
@@ -157,9 +157,9 @@
   border-color:#fde68a;
 }
 
-/* =========================================================
-   KASUS / TOPIK DIPERBESAR BIAR SOAL KEBACA
-   ========================================================= */
+/* =========================
+   KASUS / TOPIK DIPERBESAR
+   ========================= */
 
 .ps-case-panel{
   display:grid;
@@ -179,7 +179,7 @@
 }
 
 .ps-case-box:first-child{
-  min-height:136px;
+  min-height:130px;
   border-color:#93c5fd;
   background:
     radial-gradient(circle at top left, rgba(37,99,235,.10), transparent 32%),
@@ -549,22 +549,7 @@
   color:#991b1b;
 }
 
-.ps-explanation{
-  padding:14px;
-  border-radius:18px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-  color:#475569;
-  font-size:13px;
-  line-height:1.65;
-  margin-bottom:16px;
-}
-
-/* =========================================================
-   LOG PEMBELAJARAN DIBATASI
-   JADI TIDAK NAMBAH TERUS KE ATAS
-   ========================================================= */
-
+.ps-explanation,
 .ps-log-box{
   padding:14px;
   border-radius:18px;
@@ -574,24 +559,6 @@
   font-size:13px;
   line-height:1.65;
   margin-bottom:16px;
-  max-height:210px;
-  overflow:auto;
-  scrollbar-width:thin;
-  scrollbar-color:#93c5fd #eaf2ff;
-}
-
-.ps-log-box::-webkit-scrollbar{
-  width:8px;
-}
-
-.ps-log-box::-webkit-scrollbar-track{
-  background:#eaf2ff;
-  border-radius:999px;
-}
-
-.ps-log-box::-webkit-scrollbar-thumb{
-  background:#93c5fd;
-  border-radius:999px;
 }
 
 .ps-log-list{
@@ -891,14 +858,14 @@
 
 /* =========================================================
    PANJI FLOATING ASSISTANT
-   POSISI KANAN BAWAH, TAPI NAIK DARI LOG
+   POSISI TENGAH KANAN, NGIKUT VIEWPORT / SCROLL
    ========================================================= */
 
 .panji-assistant{
   position:fixed !important;
   right:34px !important;
-  bottom:128px !important;
-  top:auto !important;
+  top:54% !important;
+  bottom:auto !important;
   z-index:999999 !important;
   display:flex !important;
   align-items:flex-end !important;
@@ -906,7 +873,7 @@
   opacity:1 !important;
   visibility:visible !important;
   pointer-events:none !important;
-  transform:none !important;
+  transform:translateY(-50%) !important;
 }
 
 .panji-assistant *{
@@ -917,7 +884,7 @@
   opacity:1 !important;
   visibility:visible !important;
   pointer-events:auto !important;
-  transform:none !important;
+  transform:translateY(-50%) !important;
 }
 
 .panji-assistant.panji-minimized .panji-bubble{
@@ -934,7 +901,7 @@
 .panji-bubble{
   width:380px !important;
   min-height:132px !important;
-  max-height:300px !important;
+  max-height:360px !important;
   position:relative;
   padding:16px;
   border-radius:22px;
@@ -1789,14 +1756,14 @@
 @media (max-width:1400px){
   .panji-assistant{
     right:24px !important;
-    bottom:126px !important;
-    top:auto !important;
-    transform:none !important;
+    top:56% !important;
+    bottom:auto !important;
+    transform:translateY(-50%) !important;
   }
 
   .panji-bubble{
     width:320px !important;
-    max-height:280px !important;
+    max-height:320px !important;
   }
 
   .panji-character{
@@ -1843,7 +1810,7 @@
 
   .panji-assistant{
     right:18px !important;
-    bottom:120px !important;
+    top:58% !important;
   }
 
   .panji-bubble{
@@ -1868,8 +1835,8 @@
 
   .panji-assistant{
     right:12px !important;
-    bottom:110px !important;
     top:auto !important;
+    bottom:92px !important;
     transform:none !important;
   }
 
