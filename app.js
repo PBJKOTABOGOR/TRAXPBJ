@@ -42,8 +42,8 @@ const APP_ROUTES = {
   },
 
 'monitoring-nontender': {
-  title: 'Non eTendering/Non ePurchasing',
-  subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
+  title: 'Non eTendering/Non ePurchasing'
+  subtitle: 'Monitoring realisasi paket Non eTendering/Non ePurchasing dan capaian ITKP perangkat daerah.',
   type: 'module',
   html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
   css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
@@ -547,12 +547,12 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         hint: 'Klik untuk buka Monitoring eKontrak'
       },
       {
-        name: 'Non Tender',
+        name: 'Non eTendering',
         value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)', 'Non etendering', 'Non ePurchasing', 'Non Tender'])),
         max: 5,
         accent: 'red',
         route: 'monitoring-nontender',
-        hint: 'Klik untuk buka Monitoring Non Tender'
+        hint: 'Klik untuk buka Monitoring Non eTendering'
       }
     ]
   };
