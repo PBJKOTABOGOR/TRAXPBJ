@@ -21,6 +21,7 @@
   let cssText = '';
   let appText = '';
   let navToken = 0;
+  let appExportNames = [];
 
   function normalizePageName(input) {
     const raw = String(input || '').trim() || 'login.html';
@@ -127,10 +128,23 @@
     let match;
 
     while ((match = regex.exec(code))) {
-      if (!names.includes(match[1])) names.push(match[1]);
+      if (!names.includes(match[1])) {
+        names.push(match[1]);
+      }
     }
 
-    return `\n;window.APP_CONFIG = APP_CONFIG;\nwindow.METHOD_MAP = METHOD_MAP;\nwindow.STORAGE_KEYS = STORAGE_KEYS;\nObject.assign(window, { ${names.join(', ')} });\n`;
+    appExportNames = names;
+
+    const exportNames = names.length
+      ? `Object.assign(window, { ${names.join(', ')} });`
+      : '';
+
+    return `
+;window.APP_CONFIG = APP_CONFIG;
+window.METHOD_MAP = METHOD_MAP;
+window.STORAGE_KEYS = STORAGE_KEYS;
+${exportNames}
+`;
   }
 
   function patchScriptNavigation(code) {
@@ -152,9 +166,39 @@
     const locationProxy = makeLocationProxy();
     const patched = patchScriptNavigation(code);
 
+    const safeNames = (appExportNames || []).filter((name) => {
+      return /^[A-Za-z_$][\w$]*$/.test(name);
+    });
+
+    const bridge = safeNames
+      .map((name) => `const ${name} = window.${name};`)
+      .join('\n');
+
+    const bridgeConfig = `
+const APP_CONFIG = window.APP_CONFIG;
+const METHOD_MAP = window.METHOD_MAP;
+const STORAGE_KEYS = window.STORAGE_KEYS;
+`;
+
     try {
-      const runner = new Function('window', 'document', 'location', 'localStorage', 'sessionStorage', 'Papa', patched + '\n//# sourceURL=spse-module-' + label + '.js');
-      runner(window, documentProxy, locationProxy, window.localStorage, window.sessionStorage, window.Papa);
+      const runner = new Function(
+        'window',
+        'document',
+        'location',
+        'localStorage',
+        'sessionStorage',
+        'Papa',
+        bridgeConfig + '\n' + bridge + '\n' + patched + '\n//# sourceURL=spse-module-' + label + '.js'
+      );
+
+      runner(
+        window,
+        documentProxy,
+        locationProxy,
+        window.localStorage,
+        window.sessionStorage,
+        window.Papa
+      );
     } catch (error) {
       console.error('Gagal menjalankan script SPSE module:', label, error);
       renderModuleError(error);
@@ -170,8 +214,25 @@
     const exportBlock = exposeAppFunctions(patchedApp);
 
     try {
-      const runner = new Function('window', 'document', 'location', 'localStorage', 'sessionStorage', 'Papa', patchedApp + exportBlock + '\n//# sourceURL=spse-module-app.js');
-      runner(window, documentProxy, locationProxy, window.localStorage, window.sessionStorage, window.Papa);
+      const runner = new Function(
+        'window',
+        'document',
+        'location',
+        'localStorage',
+        'sessionStorage',
+        'Papa',
+        patchedApp + exportBlock + '\n//# sourceURL=spse-module-app.js'
+      );
+
+      runner(
+        window,
+        documentProxy,
+        locationProxy,
+        window.localStorage,
+        window.sessionStorage,
+        window.Papa
+      );
+
       appInstalled = true;
     } catch (error) {
       console.error('Gagal memasang app SPSE module:', error);
@@ -188,10 +249,13 @@
       if (!script.src && script.textContent.trim()) {
         scripts.push(script.textContent);
       }
+
       script.remove();
     });
 
-    doc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => link.remove());
+    doc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+      link.remove();
+    });
 
     return {
       body: doc.body ? doc.body.innerHTML : rawHtml,
@@ -201,11 +265,17 @@
 
   function installLinkInterceptor() {
     shadowRootRef.addEventListener('click', function (event) {
-      const target = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+      const target = event.target && event.target.closest
+        ? event.target.closest('a[href]')
+        : null;
+
       if (!target) return;
 
       const href = target.getAttribute('href') || '';
-      if (!href || href === '#') return;
+
+      if (!href || href === '#') {
+        return;
+      }
 
       if (/\.html(\?|#|$)/i.test(href)) {
         event.preventDefault();
@@ -217,9 +287,23 @@
   function renderShell() {
     shadowRootRef.innerHTML = `
       <style>
-        :host{display:block;width:100%;}
+        :host{
+          display:block;
+          width:100%;
+        }
+
         ${cssText}
-        .spse-module-native-root{width:100%;max-width:none;margin:0;padding:0;background:#efefef;color:#222;min-height:calc(100vh - 30px);}
+
+        .spse-module-native-root{
+          width:100%;
+          max-width:none;
+          margin:0;
+          padding:0;
+          background:#efefef;
+          color:#222;
+          min-height:calc(100vh - 30px);
+        }
+
         .spse-module-native-root .topbar-inner,
         .spse-module-native-root .nav,
         .spse-module-native-root .system-bar,
@@ -234,16 +318,19 @@
           margin-left:0 !important;
           margin-right:0 !important;
         }
+
         .spse-module-native-root .content-block,
         .spse-module-native-root .edit-block,
         .spse-module-native-root .panel{
           border-radius:18px;
           box-shadow:0 18px 40px rgba(15,23,42,.08);
         }
+
         .spse-module-native-root .topbar{
           border-radius:22px 22px 0 0;
           overflow:hidden;
         }
+
         .spse-module-error{
           padding:18px;
           border-radius:22px;
@@ -254,14 +341,18 @@
           font-weight:800;
         }
       </style>
+
       <div class="spse-module-native-root" data-spse-page-root>
-        <div style="min-height:180px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#123a72;">Memuat halaman...</div>
+        <div style="min-height:180px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#123a72;">
+          Memuat halaman...
+        </div>
       </div>
     `;
   }
 
   function renderModuleError(error) {
     if (!shadowRootRef) return;
+
     const root = shadowRootRef.querySelector('[data-spse-page-root]');
     if (!root) return;
 
@@ -276,6 +367,7 @@
   async function renderPage(pageName, search) {
     const token = ++navToken;
     const cleanPage = normalizePageName(pageName);
+
     currentPageName = cleanPage;
     currentSearch = search || '';
     window.__spseCurrentSearch = currentSearch;
@@ -283,11 +375,18 @@
     const root = shadowRootRef.querySelector('[data-spse-page-root]');
     if (!root) return;
 
-    root.innerHTML = '<div style="min-height:180px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#123a72;">Memuat ' + cleanPage + '...</div>';
+    root.innerHTML = `
+      <div style="min-height:180px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#123a72;">
+        Memuat ${cleanPage}...
+      </div>
+    `;
 
     try {
       const rawHtml = await fetchText(resolveAsset(cleanPage));
-      if (destroyed || token !== navToken) return;
+
+      if (destroyed || token !== navToken) {
+        return;
+      }
 
       const parts = extractPageParts(rawHtml);
       root.innerHTML = parts.body;
@@ -307,24 +406,29 @@
 
   function navigate(rawUrl) {
     if (destroyed) return;
+
     const target = String(rawUrl || '').trim() || 'login.html';
     const pageName = normalizePageName(target);
     const search = getSearchFromUrl(target);
+
     renderPage(pageName, search);
   }
 
   async function preloadAssets() {
-    const [loadedCss, loadedApp] = await Promise.all([
+    const loaded = await Promise.all([
       fetchText(resolveAsset('style.css')),
       fetchText(resolveAsset('app.js'))
     ]);
 
-    cssText = loadedCss;
-    appText = loadedApp;
+    cssText = loaded[0];
+    appText = loaded[1];
   }
 
   window.__moduleInit = function ({ container }) {
     destroyed = false;
+    appInstalled = false;
+    appExportNames = [];
+
     hostElement = container.querySelector('[data-spse-native-host]') || container;
 
     if (!hostElement.shadowRoot) {
@@ -338,10 +442,14 @@
     preloadAssets()
       .then(() => {
         if (destroyed) return;
+
         renderShell();
         installLinkInterceptor();
 
-        const startPage = localStorage.getItem('spse_logged_in') === '1' ? 'home.html' : 'login.html';
+        const startPage = localStorage.getItem('spse_logged_in') === '1'
+          ? 'home.html'
+          : 'login.html';
+
         navigate(startPage);
       })
       .catch((error) => {
@@ -353,6 +461,7 @@
     return function destroy() {
       destroyed = true;
       navToken += 1;
+
       if (window.__spseNavigate === navigate) {
         try {
           delete window.__spseNavigate;
