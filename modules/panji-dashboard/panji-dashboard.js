@@ -24,6 +24,17 @@
     ]
   };
 
+  const PANJI_ASSETS = {
+    default: '/TRAXPBJ/assets/panji/panji-senang.png',
+    intro: '/TRAXPBJ/assets/panji/panji-senang.png',
+    talking: '/TRAXPBJ/assets/panji/panji-senang.png',
+    happy: '/TRAXPBJ/assets/panji/panji-gembira.png',
+    sad: '/TRAXPBJ/assets/panji/panji-sedih.png',
+    thinking: '/TRAXPBJ/assets/panji/panji-bingung.png',
+    confused: '/TRAXPBJ/assets/panji/panji-bingung.png',
+    paused: '/TRAXPBJ/assets/panji/panji-senang.png'
+  };
+
   const PANJI_KNOWLEDGE = {
     totalScale: [
       { min: 24, label: 'Sangat Baik', tone: 'happy' },
@@ -158,6 +169,7 @@
     text: null,
     emote: null,
     character: null,
+    sprite: null,
     isClosed: false,
     isPaused: false,
     currentTarget: null,
@@ -229,46 +241,16 @@
         </div>
 
         <button type="button" class="trax-panji-character" title="Klik PANJI untuk diam/ngomong lagi" aria-label="PANJI Pengadaan Jitu">
-          <div class="panji-mascot-shadow"></div>
-          <div class="panji-mascot-question">?</div>
-          <div class="panji-mascot-spark">✦</div>
-
-          <div class="panji-mascot-arm panji-mascot-arm-left">
-            <div class="panji-mascot-glove panji-mascot-glove-left">
-              <span></span>
-            </div>
-          </div>
-
-          <div class="panji-mascot-arm panji-mascot-arm-right">
-            <div class="panji-mascot-glove panji-mascot-glove-right">
-              <span></span>
-            </div>
-          </div>
-
-          <div class="panji-mascot-leg panji-mascot-leg-left">
-            <div class="panji-mascot-shoe"></div>
-          </div>
-
-          <div class="panji-mascot-leg panji-mascot-leg-right">
-            <div class="panji-mascot-shoe"></div>
-          </div>
-
-          <div class="panji-mascot-body">
-            <div class="panji-mascot-ring"></div>
-            <div class="panji-mascot-cut"></div>
-            <div class="panji-mascot-swoosh"></div>
-            <div class="panji-mascot-core"></div>
-
-            <div class="panji-mascot-face">
-              <div class="panji-mascot-brow panji-mascot-brow-left"></div>
-              <div class="panji-mascot-brow panji-mascot-brow-right"></div>
-              <div class="panji-mascot-eye panji-mascot-eye-left"></div>
-              <div class="panji-mascot-eye panji-mascot-eye-right"></div>
-              <div class="panji-mascot-tear panji-mascot-tear-left"></div>
-              <div class="panji-mascot-tear panji-mascot-tear-right"></div>
-              <div class="panji-mascot-nose"></div>
-              <div class="panji-mascot-mouth"></div>
-            </div>
+          <div class="trax-panji-character-inner">
+            <img
+              class="trax-panji-sprite"
+              src="${PANJI_ASSETS.intro}"
+              alt="PANJI"
+              draggable="false"
+            />
+            <div class="trax-panji-sprite-shadow"></div>
+            <div class="trax-panji-sprite-icon trax-panji-sprite-question">?</div>
+            <div class="trax-panji-sprite-icon trax-panji-sprite-spark">✦</div>
           </div>
         </button>
       `;
@@ -281,8 +263,10 @@
     state.text = root.querySelector('.trax-panji-text');
     state.emote = root.querySelector('.trax-panji-emote');
     state.character = root.querySelector('.trax-panji-character');
+    state.sprite = root.querySelector('.trax-panji-sprite');
 
     bindPanjiEvents();
+    setPanjiSprite('intro');
     updatePanjiPosition();
     window.addEventListener('scroll', updatePanjiPosition, { passive: true });
     window.addEventListener('resize', updatePanjiPosition);
@@ -365,10 +349,12 @@
         'trax-panji-happy',
         'trax-panji-sad',
         'trax-panji-thinking',
-        'trax-panji-confused',
-        'trax-panji-excited'
+        'trax-panji-intro',
+        'trax-panji-show-question',
+        'trax-panji-show-spark'
       );
 
+      setPanjiSprite('paused');
       setText('Baik, PANJI diam dulu. Klik saya lagi kalau mau lanjut membaca dashboard.');
       setEmote('🤐');
       clearTimeout(state.talkTimer);
@@ -405,33 +391,40 @@
       'trax-panji-happy',
       'trax-panji-sad',
       'trax-panji-thinking',
-      'trax-panji-confused',
-      'trax-panji-excited',
       'trax-panji-talking',
-      'trax-panji-intro'
+      'trax-panji-intro',
+      'trax-panji-show-question',
+      'trax-panji-show-spark'
     );
 
     if (mood === 'happy') {
       state.root.classList.add('trax-panji-happy', 'trax-panji-talking');
       setEmote('😄');
+      setPanjiSprite('happy');
     } else if (mood === 'sad') {
       state.root.classList.add('trax-panji-sad', 'trax-panji-talking');
       setEmote('😢');
+      setPanjiSprite('sad');
     } else if (mood === 'thinking') {
       state.root.classList.add('trax-panji-thinking', 'trax-panji-talking');
       setEmote('🤔');
+      setPanjiSprite('thinking');
     } else if (mood === 'confused') {
-      state.root.classList.add('trax-panji-confused', 'trax-panji-talking');
+      state.root.classList.add('trax-panji-thinking', 'trax-panji-talking');
       setEmote('❓');
+      setPanjiSprite('confused');
     } else if (mood === 'excited') {
-      state.root.classList.add('trax-panji-excited', 'trax-panji-happy', 'trax-panji-talking');
+      state.root.classList.add('trax-panji-happy', 'trax-panji-talking');
       setEmote('🎉');
+      setPanjiSprite('happy');
     } else if (mood === 'intro') {
       state.root.classList.add('trax-panji-intro', 'trax-panji-talking');
       setEmote('👋');
+      setPanjiSprite('intro');
     } else {
       state.root.classList.add('trax-panji-talking');
       setEmote('🤖');
+      setPanjiSprite('talking');
     }
 
     setText(clean);
@@ -452,6 +445,26 @@
   function setEmote(value) {
     if (!state.emote) return;
     state.emote.textContent = value;
+  }
+
+  function setPanjiSprite(mood = 'default') {
+    if (!state.root || !state.sprite) return;
+
+    const chosen = PANJI_ASSETS[mood] || PANJI_ASSETS.default;
+    state.sprite.src = chosen;
+
+    state.root.classList.remove(
+      'trax-panji-show-question',
+      'trax-panji-show-spark'
+    );
+
+    if (mood === 'thinking' || mood === 'confused') {
+      state.root.classList.add('trax-panji-show-question');
+    }
+
+    if (mood === 'happy') {
+      state.root.classList.add('trax-panji-show-spark');
+    }
   }
 
   function bindDashboardInteractions() {
@@ -1147,7 +1160,7 @@
         padding:16px;
         border-radius:22px;
         background:
-          radial-gradient(circle at top left, rgba(239,68,68,.12), transparent 38%),
+          radial-gradient(circle at top left, rgba(239,68,68,.14), transparent 38%),
           rgba(255,255,255,.97);
         border:1px solid rgba(254,202,202,.95);
         box-shadow:0 22px 48px rgba(15,23,42,.18);
@@ -1193,12 +1206,12 @@
         min-height:26px;
         padding:0 10px;
         border-radius:999px;
-        background:linear-gradient(135deg,#b91c1c,#ef233c);
+        background:linear-gradient(135deg,#b91c1c,#ef4444);
         color:#fff;
         font-size:11px;
         font-weight:950;
         letter-spacing:.08em;
-        box-shadow:0 8px 18px rgba(239,35,60,.24);
+        box-shadow:0 8px 18px rgba(239,68,68,.22);
       }
 
       .trax-panji-emote{
@@ -1266,7 +1279,7 @@
         border:none;
         border-radius:999px;
         cursor:pointer;
-        background:#111827;
+        background:#102544;
         color:#fff;
         font-size:18px;
         font-weight:900;
@@ -1274,8 +1287,8 @@
       }
 
       .trax-panji-character{
-        width:132px;
-        height:178px;
+        width:130px;
+        height:170px;
         position:relative;
         border:none;
         background:transparent;
@@ -1283,12 +1296,16 @@
         padding:0;
         flex-shrink:0;
         transform-origin:center bottom;
-        animation:
-          panjiMascotFloat 2.9s ease-in-out infinite,
-          panjiMascotTilt 4.8s ease-in-out infinite;
+        animation:traxPanjiFloat 2.8s ease-in-out infinite;
       }
 
-      @keyframes panjiMascotFloat{
+      .trax-panji-character-inner{
+        position:relative;
+        width:100%;
+        height:100%;
+      }
+
+      @keyframes traxPanjiFloat{
         0%,100%{
           transform:translateY(0);
         }
@@ -1298,570 +1315,170 @@
         }
       }
 
-      @keyframes panjiMascotTilt{
-        0%,100%{
-          rotate:0deg;
-        }
-
-        25%{
-          rotate:-1.8deg;
-        }
-
-        75%{
-          rotate:1.8deg;
-        }
-      }
-
-      .panji-mascot-shadow{
+      .trax-panji-sprite{
         position:absolute;
-        left:22px;
-        bottom:1px;
-        width:88px;
-        height:16px;
-        border-radius:999px;
-        background:rgba(15,23,42,.18);
-        filter:blur(1px);
-        animation:panjiMascotShadow 2.9s ease-in-out infinite;
+        left:50%;
+        bottom:18px;
+        transform:translateX(-50%);
+        width:118px;
+        height:auto;
+        max-height:150px;
+        object-fit:contain;
+        user-select:none;
+        -webkit-user-drag:none;
+        filter:drop-shadow(0 12px 20px rgba(15,23,42,.18));
+        transition:
+          transform .18s ease,
+          filter .18s ease;
+        z-index:2;
       }
 
-      @keyframes panjiMascotShadow{
+      .trax-panji-sprite-shadow{
+        position:absolute;
+        left:50%;
+        bottom:10px;
+        transform:translateX(-50%);
+        width:78px;
+        height:14px;
+        border-radius:999px;
+        background:rgba(15,23,42,.14);
+        filter:blur(1px);
+        z-index:1;
+        animation:traxPanjiShadow 2.8s ease-in-out infinite;
+      }
+
+      @keyframes traxPanjiShadow{
         0%,100%{
-          transform:scale(1);
-          opacity:.18;
+          transform:translateX(-50%) scale(1);
+          opacity:.16;
         }
 
         50%{
-          transform:scale(.84);
+          transform:translateX(-50%) scale(.88);
           opacity:.10;
         }
       }
 
-      .panji-mascot-body{
-        position:absolute;
-        left:10px;
-        top:18px;
-        width:112px;
-        height:112px;
-        border-radius:999px;
-        transform-origin:center;
-        filter:drop-shadow(0 14px 24px rgba(127,29,29,.22));
-        animation:panjiMascotBreath 2.6s ease-in-out infinite;
-      }
-
-      @keyframes panjiMascotBreath{
-        0%,100%{
-          transform:scale(1);
-        }
-
-        50%{
-          transform:scale(1.025);
-        }
-      }
-
-      .panji-mascot-ring{
-        position:absolute;
-        inset:0;
-        border-radius:999px;
-        background:
-          radial-gradient(circle at 28% 20%, rgba(255,255,255,.45), transparent 16%),
-          radial-gradient(circle at 68% 78%, rgba(127,29,29,.34), transparent 28%),
-          linear-gradient(145deg,#ff4353 0%,#ef233c 46%,#b91c1c 100%);
-        border:3px solid rgba(127,29,29,.88);
-        box-shadow:
-          inset 0 10px 18px rgba(255,255,255,.24),
-          inset 0 -13px 20px rgba(127,29,29,.22);
-      }
-
-      .panji-mascot-cut{
-        position:absolute;
-        left:28px;
-        top:30px;
-        width:56px;
-        height:56px;
-        border-radius:999px;
-        background:#ffffff;
-        border:2px solid rgba(127,29,29,.18);
-        box-shadow:inset 0 -4px 12px rgba(15,23,42,.06);
-      }
-
-      .panji-mascot-swoosh{
-        position:absolute;
-        right:10px;
-        top:25px;
-        width:58px;
-        height:38px;
-        border-radius:0 60px 60px 24px;
-        background:
-          radial-gradient(circle at 18% 15%, rgba(255,255,255,.35), transparent 22%),
-          linear-gradient(145deg,#ff4353,#d90429);
-        border-right:3px solid rgba(127,29,29,.78);
-        border-bottom:3px solid rgba(127,29,29,.78);
-        transform:rotate(6deg);
-        clip-path:polygon(0 0,100% 12%,92% 62%,62% 100%,18% 72%);
-      }
-
-      .panji-mascot-core{
-        position:absolute;
-        left:48px;
-        top:48px;
-        width:28px;
-        height:28px;
-        border-radius:999px;
-        background:
-          radial-gradient(circle at 30% 26%, rgba(255,255,255,.45), transparent 22%),
-          linear-gradient(145deg,#ff4353,#d90429);
-        border:2px solid rgba(127,29,29,.72);
-        z-index:5;
-      }
-
-      .panji-mascot-face{
-        position:absolute;
-        left:28px;
-        top:27px;
-        width:60px;
-        height:62px;
-        z-index:8;
-      }
-
-      .panji-mascot-brow{
-        position:absolute;
-        top:17px;
-        width:18px;
-        height:8px;
-        border-top:4px solid #111827;
-        border-radius:999px;
-        opacity:.95;
-        transition:.18s ease;
-      }
-
-      .panji-mascot-brow-left{
-        left:9px;
-        transform:rotate(-7deg);
-      }
-
-      .panji-mascot-brow-right{
-        right:7px;
-        transform:rotate(7deg);
-      }
-
-      .panji-mascot-eye{
-        position:absolute;
-        top:26px;
-        width:13px;
-        height:17px;
-        border-radius:999px;
-        background:#111827;
-        box-shadow:
-          inset -2px -3px 0 rgba(0,0,0,.18);
-        animation:panjiMascotBlink 4.9s infinite;
-      }
-
-      .panji-mascot-eye::after{
-        content:"";
-        position:absolute;
-        left:3px;
-        top:3px;
-        width:4px;
-        height:5px;
-        border-radius:999px;
-        background:#fff;
-      }
-
-      .panji-mascot-eye-left{
-        left:12px;
-      }
-
-      .panji-mascot-eye-right{
-        right:10px;
-      }
-
-      @keyframes panjiMascotBlink{
-        0%,91%,100%{
-          transform:scaleY(1);
-        }
-
-        94%{
-          transform:scaleY(.12);
-        }
-
-        96%{
-          transform:scaleY(1);
-        }
-      }
-
-      .panji-mascot-nose{
-        position:absolute;
-        left:29px;
-        top:41px;
-        width:6px;
-        height:5px;
-        border-radius:999px;
-        background:#ef233c;
-        border:1px solid rgba(127,29,29,.45);
-      }
-
-      .panji-mascot-mouth{
-        position:absolute;
-        left:22px;
-        top:48px;
-        width:22px;
-        height:11px;
-        border-radius:0 0 999px 999px;
-        background:#7f1d1d;
-        overflow:hidden;
-        transition:.18s ease;
-      }
-
-      .panji-mascot-mouth::after{
-        content:"";
-        position:absolute;
-        left:6px;
-        bottom:-3px;
-        width:11px;
-        height:7px;
-        border-radius:999px;
-        background:#fb7185;
-      }
-
-      .panji-mascot-tear{
-        position:absolute;
-        top:39px;
-        width:6px;
-        height:10px;
-        border-radius:999px;
-        background:linear-gradient(180deg,#93c5fd,#38bdf8);
-        opacity:0;
-        z-index:12;
-      }
-
-      .panji-mascot-tear-left{
-        left:16px;
-      }
-
-      .panji-mascot-tear-right{
-        right:14px;
-      }
-
-      .panji-mascot-arm{
-        position:absolute;
-        width:12px;
-        height:48px;
-        border-radius:999px;
-        background:#1f2937;
-        z-index:2;
-        transform-origin:top center;
-      }
-
-      .panji-mascot-arm-left{
-        left:9px;
-        top:82px;
-        transform:rotate(34deg);
-      }
-
-      .panji-mascot-arm-right{
-        right:9px;
-        top:82px;
-        transform:rotate(-34deg);
-        animation:panjiMascotWave 2.1s ease-in-out infinite;
-      }
-
-      @keyframes panjiMascotWave{
-        0%,100%{
-          transform:rotate(-28deg);
-        }
-
-        50%{
-          transform:rotate(-55deg);
-        }
-      }
-
-      .panji-mascot-glove{
-        position:absolute;
-        left:50%;
-        bottom:-12px;
-        width:28px;
-        height:25px;
-        border-radius:999px;
-        background:#fff;
-        border:2px solid #111827;
-        box-shadow:inset 0 -4px 0 rgba(15,23,42,.08);
-      }
-
-      .panji-mascot-glove span{
-        position:absolute;
-        left:5px;
-        top:5px;
-        width:18px;
-        height:9px;
-        border-top:2px solid rgba(17,24,39,.45);
-        border-radius:999px;
-      }
-
-      .panji-mascot-glove-left{
-        transform:translateX(-50%) rotate(-8deg);
-      }
-
-      .panji-mascot-glove-right{
-        transform:translateX(-50%) rotate(10deg);
-      }
-
-      .panji-mascot-leg{
-        position:absolute;
-        width:13px;
-        height:36px;
-        border-radius:999px;
-        background:#1f2937;
-        z-index:1;
-      }
-
-      .panji-mascot-leg-left{
-        left:45px;
-        top:124px;
-        transform:rotate(2deg);
-      }
-
-      .panji-mascot-leg-right{
-        right:45px;
-        top:124px;
-        transform:rotate(-2deg);
-      }
-
-      .panji-mascot-shoe{
-        position:absolute;
-        left:50%;
-        bottom:-10px;
-        width:34px;
-        height:17px;
-        border-radius:999px 999px 8px 8px;
-        transform:translateX(-50%);
-        background:
-          radial-gradient(circle at 24% 24%, rgba(255,255,255,.68), transparent 20%),
-          linear-gradient(145deg,#ff4353,#d90429);
-        border:2px solid #111827;
-        box-shadow:inset 0 -3px 0 rgba(127,29,29,.28);
-      }
-
-      .panji-mascot-shoe::after{
-        content:"";
-        position:absolute;
-        left:4px;
-        right:4px;
-        bottom:1px;
-        height:3px;
-        border-radius:999px;
-        background:#fff;
-      }
-
-      .panji-mascot-question,
-      .panji-mascot-spark{
+      .trax-panji-sprite-icon{
         position:absolute;
         opacity:0;
         pointer-events:none;
-        z-index:30;
+        transition:.18s ease;
+        z-index:4;
       }
 
-      .panji-mascot-question{
-        right:0;
-        top:2px;
+      .trax-panji-sprite-question{
+        right:4px;
+        top:6px;
         width:30px;
         height:30px;
         border-radius:999px;
-        background:#fef3c7;
-        color:#92400e;
         display:flex;
         align-items:center;
         justify-content:center;
+        background:#fef3c7;
+        color:#92400e;
         font-size:22px;
         font-weight:950;
-        box-shadow:0 8px 18px rgba(15,23,42,.16);
+        box-shadow:0 8px 18px rgba(15,23,42,.14);
       }
 
-      .panji-mascot-spark{
-        right:15px;
-        top:7px;
+      .trax-panji-sprite-spark{
+        right:14px;
+        top:10px;
         color:#f59e0b;
-        font-size:26px;
+        font-size:28px;
         text-shadow:0 6px 14px rgba(245,158,11,.22);
       }
 
-      .trax-panji-talking .panji-mascot-mouth{
-        animation:panjiMascotTalk .22s ease-in-out infinite;
+      .trax-panji-show-question .trax-panji-sprite-question{
+        opacity:1;
+        animation:traxPanjiQuestion 1.1s ease-in-out infinite;
       }
 
-      @keyframes panjiMascotTalk{
+      .trax-panji-show-spark .trax-panji-sprite-spark{
+        opacity:1;
+        animation:traxPanjiSpark 1s ease-in-out infinite;
+      }
+
+      @keyframes traxPanjiQuestion{
         0%,100%{
-          width:18px;
-          height:8px;
-          left:24px;
-          top:50px;
-          border-radius:0 0 999px 999px;
+          transform:translateY(0) scale(1);
         }
 
         50%{
-          width:24px;
-          height:18px;
-          left:21px;
-          top:44px;
-          border-radius:999px;
+          transform:translateY(-7px) scale(1.08);
         }
       }
 
-      .trax-panji-happy .panji-mascot-eye{
-        top:30px;
-        height:8px;
-        background:transparent;
-        box-shadow:none;
-        border-bottom:4px solid #111827;
-        animation:none;
+      @keyframes traxPanjiSpark{
+        0%,100%{
+          transform:scale(1) rotate(0deg);
+          opacity:.8;
+        }
+
+        50%{
+          transform:scale(1.2) rotate(10deg);
+          opacity:1;
+        }
       }
 
-      .trax-panji-happy .panji-mascot-eye::after{
-        display:none;
+      .trax-panji-talking .trax-panji-sprite{
+        animation:traxPanjiTalkBob .45s ease-in-out infinite;
       }
 
-      .trax-panji-happy .panji-mascot-mouth{
-        width:26px;
-        height:15px;
-        left:20px;
-        top:46px;
-        border-radius:0 0 999px 999px;
-        background:#7f1d1d;
+      @keyframes traxPanjiTalkBob{
+        0%,100%{
+          transform:translateX(-50%) translateY(0);
+        }
+
+        50%{
+          transform:translateX(-50%) translateY(-3px);
+        }
       }
 
-      .trax-panji-happy .panji-mascot-brow-left{
-        transform:rotate(-14deg) translateY(-1px);
+      .trax-panji-happy .trax-panji-sprite{
+        animation:traxPanjiHappyBounce .65s ease-in-out infinite;
       }
 
-      .trax-panji-happy .panji-mascot-brow-right{
-        transform:rotate(14deg) translateY(-1px);
+      @keyframes traxPanjiHappyBounce{
+        0%,100%{
+          transform:translateX(-50%) translateY(0);
+        }
+
+        50%{
+          transform:translateX(-50%) translateY(-10px);
+        }
       }
 
-      .trax-panji-sad .panji-mascot-brow-left{
-        transform:rotate(18deg) translateY(1px);
+      .trax-panji-sad .trax-panji-sprite{
+        transform:translateX(-50%) translateY(4px);
+        filter:drop-shadow(0 10px 16px rgba(15,23,42,.16));
       }
 
-      .trax-panji-sad .panji-mascot-brow-right{
-        transform:rotate(-18deg) translateY(1px);
+      .trax-panji-thinking .trax-panji-sprite{
+        animation:traxPanjiThinkTilt 1.5s ease-in-out infinite;
       }
 
-      .trax-panji-sad .panji-mascot-mouth{
-        width:24px;
-        height:13px;
-        left:21px;
-        top:50px;
-        background:transparent;
-        border-top:4px solid #111827;
-        border-radius:999px 999px 0 0;
-      }
-
-      .trax-panji-sad .panji-mascot-mouth::after{
-        display:none;
-      }
-
-      .trax-panji-sad .panji-mascot-tear{
-        opacity:1;
-        animation:panjiMascotTear 1.05s ease-in-out infinite;
-      }
-
-      @keyframes panjiMascotTear{
-        0%{
-          transform:translateY(-4px) scale(.7);
-          opacity:0;
+      @keyframes traxPanjiThinkTilt{
+        0%,100%{
+          transform:translateX(-50%) rotate(0deg);
         }
 
         25%{
-          opacity:1;
+          transform:translateX(-50%) rotate(-3deg);
         }
 
-        100%{
-          transform:translateY(18px) scale(1);
-          opacity:0;
+        75%{
+          transform:translateX(-50%) rotate(3deg);
         }
-      }
-
-      .trax-panji-thinking .panji-mascot-question,
-      .trax-panji-confused .panji-mascot-question{
-        opacity:1;
-        animation:panjiMascotQuestion 1.15s ease-in-out infinite;
-      }
-
-      @keyframes panjiMascotQuestion{
-        0%,100%{
-          transform:translateY(0) scale(1) rotate(0deg);
-        }
-
-        50%{
-          transform:translateY(-7px) scale(1.08) rotate(5deg);
-        }
-      }
-
-      .trax-panji-thinking .panji-mascot-mouth,
-      .trax-panji-confused .panji-mascot-mouth{
-        width:12px;
-        height:13px;
-        left:27px;
-        top:47px;
-        border-radius:999px;
-        background:#7f1d1d;
-      }
-
-      .trax-panji-thinking .panji-mascot-brow-left,
-      .trax-panji-confused .panji-mascot-brow-left{
-        transform:rotate(-24deg) translateY(-1px);
-      }
-
-      .trax-panji-thinking .panji-mascot-brow-right,
-      .trax-panji-confused .panji-mascot-brow-right{
-        transform:rotate(24deg) translateY(1px);
-      }
-
-      .trax-panji-excited .panji-mascot-spark{
-        opacity:1;
-        animation:panjiMascotSpark 1s ease-in-out infinite;
-      }
-
-      @keyframes panjiMascotSpark{
-        0%,100%{
-          transform:scale(1) rotate(0deg);
-          opacity:.75;
-        }
-
-        50%{
-          transform:scale(1.25) rotate(16deg);
-          opacity:1;
-        }
-      }
-
-      .trax-panji-excited .trax-panji-character{
-        animation:panjiMascotJump .68s ease-in-out infinite;
-      }
-
-      @keyframes panjiMascotJump{
-        0%,100%{
-          transform:translateY(0) rotate(0deg);
-        }
-
-        50%{
-          transform:translateY(-16px) rotate(-2deg);
-        }
-      }
-
-      .trax-panji-excited .panji-mascot-arm-left{
-        top:70px;
-        transform:rotate(-126deg);
-      }
-
-      .trax-panji-excited .panji-mascot-arm-right{
-        top:70px;
-        animation:none;
-        transform:rotate(126deg);
       }
 
       .trax-panji-intro .trax-panji-character{
-        animation:panjiMascotIntro .85s cubic-bezier(.2,.8,.2,1);
+        animation:traxPanjiIntro .85s cubic-bezier(.2,.8,.2,1);
       }
 
-      @keyframes panjiMascotIntro{
+      @keyframes traxPanjiIntro{
         0%{
           opacity:0;
           transform:translateY(38px) scale(.82) rotate(-8deg);
@@ -1881,11 +1498,11 @@
       .panji-elegant-focus{
         position:relative !important;
         z-index:20 !important;
-        outline:3px solid rgba(239,35,60,.88) !important;
+        outline:3px solid rgba(239,68,68,.88) !important;
         outline-offset:5px !important;
         box-shadow:
-          0 0 0 8px rgba(239,35,60,.12),
-          0 0 28px rgba(239,35,60,.30),
+          0 0 0 8px rgba(239,68,68,.12),
+          0 0 28px rgba(239,68,68,.30),
           0 18px 36px rgba(15,23,42,.12) !important;
         border-radius:18px !important;
         animation:panjiElegantPulse 1.2s ease-in-out infinite !important;
@@ -1893,10 +1510,10 @@
 
       @keyframes panjiElegantPulse{
         0%,100%{
-          outline-color:rgba(239,35,60,.88);
+          outline-color:rgba(239,68,68,.88);
           box-shadow:
-            0 0 0 7px rgba(239,35,60,.12),
-            0 0 22px rgba(239,35,60,.25),
+            0 0 0 7px rgba(239,68,68,.12),
+            0 0 22px rgba(239,68,68,.25),
             0 18px 36px rgba(15,23,42,.10);
         }
 
@@ -1920,60 +1537,68 @@
         }
 
         .trax-panji-character{
-          width:124px;
-          height:170px;
+          width:120px;
+          height:160px;
+        }
+
+        .trax-panji-sprite{
+          width:110px;
+          max-height:142px;
         }
       }
 
       @media(max-width:900px){
         .trax-panji-assistant{
-          right:14px;
-          bottom:var(--trax-panji-bottom, 72px);
-          gap:8px;
+          right:16px;
+          gap:10px;
         }
 
         .trax-panji-bubble{
-          width:min(310px, calc(100vw - 164px));
+          width:300px;
           max-height:230px;
-          padding:14px;
         }
 
         .trax-panji-character{
-          width:112px;
-          height:158px;
+          width:108px;
+          height:150px;
         }
 
-        .panji-mascot-body{
-          transform:scale(.9);
-          transform-origin:center top;
+        .trax-panji-sprite{
+          width:98px;
+          max-height:132px;
         }
       }
 
       @media(max-width:640px){
         .trax-panji-assistant{
-          align-items:flex-end;
           right:10px;
+          gap:8px;
         }
 
         .trax-panji-bubble{
-          width:calc(100vw - 132px);
-          min-width:0;
+          width:calc(100vw - 130px);
           max-height:220px;
-        }
-
-        .trax-panji-actions button{
-          min-height:32px;
-          font-size:10px;
-          padding:0 9px;
+          padding:14px;
         }
 
         .trax-panji-character{
-          width:104px;
-          height:150px;
+          width:100px;
+          height:140px;
+        }
+
+        .trax-panji-sprite{
+          width:92px;
+          max-height:124px;
         }
 
         .trax-panji-text{
           font-size:13px;
+        }
+
+        .trax-panji-actions button{
+          min-height:31px;
+          font-size:10px;
+          padding:0 9px;
         }
       }
     `;
