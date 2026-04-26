@@ -1,6 +1,6 @@
 const APP_ROUTES = {
   dashboard: {
-    title: 'Dashboard TRAXPBJ',
+    title: 'Dashboard SIPPBJ',
     subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
@@ -41,23 +41,26 @@ const APP_ROUTES = {
     js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
   },
 
-  'monitoring-nontender': {
-    title: 'Monitoring Non Tender',
-    subtitle: 'Halaman ini disiapkan untuk monitoring Non eTendering/Non ePurchasing.',
-    type: 'placeholder'
-  },
+'monitoring-nontender': {
+  title: 'Non eTendering/Non ePurchasing',
+  subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
+  type: 'module',
+  html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
+  css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
+  js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
+},
 
-  'rapor-pbj': {
-    title: 'Rapor PBJ',
-    subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
-    type: 'module',
-    html: 'modules/rapor-pbj/rapor-pbj.html',
-    css: 'modules/rapor-pbj/rapor-pbj.css',
-    js: 'modules/rapor-pbj/rapor-pbj.js',
-    externalScripts: [
-      'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
-    ]
-  },
+'rapor-pbj': {
+  title: 'Rapor PBJ',
+  subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
+  type: 'module',
+  html: 'modules/rapor-pbj/rapor-pbj.html',
+  css: 'modules/rapor-pbj/rapor-pbj.css',
+  js: 'modules/rapor-pbj/rapor-pbj.js',
+  externalScripts: [
+    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+  ]
+},
 
   'monitoring-perencanaan': {
     title: 'Monitoring Realisasi',
@@ -402,6 +405,12 @@ function groupSum(rows, keyGetter, valueGetter) {
   return Array.from(map.values()).sort((a, b) => b.value - a.value);
 }
 
+function avg(values) {
+  const cleaned = values.map(toNumber).filter((value) => Number.isFinite(value));
+  if (!cleaned.length) return 0;
+  return cleaned.reduce((total, value) => total + value, 0) / cleaned.length;
+}
+
 function sum(values) {
   return values.reduce((total, value) => total + toNumber(value), 0);
 }
@@ -679,7 +688,7 @@ function renderDashboardSkeleton() {
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-glow"></div>
-      <div class="hero-kicker">TRAXPBJ · Kota Bogor Procurement Intelligence</div>
+      <div class="hero-kicker">SIPPBJ · Kota Bogor Procurement Dashboard</div>
       <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
       <p>Menarik data dari FIX ITKP OPD, D_PERENCANAAN, dan D_REALISASI untuk merangkum profil ITKP, perencanaan, realisasi, metode pengadaan, OPD dominan, serta indikator progress pengadaan.</p>
 
@@ -697,7 +706,7 @@ function renderDashboardSkeleton() {
 function renderDashboardError(error) {
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
-      <div class="hero-kicker">TRAXPBJ · Dashboard</div>
+      <div class="hero-kicker">SIPPBJ · Dashboard</div>
       <h3>Data dashboard belum bisa dimuat</h3>
       <p>${escapeHtml(error.message || 'Terjadi kendala saat mengambil data.')}</p>
       <div class="hero-actions">
@@ -766,7 +775,7 @@ function renderDashboardReady(data) {
 
       <div class="hero-topline">
         <div>
-          <div class="hero-kicker">TRAXPBJ · Kota Bogor Procurement Intelligence</div>
+          <div class="hero-kicker">SIPPBJ · Kota Bogor Procurement Dashboard</div>
           <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
           <p>Ringkasan interaktif dari ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD/Sub OPD berdasarkan data Google Sheet yang tersedia.</p>
         </div>
@@ -951,7 +960,7 @@ function renderDashboardReady(data) {
       ${renderQuickCard('🗓️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
     </section>
 
-    <div class="footer-note">© BenRama 2026 SIPPBJ - Dashboard TRAXPBJ Kota Bogor</div>
+    <div class="footer-note">© BenRama 2026 SIPPBJ - Dashboard UKPBJ Kota Bogor</div>
   `;
 }
 
@@ -1124,21 +1133,17 @@ function renderQuickCard(icon, bg, title, text, route) {
 }
 
 function renderIframePage(page) {
-  const lowerUrl = String(page.url || '').toLowerCase();
-  const isSimNontender = lowerUrl.includes('simppk');
-
   contentArea.innerHTML = `
-    <section class="embed-card ${isSimNontender ? 'embed-card--simppk' : ''}">
+    <section class="embed-card">
       <h3>${escapeHtml(page.title)}</h3>
       <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
 
-      <div class="embed-frame-wrap ${isSimNontender ? 'embed-frame-wrap--simppk' : ''}">
+      <div class="embed-frame-wrap">
         <iframe
-          class="embed-frame ${isSimNontender ? 'embed-frame--simppk' : ''}"
+          class="embed-frame"
           src="${page.url}"
           loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          scrolling="yes">
+          referrerpolicy="no-referrer-when-downgrade">
         </iframe>
       </div>
     </section>
