@@ -412,13 +412,88 @@ function isCityAggregateName(name) {
   return String(name || '').trim().toUpperCase() === 'PEMERINTAH KOTA BOGOR';
 }
 
+function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
+  const map = row && row.__normalized ? row.__normalized : {};
+  const required = requiredWords.map(normalizeHeader).filter(Boolean);
+  const optional = optionalWords.map(normalizeHeader).filter(Boolean);
+
+  let bestValue = 0;
+  let bestWeight = -1;
+
+  Object.entries(map).forEach(([key, value]) => {
+    const number = toNumber(value);
+
+    if (!Number.isFinite(number) || number <= 0) {
+      return;
+    }
+
+    const isMatch = required.every((word) => key.includes(word));
+
+    if (!isMatch) {
+      return;
+    }
+
+    let weight = 0;
+    optional.forEach((word) => {
+      if (key.includes(word)) weight += 1;
+    });
+
+    if (weight > bestWeight) {
+      bestWeight = weight;
+      bestValue = number;
+    }
+  });
+
+  return bestValue;
+}
+
+function getLastReasonableItkpNumber(row) {
+  const map = row && row.__normalized ? row.__normalized : {};
+  const values = Object.entries(map)
+    .filter(([key]) => {
+      return !key.includes('total rup')
+        && !key.includes('total komitmen')
+        && !key.includes('total pagu')
+        && !key.includes('total realisasi')
+        && !key.includes('paket')
+        && !key.includes('pagu');
+    })
+    .map(([, value]) => toNumber(value))
+    .filter((value) => Number.isFinite(value) && value > 0 && value <= 30);
+
+  return values.length ? values[values.length - 1] : 0;
+}
+
 function getItkpScore(row) {
-  return toNumber(getField(row, [
+  const exactValue = toNumber(getField(row, [
     'Nilai ITKP Indikator Pemanfaatan Sistem - skor maksimal 30 (point)',
     'Nilai ITKP - Pemanfaatan Sistem - skor maksimal 30 (point)',
+    'Nilai ITKP Pemanfaatan Sistem - skor maksimal 30 (point)',
     'Nilai ITKP Pemanfaatan Sistem',
+    'Nilai ITKP Indikator Pemanfaatan Sistem',
+    'Pemanfaatan Sistem - skor maksimal 30',
     'Pemanfaatan Sistem'
   ]));
+
+  if (exactValue > 0) {
+    return exactValue;
+  }
+
+  const headerValue = findNumericByHeader(
+    row,
+    ['nilai itkp', 'pemanfaatan sistem'],
+    ['skor maksimal 30', '30', 'point']
+  );
+
+  if (headerValue > 0) {
+    return headerValue;
+  }
+
+  if (isCityAggregateName(getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']))) {
+    return getLastReasonableItkpNumber(row || {});
+  }
+
+  return 0;
 }
 
 function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
@@ -506,18 +581,33 @@ function analyzeDashboardData(raw) {
   const selectedProfile = profiles.find((profile) => profile.name === selectedName) || cityProfile;
   DASHBOARD_STATE.selectedItkpSatker = selectedProfile.name;
 
-  const totalPagu = sum(planningRows.map(getPagu));
-  const totalRealisasi = sum(realRows.map(getRealisasi));
+  const selectedIsCity = isCityAggregateName(selectedProfile.name);
+  const normalizeSatkerName = (value) => String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ');
+
+  const selectedSatkerKey = normalizeSatkerName(selectedProfile.name);
+  const isSelectedSatkerRow = (row) => {
+    if (selectedIsCity) return true;
+    return normalizeSatkerName(getSatker(row)) === selectedSatkerKey;
+  };
+
+  const scopedPlanningRows = planningRows.filter(isSelectedSatkerRow);
+  const scopedRealRows = realRows.filter(isSelectedSatkerRow);
+
+  const totalPagu = sum(scopedPlanningRows.map(getPagu));
+  const totalRealisasi = sum(scopedRealRows.map(getRealisasi));
   const realisasiPersen = totalPagu > 0 ? (totalRealisasi / totalPagu) * 100 : 0;
 
-  const selesaiRows = realRows.filter((row) => /selesai|completed|paket selesai/i.test(getStatus(row)));
-  const processRows = realRows.filter((row) => /process|proses|berlangsung|sedang/i.test(getStatus(row)));
-  const bastRows = realRows.filter((row) => String(getField(row, ['BAST', 'dok_realisasi'])).trim() && String(getField(row, ['BAST', 'dok_realisasi'])).trim() !== '-');
+  const selesaiRows = scopedRealRows.filter((row) => /selesai|completed|paket selesai/i.test(getStatus(row)));
+  const processRows = scopedRealRows.filter((row) => /process|proses|berlangsung|sedang/i.test(getStatus(row)));
+  const bastRows = scopedRealRows.filter((row) => String(getField(row, ['BAST', 'dok_realisasi'])).trim() && String(getField(row, ['BAST', 'dok_realisasi'])).trim() !== '-');
 
-  const byMetodePlanning = groupSum(planningRows, getMetode, getPagu);
-  const byMetodeReal = groupSum(realRows, getMetode, getRealisasi);
-  const bySatkerPlanning = groupSum(planningRows, getSatker, getPagu);
-  const bySatkerReal = groupSum(realRows, getSatker, getRealisasi);
+  const byMetodePlanning = groupSum(scopedPlanningRows, getMetode, getPagu);
+  const byMetodeReal = groupSum(scopedRealRows, getMetode, getRealisasi);
+  const bySatkerPlanning = groupSum(scopedPlanningRows, getSatker, getPagu);
+  const bySatkerReal = groupSum(scopedRealRows, getSatker, getRealisasi);
 
   const rankingSourceRows = subOpdRows.length ? subOpdRows : itkpOpdRows;
   const scoreRows = rankingSourceRows.map((row) => ({
@@ -535,8 +625,12 @@ function analyzeDashboardData(raw) {
     realRows,
     totalOpd: itkpOpdRows.length,
     totalSubOpd: subOpdRows.length,
-    totalPaketRup: planningRows.length,
-    totalPaketRealisasi: realRows.length,
+    scopeName: selectedProfile.name,
+    scopeIsCity: selectedIsCity,
+    scopedPlanningRows,
+    scopedRealRows,
+    totalPaketRup: scopedPlanningRows.length,
+    totalPaketRealisasi: scopedRealRows.length,
     totalPagu,
     totalRealisasi,
     realisasiPersen,
@@ -660,6 +754,10 @@ function renderDashboardReady(data) {
     : '-';
 
   const selectedProfile = data.selectedProfile || data.cityProfile;
+  const scopeLabel = data.scopeIsCity ? 'Kota Bogor' : selectedProfile.name;
+  const scopeDesc = data.scopeIsCity
+    ? 'Akumulasi seluruh satuan kerja Kota Bogor'
+    : `Filter khusus ${selectedProfile.name}`;
 
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
@@ -680,9 +778,9 @@ function renderDashboardReady(data) {
 
       <div class="stats-grid dashboard-kpi-grid">
         ${renderKpiCard('Skor ITKP Kota Bogor', formatScore(data.itkpOverall), 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD', '📊')}
-        ${renderKpiCard('Pagu Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket RUP/perencanaan`, '🧾')}
-        ${renderKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu perencanaan`, '💰')}
-        ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses`, '📦')}
+        ${renderKpiCard('Pagu Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾')}
+        ${renderKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰')}
+        ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses · ${scopeLabel}`, '📦')}
       </div>
 
       <div class="hero-actions">
@@ -698,7 +796,7 @@ function renderDashboardReady(data) {
           <div>
             <span class="section-kicker">Profile Kota Bogor</span>
             <h3>Radar Pemanfaatan Sistem ITKP</h3>
-            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, bukan masuk ranking OPD.</p>
+            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, dibaca langsung dari kolom <b>Nilai ITKP Pemanfaatan Sistem</b>, dan tidak masuk ranking OPD.</p>
           </div>
 
           <label class="satker-select-wrap">
@@ -734,7 +832,7 @@ function renderDashboardReady(data) {
       <div class="card">
         <div class="section-title-row">
           <div>
-            <span class="section-kicker">Kinerja Realisasi</span>
+            <span class="section-kicker">Kinerja Realisasi · ${escapeHtml(scopeLabel)}</span>
             <h3>Progress Pagu vs Realisasi</h3>
           </div>
           <span class="soft-pill">${formatPercent(data.realisasiPersen)}</span>
@@ -752,7 +850,7 @@ function renderDashboardReady(data) {
           <div class="progress-track progress-track--tall">
             <div class="progress-bar" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
           </div>
-          <p class="page-note">Persentase dihitung dari total nilai realisasi pada D_REALISASI dibanding total nilai pagu pada D_PERENCANAAN.</p>
+          <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi pada D_REALISASI dibanding nilai pagu pada D_PERENCANAAN.</p>
         </div>
 
         <div class="status-mini-grid">
@@ -767,7 +865,7 @@ function renderDashboardReady(data) {
       <div class="card">
         <div class="section-title-row">
           <div>
-            <span class="section-kicker">Perencanaan</span>
+            <span class="section-kicker">Perencanaan · ${escapeHtml(scopeLabel)}</span>
             <h3>Komposisi Pagu per Metode</h3>
           </div>
           <span class="soft-pill">${formatNumber(data.totalPaketRup)} paket</span>
@@ -780,7 +878,7 @@ function renderDashboardReady(data) {
       <div class="card">
         <div class="section-title-row">
           <div>
-            <span class="section-kicker">Realisasi</span>
+            <span class="section-kicker">Realisasi · ${escapeHtml(scopeLabel)}</span>
             <h3>Komposisi Realisasi per Metode</h3>
           </div>
           <span class="soft-pill">${formatNumber(data.totalPaketRealisasi)} paket</span>
@@ -822,8 +920,8 @@ function renderDashboardReady(data) {
     <section class="card">
       <div class="section-title-row">
         <div>
-          <span class="section-kicker">OPD Dominan</span>
-          <h3>Top OPD Berdasarkan Pagu Perencanaan & Realisasi</h3>
+          <span class="section-kicker">Profil Belanja · ${escapeHtml(scopeLabel)}</span>
+          <h3>${data.scopeIsCity ? 'Top OPD Berdasarkan Pagu Perencanaan & Realisasi' : 'Ringkasan Pagu Perencanaan & Realisasi OPD Terpilih'}</h3>
         </div>
         <span class="soft-pill">Profil belanja</span>
       </div>
@@ -873,7 +971,9 @@ function bindDashboardEvents() {
       DASHBOARD_STATE.selectedItkpSatker = satkerSelect.value;
       if (DASHBOARD_STATE.data) {
         DASHBOARD_STATE.data = analyzeDashboardData({
-          itkp: DASHBOARD_STATE.data.itkpRows.concat([DASHBOARD_STATE.data.cityProfile.__sourceRow || {}]).filter(Boolean),
+          itkp: DASHBOARD_STATE.data.cityProfile && DASHBOARD_STATE.data.cityProfile.__sourceRow
+            ? DASHBOARD_STATE.data.itkpRows.concat([DASHBOARD_STATE.data.cityProfile.__sourceRow])
+            : DASHBOARD_STATE.data.itkpRows,
           itkpSubOpd: DASHBOARD_STATE.data.itkpSubOpdRows,
           perencanaan: DASHBOARD_STATE.data.planningRows,
           realisasi: DASHBOARD_STATE.data.realRows
