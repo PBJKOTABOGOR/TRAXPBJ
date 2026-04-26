@@ -590,8 +590,8 @@ tr.row-danger td{
   background:rgba(15,23,42,.48) !important;
   display:none !important;
   justify-content:center !important;
-  align-items:center !important;
-  padding:24px !important;
+  align-items:flex-start !important;
+  padding:0 24px 24px !important;
   overflow:hidden !important;
 }
 
@@ -607,7 +607,7 @@ tr.row-danger td{
   position:relative !important;
   z-index:1000000 !important;
   width:min(820px, calc(100vw - 48px)) !important;
-  max-height:calc(100vh - 90px) !important;
+  max-height:calc(100vh - 110px) !important;
   overflow:hidden !important;
   background:#ffffff !important;
   border-radius:24px !important;
@@ -618,7 +618,7 @@ tr.row-danger td{
   opacity:1 !important;
   visibility:visible !important;
   transform:none !important;
-  margin:0 auto !important;
+  margin:70px auto 0 !important;
 }
 
 .opd-modal-head{
@@ -694,14 +694,15 @@ tr.row-danger td{
   color:#991b1b !important;
 }
 
+/* layar laptop pendek / zoom besar */
 @media (max-height:800px){
   .opd-modal{
-    padding:16px !important;
-    align-items:center !important;
+    padding:0 16px 16px !important;
   }
 
   .opd-modal-card{
-    max-height:calc(100vh - 48px) !important;
+    margin-top:42px !important;
+    max-height:calc(100vh - 70px) !important;
   }
 
   .opd-modal-head{
@@ -717,15 +718,25 @@ tr.row-danger td{
   }
 }
 
+/* layar sangat pendek */
+@media (max-height:600px){
+  .opd-modal-card{
+    margin-top:18px !important;
+    max-height:calc(100vh - 36px) !important;
+  }
+}
+
+/* HP */
 @media (max-width:760px){
   .opd-modal{
-    padding:12px !important;
-    align-items:center !important;
+    padding:0 12px 12px !important;
+    align-items:flex-start !important;
   }
 
   .opd-modal-card{
     width:calc(100vw - 24px) !important;
-    max-height:calc(100vh - 48px) !important;
+    max-height:calc(100vh - 60px) !important;
+    margin-top:42px !important;
     border-radius:18px !important;
   }
 
