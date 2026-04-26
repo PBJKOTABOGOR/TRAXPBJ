@@ -1371,50 +1371,484 @@ function injectDashboardPanjiCss() {
   const style = document.createElement('style');
   style.id = 'dashboard-panji-css';
   style.textContent = `
-    .dash-panji{position:fixed;right:var(--dash-panji-right,34px);bottom:var(--dash-panji-bottom,86px);left:auto;top:auto;z-index:999999;display:flex;align-items:flex-end;gap:14px;pointer-events:none;transition:left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),right .45s cubic-bezier(.2,.8,.2,1),bottom .45s cubic-bezier(.2,.8,.2,1),transform .25s ease;}
-    .dash-panji *{pointer-events:auto;}
-    .dash-panji-bubble{width:370px;min-height:128px;max-height:300px;overflow:auto;padding:16px;border-radius:22px;background:radial-gradient(circle at top left,rgba(59,130,246,.14),transparent 38%),rgba(255,255,255,.97);border:1px solid rgba(219,234,254,.95);box-shadow:0 22px 48px rgba(15,23,42,.18);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);position:relative;animation:dashPanjiBubbleIdle 3.8s ease-in-out infinite;}
-    .dash-panji-bubble::after{content:"";position:absolute;right:-10px;bottom:34px;width:20px;height:20px;background:rgba(255,255,255,.97);border-right:1px solid rgba(219,234,254,.95);border-bottom:1px solid rgba(219,234,254,.95);transform:rotate(-45deg);}
-    @keyframes dashPanjiBubbleIdle{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
-    .dash-panji.dash-panji-minimized .dash-panji-bubble{opacity:0;visibility:hidden;width:0;min-width:0;min-height:0;max-height:0;padding:0;border:0;overflow:hidden;}
-    .dash-panji-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
-    .dash-panji-name{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;background:linear-gradient(135deg,#123a72,#2563eb);color:#fff;font-size:11px;font-weight:950;letter-spacing:.08em;box-shadow:0 8px 18px rgba(37,99,235,.22);}
-    .dash-panji-emote{width:34px;height:34px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#eef4fb;font-size:18px;animation:dashPanjiEmote 2s ease-in-out infinite;}
-    @keyframes dashPanjiEmote{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
-    .dash-panji-text{color:#102544;font-size:14px;line-height:1.68;font-weight:750;}
-    .dash-panji-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
-    .dash-panji-actions button{border:none;min-height:34px;padding:0 11px;border-radius:11px;cursor:pointer;font-size:11px;font-weight:900;background:#eef4fb;color:#123a72;border:1px solid #dbeafe;transition:.18s ease;}
-    .dash-panji-actions button:hover{transform:translateY(-1px);background:#dbeafe;}
-    .dash-panji-close{position:absolute;right:-8px;top:-8px;width:28px;height:28px;z-index:5;border:none;border-radius:999px;cursor:pointer;background:#102544;color:#fff;font-size:18px;font-weight:900;box-shadow:0 8px 18px rgba(15,23,42,.22);}
-    .dash-panji-character{width:108px;height:138px;position:relative;border:none;background:transparent;cursor:pointer;padding:0;flex-shrink:0;animation:dashPanjiFloat 2.8s ease-in-out infinite,dashPanjiTilt 4.2s ease-in-out infinite;transform-origin:center bottom;}
-    @keyframes dashPanjiFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-    @keyframes dashPanjiTilt{0%,100%{rotate:0deg;}25%{rotate:-2deg;}75%{rotate:2deg;}}
-    .dash-panji-glow{position:absolute;inset:22px 4px 0;border-radius:999px;background:radial-gradient(circle,rgba(37,99,235,.28),transparent 68%);filter:blur(10px);animation:dashPanjiGlow 2.4s ease-in-out infinite;}
-    @keyframes dashPanjiGlow{0%,100%{opacity:.65;transform:scale(.96);}50%{opacity:1;transform:scale(1.08);}}
-    .dash-panji-head{position:absolute;left:16px;top:8px;width:76px;height:76px;border-radius:28px 28px 25px 25px;background:radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),linear-gradient(135deg,#f8fbff,#c7ddff);border:2px solid #123a72;box-shadow:0 14px 28px rgba(18,58,114,.20),inset 0 -8px 18px rgba(37,99,235,.10);animation:dashPanjiHead 3.4s ease-in-out infinite;}
-    @keyframes dashPanjiHead{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
-    .dash-panji-hat{position:absolute;left:9px;top:-14px;width:58px;height:26px;border-radius:12px 12px 8px 8px;background:linear-gradient(135deg,#123a72,#2563eb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:950;letter-spacing:.08em;box-shadow:0 8px 16px rgba(18,58,114,.22);}
-    .dash-panji-eye{position:absolute;top:34px;width:12px;height:16px;border-radius:999px;background:#102544;animation:dashPanjiBlink 4.8s infinite;}
-    .dash-panji-eye-left{left:21px;}.dash-panji-eye-right{right:21px;}
-    @keyframes dashPanjiBlink{0%,91%,100%{transform:scaleY(1);}94%{transform:scaleY(.12);}96%{transform:scaleY(1);}}
-    .dash-panji-mouth{position:absolute;left:31px;bottom:17px;width:16px;height:8px;border-bottom:3px solid #102544;border-radius:0 0 999px 999px;}
-    .dash-panji-body{position:absolute;left:24px;top:84px;width:60px;height:45px;border-radius:21px 21px 17px 17px;background:linear-gradient(135deg,#123a72,#2f9a8f);border:2px solid rgba(255,255,255,.88);box-shadow:0 14px 24px rgba(15,23,42,.18);animation:dashPanjiBreath 2.6s ease-in-out infinite;}
-    @keyframes dashPanjiBreath{0%,100%{transform:scale(1);}50%{transform:scale(1.025);}}
-    .dash-panji-badge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:999px;background:#fff;color:#123a72;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:950;}
-    .dash-panji-hand{position:absolute;top:94px;width:18px;height:34px;border-radius:999px;background:linear-gradient(135deg,#c7ddff,#f8fbff);border:2px solid #123a72;}
-    .dash-panji-hand-left{left:8px;transform:rotate(24deg);}.dash-panji-hand-right{right:8px;transform-origin:top center;animation:dashPanjiWave 1.8s ease-in-out infinite;}
-    @keyframes dashPanjiWave{0%,100%{transform:rotate(-18deg);}50%{transform:rotate(-46deg);}}
-    .dash-panji-talking .dash-panji-mouth{animation:dashPanjiTalk .22s ease-in-out infinite;}
-    @keyframes dashPanjiTalk{0%,100%{height:5px;width:15px;left:31px;bottom:17px;border-bottom:3px solid currentColor;border-top:none;border-left:none;border-right:none;border-radius:0 0 999px 999px;background:transparent;}50%{height:15px;width:20px;left:28px;bottom:12px;border:3px solid currentColor;border-radius:999px;background:rgba(15,23,42,.08);}}
-    .dash-panji-happy .dash-panji-head{background:radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),linear-gradient(135deg,#ecfdf5,#bbf7d0);border-color:#16a34a;}
-    .dash-panji-happy .dash-panji-eye{height:8px;top:40px;background:transparent;border-bottom:4px solid #166534;animation:none;}
-    .dash-panji-sad .dash-panji-head{background:radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),linear-gradient(135deg,#fff1f2,#fecdd3);border-color:#dc2626;}
-    .dash-panji-sad .dash-panji-eye-left::after,.dash-panji-sad .dash-panji-eye-right::after{content:"";position:absolute;left:3px;top:13px;width:6px;height:10px;border-radius:999px;background:linear-gradient(180deg,#93c5fd,#38bdf8);animation:dashPanjiTear 1.1s ease-in-out infinite;}
-    @keyframes dashPanjiTear{0%{opacity:0;transform:translateY(-4px) scale(.7);}25%{opacity:1;}100%{opacity:0;transform:translateY(16px) scale(1);}}
-    .dash-panji-thinking .dash-panji-character::after{content:"?";position:absolute;right:0;top:0;width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#fef3c7;color:#92400e;font-weight:950;box-shadow:0 8px 18px rgba(15,23,42,.14);animation:dashPanjiQuestion 1.1s ease-in-out infinite;}
-    @keyframes dashPanjiQuestion{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-7px) scale(1.08);}}
-    .dash-panji-highlight{position:relative;z-index:9999;outline:3px solid rgba(37,99,235,.45);outline-offset:5px;box-shadow:0 0 0 9px rgba(37,99,235,.10),0 18px 42px rgba(37,99,235,.16) !important;}
-    @media(max-width:1400px){.dash-panji-bubble{width:320px;max-height:280px;}.dash-panji-character{width:102px;height:132px;}}
+    .dash-panji{
+      position:fixed;
+      right:var(--dash-panji-right,34px);
+      bottom:var(--dash-panji-bottom,86px);
+      left:auto;
+      top:auto;
+      z-index:999999;
+      display:flex;
+      align-items:flex-end;
+      gap:14px;
+      pointer-events:none;
+      transition:
+        left .45s cubic-bezier(.2,.8,.2,1),
+        top .45s cubic-bezier(.2,.8,.2,1),
+        right .45s cubic-bezier(.2,.8,.2,1),
+        bottom .45s cubic-bezier(.2,.8,.2,1),
+        transform .25s ease;
+    }
+
+    .dash-panji *{
+      pointer-events:auto;
+    }
+
+    /* POP UP BERCERITA: narasi jadi story bar, bukan kolom yang menutupi dashboard */
+    .dash-panji-bubble{
+      position:fixed;
+      left:50%;
+      right:auto;
+      bottom:24px;
+      width:min(760px, calc(100vw - 390px));
+      min-width:520px;
+      min-height:0;
+      max-height:172px;
+      overflow:auto;
+      padding:14px 16px;
+      border-radius:22px;
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,.16), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,251,255,.96));
+      border:1px solid rgba(219,234,254,.98);
+      box-shadow:
+        0 22px 48px rgba(15,23,42,.18),
+        inset 0 1px 0 rgba(255,255,255,.85);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      transform:translateX(-50%);
+      animation:dashPanjiStoryIn .28s ease both;
+    }
+
+    .dash-panji-bubble::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      right:0;
+      height:3px;
+      border-radius:22px 22px 0 0;
+      background:linear-gradient(90deg,#123a72,#2563eb,#22d3ee,#0f766e);
+    }
+
+    .dash-panji-bubble::after{
+      content:"Cerita PANJI";
+      position:absolute;
+      right:48px;
+      top:10px;
+      font-size:10px;
+      font-weight:950;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#94a3b8;
+    }
+
+    @keyframes dashPanjiStoryIn{
+      from{
+        opacity:0;
+        transform:translateX(-50%) translateY(18px) scale(.98);
+      }
+      to{
+        opacity:1;
+        transform:translateX(-50%) translateY(0) scale(1);
+      }
+    }
+
+    .dash-panji.dash-panji-minimized .dash-panji-bubble{
+      opacity:0;
+      visibility:hidden;
+      transform:translateX(-50%) translateY(20px) scale(.96);
+      pointer-events:none;
+    }
+
+    .dash-panji-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+      padding-right:120px;
+    }
+
+    .dash-panji-name{
+      display:inline-flex;
+      align-items:center;
+      min-height:26px;
+      padding:0 10px;
+      border-radius:999px;
+      background:linear-gradient(135deg,#123a72,#2563eb);
+      color:#fff;
+      font-size:11px;
+      font-weight:950;
+      letter-spacing:.08em;
+      box-shadow:0 8px 18px rgba(37,99,235,.22);
+      white-space:nowrap;
+    }
+
+    .dash-panji-emote{
+      width:30px;
+      height:30px;
+      flex-shrink:0;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#eef4fb;
+      font-size:17px;
+      animation:dashPanjiEmote 2s ease-in-out infinite;
+    }
+
+    @keyframes dashPanjiEmote{
+      0%,100%{transform:scale(1);}
+      50%{transform:scale(1.12);}
+    }
+
+    .dash-panji-text{
+      color:#102544;
+      font-size:14px;
+      line-height:1.58;
+      font-weight:750;
+      padding-right:6px;
+    }
+
+    .dash-panji-actions{
+      display:flex;
+      gap:8px;
+      margin-top:10px;
+      flex-wrap:wrap;
+    }
+
+    .dash-panji-actions button{
+      border:none;
+      min-height:32px;
+      padding:0 11px;
+      border-radius:11px;
+      cursor:pointer;
+      font-size:11px;
+      font-weight:900;
+      background:#eef4fb;
+      color:#123a72;
+      border:1px solid #dbeafe;
+      transition:.18s ease;
+    }
+
+    .dash-panji-actions button:hover{
+      transform:translateY(-1px);
+      background:#dbeafe;
+    }
+
+    .dash-panji-close{
+      position:absolute;
+      right:12px;
+      top:12px;
+      width:28px;
+      height:28px;
+      z-index:5;
+      border:none;
+      border-radius:999px;
+      cursor:pointer;
+      background:#102544;
+      color:#fff;
+      font-size:18px;
+      font-weight:900;
+      box-shadow:0 8px 18px rgba(15,23,42,.22);
+    }
+
+    .dash-panji-character{
+      width:108px;
+      height:138px;
+      position:relative;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      padding:0;
+      flex-shrink:0;
+      animation:
+        dashPanjiFloat 2.8s ease-in-out infinite,
+        dashPanjiTilt 4.2s ease-in-out infinite;
+      transform-origin:center bottom;
+      filter:drop-shadow(0 16px 20px rgba(15,23,42,.18));
+    }
+
+    @keyframes dashPanjiFloat{
+      0%,100%{transform:translateY(0);}
+      50%{transform:translateY(-8px);}
+    }
+
+    @keyframes dashPanjiTilt{
+      0%,100%{rotate:0deg;}
+      25%{rotate:-2deg;}
+      75%{rotate:2deg;}
+    }
+
+    .dash-panji-glow{
+      position:absolute;
+      inset:22px 4px 0;
+      border-radius:999px;
+      background:radial-gradient(circle,rgba(37,99,235,.28),transparent 68%);
+      filter:blur(10px);
+      animation:dashPanjiGlow 2.4s ease-in-out infinite;
+    }
+
+    @keyframes dashPanjiGlow{
+      0%,100%{opacity:.65;transform:scale(.96);}
+      50%{opacity:1;transform:scale(1.08);}
+    }
+
+    .dash-panji-head{
+      position:absolute;
+      left:16px;
+      top:8px;
+      width:76px;
+      height:76px;
+      border-radius:28px 28px 25px 25px;
+      background:
+        radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),
+        linear-gradient(135deg,#f8fbff,#c7ddff);
+      border:2px solid #123a72;
+      box-shadow:
+        0 14px 28px rgba(18,58,114,.20),
+        inset 0 -8px 18px rgba(37,99,235,.10);
+      animation:dashPanjiHead 3.4s ease-in-out infinite;
+    }
+
+    @keyframes dashPanjiHead{
+      0%,100%{transform:translateY(0);}
+      50%{transform:translateY(-3px);}
+    }
+
+    .dash-panji-hat{
+      position:absolute;
+      left:9px;
+      top:-14px;
+      width:58px;
+      height:26px;
+      border-radius:12px 12px 8px 8px;
+      background:linear-gradient(135deg,#123a72,#2563eb);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:950;
+      letter-spacing:.08em;
+      box-shadow:0 8px 16px rgba(18,58,114,.22);
+    }
+
+    .dash-panji-eye{
+      position:absolute;
+      top:34px;
+      width:12px;
+      height:16px;
+      border-radius:999px;
+      background:#102544;
+      animation:dashPanjiBlink 4.8s infinite;
+    }
+
+    .dash-panji-eye-left{left:21px;}
+    .dash-panji-eye-right{right:21px;}
+
+    @keyframes dashPanjiBlink{
+      0%,91%,100%{transform:scaleY(1);}
+      94%{transform:scaleY(.12);}
+      96%{transform:scaleY(1);}
+    }
+
+    .dash-panji-mouth{
+      position:absolute;
+      left:31px;
+      bottom:17px;
+      width:16px;
+      height:8px;
+      border-bottom:3px solid #102544;
+      border-radius:0 0 999px 999px;
+    }
+
+    .dash-panji-body{
+      position:absolute;
+      left:24px;
+      top:84px;
+      width:60px;
+      height:45px;
+      border-radius:21px 21px 17px 17px;
+      background:linear-gradient(135deg,#123a72,#2f9a8f);
+      border:2px solid rgba(255,255,255,.88);
+      box-shadow:0 14px 24px rgba(15,23,42,.18);
+      animation:dashPanjiBreath 2.6s ease-in-out infinite;
+    }
+
+    @keyframes dashPanjiBreath{
+      0%,100%{transform:scale(1);}
+      50%{transform:scale(1.025);}
+    }
+
+    .dash-panji-badge{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:30px;
+      height:30px;
+      border-radius:999px;
+      background:#fff;
+      color:#123a72;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:950;
+    }
+
+    .dash-panji-hand{
+      position:absolute;
+      top:94px;
+      width:18px;
+      height:34px;
+      border-radius:999px;
+      background:linear-gradient(135deg,#c7ddff,#f8fbff);
+      border:2px solid #123a72;
+    }
+
+    .dash-panji-hand-left{
+      left:8px;
+      transform:rotate(24deg);
+    }
+
+    .dash-panji-hand-right{
+      right:8px;
+      transform-origin:top center;
+      animation:dashPanjiWave 1.8s ease-in-out infinite;
+    }
+
+    @keyframes dashPanjiWave{
+      0%,100%{transform:rotate(-18deg);}
+      50%{transform:rotate(-46deg);}
+    }
+
+    .dash-panji-talking .dash-panji-mouth{
+      animation:dashPanjiTalk .22s ease-in-out infinite;
+    }
+
+    @keyframes dashPanjiTalk{
+      0%,100%{
+        height:5px;
+        width:15px;
+        left:31px;
+        bottom:17px;
+        border-bottom:3px solid currentColor;
+        border-top:none;
+        border-left:none;
+        border-right:none;
+        border-radius:0 0 999px 999px;
+        background:transparent;
+      }
+      50%{
+        height:15px;
+        width:20px;
+        left:28px;
+        bottom:12px;
+        border:3px solid currentColor;
+        border-radius:999px;
+        background:rgba(15,23,42,.08);
+      }
+    }
+
+    .dash-panji-happy .dash-panji-head{
+      background:
+        radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),
+        linear-gradient(135deg,#ecfdf5,#bbf7d0);
+      border-color:#16a34a;
+    }
+
+    .dash-panji-happy .dash-panji-eye{
+      height:8px;
+      top:40px;
+      background:transparent;
+      border-bottom:4px solid #166534;
+      animation:none;
+    }
+
+    .dash-panji-sad .dash-panji-head{
+      background:
+        radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),
+        linear-gradient(135deg,#fff1f2,#fecdd3);
+      border-color:#dc2626;
+    }
+
+    .dash-panji-sad .dash-panji-eye-left::after,
+    .dash-panji-sad .dash-panji-eye-right::after{
+      content:"";
+      position:absolute;
+      left:3px;
+      top:13px;
+      width:6px;
+      height:10px;
+      border-radius:999px;
+      background:linear-gradient(180deg,#93c5fd,#38bdf8);
+      animation:dashPanjiTear 1.1s ease-in-out infinite;
+    }
+
+    @keyframes dashPanjiTear{
+      0%{opacity:0;transform:translateY(-4px) scale(.7);}
+      25%{opacity:1;}
+      100%{opacity:0;transform:translateY(16px) scale(1);}
+    }
+
+    .dash-panji-thinking .dash-panji-character::after{
+      content:"?";
+      position:absolute;
+      right:0;
+      top:0;
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#fef3c7;
+      color:#92400e;
+      font-weight:950;
+      box-shadow:0 8px 18px rgba(15,23,42,.14);
+      animation:dashPanjiQuestion 1.1s ease-in-out infinite;
+    }
+
+    @keyframes dashPanjiQuestion{
+      0%,100%{transform:translateY(0) scale(1);}
+      50%{transform:translateY(-7px) scale(1.08);}
+    }
+
+    .dash-panji-highlight{
+      position:relative;
+      z-index:9999;
+      outline:3px solid rgba(37,99,235,.45);
+      outline-offset:5px;
+      box-shadow:
+        0 0 0 9px rgba(37,99,235,.10),
+        0 18px 42px rgba(37,99,235,.16) !important;
+    }
+
+    @media(max-width:1400px){
+      .dash-panji-bubble{
+        width:min(650px, calc(100vw - 330px));
+        min-width:460px;
+        max-height:160px;
+      }
+      .dash-panji-character{
+        width:102px;
+        height:132px;
+      }
+    }
+
+    @media(max-width:1100px){
+      .dash-panji-bubble{
+        left:24px;
+        right:24px;
+        bottom:20px;
+        width:auto;
+        min-width:0;
+        transform:none;
+      }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -1493,8 +1927,8 @@ function moveDashboardPanjiToElement(target) {
   const rect = target.getBoundingClientRect();
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const assistantWidth = Math.min(530, vw - 40);
-  const assistantHeight = 235;
+  const assistantWidth = 138;
+  const assistantHeight = 170;
   const gap = 18;
 
   let left = rect.left > vw / 2
