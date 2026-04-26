@@ -754,6 +754,9 @@ function renderDashboardReady(data) {
     : '-';
 
   const selectedProfile = data.selectedProfile || data.cityProfile;
+  const profileKicker = selectedProfile.name === 'PEMERINTAH KOTA BOGOR'
+    ? 'Profile Kota Bogor'
+    : ;
   const scopeLabel = data.scopeIsCity ? 'Kota Bogor' : selectedProfile.name;
   const scopeDesc = data.scopeIsCity
     ? 'Akumulasi seluruh satuan kerja Kota Bogor'
@@ -794,7 +797,7 @@ function renderDashboardReady(data) {
       <div class="card procurement-map-card">
         <div class="section-title-row section-title-row--select">
           <div>
-            <span class="section-kicker">Profile Kota Bogor</span>
+            <span class="section-kicker">${escapeHtml(profileKicker)}</span>
             <h3>Radar Pemanfaatan Sistem ITKP</h3>
             <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, dibaca langsung dari kolom <b>Nilai ITKP Pemanfaatan Sistem</b>, dan tidak masuk ranking OPD.</p>
           </div>
