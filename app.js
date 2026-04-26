@@ -109,6 +109,7 @@ let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
 let dashboardPanjiDestroy = null;
+let dashboardPanjiMuted = false;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -1329,23 +1330,23 @@ function buildPanjiKpiExplanation(label, value, desc, data) {
 
   if (/itkp/i.test(cleanLabel)) {
     const status = getPanjiDashboardStatus(profile.score, 30);
-    return `Ini kartu ${cleanLabel}. Nilainya ${formatScore(profile.score)} dari 30 untuk ${profile.name}. Kategorinya ${status.label}. ${status.text}`;
+    return `Kartu ${cleanLabel} menampilkan nilai ${formatScore(profile.score)} dari 30 untuk ${profile.name}. Kategorinya ${status.label}. ${status.text}`;
   }
 
   if (/pagu/i.test(cleanLabel)) {
-    return `Ini kartu Pagu Perencanaan. Nilainya ${value}. Artinya dashboard membaca total pagu paket dari data perencanaan untuk scope ${data.scopeName}. Ini dipakai sebagai pembanding terhadap realisasi.`;
+    return `Kartu Pagu Perencanaan bernilai ${value}. Dashboard membaca total pagu paket dari data perencanaan untuk scope ${data.scopeName}. Angka ini dipakai sebagai pembanding terhadap realisasi.`;
   }
 
   if (/realisasi/i.test(cleanLabel) && !/paket/i.test(cleanLabel)) {
     const status = getPanjiDashboardStatus(data.realisasiPersen, 100);
-    return `Ini kartu Realisasi. Nilainya ${value}, atau ${formatPercent(data.realisasiPersen)} dari pagu. Kategorinya ${status.label}. Kalau rendah, cek paket yang belum jalan, belum kontrak, belum BAST, atau belum tercatat.`;
+    return `Kartu Realisasi bernilai ${value}, atau ${formatPercent(data.realisasiPersen)} dari pagu. Kategorinya ${status.label}. Kalau rendah, cek paket yang belum jalan, belum kontrak, belum BAST, atau belum tercatat.`;
   }
 
   if (/paket/i.test(cleanLabel)) {
-    return `Ini kartu Paket Realisasi. Nilainya ${value}. PANJI membaca jumlah paket realisasi, paket selesai, dan paket yang masih proses. Kalau banyak yang belum selesai, cek kontrak, BAST, dan pencatatan realisasi.`;
+    return `Kartu Paket Realisasi bernilai ${value}. PANJI membaca jumlah paket realisasi, paket selesai, dan paket yang masih proses. Kalau banyak yang belum selesai, cek kontrak, BAST, dan pencatatan realisasi.`;
   }
 
-  return `Ini kartu ${cleanLabel}. Nilainya ${value}. ${desc || 'PANJI membaca kartu ini sebagai ringkasan dashboard.'}`;
+  return `Kartu ${cleanLabel} bernilai ${value}. ${desc || 'PANJI membaca kartu ini sebagai ringkasan dashboard.'}`;
 }
 
 function buildPanjiDimensionExplanationByElement(button, data) {
@@ -1362,7 +1363,7 @@ function buildPanjiQuickExplanation(button) {
   const title = button.querySelector('.quick-title')?.textContent?.trim() || 'Menu';
   const text = button.querySelector('.quick-text')?.textContent?.trim() || '';
 
-  return `Ini tombol ${title}. ${text}\n\nKalau diklik, dashboard membuka modul detailnya. PANJI bisa bantu user tahu indikator mana yang harus dicek.`;
+  return `Tombol ${title} dipakai untuk membuka modul terkait. ${text}\n\nKalau diklik, dashboard membuka modul detailnya. PANJI bisa bantu user tahu indikator mana yang harus dicek.`;
 }
 
 function injectDashboardPanjiCss() {
@@ -1850,6 +1851,75 @@ function injectDashboardPanjiCss() {
       }
     }
   `;
+
+  style.textContent += `
+    /* FIX: PANJI diam di kanan bawah, narasi ikut bubble kecil, bukan story bar */
+    .dash-panji{
+      position:fixed !important;
+      right:34px !important;
+      bottom:var(--dash-panji-bottom,86px) !important;
+      left:auto !important;
+      top:auto !important;
+      transform:none !important;
+      display:flex !important;
+      align-items:flex-end !important;
+      gap:14px !important;
+      pointer-events:none !important;
+      transition:bottom .22s ease, opacity .22s ease !important;
+    }
+
+    .dash-panji-bubble{
+      position:relative !important;
+      left:auto !important;
+      right:auto !important;
+      bottom:auto !important;
+      transform:none !important;
+      width:360px !important;
+      min-width:0 !important;
+      min-height:118px !important;
+      max-height:260px !important;
+      padding:16px !important;
+      border-radius:22px !important;
+      overflow:auto !important;
+      animation:dashPanjiBubbleIdle 3.8s ease-in-out infinite !important;
+    }
+
+    .dash-panji-bubble::before,
+    .dash-panji-bubble::after{
+      content:none !important;
+      display:none !important;
+    }
+
+    .dash-panji.dash-panji-minimized .dash-panji-bubble,
+    .dash-panji.dash-panji-muted .dash-panji-bubble{
+      opacity:0 !important;
+      visibility:hidden !important;
+      width:0 !important;
+      min-width:0 !important;
+      min-height:0 !important;
+      max-height:0 !important;
+      padding:0 !important;
+      border:0 !important;
+      overflow:hidden !important;
+      pointer-events:none !important;
+    }
+
+    .dash-panji-top{
+      padding-right:0 !important;
+      margin-bottom:10px !important;
+    }
+
+    .dash-panji-highlight{
+      outline:3px solid rgba(37,99,235,.30);
+      box-shadow:0 0 0 7px rgba(37,99,235,.08) !important;
+      border-radius:18px;
+    }
+
+    @keyframes dashPanjiBubbleIdle{
+      0%,100%{transform:translateY(0);}
+      50%{transform:translateY(-4px);}
+    }
+  `;
   document.head.appendChild(style);
 }
 
@@ -1914,49 +1984,23 @@ function moveDashboardPanjiHome() {
 }
 
 function moveDashboardPanjiToElement(target) {
-  const panji = document.getElementById('dashboardPanji');
-
-  if (!panji || !target || !target.getBoundingClientRect) {
-    moveDashboardPanjiHome();
-    return;
-  }
-
+  moveDashboardPanjiHome();
   clearDashboardPanjiHighlight();
-  target.classList.add('dash-panji-highlight');
 
-  const rect = target.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const assistantWidth = 138;
-  const assistantHeight = 170;
-  const gap = 18;
-
-  let left = rect.left > vw / 2
-    ? rect.left - assistantWidth - gap
-    : rect.right + gap;
-
-  if (left < 18) left = 18;
-  if (left + assistantWidth > vw - 18) left = vw - assistantWidth - 18;
-
-  let top = rect.top + (rect.height / 2) - (assistantHeight / 2);
-
-  if (top < 18) top = 18;
-  if (top + assistantHeight > vh - 18) top = vh - assistantHeight - 18;
-
-  panji.style.left = `${Math.round(left)}px`;
-  panji.style.top = `${Math.round(top)}px`;
-  panji.style.right = 'auto';
-  panji.style.bottom = 'auto';
+  if (target && target.classList) {
+    target.classList.add('dash-panji-highlight');
+  }
 }
-
 function dashboardPanjiSpeak(message, mood = 'talking', target = null) {
+  if (dashboardPanjiMuted) return;
+
   const panji = document.getElementById('dashboardPanji');
   const textEl = document.getElementById('dashPanjiText');
   const emote = document.getElementById('dashPanjiEmote');
 
   if (!panji || !textEl) return;
 
-  panji.classList.remove('dash-panji-minimized', 'dash-panji-happy', 'dash-panji-sad', 'dash-panji-thinking', 'dash-panji-talking');
+  panji.classList.remove('dash-panji-minimized', 'dash-panji-muted', 'dash-panji-happy', 'dash-panji-sad', 'dash-panji-thinking', 'dash-panji-talking');
   panji.classList.add('dash-panji-talking');
 
   if (mood === 'happy') {
@@ -1988,32 +2032,32 @@ function startDashboardPanjiTour(data) {
   const steps = [
     {
       selector: '.hero-card--dashboard',
-      message: 'Ini area pembuka dashboard. Di sini user tahu dashboard sedang membaca profil PBJ Kota Bogor, update data, dan tombol cepat untuk masuk ke modul.',
+      message: 'Area pembuka dashboard menampilkan profil PBJ Kota Bogor, update data, dan tombol cepat untuk masuk ke modul.',
       mood: 'talking'
     },
     {
       selector: '.dashboard-kpi-grid .stat-card--lux:nth-child(1)',
-      message: 'Ini kartu Skor ITKP. PANJI menilai kualitas pemanfaatan sistem dari total 30 poin. Semakin tinggi, semakin baik pemanfaatan SiRUP, katalog, tender, kontrak, dan pencatatan non tender.',
+      message: 'Kartu Skor ITKP menilai kualitas pemanfaatan sistem dari total 30 poin. Semakin tinggi, semakin baik pemanfaatan SiRUP, katalog, tender, kontrak, dan pencatatan non tender.',
       mood: 'thinking'
     },
     {
       selector: '.procurement-map-card',
-      message: 'Ini radar Pemanfaatan Sistem ITKP. Pilih satuan kerja di dropdown, lalu PANJI akan baca nilai per indikator dan menentukan mana yang baik, cukup, atau butuh perhatian.',
+      message: 'Radar Pemanfaatan Sistem ITKP membaca nilai per indikator. Pilih satuan kerja di dropdown, lalu PANJI akan menentukan mana yang baik, cukup, atau butuh perhatian.',
       mood: 'talking'
     },
     {
       selector: '.dimensions--clickable',
-      message: 'Ini daftar indikator: SiRUP, Toko Daring, e-Purchasing, e-Tendering, e-Kontrak, dan Non Tender. Arahkan mouse ke tiap indikator, PANJI akan jelaskan arti nilainya.',
+      message: 'Daftar indikator terdiri dari SiRUP, Toko Daring, e-Purchasing, e-Tendering, e-Kontrak, dan Non Tender. Arahkan mouse ke tiap indikator, PANJI akan jelaskan arti nilainya.',
       mood: 'happy'
     },
     {
       selector: '.money-progress',
-      message: 'Ini progress pagu dibanding realisasi. Kalau realisasi masih rendah, perlu cek paket yang belum jalan, belum kontrak, belum BAST, atau belum tercatat realisasinya.',
+      message: 'Progress ini membandingkan pagu dengan realisasi. Kalau realisasi masih rendah, perlu cek paket yang belum jalan, belum kontrak, belum BAST, atau belum tercatat realisasinya.',
       mood: 'thinking'
     },
     {
       selector: '.quick-grid',
-      message: 'Ini tombol akses cepat. PANJI bisa jelaskan fungsi setiap tombol, lalu user bisa klik untuk masuk ke modul detail.',
+      message: 'Tombol akses cepat membantu user masuk ke modul detail. PANJI bisa jelaskan fungsi setiap tombol, lalu user bisa klik untuk masuk ke modul detail.',
       mood: 'happy'
     }
   ];
@@ -2067,13 +2111,15 @@ function initDashboardPanji(data, fromSelection = false) {
   const adviceBtn = document.getElementById('dashPanjiAdvice');
 
   const minimize = () => {
-    panji.classList.add('dash-panji-minimized');
+    dashboardPanjiMuted = true;
+    panji.classList.add('dash-panji-minimized', 'dash-panji-muted');
     clearDashboardPanjiHighlight();
     moveDashboardPanjiHome();
   };
 
   const show = () => {
-    panji.classList.remove('dash-panji-minimized');
+    if (dashboardPanjiMuted) return;
+    panji.classList.remove('dash-panji-minimized', 'dash-panji-muted');
   };
 
   if (closeBtn) closeBtn.addEventListener('click', minimize);
@@ -2222,6 +2268,12 @@ function initDashboardPanji(data, fromSelection = false) {
   window.addEventListener('scroll', updatePanjiBottom, { passive: true });
   window.addEventListener('resize', updatePanjiBottom);
   updatePanjiBottom();
+
+  if (dashboardPanjiMuted) {
+    panji.classList.add('dash-panji-minimized', 'dash-panji-muted');
+    clearDashboardPanjiHighlight();
+    moveDashboardPanjiHome();
+  }
 
   const firstMessage = fromSelection
     ? buildPanjiFullDashboardAnalysis(data)
