@@ -324,63 +324,56 @@ ${exportNames}
   }
 
   function executeScript(code, label) {
-    if (destroyed) {
-      return;
-    }
-
-    installFallbackGlobals();
-
-    const documentProxy = makeDocumentProxy(shadowRootRef);
-    const locationProxy = makeLocationProxy();
-    const patched = patchScriptNavigation(code);
-
-    const safeNames = (appExportNames || []).filter((name) => {
-      return /^[A-Za-z_$][\w$]*$/.test(name);
-    });
-
-    const bridge = safeNames
-      .map((name) => `const ${name} = window.${name};`)
-      .join('\n');
-
-    const bridgeConfig = `
-const APP_CONFIG = window.APP_CONFIG;
-const METHOD_MAP = window.METHOD_MAP;
-const STORAGE_KEYS = window.STORAGE_KEYS;
-const requireLogin = window.requireLogin;
-const bindLogout = window.bindLogout;
-const getQueryParam = window.getQueryParam;
-const fillUserIdentity = window.fillUserIdentity;
-const escapeHtml = window.escapeHtml;
-const safeNumber = window.safeNumber;
-const parseNumber = window.parseNumber;
-const formatRupiahFull = window.formatRupiahFull;
-const formatNumberInput = window.formatNumberInput;
-`;
-
-    try {
-      const runner = new Function(
-        'window',
-        'document',
-        'location',
-        'localStorage',
-        'sessionStorage',
-        'Papa',
-        bridgeConfig + '\n' + bridge + '\n' + patched + '\n//# sourceURL=spse-module-' + label + '.js'
-      );
-
-      runner(
-        window,
-        documentProxy,
-        locationProxy,
-        window.localStorage,
-        window.sessionStorage,
-        window.Papa
-      );
-    } catch (error) {
-      console.error('Gagal menjalankan script SPSE module:', label, error);
-      renderModuleError(error);
-    }
+  if (destroyed) {
+    return;
   }
+
+  installFallbackGlobals();
+
+  const documentProxy = makeDocumentProxy(shadowRootRef);
+  const locationProxy = makeLocationProxy();
+  const patched = patchScriptNavigation(code);
+
+  const scope = Object.create(window);
+
+  Object.assign(scope, window, {
+    window,
+    document: documentProxy,
+    location: locationProxy,
+    localStorage: window.localStorage,
+    sessionStorage: window.sessionStorage,
+    Papa: window.Papa,
+    APP_CONFIG: window.APP_CONFIG,
+    METHOD_MAP: window.METHOD_MAP,
+    STORAGE_KEYS: window.STORAGE_KEYS,
+    requireLogin: window.requireLogin,
+    bindLogout: window.bindLogout,
+    getQueryParam: window.getQueryParam,
+    fillUserIdentity: window.fillUserIdentity,
+    escapeHtml: window.escapeHtml,
+    safeNumber: window.safeNumber,
+    parseNumber: window.parseNumber,
+    formatRupiahFull: window.formatRupiahFull,
+    formatNumberInput: window.formatNumberInput
+  });
+
+  try {
+    const runner = new Function(
+      'scope',
+      `
+      with (scope) {
+        ${patched}
+      }
+      //# sourceURL=spse-module-${label}.js
+      `
+    );
+
+    runner(scope);
+  } catch (error) {
+    console.error('Gagal menjalankan script SPSE module:', label, error);
+    renderModuleError(error);
+  }
+}
 
   function installBaseApp() {
     if (appInstalled) {
