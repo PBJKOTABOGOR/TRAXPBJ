@@ -110,6 +110,9 @@ let loadingPageKey = '';
 let scrollAnimationDestroy = null;
 let dashboardPanjiDestroy = null;
 let dashboardPanjiMuted = false;
+let dashboardPanjiSilenced = false;
+let dashboardPanjiLastSpeak = null;
+let dashboardPanjiSequenceTimer = null;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -1919,6 +1922,102 @@ function injectDashboardPanjiCss() {
       0%,100%{transform:translateY(0);}
       50%{transform:translateY(-4px);}
     }
+
+    /* FIX RGB: highlight elemen yang sedang dijelaskan PANJI dibuat jelas dan muter */
+    .dash-panji-highlight{
+      position:relative !important;
+      z-index:9999 !important;
+      border-radius:18px !important;
+      outline:4px solid rgba(34,211,238,.95) !important;
+      outline-offset:8px !important;
+      box-shadow:
+        0 0 0 8px rgba(37,99,235,.18),
+        0 0 24px rgba(34,211,238,.65),
+        0 0 48px rgba(236,72,153,.38),
+        0 18px 42px rgba(15,23,42,.18) !important;
+      animation:dashPanjiRgbGlow 1.15s linear infinite !important;
+    }
+
+    .dash-panji-highlight::after{
+      content:"PANJI menjelaskan ini";
+      position:absolute;
+      right:14px;
+      top:-22px;
+      z-index:10000;
+      display:inline-flex;
+      align-items:center;
+      min-height:24px;
+      padding:0 10px;
+      border-radius:999px;
+      color:#fff;
+      font-size:10px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e,#06b6d4,#2563eb,#a855f7,#ef4444);
+      background-size:260% 100%;
+      box-shadow:0 8px 18px rgba(15,23,42,.24);
+      animation:dashPanjiRgbLabel 1.25s linear infinite;
+      pointer-events:none;
+      white-space:nowrap;
+    }
+
+    .dash-panji-silenced .dash-panji-character{
+      filter:grayscale(.35) drop-shadow(0 12px 18px rgba(15,23,42,.14));
+      opacity:.82;
+    }
+
+    .dash-panji-silenced .dash-panji-mouth{
+      animation:none !important;
+    }
+
+    .dash-panji-chunk-badge{
+      display:inline-flex;
+      align-items:center;
+      min-height:22px;
+      margin-bottom:7px;
+      padding:0 9px;
+      border-radius:999px;
+      background:#eff6ff;
+      border:1px solid #dbeafe;
+      color:#123a72;
+      font-size:10px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    @keyframes dashPanjiRgbGlow{
+      0%{
+        outline-color:#ef4444;
+        box-shadow:0 0 0 8px rgba(239,68,68,.18),0 0 28px rgba(239,68,68,.72),0 0 54px rgba(245,158,11,.34),0 18px 42px rgba(15,23,42,.18);
+      }
+      20%{
+        outline-color:#f59e0b;
+        box-shadow:0 0 0 8px rgba(245,158,11,.18),0 0 28px rgba(245,158,11,.72),0 0 54px rgba(34,197,94,.34),0 18px 42px rgba(15,23,42,.18);
+      }
+      40%{
+        outline-color:#22c55e;
+        box-shadow:0 0 0 8px rgba(34,197,94,.18),0 0 28px rgba(34,197,94,.72),0 0 54px rgba(6,182,212,.34),0 18px 42px rgba(15,23,42,.18);
+      }
+      60%{
+        outline-color:#06b6d4;
+        box-shadow:0 0 0 8px rgba(6,182,212,.18),0 0 28px rgba(6,182,212,.72),0 0 54px rgba(37,99,235,.34),0 18px 42px rgba(15,23,42,.18);
+      }
+      80%{
+        outline-color:#a855f7;
+        box-shadow:0 0 0 8px rgba(168,85,247,.18),0 0 28px rgba(168,85,247,.72),0 0 54px rgba(236,72,153,.34),0 18px 42px rgba(15,23,42,.18);
+      }
+      100%{
+        outline-color:#ef4444;
+        box-shadow:0 0 0 8px rgba(239,68,68,.18),0 0 28px rgba(239,68,68,.72),0 0 54px rgba(245,158,11,.34),0 18px 42px rgba(15,23,42,.18);
+      }
+    }
+
+    @keyframes dashPanjiRgbLabel{
+      from{background-position:0% 50%;}
+      to{background-position:260% 50%;}
+    }
   `;
   document.head.appendChild(style);
 }
@@ -1946,7 +2045,7 @@ function ensureDashboardPanjiElement() {
         <button type="button" id="dashPanjiExplain">Jelaskan Dashboard</button>
         <button type="button" id="dashPanjiTour">Panduan Elemen</button>
         <button type="button" id="dashPanjiAdvice">Rekomendasi</button>
-        <button type="button" id="dashPanjiMini">Minimize</button>
+        <button type="button" id="dashPanjiMini">Tutup PANJI</button>
       </div>
     </div>
 
@@ -1991,16 +2090,71 @@ function moveDashboardPanjiToElement(target) {
     target.classList.add('dash-panji-highlight');
   }
 }
-function dashboardPanjiSpeak(message, mood = 'talking', target = null) {
-  if (dashboardPanjiMuted) return;
+function splitDashboardPanjiMessage(message) {
+  const clean = String(message || '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 
+  if (!clean) return [''];
+
+  const paragraphs = clean.split(/\n\n+/).map((item) => item.trim()).filter(Boolean);
+  const chunks = [];
+  const maxLength = 230;
+
+  paragraphs.forEach((paragraph) => {
+    if (paragraph.length <= maxLength) {
+      chunks.push(paragraph);
+      return;
+    }
+
+    const sentences = paragraph
+      .split(/(?<=[.!?])\s+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    let current = '';
+
+    sentences.forEach((sentence) => {
+      if (!current) {
+        current = sentence;
+        return;
+      }
+
+      if ((current + ' ' + sentence).length <= maxLength) {
+        current += ' ' + sentence;
+      } else {
+        chunks.push(current);
+        current = sentence;
+      }
+    });
+
+    if (current) chunks.push(current);
+  });
+
+  return chunks.length ? chunks : [clean];
+}
+
+function clearDashboardPanjiSpeechTimers() {
   const panji = document.getElementById('dashboardPanji');
-  const textEl = document.getElementById('dashPanjiText');
-  const emote = document.getElementById('dashPanjiEmote');
 
-  if (!panji || !textEl) return;
+  if (dashboardPanjiSequenceTimer) {
+    clearTimeout(dashboardPanjiSequenceTimer);
+    dashboardPanjiSequenceTimer = null;
+  }
 
-  panji.classList.remove('dash-panji-minimized', 'dash-panji-muted', 'dash-panji-happy', 'dash-panji-sad', 'dash-panji-thinking', 'dash-panji-talking');
+  if (panji) {
+    clearTimeout(panji._talkTimer);
+    clearTimeout(panji._tourTimer);
+    if (dashboardPanjiSequenceTimer) {
+      clearTimeout(dashboardPanjiSequenceTimer);
+      dashboardPanjiSequenceTimer = null;
+    }
+    panji.classList.remove('dash-panji-talking');
+  }
+}
+
+function setDashboardPanjiMood(panji, emote, mood) {
+  panji.classList.remove('dash-panji-happy', 'dash-panji-sad', 'dash-panji-thinking', 'dash-panji-talking');
   panji.classList.add('dash-panji-talking');
 
   if (mood === 'happy') {
@@ -2015,18 +2169,110 @@ function dashboardPanjiSpeak(message, mood = 'talking', target = null) {
   } else if (emote) {
     emote.textContent = '🤖';
   }
+}
 
-  textEl.innerHTML = escapeHtml(message).replace(/\n/g, '<br>');
+function renderDashboardPanjiChunk(chunks, index, mood) {
+  const panji = document.getElementById('dashboardPanji');
+  const textEl = document.getElementById('dashPanjiText');
+  const emote = document.getElementById('dashPanjiEmote');
+
+  if (!panji || !textEl) return;
+  if (dashboardPanjiMuted || dashboardPanjiSilenced) return;
+
+  const total = chunks.length;
+  const safeIndex = Math.min(index, total - 1);
+  const chunk = chunks[safeIndex] || '';
+
+  setDashboardPanjiMood(panji, emote, mood);
+
+  const badge = total > 1
+    ? `<div class="dash-panji-chunk-badge">Narasi ${safeIndex + 1}/${total}</div>`
+    : '';
+
+  textEl.innerHTML = `${badge}${escapeHtml(chunk).replace(/\n/g, '<br>')}`;
+
+  clearTimeout(panji._talkTimer);
+  panji._talkTimer = setTimeout(() => {
+    if (panji && !dashboardPanjiSequenceTimer) {
+      panji.classList.remove('dash-panji-talking');
+    }
+  }, Math.min(2600, Math.max(1200, String(chunk).length * 28)));
+
+  if (safeIndex < total - 1) {
+    clearTimeout(dashboardPanjiSequenceTimer);
+    dashboardPanjiSequenceTimer = setTimeout(() => {
+      dashboardPanjiSequenceTimer = null;
+      renderDashboardPanjiChunk(chunks, safeIndex + 1, mood);
+    }, Math.min(4200, Math.max(2400, String(chunk).length * 45)));
+  } else {
+    clearTimeout(dashboardPanjiSequenceTimer);
+    dashboardPanjiSequenceTimer = null;
+    panji._talkTimer = setTimeout(() => {
+      panji.classList.remove('dash-panji-talking');
+    }, Math.min(2600, Math.max(1200, String(chunk).length * 28)));
+  }
+}
+
+function dashboardPanjiSpeak(message, mood = 'talking', target = null) {
+  if (dashboardPanjiMuted || dashboardPanjiSilenced) return;
+
+  const panji = document.getElementById('dashboardPanji');
+  const textEl = document.getElementById('dashPanjiText');
+
+  if (!panji || !textEl) return;
+
+  dashboardPanjiLastSpeak = { message, mood, target };
+
+  clearDashboardPanjiSpeechTimers();
+
+  panji.classList.remove('dash-panji-minimized', 'dash-panji-muted', 'dash-panji-silenced');
 
   if (target) {
     moveDashboardPanjiToElement(target);
   }
 
-  clearTimeout(panji._talkTimer);
-  panji._talkTimer = setTimeout(() => {
-    panji.classList.remove('dash-panji-talking');
-  }, Math.min(9000, Math.max(2400, String(message).length * 32)));
+  const chunks = splitDashboardPanjiMessage(message);
+  renderDashboardPanjiChunk(chunks, 0, mood);
 }
+
+function toggleDashboardPanjiSilence(data) {
+  const panji = document.getElementById('dashboardPanji');
+
+  if (!panji || dashboardPanjiMuted) return;
+
+  if (!dashboardPanjiSilenced) {
+    dashboardPanjiSilenced = true;
+    clearDashboardPanjiSpeechTimers();
+    clearDashboardPanjiHighlight();
+    moveDashboardPanjiHome();
+    panji.classList.add('dash-panji-minimized', 'dash-panji-silenced');
+    return;
+  }
+
+  dashboardPanjiSilenced = false;
+  panji.classList.remove('dash-panji-minimized', 'dash-panji-silenced');
+
+  const last = dashboardPanjiLastSpeak || {
+    message: buildPanjiDashboardIntro(data),
+    mood: 'talking',
+    target: null
+  };
+
+  dashboardPanjiSpeak(last.message, last.mood, last.target);
+}
+
+function closeDashboardPanjiUntilReload(panji) {
+  dashboardPanjiMuted = true;
+  dashboardPanjiSilenced = true;
+  clearDashboardPanjiSpeechTimers();
+  clearDashboardPanjiHighlight();
+  moveDashboardPanjiHome();
+
+  if (panji) {
+    panji.classList.add('dash-panji-minimized', 'dash-panji-muted', 'dash-panji-silenced');
+  }
+}
+
 
 function startDashboardPanjiTour(data) {
   const steps = [
@@ -2067,6 +2313,8 @@ function startDashboardPanjiTour(data) {
   const runStep = () => {
     const step = steps[index];
     const target = document.querySelector(step.selector);
+
+    if (dashboardPanjiMuted || dashboardPanjiSilenced) return;
 
     if (target) {
       dashboardPanjiSpeak(step.message, step.mood, target);
@@ -2110,33 +2358,29 @@ function initDashboardPanji(data, fromSelection = false) {
   const tourBtn = document.getElementById('dashPanjiTour');
   const adviceBtn = document.getElementById('dashPanjiAdvice');
 
-  const minimize = () => {
-    dashboardPanjiMuted = true;
-    panji.classList.add('dash-panji-minimized', 'dash-panji-muted');
-    clearDashboardPanjiHighlight();
-    moveDashboardPanjiHome();
+  const closePanji = () => {
+    closeDashboardPanjiUntilReload(panji);
   };
 
-  const show = () => {
-    if (dashboardPanjiMuted) return;
-    panji.classList.remove('dash-panji-minimized', 'dash-panji-muted');
+  const wakePanjiForButton = () => {
+    if (dashboardPanjiMuted) return false;
+    dashboardPanjiSilenced = false;
+    panji.classList.remove('dash-panji-minimized', 'dash-panji-muted', 'dash-panji-silenced');
+    return true;
   };
 
-  if (closeBtn) closeBtn.addEventListener('click', minimize);
-  if (miniBtn) miniBtn.addEventListener('click', minimize);
+  if (closeBtn) closeBtn.addEventListener('click', closePanji);
+  if (miniBtn) miniBtn.addEventListener('click', closePanji);
 
   if (characterBtn) {
     characterBtn.addEventListener('click', () => {
-      show();
-      clearDashboardPanjiHighlight();
-      moveDashboardPanjiHome();
-      dashboardPanjiSpeak(buildPanjiDashboardIntro(data), 'talking');
+      toggleDashboardPanjiSilence(data);
     });
   }
 
   if (explainBtn) {
     explainBtn.addEventListener('click', () => {
-      show();
+      if (!wakePanjiForButton()) return;
       clearDashboardPanjiHighlight();
       moveDashboardPanjiHome();
       dashboardPanjiSpeak(
@@ -2148,14 +2392,14 @@ function initDashboardPanji(data, fromSelection = false) {
 
   if (tourBtn) {
     tourBtn.addEventListener('click', () => {
-      show();
+      if (!wakePanjiForButton()) return;
       startDashboardPanjiTour(data);
     });
   }
 
   if (adviceBtn) {
     adviceBtn.addEventListener('click', () => {
-      show();
+      if (!wakePanjiForButton()) return;
       clearDashboardPanjiHighlight();
       moveDashboardPanjiHome();
       dashboardPanjiSpeak(buildPanjiRecommendation(data), 'thinking');
@@ -2239,8 +2483,8 @@ function initDashboardPanji(data, fromSelection = false) {
   contentArea.querySelectorAll('.rank-table').forEach((table, index) => {
     cleanups.push(bindHover(table, () => {
       const message = index === 0
-        ? 'Ini ranking nilai ITKP tertinggi. OPD/Sub OPD di sini bisa jadi contoh praktik baik pemanfaatan sistem.'
-        : 'Ini ranking nilai ITKP terendah. Bagian ini bukan untuk menyalahkan, tapi menentukan prioritas pembinaan dan perbaikan data.';
+        ? 'Ranking nilai ITKP tertinggi menampilkan OPD/Sub OPD yang bisa jadi contoh praktik baik pemanfaatan sistem.'
+        : 'Ranking nilai ITKP terendah membantu menentukan prioritas pembinaan dan perbaikan data, bukan untuk menyalahkan.';
       dashboardPanjiSpeak(message, index === 0 ? 'happy' : 'thinking', table);
     }));
   });
@@ -2287,6 +2531,10 @@ function initDashboardPanji(data, fromSelection = false) {
   dashboardPanjiDestroy = () => {
     clearTimeout(panji._talkTimer);
     clearTimeout(panji._tourTimer);
+    if (dashboardPanjiSequenceTimer) {
+      clearTimeout(dashboardPanjiSequenceTimer);
+      dashboardPanjiSequenceTimer = null;
+    }
     cleanups.forEach((fn) => {
       try {
         fn();
