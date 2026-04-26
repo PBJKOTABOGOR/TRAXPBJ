@@ -101,13 +101,8 @@ js: 'modules/timeline/simulasi-timeline.js'
 'simulasi-nontender': {
   title: 'Pencatatan Non Tender',
   subtitle: 'Simulasi PPK untuk pencatatan paket non tender.',
-  type: 'module',
-  html: 'modules/simulasi/nontender/sim-nontender.html',
-  css: 'modules/simulasi/nontender/sim-nontender.css',
-  js: 'modules/simulasi/nontender/sim-nontender.js',
-  externalScripts: [
-    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
-  ]
+  type: 'iframe',
+  url: 'https://pbjkotabogor.github.io/SIMPPK/login.html'
 }
 };
 
