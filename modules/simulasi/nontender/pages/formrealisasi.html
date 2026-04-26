@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi SPSE - Form Realisasi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-shell">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-icon">SPSE</div>
+        <div class="brand-text">
+          <div class="brand-main">INAPROC</div>
+          <div class="brand-sub">SPSE</div>
+        </div>
+      </div>
+      <div class="logo-kota">Kota Bogor</div>
+    </div>
+
+    <div class="nav">
+      <a href="home.html">BERANDA</a>
+      <a href="#" class="active">DAFTAR PAKET</a>
+      <a href="#">AMEL</a>
+      <a href="#">INBOX</a>
+      <a href="#">LOG AKSES</a>
+      <a href="#">GANTI PASSWORD</a>
+      <div class="nav-right">
+        <button class="btn-logout" id="btnLogout">⏻ LOGOUT</button>
+      </div>
+    </div>
+
+    <div class="system-bar">
+      <div class="left-mini">
+        <span style="font-weight:700;">⇵</span>
+        <span class="mini-link">▣ Petunjuk Penggunaan</span>
+        <span class="mini-link">Aplikasi e-Procurement Lainnya</span>
+      </div>
+      <div class="right-mini">
+        <span>
+          <a href="#" style="color:#315ec9;" data-user-name>PPK</a>
+          -
+          <span data-user-role>Pejabat Pembuat Komitmen</span>
+        </span>
+        <span>|</span>
+        <span><a href="#" style="color:#315ec9;">🔑 Enable 2FA</a></span>
+        <span>✉️</span>
+        <span class="notif-badge">15</span>
+        <span style="color:#21a55b;">⬢</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-block" style="margin-top:22px;">
+    <div class="crumb">
+      <span class="blue">Beranda</span> »
+      <span class="blue">Edit Paket</span> »
+      Form Realisasi
+    </div>
+
+    <div class="notice" style="padding:12px 14px;">
+      <strong>Tata Cara:</strong><br>
+      Isi field yang bertanda <span class="req">*</span>.
+      Semua tanggal dipilih lewat kalender.
+      Nilai realisasi pakai format seperti <strong>100.000,00</strong>.
+    </div>
+
+    <div id="successBox" class="success-box" style="display:none;margin-top:10px;">
+      Berhasil simpan Realisasi
+    </div>
+
+    <table class="form-table" style="margin-top:10px;">
+      <tr>
+        <td class="form-label">Kode Paket</td>
+        <td class="form-field" id="viewKodePaket"></td>
+      </tr>
+      <tr>
+        <td class="form-label">Nama Paket</td>
+        <td class="form-field" id="viewNamaPaket"></td>
+      </tr>
+      <tr>
+        <td class="form-label">Nilai Pagu</td>
+        <td class="form-field" id="viewNilaiPagu"></td>
+      </tr>
+      <tr>
+        <td class="form-label">Total Nilai Realisasi</td>
+        <td class="form-field" id="viewTotalRealisasi">Rp. 0,00</td>
+      </tr>
+      <tr>
+        <td class="form-label">Status Paket</td>
+        <td class="form-field" id="viewStatusPaket">Draft</td>
+      </tr>
+    </table>
+
+    <table class="form-table" style="margin-top:14px;">
+      <tr>
+        <td class="form-label">Bukti Pembayaran</td>
+        <td class="form-field">
+          <select id="inputBuktiPembayaran" class="select-control" style="max-width:220px;">
+            <option value="Non SPK">Non SPK</option>
+            <option value="SPK">SPK</option>
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td class="form-label">Jenis Realisasi</td>
+        <td class="form-field">
+          <select id="inputJenisRealisasi" class="select-control" style="max-width:100%;"></select>
+        </td>
+      </tr>
+
+      <tr>
+        <td class="form-label">Nama Dokumen <span class="req">*</span></td>
+        <td class="form-field">
+          <input type="text" id="inputNamaDokumen" class="text-control">
+        </td>
+      </tr>
+
+      <tr>
+        <td class="form-label">Nomor Dokumen</td>
+        <td class="form-field">
+          <input type="text" id="inputNomorDokumen" class="text-control">
+        </td>
+      </tr>
+
+      <tr>
+        <td class="form-label">Nilai Realisasi (Rp) <span class="req">*</span></td>
+        <td class="form-field">
+          <input type="text" id="inputNilaiRealisasi" class="text-control">
+          <div class="notice-yellow" style="margin-top:6px;">
+            Gunakan koma untuk pemisah desimal.
+          </div>
+        </td>
+      </tr>
+
+      <tr>
+        <td class="form-label">Tanggal Realisasi <span class="req">*</span></td>
+        <td class="form-field">
+          <div id="tanggalRealisasiWrap"></div>
+        </td>
+      </tr>
+
+      <tr>
+        <td class="form-label">Keterangan</td>
+        <td class="form-field">
+          <textarea id="inputKeterangan" class="textarea-control" style="height:72px;"></textarea>
+        </td>
+      </tr>
+
+      <tr>
+        <td class="form-label">Pilih Penyedia</td>
+        <td class="form-field">
+          <div id="penyediaModeWrap" style="display:none;">
+            <select id="inputModePenyedia" class="select-control" style="max-width:220px;">
+              <option value="Data SiKaP">Data SiKaP</option>
+              <option value="Data Non SiKaP">Data Non SiKaP</option>
+            </select>
+          </div>
+          <div class="notice-yellow" id="penyediaHint" style="margin:0;">
+            Pilih Penyedia setelah selesai menyimpan realisasi.
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <div id="penyediaPanel" style="display:none;margin-top:10px;border:1px solid #d9534f;background:#d9534f;padding:8px;">
+      <div style="margin-bottom:8px;">
+        <button class="btn-dark" id="btnTambahPenyedia" type="button">➕ Tambah Penyedia</button>
+      </div>
+
+      <table class="table-simple" style="background:#fff;">
+        <thead>
+          <tr>
+            <th style="width:50px;">No</th>
+            <th>Nama Penyedia</th>
+            <th style="width:190px;">NPWP</th>
+            <th style="width:220px;">Email</th>
+            <th style="width:140px;">Telp</th>
+            <th>Alamat</th>
+          </tr>
+        </thead>
+        <tbody id="penyediaTableBody">
+          <tr><td colspan="6" style="text-align:center;color:#666;">Belum ada penyedia</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="dokumenPanel" style="display:none;margin-top:16px;">
+      <div class="section-title">Dokumen Realisasi</div>
+
+      <div class="notice-yellow" style="margin-top:8px;">
+        Dokumen yang dapat di upload hanya file/dokumen yang memiliki ekstensi
+        <strong>*.pdf, *.jpg, *.jpeg, atau *.png</strong>.
+      </div>
+
+      <table class="form-table" style="margin-top:10px;">
+        <tr>
+          <td class="form-label">Dokumen <span class="req">*</span></td>
+          <td class="form-field">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <input type="file" id="inputDokumenFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;">
+              <button class="btn-green" id="btnUploadDokumen" type="button">⬆ Upload</button>
+              <span id="uploadFileName" style="font-size:12px;color:#444;"></span>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <table class="table-simple" style="margin-top:10px;">
+        <thead>
+          <tr>
+            <th>Nama File</th>
+            <th style="width:180px;">Tanggal Upload</th>
+            <th style="width:120px;">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="dokumenTableBody">
+          <tr><td colspan="3" style="text-align:center;color:#666;">Belum ada dokumen</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-green" id="btnSimpan" type="button">◘ Simpan</button>
+      <button class="btn-back" id="btnKembali" type="button">◀ Kembali</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if(!requireLogin()){}
+    bindLogout();
+
+    const packageId = getQueryParam('id') || '';
+    const realisasiId = getQueryParam('id_realisasi') || '';
+
+    let currentPackage = null;
+    let currentRealisasi = null;
+    let tanggalPicker = null;
+    let savedDokumenRows = [];
+    let savedPenyediaRows = [];
+
+    const jenisRealisasiMap = {
+      'Non SPK': ['Bukti Pembelian', 'Kuitansi', 'Surat Perjanjian', 'Surat Pesanan', 'Dokumen Lainnya'],
+      'SPK': ['Kuitansi', 'Surat Perjanjian', 'Surat Pesanan', 'Dokumen Lainnya']
+    };
+
+    function safeShowLoading(title, text){
+      try{
+        if(typeof hideLoading === 'function') hideLoading();
+        if(typeof showLoading === 'function') showLoading(title, text);
+      }catch(e){}
+    }
+
+    function safeHideLoading(){
+      try{
+        if(typeof hideLoading === 'function') hideLoading();
+      }catch(e){}
+    }
+
+    function parseDateFlexible(value){
+      const raw = String(value || '').trim();
+      if(!raw) return null;
+
+      if(/^\d{2}-\d{2}-\d{4}$/.test(raw)){
+        const [dd, mm, yyyy] = raw.split('-').map(Number);
+        const d = new Date(yyyy, mm - 1, dd);
+        return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      }
+
+      if(/^\d{4}-\d{2}-\d{2}/.test(raw)){
+        const d = new Date(raw);
+        if(!isNaN(d.getTime())){
+          return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        }
+      }
+
+      return null;
+    }
+
+    function getTodayDateOnly(){
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function getEffectivePackageStatus(pkg){
+      const tgl = parseDateFlexible(pkg?.tanggal_paket_selesai || '');
+      if(!tgl) return 'Draft';
+      const today = getTodayDateOnly();
+      return tgl < today ? 'Paket Sudah Selesai' : 'Paket Sedang Berjalan';
+    }
+
+    function isPackageFinished(){
+      return getEffectivePackageStatus(currentPackage) === 'Paket Sudah Selesai';
+    }
+
+    function getTotalRealisasiByPackageSafe(idSimulasi){
+      if(typeof getTotalRealisasiByPackage === 'function'){
+        return Number(getTotalRealisasiByPackage(idSimulasi) || 0);
+      }
+      const rows = Array.isArray(window.SPSE_APP_STATE.realisasiRows) ? window.SPSE_APP_STATE.realisasiRows : [];
+      return rows
+        .filter(row => normalizeWhitespace(row.id_simulasi) === normalizeWhitespace(idSimulasi))
+        .reduce((sum, row) => sum + parseNumber(row.nilai_realisasi || 0), 0);
+    }
+
+    function findLoadedRealisasiByIdSafe(id){
+      if(typeof findLoadedRealisasiById === 'function'){
+        return findLoadedRealisasiById(id);
+      }
+      const rows = Array.isArray(window.SPSE_APP_STATE.realisasiRows) ? window.SPSE_APP_STATE.realisasiRows : [];
+      return rows.find(row => normalizeWhitespace(row.id_realisasi) === normalizeWhitespace(id)) || null;
+    }
+
+    async function loadRealisasiRowsSafe(idSimulasi){
+      if(typeof loadRealisasiRows === 'function'){
+        return await loadRealisasiRows(idSimulasi);
+      }
+      window.SPSE_APP_STATE.realisasiRows = [];
+      return [];
+    }
+
+    async function loadPenyediaRowsSafe(idRealisasi){
+      if(typeof loadPenyediaRows === 'function'){
+        return await loadPenyediaRows(idRealisasi);
+      }
+      window.SPSE_APP_STATE.penyediaRows = [];
+      return [];
+    }
+
+    async function loadDokumenRowsSafe(idRealisasi){
+      if(typeof loadDokumenRows === 'function'){
+        return await loadDokumenRows(idRealisasi);
+      }
+      window.SPSE_APP_STATE.dokumenRows = [];
+      return [];
+    }
+
+    async function saveRealisasiToSheetSafe(payload){
+      if(typeof saveRealisasiToSheet === 'function'){
+        return await saveRealisasiToSheet(payload);
+      }
+      throw new Error('Fungsi saveRealisasiToSheet belum tersedia di app.js');
+    }
+
+    async function saveDokumenToSheetSafe(payload){
+      if(typeof saveDokumenToSheet === 'function'){
+        return await saveDokumenToSheet(payload);
+      }
+      throw new Error('Fungsi saveDokumenToSheet belum tersedia di app.js');
+    }
+
+    function fillInfo(){
+      currentPackage.status_paket = getEffectivePackageStatus(currentPackage);
+      document.getElementById('viewKodePaket').textContent = currentPackage.id_simulasi || '';
+      document.getElementById('viewNamaPaket').textContent = currentPackage.nama_paket || '';
+      document.getElementById('viewNilaiPagu').textContent = formatRupiahFull(currentPackage.pagu || 0);
+      document.getElementById('viewStatusPaket').textContent = currentPackage.status_paket || 'Draft';
+      document.getElementById('viewTotalRealisasi').textContent = formatRupiahFull(getTotalRealisasiByPackageSafe(packageId));
+    }
+
+    function buildJenisRealisasiOptions(){
+      const bukti = document.getElementById('inputBuktiPembayaran').value;
+      const select = document.getElementById('inputJenisRealisasi');
+      const current = select.value;
+      const items = jenisRealisasiMap[bukti] || [];
+
+      select.innerHTML = items.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('');
+
+      if(items.includes(current)){
+        select.value = current;
+      }else if(items.length){
+        select.value = items[0];
+      }
+    }
+
+    function bindNilaiFormat(){
+      const input = document.getElementById('inputNilaiRealisasi');
+      input.addEventListener('blur', function(){
+        if(!input.value.trim()) return;
+        input.value = formatNumberInput(input.value);
+      });
+    }
+
+    function renderTanggalPicker(){
+      const wrap = document.getElementById('tanggalRealisasiWrap');
+      wrap.innerHTML = '';
+
+      tanggalPicker = createDatePickerInput({
+        value: currentRealisasi ? (currentRealisasi.tanggal_realisasi || '') : '',
+        placeholder: 'dd-mm-yyyy'
+      });
+
+      tanggalPicker.text.style.maxWidth = '220px';
+      tanggalPicker.text.readOnly = true;
+      wrap.appendChild(tanggalPicker.wrap);
+    }
+
+    function applyReadonlyByPackageStatus(){
+      const selesai = isPackageFinished();
+      const readonly = selesai;
+
+      const bukti = document.getElementById('inputBuktiPembayaran');
+      const jenis = document.getElementById('inputJenisRealisasi');
+      const nama = document.getElementById('inputNamaDokumen');
+      const nomor = document.getElementById('inputNomorDokumen');
+      const nilai = document.getElementById('inputNilaiRealisasi');
+      const ket = document.getElementById('inputKeterangan');
+      const btnSimpan = document.getElementById('btnSimpan');
+      const btnUpload = document.getElementById('btnUploadDokumen');
+      const btnTambahPenyedia = document.getElementById('btnTambahPenyedia');
+
+      bukti.disabled = readonly;
+      jenis.disabled = readonly;
+      nama.disabled = readonly;
+      nomor.disabled = readonly;
+      nilai.disabled = readonly;
+      ket.disabled = readonly;
+
+      if(tanggalPicker){
+        tanggalPicker.text.disabled = readonly;
+        tanggalPicker.button.disabled = readonly;
+        tanggalPicker.hidden.disabled = readonly;
+        tanggalPicker.text.style.background = readonly ? '#f3f4f6' : '#fff';
+      }
+
+      btnSimpan.style.display = readonly ? 'none' : 'inline-flex';
+      btnUpload.style.display = readonly ? 'none' : 'inline-flex';
+      btnTambahPenyedia.style.display = readonly ? 'none' : 'inline-flex';
+
+      if(readonly){
+        nama.style.background = '#f3f4f6';
+        nomor.style.background = '#f3f4f6';
+        nilai.style.background = '#f3f4f6';
+        ket.style.background = '#f3f4f6';
+      } else {
+        nama.style.background = '#fff';
+        nomor.style.background = '#fff';
+        nilai.style.background = '#fff';
+        ket.style.background = '#fff';
+      }
+    }
+
+    function validateForm(){
+      if(isPackageFinished()){
+        alert('Paket Sudah Selesai, realisasi tidak bisa diubah.');
+        return false;
+      }
+
+      const namaDokumen = document.getElementById('inputNamaDokumen').value.trim();
+      const nilaiRealisasi = parseNumber(document.getElementById('inputNilaiRealisasi').value);
+      const tanggalRealisasi = tanggalPicker ? tanggalPicker.text.value.trim() : '';
+
+      if(!namaDokumen){
+        alert('Nama Dokumen wajib diisi.');
+        return false;
+      }
+
+      if(!nilaiRealisasi || nilaiRealisasi <= 0){
+        alert('Nilai Realisasi wajib diisi.');
+        return false;
+      }
+
+      if(!tanggalRealisasi){
+        alert('Tanggal Realisasi wajib diisi.');
+        return false;
+      }
+
+      const totalExisting = getTotalRealisasiByPackageSafe(packageId);
+      const existingThisRow = currentRealisasi ? parseNumber(currentRealisasi.nilai_realisasi) : 0;
+      const totalAfterSave = totalExisting - existingThisRow + nilaiRealisasi;
+      const pagu = parseNumber(currentPackage.pagu);
+
+      if(totalAfterSave > pagu){
+        alert('Total Nilai Realisasi melebihi Pagu');
+        return false;
+      }
+
+      return true;
+    }
+
+    function renderPenyediaTable(){
+      const tbody = document.getElementById('penyediaTableBody');
+
+      if(!savedPenyediaRows.length){
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;">Belum ada penyedia</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = savedPenyediaRows.map((row, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(row.nama_penyedia || '')}</td>
+          <td>${escapeHtml(row.npwp || '')}</td>
+          <td>${escapeHtml(row.email || '')}</td>
+          <td>${escapeHtml(row.telp || '')}</td>
+          <td>${escapeHtml(row.alamat || '')}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderDokumenTable(){
+      const tbody = document.getElementById('dokumenTableBody');
+
+      if(!savedDokumenRows.length){
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#666;">Belum ada dokumen</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = savedDokumenRows.map(row => `
+        <tr>
+          <td>${escapeHtml(row.nama_file || '')}</td>
+          <td>${escapeHtml(formatTanggalIndonesia(row.created_at || ''))}</td>
+          <td>-</td>
+        </tr>
+      `).join('');
+    }
+
+    function showAfterSaveSection(){
+      document.getElementById('successBox').style.display = 'block';
+      document.getElementById('penyediaHint').style.display = 'none';
+      document.getElementById('penyediaModeWrap').style.display = 'block';
+      document.getElementById('penyediaPanel').style.display = 'block';
+      document.getElementById('dokumenPanel').style.display = 'block';
+      applyReadonlyByPackageStatus();
+    }
+
+    function hideAfterSaveSection(){
+      document.getElementById('successBox').style.display = 'none';
+      document.getElementById('penyediaHint').style.display = 'block';
+      document.getElementById('penyediaModeWrap').style.display = 'none';
+      document.getElementById('penyediaPanel').style.display = 'none';
+      document.getElementById('dokumenPanel').style.display = 'none';
+    }
+
+    function base64FromFile(file){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(){
+          const result = String(reader.result || '');
+          const base64 = result.includes(',') ? result.split(',')[1] : result;
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function openPenyediaForm(){
+      if(isPackageFinished()){
+        alert('Paket Sudah Selesai, penyedia tidak bisa ditambah.');
+        return;
+      }
+
+      if(!currentRealisasi || !currentRealisasi.id_realisasi){
+        alert('Simpan realisasi terlebih dahulu.');
+        return;
+      }
+
+      location.href =
+        'penyedianonsikap.html?id=' +
+        encodeURIComponent(packageId) +
+        '&id_realisasi=' +
+        encodeURIComponent(currentRealisasi.id_realisasi);
+    }
+
+    async function loadPenyediaDokumenIfAny(){
+      if(!currentRealisasi || !currentRealisasi.id_realisasi) return;
+
+      await loadPenyediaRowsSafe(currentRealisasi.id_realisasi);
+      savedPenyediaRows = Array.isArray(window.SPSE_APP_STATE.penyediaRows)
+        ? window.SPSE_APP_STATE.penyediaRows
+        : [];
+      renderPenyediaTable();
+
+      await loadDokumenRowsSafe(currentRealisasi.id_realisasi);
+      savedDokumenRows = Array.isArray(window.SPSE_APP_STATE.dokumenRows)
+        ? window.SPSE_APP_STATE.dokumenRows
+        : [];
+      renderDokumenTable();
+    }
+
+    function fillExistingRealisasi(){
+      if(!currentRealisasi) return;
+
+      document.getElementById('inputBuktiPembayaran').value = currentRealisasi.bukti_pembayaran || 'Non SPK';
+      buildJenisRealisasiOptions();
+      document.getElementById('inputJenisRealisasi').value = currentRealisasi.jenis_realisasi || '';
+      document.getElementById('inputNamaDokumen').value = currentRealisasi.nama_dokumen || '';
+      document.getElementById('inputNomorDokumen').value = currentRealisasi.nomor_dokumen || '';
+      document.getElementById('inputNilaiRealisasi').value = formatNumberInput(currentRealisasi.nilai_realisasi || 0);
+      document.getElementById('inputKeterangan').value = currentRealisasi.keterangan || '';
+    }
+
+    function clearFormForNew(){
+      document.getElementById('inputBuktiPembayaran').value = 'Non SPK';
+      buildJenisRealisasiOptions();
+      document.getElementById('inputNamaDokumen').value = '';
+      document.getElementById('inputNomorDokumen').value = '';
+      document.getElementById('inputNilaiRealisasi').value = '';
+      document.getElementById('inputKeterangan').value = '';
+      if(tanggalPicker) tanggalPicker.setValue('');
+    }
+
+    document.getElementById('inputBuktiPembayaran').addEventListener('change', buildJenisRealisasiOptions);
+
+    document.getElementById('btnKembali').onclick = function(){
+      location.href = `editpaketpencatatan.html?id=${encodeURIComponent(packageId)}`;
+    };
+
+    document.getElementById('btnTambahPenyedia').onclick = function(){
+      openPenyediaForm();
+    };
+
+    document.getElementById('btnUploadDokumen').onclick = function(){
+      if(isPackageFinished()){
+        alert('Paket Sudah Selesai, dokumen tidak bisa ditambah.');
+        return;
+      }
+
+      if(!currentRealisasi || !currentRealisasi.id_realisasi){
+        alert('Simpan realisasi terlebih dahulu.');
+        return;
+      }
+
+      document.getElementById('inputDokumenFile').click();
+    };
+
+    document.getElementById('inputDokumenFile').addEventListener('change', async function(){
+      const file = this.files && this.files[0];
+      if(!file) return;
+
+      try{
+        if(isPackageFinished()){
+          alert('Paket Sudah Selesai, dokumen tidak bisa ditambah.');
+          return;
+        }
+
+        safeShowLoading('Mohon Tunggu', 'Sedang upload dokumen...');
+        document.getElementById('uploadFileName').textContent = file.name;
+
+        const base64 = await base64FromFile(file);
+
+        await saveDokumenToSheetSafe({
+          id_realisasi: currentRealisasi.id_realisasi,
+          id_simulasi: packageId,
+          nama_file: file.name,
+          mime_type: file.type || 'application/octet-stream',
+          file_base64: base64
+        });
+
+        await loadDokumenRowsSafe(currentRealisasi.id_realisasi);
+        savedDokumenRows = Array.isArray(window.SPSE_APP_STATE.dokumenRows)
+          ? window.SPSE_APP_STATE.dokumenRows
+          : [];
+        renderDokumenTable();
+
+        safeHideLoading();
+        alert('Dokumen berhasil diupload');
+      }catch(error){
+        safeHideLoading();
+        alert(error.message || 'Gagal upload dokumen');
+      }finally{
+        this.value = '';
+      }
+    });
+
+    document.getElementById('btnSimpan').onclick = async function(){
+      try{
+        if(!validateForm()) return;
+
+        safeShowLoading('Mohon Tunggu', 'Sedang menyimpan realisasi...');
+
+        const payload = {
+          id_simulasi: packageId,
+          id_realisasi: currentRealisasi ? currentRealisasi.id_realisasi : '',
+          bukti_pembayaran: document.getElementById('inputBuktiPembayaran').value,
+          jenis_realisasi: document.getElementById('inputJenisRealisasi').value,
+          nama_dokumen: document.getElementById('inputNamaDokumen').value.trim(),
+          nomor_dokumen: document.getElementById('inputNomorDokumen').value.trim(),
+          nilai_realisasi: document.getElementById('inputNilaiRealisasi').value.trim(),
+          tanggal_realisasi: tanggalPicker ? tanggalPicker.text.value.trim() : '',
+          keterangan: document.getElementById('inputKeterangan').value.trim()
+        };
+
+        currentRealisasi = await saveRealisasiToSheetSafe(payload);
+
+        await loadPackageRows();
+        currentPackage = findLoadedPackageById(packageId);
+        if(currentPackage){
+          currentPackage.status_paket = getEffectivePackageStatus(currentPackage);
+        }
+
+        await loadRealisasiRowsSafe(packageId);
+
+        fillInfo();
+        showAfterSaveSection();
+        await loadPenyediaDokumenIfAny();
+
+        safeHideLoading();
+        alert('Berhasil simpan Realisasi');
+      }catch(error){
+        safeHideLoading();
+        alert(error.message || 'Gagal menyimpan realisasi');
+      }
+    };
+
+    (async function initPage(){
+      try{
+        if(!packageId){
+          location.href = 'pencatatannontender.html';
+          return;
+        }
+
+        safeShowLoading('Mohon Tunggu', 'Sedang menarik data paket...');
+
+        await loadPackageRows();
+        currentPackage = findLoadedPackageById(packageId);
+
+        if(!currentPackage){
+          throw new Error('Data paket tidak ditemukan.');
+        }
+
+        currentPackage.status_paket = getEffectivePackageStatus(currentPackage);
+
+        if(!realisasiId && isPackageFinished()){
+          safeHideLoading();
+          alert('Paket Sudah Selesai, tidak bisa tambah realisasi baru.');
+          location.href = `editpaketpencatatan.html?id=${encodeURIComponent(packageId)}`;
+          return;
+        }
+
+        await loadRealisasiRowsSafe(packageId);
+
+        fillInfo();
+        buildJenisRealisasiOptions();
+        renderTanggalPicker();
+        bindNilaiFormat();
+
+        if(realisasiId){
+          currentRealisasi = findLoadedRealisasiByIdSafe(realisasiId);
+
+          if(!currentRealisasi){
+            throw new Error('Data realisasi tidak ditemukan.');
+          }
+
+          fillExistingRealisasi();
+
+          if(tanggalPicker){
+            tanggalPicker.setValue(currentRealisasi.tanggal_realisasi || '');
+          }
+
+          showAfterSaveSection();
+          await loadPenyediaDokumenIfAny();
+        }else{
+          currentRealisasi = null;
+          clearFormForNew();
+          hideAfterSaveSection();
+          applyReadonlyByPackageStatus();
+        }
+
+        applyReadonlyByPackageStatus();
+        safeHideLoading();
+      }catch(error){
+        safeHideLoading();
+        alert(error.message || 'Gagal menarik data paket');
+        location.href = `editpaketpencatatan.html?id=${encodeURIComponent(packageId || '')}`;
+      }
+    })();
+  </script>
+</body>
+</html>
