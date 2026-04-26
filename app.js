@@ -51,10 +51,15 @@ js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
 },
 
 'rapor-pbj': {
-title: 'Rapor PBJ',
-subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
-type: 'iframe',
-url: 'modules/rapor-pbj/index.html'
+  title: 'Rapor PBJ',
+  subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
+  type: 'module',
+  html: 'modules/rapor-pbj/rapor-pbj.html',
+  css: 'modules/rapor-pbj/rapor-pbj.css',
+  js: 'modules/rapor-pbj/rapor-pbj.js',
+  externalScripts: [
+    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+  ]
 },
 
 'monitoring-perencanaan': {
