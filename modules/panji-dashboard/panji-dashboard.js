@@ -547,33 +547,13 @@
     const lower = text.toLowerCase();
     const data = readDashboardData();
 
-    if (lower.includes('sirup')) {
-      return explainIndicatorByName('SiRUP', data);
-    }
-
-    if (lower.includes('toko daring')) {
-      return explainIndicatorByName('Toko Daring', data);
-    }
-
-    if (lower.includes('e-purchasing') || lower.includes('epurchasing') || lower.includes('katalog')) {
-      return explainIndicatorByName('e-Purchasing', data);
-    }
-
-    if (lower.includes('e-tendering') || lower.includes('etendering') || lower.includes('tender')) {
-      return explainIndicatorByName('e-Tendering', data);
-    }
-
-    if (lower.includes('e-kontrak') || lower.includes('ekontrak') || lower.includes('kontrak')) {
-      return explainIndicatorByName('e-Kontrak', data);
-    }
-
-    if (lower.includes('non tender') || lower.includes('nontender')) {
-      return explainIndicatorByName('Non Tender', data);
-    }
-
-    if (lower.includes('itkp') || lower.includes('pemanfaatan sistem')) {
-      return analyzeCurrentSatker(data);
-    }
+    if (lower.includes('sirup')) return explainIndicatorByName('SiRUP', data);
+    if (lower.includes('toko daring')) return explainIndicatorByName('Toko Daring', data);
+    if (lower.includes('e-purchasing') || lower.includes('epurchasing') || lower.includes('katalog')) return explainIndicatorByName('e-Purchasing', data);
+    if (lower.includes('e-tendering') || lower.includes('etendering') || lower.includes('tender')) return explainIndicatorByName('e-Tendering', data);
+    if (lower.includes('e-kontrak') || lower.includes('ekontrak') || lower.includes('kontrak')) return explainIndicatorByName('e-Kontrak', data);
+    if (lower.includes('non tender') || lower.includes('nontender')) return explainIndicatorByName('Non Tender', data);
+    if (lower.includes('itkp') || lower.includes('pemanfaatan sistem')) return analyzeCurrentSatker(data);
 
     if (lower.includes('pagu') || lower.includes('perencanaan')) {
       return `Pagu perencanaan menunjukkan beban rencana pengadaan yang harus dikawal sejak RUP. Nilai besar belum otomatis baik; yang penting adalah paketnya diumumkan, metode sesuai, jadwal realistis, dan tidak berhenti sebelum proses pemilihan.`;
@@ -625,7 +605,7 @@
       return `Rapor PBJ cocok dipakai untuk membaca kinerja OPD secara lebih naratif. Data dashboard menjadi pintu masuk, sedangkan rapor membantu menyampaikan kondisi dan rekomendasi dengan bahasa evaluasi.`;
     }
 
-    if (text.includes('procurement stacker') || text.includes('panji game')) {
+    if (text.includes('procurement stacker') || text.includes('panji game') || text.includes('mini game')) {
       return `Procurement Stacker adalah ruang latihan. Di sana PANJI menguji urutan PBJ, jebakan metode, katalog tidak tersedia, kontrak, adendum, BAST, dan realisasi.`;
     }
 
@@ -681,7 +661,6 @@
     const value = indicator ? indicator.value : 0;
     const max = indicator ? indicator.max : getDefaultMax(name);
     const status = PANJI_KNOWLEDGE.indicatorScale(value, max);
-
     const fn = PANJI_KNOWLEDGE.indicatorNarratives[normalized];
 
     if (typeof fn === 'function') {
@@ -693,12 +672,8 @@
 
   function focusWeakestIndicator(data) {
     if (!data.weakestIndicator) return;
-
     const target = findElementByText(data.weakestIndicator.name);
-
-    if (target) {
-      highlightElement(target);
-    }
+    if (target) highlightElement(target);
   }
 
   function focusBestDashboardTarget(mode) {
@@ -723,7 +698,6 @@
 
   function highlightElement(el) {
     clearHighlight();
-
     if (!el || !el.classList) return;
 
     state.currentTarget = el;
@@ -845,7 +819,6 @@
     for (const container of containers) {
       const text = cleanText(container.textContent);
       const score = parseScoreFromText(text, max);
-
       if (score !== null) return score;
     }
 
@@ -854,8 +827,8 @@
 
   function parseScoreFromText(text, max) {
     const clean = String(text || '');
-
     const fraction = clean.match(/(\d+(?:[,.]\d+)?)\s*(?:\/|dari)\s*(\d+(?:[,.]\d+)?)/i);
+
     if (fraction) {
       const value = toNumber(fraction[1]);
       const maximum = toNumber(fraction[2]);
@@ -869,10 +842,7 @@
 
     for (const number of numbers) {
       const value = toNumber(number);
-
-      if (value >= 0 && value <= max) {
-        return value;
-      }
+      if (value >= 0 && value <= max) return value;
     }
 
     return null;
@@ -880,7 +850,6 @@
 
   function findIndicator(data, name) {
     const key = normalizeIndicatorKey(name);
-
     return (data.indicators || []).find((item) => normalizeIndicatorKey(item.name) === key);
   }
 
@@ -950,7 +919,6 @@
   function getPercent(indicator) {
     const max = toNumber(indicator.max);
     if (max <= 0) return 0;
-
     return (toNumber(indicator.value) / max) * 100;
   }
 
@@ -1183,13 +1151,8 @@
       }
 
       @keyframes traxPanjiBubbleIdle{
-        0%,100%{
-          transform:translateY(0);
-        }
-
-        50%{
-          transform:translateY(-4px);
-        }
+        0%,100%{ transform:translateY(0); }
+        50%{ transform:translateY(-4px); }
       }
 
       .trax-panji-bubble-top{
@@ -1227,13 +1190,8 @@
       }
 
       @keyframes traxPanjiEmote{
-        0%,100%{
-          transform:scale(1);
-        }
-
-        50%{
-          transform:scale(1.12);
-        }
+        0%,100%{ transform:scale(1); }
+        50%{ transform:scale(1.12); }
       }
 
       .trax-panji-text{
@@ -1306,13 +1264,8 @@
       }
 
       @keyframes traxPanjiFloat{
-        0%,100%{
-          transform:translateY(0);
-        }
-
-        50%{
-          transform:translateY(-8px);
-        }
+        0%,100%{ transform:translateY(0); }
+        50%{ transform:translateY(-8px); }
       }
 
       .trax-panji-sprite{
@@ -1402,13 +1355,8 @@
       }
 
       @keyframes traxPanjiQuestion{
-        0%,100%{
-          transform:translateY(0) scale(1);
-        }
-
-        50%{
-          transform:translateY(-7px) scale(1.08);
-        }
+        0%,100%{ transform:translateY(0) scale(1); }
+        50%{ transform:translateY(-7px) scale(1.08); }
       }
 
       @keyframes traxPanjiSpark{
@@ -1428,13 +1376,8 @@
       }
 
       @keyframes traxPanjiTalkBob{
-        0%,100%{
-          transform:translateX(-50%) translateY(0);
-        }
-
-        50%{
-          transform:translateX(-50%) translateY(-3px);
-        }
+        0%,100%{ transform:translateX(-50%) translateY(0); }
+        50%{ transform:translateX(-50%) translateY(-3px); }
       }
 
       .trax-panji-happy .trax-panji-sprite{
@@ -1442,13 +1385,8 @@
       }
 
       @keyframes traxPanjiHappyBounce{
-        0%,100%{
-          transform:translateX(-50%) translateY(0);
-        }
-
-        50%{
-          transform:translateX(-50%) translateY(-10px);
-        }
+        0%,100%{ transform:translateX(-50%) translateY(0); }
+        50%{ transform:translateX(-50%) translateY(-10px); }
       }
 
       .trax-panji-sad .trax-panji-sprite{
@@ -1461,17 +1399,9 @@
       }
 
       @keyframes traxPanjiThinkTilt{
-        0%,100%{
-          transform:translateX(-50%) rotate(0deg);
-        }
-
-        25%{
-          transform:translateX(-50%) rotate(-3deg);
-        }
-
-        75%{
-          transform:translateX(-50%) rotate(3deg);
-        }
+        0%,100%{ transform:translateX(-50%) rotate(0deg); }
+        25%{ transform:translateX(-50%) rotate(-3deg); }
+        75%{ transform:translateX(-50%) rotate(3deg); }
       }
 
       .trax-panji-intro .trax-panji-character{
