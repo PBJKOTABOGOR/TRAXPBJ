@@ -59,7 +59,7 @@ js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
 title: 'Rapor PBJ',
 subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
 type: 'iframe',
-url: 'https://pbjkotabogor.github.io/raporpbj/'
+url: 'modules/rapor-pbj/index.html'
 },
 
 'monitoring-perencanaan': {
