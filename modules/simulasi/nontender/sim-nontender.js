@@ -1,5 +1,6 @@
 (function () {
   const MODULE_BASE = 'modules/simulasi/nontender/pages/';
+
   const PAGE_MAP = {
     'login.html': 'login.html',
     'home.html': 'home.html',
@@ -32,7 +33,11 @@
   function getSearchFromUrl(input) {
     const raw = String(input || '').trim();
     const qIndex = raw.indexOf('?');
-    if (qIndex < 0) return '';
+
+    if (qIndex < 0) {
+      return '';
+    }
+
     const hashIndex = raw.indexOf('#', qIndex);
     return hashIndex >= 0 ? raw.slice(qIndex, hashIndex) : raw.slice(qIndex);
   }
@@ -122,6 +127,24 @@
     };
   }
 
+  function patchScriptNavigation(code) {
+    return String(code || '')
+      .replace(/window\.location\.href\s*=\s*([^;]+);/g, 'window.__spseNavigate($1);')
+      .replace(/location\.href\s*=\s*([^;]+);/g, 'window.__spseNavigate($1);')
+      .replace(/window\.location\.assign\(([^)]+)\);/g, 'window.__spseNavigate($1);')
+      .replace(/location\.assign\(([^)]+)\);/g, 'window.__spseNavigate($1);')
+      .replace(/window\.location\.replace\(([^)]+)\);/g, 'window.__spseNavigate($1);')
+      .replace(/location\.replace\(([^)]+)\);/g, 'window.__spseNavigate($1);');
+  }
+
+  function patchAppCode(code) {
+    return patchScriptNavigation(code)
+      .replace(/location\.href\s*=\s*'login\.html';/g, "window.__spseNavigate('login.html');")
+      .replace(/location\.href\s*=\s*"login\.html";/g, "window.__spseNavigate('login.html');")
+      .replace(/location\.href\s*=\s*'home\.html';/g, "window.__spseNavigate('home.html');")
+      .replace(/location\.href\s*=\s*"home\.html";/g, "window.__spseNavigate('home.html');");
+  }
+
   function exposeAppFunctions(code) {
     const names = [];
     const regex = /function\s+([A-Za-z_$][\w$]*)\s*\(/g;
@@ -140,27 +163,172 @@
       : '';
 
     return `
-;window.APP_CONFIG = APP_CONFIG;
-window.METHOD_MAP = METHOD_MAP;
-window.STORAGE_KEYS = STORAGE_KEYS;
+;window.APP_CONFIG = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : window.APP_CONFIG;
+window.METHOD_MAP = typeof METHOD_MAP !== 'undefined' ? METHOD_MAP : window.METHOD_MAP;
+window.STORAGE_KEYS = typeof STORAGE_KEYS !== 'undefined' ? STORAGE_KEYS : window.STORAGE_KEYS;
 ${exportNames}
 `;
   }
 
-  function patchScriptNavigation(code) {
-    return String(code || '')
-      .replace(/window\.location\.href\s*=\s*([^;]+);/g, 'window.__spseNavigate($1);')
-      .replace(/location\.href\s*=\s*([^;]+);/g, 'window.__spseNavigate($1);');
-  }
+  function installFallbackGlobals() {
+    window.APP_CONFIG = window.APP_CONFIG || {
+      spreadsheetId: '1ssQdLVKLPPj0dI6a_7iUwxm3L2IiPOZodIg1uE20BM0',
+      rupMasterGid: '2083920669',
+      packageSheetGid: '401635447',
+      defaultInstansi: 'Kota Bogor',
+      defaultTahun: '2026',
+      currentUserName: 'PPK',
+      currentUserRole: 'Pejabat Pembuat Komitmen'
+    };
 
-  function patchAppCode(code) {
-    return String(code || '')
-      .replace(/location\.href\s*=\s*'login\.html';/g, "window.__spseNavigate('login.html');")
-      .replace(/location\.href\s*=\s*"login\.html";/g, "window.__spseNavigate('login.html');");
+    window.STORAGE_KEYS = window.STORAGE_KEYS || {
+      login: 'spse_logged_in',
+      hideTutorial: 'spse_hide_tutorial',
+      draftPackage: 'spse_draft_package'
+    };
+
+    window.METHOD_MAP = window.METHOD_MAP || {
+      'Pengecualian': ['Dikecualikan', 'Pengecualian'],
+      'Pengadaan Langsung': ['Pengadaan Langsung'],
+      'Penunjukan Langsung': ['Penunjukan Langsung'],
+      'Kontes': ['Kontes'],
+      'Sayembara': ['Sayembara'],
+      'Darurat': ['Darurat'],
+      'Tender Internasional': ['Tender Internasional'],
+      'Penunjukan Langsung Program Arahan Presiden': ['Penunjukan Langsung Program Arahan Presiden']
+    };
+
+    if (typeof window.getQueryParam !== 'function') {
+      window.getQueryParam = function (name) {
+        const params = new URLSearchParams(currentSearch || '');
+        return params.get(name);
+      };
+    }
+
+    if (typeof window.fillUserIdentity !== 'function') {
+      window.fillUserIdentity = function () {
+        const config = window.APP_CONFIG || {};
+        const userName = config.currentUserName || 'PPK';
+        const userRole = config.currentUserRole || 'Pejabat Pembuat Komitmen';
+
+        if (!shadowRootRef) {
+          return;
+        }
+
+        shadowRootRef.querySelectorAll('[data-user-name]').forEach((el) => {
+          el.textContent = userName;
+        });
+
+        shadowRootRef.querySelectorAll('[data-user-role]').forEach((el) => {
+          el.textContent = userRole;
+        });
+      };
+    }
+
+    if (typeof window.requireLogin !== 'function') {
+      window.requireLogin = function () {
+        const key = window.STORAGE_KEYS && window.STORAGE_KEYS.login
+          ? window.STORAGE_KEYS.login
+          : 'spse_logged_in';
+
+        if (window.localStorage.getItem(key) !== '1') {
+          window.__spseNavigate('login.html');
+          return false;
+        }
+
+        if (typeof window.fillUserIdentity === 'function') {
+          window.fillUserIdentity();
+        }
+
+        return true;
+      };
+    }
+
+    if (typeof window.bindLogout !== 'function') {
+      window.bindLogout = function (buttonId = 'btnLogout') {
+        if (!shadowRootRef) {
+          return;
+        }
+
+        const btn = shadowRootRef.getElementById(buttonId);
+
+        if (!btn) {
+          return;
+        }
+
+        btn.onclick = function () {
+          const key = window.STORAGE_KEYS && window.STORAGE_KEYS.login
+            ? window.STORAGE_KEYS.login
+            : 'spse_logged_in';
+
+          window.localStorage.removeItem(key);
+          window.__spseNavigate('login.html');
+        };
+      };
+    }
+
+    if (typeof window.escapeHtml !== 'function') {
+      window.escapeHtml = function (value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      };
+    }
+
+    if (typeof window.safeNumber !== 'function') {
+      window.safeNumber = function (value) {
+        if (typeof value === 'number') {
+          return Number.isFinite(value) ? value : 0;
+        }
+
+        if (value === null || value === undefined || value === '') {
+          return 0;
+        }
+
+        const clean = String(value)
+          .trim()
+          .replace(/\s/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.')
+          .replace(/[^\d.-]/g, '');
+
+        const number = Number(clean);
+        return Number.isFinite(number) ? number : 0;
+      };
+    }
+
+    if (typeof window.parseNumber !== 'function') {
+      window.parseNumber = window.safeNumber;
+    }
+
+    if (typeof window.formatRupiahFull !== 'function') {
+      window.formatRupiahFull = function (value) {
+        return 'Rp. ' + window.safeNumber(value).toLocaleString('id-ID', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      };
+    }
+
+    if (typeof window.formatNumberInput !== 'function') {
+      window.formatNumberInput = function (value) {
+        return window.safeNumber(value).toLocaleString('id-ID', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      };
+    }
   }
 
   function executeScript(code, label) {
-    if (destroyed) return;
+    if (destroyed) {
+      return;
+    }
+
+    installFallbackGlobals();
 
     const documentProxy = makeDocumentProxy(shadowRootRef);
     const locationProxy = makeLocationProxy();
@@ -178,6 +346,15 @@ ${exportNames}
 const APP_CONFIG = window.APP_CONFIG;
 const METHOD_MAP = window.METHOD_MAP;
 const STORAGE_KEYS = window.STORAGE_KEYS;
+const requireLogin = window.requireLogin;
+const bindLogout = window.bindLogout;
+const getQueryParam = window.getQueryParam;
+const fillUserIdentity = window.fillUserIdentity;
+const escapeHtml = window.escapeHtml;
+const safeNumber = window.safeNumber;
+const parseNumber = window.parseNumber;
+const formatRupiahFull = window.formatRupiahFull;
+const formatNumberInput = window.formatNumberInput;
 `;
 
     try {
@@ -206,7 +383,10 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
   }
 
   function installBaseApp() {
-    if (appInstalled) return;
+    if (appInstalled) {
+      installFallbackGlobals();
+      return;
+    }
 
     const documentProxy = makeDocumentProxy(shadowRootRef);
     const locationProxy = makeLocationProxy();
@@ -234,9 +414,10 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
       );
 
       appInstalled = true;
+      installFallbackGlobals();
     } catch (error) {
       console.error('Gagal memasang app SPSE module:', error);
-      renderModuleError(error);
+      installFallbackGlobals();
     }
   }
 
@@ -246,7 +427,9 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
     const scripts = [];
 
     doc.querySelectorAll('script').forEach((script) => {
-      if (!script.src && script.textContent.trim()) {
+      const src = script.getAttribute('src') || '';
+
+      if (!src && script.textContent.trim()) {
         scripts.push(script.textContent);
       }
 
@@ -269,7 +452,9 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
         ? event.target.closest('a[href]')
         : null;
 
-      if (!target) return;
+      if (!target) {
+        return;
+      }
 
       const href = target.getAttribute('href') || '';
 
@@ -351,10 +536,15 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
   }
 
   function renderModuleError(error) {
-    if (!shadowRootRef) return;
+    if (!shadowRootRef) {
+      return;
+    }
 
     const root = shadowRootRef.querySelector('[data-spse-page-root]');
-    if (!root) return;
+
+    if (!root) {
+      return;
+    }
 
     root.innerHTML = `
       <div class="spse-module-error">
@@ -373,7 +563,10 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
     window.__spseCurrentSearch = currentSearch;
 
     const root = shadowRootRef.querySelector('[data-spse-page-root]');
-    if (!root) return;
+
+    if (!root) {
+      return;
+    }
 
     root.innerHTML = `
       <div style="min-height:180px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#123a72;">
@@ -389,6 +582,7 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
       }
 
       const parts = extractPageParts(rawHtml);
+
       root.innerHTML = parts.body;
 
       installBaseApp();
@@ -398,6 +592,8 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
           executeScript(scriptText, cleanPage.replace(/\.html$/i, '') + '-' + index);
         }
       });
+
+      installFallbackGlobals();
     } catch (error) {
       console.error(error);
       renderModuleError(error);
@@ -405,7 +601,9 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
   }
 
   function navigate(rawUrl) {
-    if (destroyed) return;
+    if (destroyed) {
+      return;
+    }
 
     const target = String(rawUrl || '').trim() || 'login.html';
     const pageName = normalizePageName(target);
@@ -441,10 +639,13 @@ const STORAGE_KEYS = window.STORAGE_KEYS;
 
     preloadAssets()
       .then(() => {
-        if (destroyed) return;
+        if (destroyed) {
+          return;
+        }
 
         renderShell();
         installLinkInterceptor();
+        installFallbackGlobals();
 
         const startPage = localStorage.getItem('spse_logged_in') === '1'
           ? 'home.html'
