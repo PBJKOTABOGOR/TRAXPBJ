@@ -16,7 +16,7 @@ const APP_ROUTES = {
 
   'monitoring-ekatalog': {
     title: 'Monitoring eKatalog',
-    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKatalog.',
+    subtitle: 'Monitoring indikator pemanfaatan eKatalog, Toko Daring, dan e-Purchasing.',
     type: 'module',
     html: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.html',
     css: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.css',
@@ -25,7 +25,7 @@ const APP_ROUTES = {
 
   'monitoring-etendering': {
     title: 'Monitoring eTendering',
-    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eTendering.',
+    subtitle: 'Monitoring indikator pemanfaatan eTendering.',
     type: 'module',
     html: 'modules/monitoring/itkp-etendering/itkp-etendering.html',
     css: 'modules/monitoring/itkp-etendering/itkp-etendering.css',
@@ -34,7 +34,7 @@ const APP_ROUTES = {
 
   'monitoring-ekontrak': {
     title: 'Monitoring eKontrak',
-    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKontrak.',
+    subtitle: 'Monitoring indikator pemanfaatan eKontrak.',
     type: 'module',
     html: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.html',
     css: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.css',
@@ -108,89 +108,11 @@ let activeFlyout = null;
 let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
+
 let dashboardPanjiDestroy = null;
-let dashboardPanjiMuted = false;
-let dashboardPanjiSilenced = false;
-let dashboardPanjiLastSpeak = null;
-let dashboardPanjiSequenceTimer = null;
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function cacheBust(url) {
-  const joiner = url.includes('?') ? '&' : '?';
-  return `${url}${joiner}v=${Date.now()}`;
-}
-
-function showModuleLoading(title = 'Memuat modul...') {
-  contentArea.innerHTML = `
-    <section class="card">
-      <h3>${escapeHtml(title)}</h3>
-      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
-    </section>
-  `;
-}
-
-function initScrollAnimation() {
-  if (typeof scrollAnimationDestroy === 'function') {
-    scrollAnimationDestroy();
-    scrollAnimationDestroy = null;
-  }
-
-  let progress = document.getElementById('luxScrollProgress');
-
-  if (!progress) {
-    progress = document.createElement('div');
-    progress.id = 'luxScrollProgress';
-    progress.className = 'lux-scroll-progress';
-    document.body.appendChild(progress);
-  }
-
-  const updateProgress = () => {
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-
-    progress.style.width = `${Math.min(100, Math.max(0, percent))}%`;
-  };
-
-  const revealItems = contentArea.querySelectorAll(
-    '.hero-card, .card, .quick-card, .embed-card, .module-page--native > *'
-  );
-
-  revealItems.forEach((item, index) => {
-    item.classList.add('lux-reveal');
-    item.style.transitionDelay = `${Math.min(index * 45, 260)}ms`;
-  });
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, {
-    threshold: 0.12,
-    rootMargin: '0px 0px -30px 0px'
-  });
-
-  revealItems.forEach((item) => observer.observe(item));
-
-  updateProgress();
-  window.addEventListener('scroll', updateProgress, { passive: true });
-
-  scrollAnimationDestroy = () => {
-    window.removeEventListener('scroll', updateProgress);
-    observer.disconnect();
-  };
-}
+let dashboardPanjiClosedUntilReload = false;
+let dashboardPanjiPaused = false;
+let dashboardPanjiLastMessage = '';
 
 const DASHBOARD_SHEETS = {
   itkp: {
@@ -219,20 +141,45 @@ const DASHBOARD_STATE = {
   loading: false,
   loadedAt: null,
   error: null,
+  raw: null,
   data: null,
   selectedItkpSatker: 'PEMERINTAH KOTA BOGOR'
 };
+
+/* =========================================================
+   BASIC HELPERS
+   ========================================================= */
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function cacheBust(url) {
+  const joiner = url.includes('?') ? '&' : '?';
+  return `${url}${joiner}v=${Date.now()}`;
+}
 
 function normalizeHeader(value) {
   return String(value || '')
     .toLowerCase()
     .replace(/\s+/g, ' ')
-    .replace(/[^\w\s%()-]/g, '')
+    .replace(/[^\w\s%()/-]/g, '')
+    .trim();
+}
+
+function cleanText(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
 function getField(row, candidates) {
-  const map = row.__normalized || {};
+  const map = row && row.__normalized ? row.__normalized : {};
 
   for (const candidate of candidates) {
     const key = normalizeHeader(candidate);
@@ -241,10 +188,10 @@ function getField(row, candidates) {
     }
   }
 
-  const candidateText = candidates.map(normalizeHeader);
+  const wanted = candidates.map(normalizeHeader);
 
   for (const [key, value] of Object.entries(map)) {
-    if (candidateText.some((item) => key.includes(item) || item.includes(key))) {
+    if (wanted.some((item) => key.includes(item) || item.includes(key))) {
       return value;
     }
   }
@@ -292,19 +239,40 @@ function formatNumber(value) {
 
 function formatMoney(value) {
   const number = toNumber(value);
-  if (number >= 1_000_000_000_000) return `Rp ${(number / 1_000_000_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} T`;
-  if (number >= 1_000_000_000) return `Rp ${(number / 1_000_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} M`;
-  if (number >= 1_000_000) return `Rp ${(number / 1_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} Jt`;
+
+  if (number >= 1_000_000_000_000) {
+    return `Rp ${(number / 1_000_000_000_000).toLocaleString('id-ID', {
+      maximumFractionDigits: 2
+    })} T`;
+  }
+
+  if (number >= 1_000_000_000) {
+    return `Rp ${(number / 1_000_000_000).toLocaleString('id-ID', {
+      maximumFractionDigits: 2
+    })} M`;
+  }
+
+  if (number >= 1_000_000) {
+    return `Rp ${(number / 1_000_000).toLocaleString('id-ID', {
+      maximumFractionDigits: 2
+    })} Jt`;
+  }
+
   return `Rp ${formatNumber(number)}`;
 }
 
 function formatPercent(value) {
-  const number = toNumber(value);
-  return `${number.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+  return `${toNumber(value).toLocaleString('id-ID', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}%`;
 }
 
 function formatScore(value) {
-  return toNumber(value).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return toNumber(value).toLocaleString('id-ID', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 function parseCsv(text) {
@@ -337,7 +305,11 @@ function parseCsv(text) {
     if ((char === '\n' || char === '\r') && !quote) {
       if (char === '\r' && next === '\n') i += 1;
       row.push(value);
-      if (row.some((cell) => String(cell).trim() !== '')) rows.push(row);
+
+      if (row.some((cell) => String(cell).trim() !== '')) {
+        rows.push(row);
+      }
+
       row = [];
       value = '';
       continue;
@@ -347,7 +319,10 @@ function parseCsv(text) {
   }
 
   row.push(value);
-  if (row.some((cell) => String(cell).trim() !== '')) rows.push(row);
+
+  if (row.some((cell) => String(cell).trim() !== '')) {
+    rows.push(row);
+  }
 
   return rows;
 }
@@ -376,6 +351,7 @@ async function fetchSheetRows(config) {
     headers.forEach((header, index) => {
       const cleanHeader = String(header || '').trim();
       const cell = String(cells[index] || '').trim();
+
       row[cleanHeader] = cell;
       normalized[normalizeHeader(cleanHeader)] = cell;
     });
@@ -387,12 +363,20 @@ async function fetchSheetRows(config) {
   });
 }
 
+function sum(values) {
+  return values.reduce((total, value) => total + toNumber(value), 0);
+}
+
 function groupSum(rows, keyGetter, valueGetter) {
   const map = new Map();
 
   rows.forEach((row) => {
     const key = String(keyGetter(row) || 'Tidak Terisi').trim() || 'Tidak Terisi';
-    const prev = map.get(key) || { name: key, count: 0, value: 0 };
+    const prev = map.get(key) || {
+      name: key,
+      count: 0,
+      value: 0
+    };
 
     prev.count += 1;
     prev.value += toNumber(valueGetter(row));
@@ -402,19 +386,20 @@ function groupSum(rows, keyGetter, valueGetter) {
   return Array.from(map.values()).sort((a, b) => b.value - a.value);
 }
 
-function avg(values) {
-  const cleaned = values.map(toNumber).filter((value) => Number.isFinite(value));
-  if (!cleaned.length) return 0;
-  return cleaned.reduce((total, value) => total + value, 0) / cleaned.length;
-}
-
-function sum(values) {
-  return values.reduce((total, value) => total + toNumber(value), 0);
+function normalizeSatkerName(value) {
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ');
 }
 
 function isCityAggregateName(name) {
-  return String(name || '').trim().toUpperCase() === 'PEMERINTAH KOTA BOGOR';
+  return normalizeSatkerName(name) === 'PEMERINTAH KOTA BOGOR';
 }
+
+/* =========================================================
+   ITKP ANALYSIS HELPERS
+   ========================================================= */
 
 function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
   const map = row && row.__normalized ? row.__normalized : {};
@@ -426,16 +411,10 @@ function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
 
   Object.entries(map).forEach(([key, value]) => {
     const number = toNumber(value);
+    if (!Number.isFinite(number) || number <= 0) return;
 
-    if (!Number.isFinite(number) || number <= 0) {
-      return;
-    }
-
-    const isMatch = required.every((word) => key.includes(word));
-
-    if (!isMatch) {
-      return;
-    }
+    const matched = required.every((word) => key.includes(word));
+    if (!matched) return;
 
     let weight = 0;
     optional.forEach((word) => {
@@ -453,14 +432,15 @@ function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
 
 function getLastReasonableItkpNumber(row) {
   const map = row && row.__normalized ? row.__normalized : {};
+
   const values = Object.entries(map)
     .filter(([key]) => {
-      return !key.includes('total rup')
-        && !key.includes('total komitmen')
-        && !key.includes('total pagu')
-        && !key.includes('total realisasi')
-        && !key.includes('paket')
-        && !key.includes('pagu');
+      return !key.includes('total rup') &&
+        !key.includes('total komitmen') &&
+        !key.includes('total pagu') &&
+        !key.includes('total realisasi') &&
+        !key.includes('paket') &&
+        !key.includes('pagu');
     })
     .map(([, value]) => toNumber(value))
     .filter((value) => Number.isFinite(value) && value > 0 && value <= 30);
@@ -469,7 +449,7 @@ function getLastReasonableItkpNumber(row) {
 }
 
 function getItkpScore(row) {
-  const exactValue = toNumber(getField(row, [
+  const exactValue = toNumber(getField(row || {}, [
     'Nilai ITKP Indikator Pemanfaatan Sistem - skor maksimal 30 (point)',
     'Nilai ITKP - Pemanfaatan Sistem - skor maksimal 30 (point)',
     'Nilai ITKP Pemanfaatan Sistem - skor maksimal 30 (point)',
@@ -479,19 +459,15 @@ function getItkpScore(row) {
     'Pemanfaatan Sistem'
   ]));
 
-  if (exactValue > 0) {
-    return exactValue;
-  }
+  if (exactValue > 0) return exactValue;
 
   const headerValue = findNumericByHeader(
-    row,
+    row || {},
     ['nilai itkp', 'pemanfaatan sistem'],
     ['skor maksimal 30', '30', 'point']
   );
 
-  if (headerValue > 0) {
-    return headerValue;
-  }
+  if (headerValue > 0) return headerValue;
 
   if (isCityAggregateName(getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']))) {
     return getLastReasonableItkpNumber(row || {});
@@ -500,160 +476,208 @@ function getItkpScore(row) {
   return 0;
 }
 
+function getIndicatorStatus(value, max) {
+  const number = toNumber(value);
+  const maximum = toNumber(max);
+  const percent = maximum > 0 ? (number / maximum) * 100 : 0;
+
+  if (number <= 0 || maximum <= 0) {
+    return {
+      label: 'Belum Terdeteksi',
+      tone: 'danger',
+      mood: 'sad',
+      percent: 0
+    };
+  }
+
+  if (percent >= 85) {
+    return {
+      label: 'Sangat Baik',
+      tone: 'success',
+      mood: 'happy',
+      percent
+    };
+  }
+
+  if (percent >= 70) {
+    return {
+      label: 'Baik',
+      tone: 'good',
+      mood: 'happy',
+      percent
+    };
+  }
+
+  if (percent >= 50) {
+    return {
+      label: 'Cukup',
+      tone: 'warning',
+      mood: 'thinking',
+      percent
+    };
+  }
+
+  return {
+    label: 'Butuh Perhatian',
+    tone: 'danger',
+    mood: 'sad',
+    percent
+  };
+}
+
+function getTotalStatus(score) {
+  const value = toNumber(score);
+
+  if (value >= 24) {
+    return {
+      label: 'Sangat Baik',
+      tone: 'success',
+      mood: 'happy',
+      icon: '🏆'
+    };
+  }
+
+  if (value >= 18) {
+    return {
+      label: 'Baik',
+      tone: 'good',
+      mood: 'happy',
+      icon: '✅'
+    };
+  }
+
+  if (value >= 12) {
+    return {
+      label: 'Cukup',
+      tone: 'warning',
+      mood: 'thinking',
+      icon: '⚠️'
+    };
+  }
+
+  return {
+    label: 'Butuh Perhatian',
+    tone: 'danger',
+    mood: 'sad',
+    icon: '🚨'
+  };
+}
+
 function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
-  const name = getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']) || fallbackName;
+  const name = getField(row || {}, [
+    'Satuan Kerja',
+    'Nama Satuan Kerja',
+    'nama_satker'
+  ]) || fallbackName;
+
+  const dimensions = [
+    {
+      id: 'sirup',
+      name: 'SiRUP',
+      value: toNumber(getField(row || {}, [
+        'Nilai ITKP - skor maksimal 10 (point) (SIRUP)',
+        'Nilai ITKP skor maksimal 10 point SIRUP',
+        'SIRUP',
+        'sirup'
+      ])),
+      max: 10,
+      route: 'monitoring-sirup'
+    },
+    {
+      id: 'tokoDaring',
+      name: 'Toko Daring',
+      value: toNumber(getField(row || {}, [
+        'Nilai ITKP - skor maksimal 1 (point) (Toko Daring)',
+        'Nilai ITKP skor maksimal 1 point Toko Daring',
+        'Toko Daring',
+        'toko daring'
+      ])),
+      max: 1,
+      route: 'monitoring-ekatalog'
+    },
+    {
+      id: 'epurchasing',
+      name: 'e-Purchasing',
+      value: toNumber(getField(row || {}, [
+        'Nilai ITKP - skor maksimal 4 (point) (Epurchasing)',
+        'Nilai ITKP skor maksimal 4 point Epurchasing',
+        'Epurchasing',
+        'ePurchasing',
+        'e-Purchasing'
+      ])),
+      max: 4,
+      route: 'monitoring-ekatalog'
+    },
+    {
+      id: 'etendering',
+      name: 'e-Tendering',
+      value: toNumber(getField(row || {}, [
+        'Nilai ITKP - skor maksimal 5 (point) (etendering)',
+        'Nilai ITKP skor maksimal 5 point etendering',
+        'eTendering',
+        'e-Tendering'
+      ])),
+      max: 5,
+      route: 'monitoring-etendering'
+    },
+    {
+      id: 'ekontrak',
+      name: 'e-Kontrak',
+      value: toNumber(getField(row || {}, [
+        'Nilai ITKP - skor maksimal 5 (point) (ekontrak)',
+        'Nilai ITKP skor maksimal 5 point ekontrak',
+        'eKontrak',
+        'e-Kontrak'
+      ])),
+      max: 5,
+      route: 'monitoring-ekontrak'
+    },
+    {
+      id: 'nontender',
+      name: 'Non Tender',
+      value: toNumber(getField(row || {}, [
+        'Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)',
+        'Nilai ITKP skor maksimal 5 point Non etendering Non ePurchasing',
+        'Non etendering',
+        'Non ePurchasing',
+        'Non Tender'
+      ])),
+      max: 5,
+      route: 'monitoring-nontender'
+    }
+  ];
 
   return {
     name,
-    __sourceRow: row || {},
     score: getItkpScore(row || {}),
-    dimensions: [
-      {
-        name: 'SiRUP',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 10 (point) (SIRUP)', 'SIRUP'])),
-        max: 10,
-        accent: 'blue',
-        route: 'monitoring-sirup',
-        hint: 'Klik untuk buka Monitoring SiRUP'
-      },
-      {
-        name: 'Toko Daring',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)', 'Toko Daring'])),
-        max: 1,
-        accent: 'teal',
-        route: 'monitoring-ekatalog',
-        hint: 'Klik untuk buka Monitoring eKatalog/Toko Daring'
-      },
-      {
-        name: 'e-Purchasing',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 4 (point) (Epurchasing)', 'Epurchasing', 'ePurchasing'])),
-        max: 4,
-        accent: 'purple',
-        route: 'monitoring-ekatalog',
-        hint: 'Klik untuk buka Monitoring eKatalog'
-      },
-      {
-        name: 'e-Tendering',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (etendering)', 'eTendering'])),
-        max: 5,
-        accent: 'orange',
-        route: 'monitoring-etendering',
-        hint: 'Klik untuk buka Monitoring eTendering'
-      },
-      {
-        name: 'e-Kontrak',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (ekontrak)', 'eKontrak'])),
-        max: 5,
-        accent: 'green',
-        route: 'monitoring-ekontrak',
-        hint: 'Klik untuk buka Monitoring eKontrak'
-      },
-      {
-        name: 'Non Tender',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)', 'Non etendering', 'Non ePurchasing', 'Non Tender'])),
-        max: 5,
-        accent: 'red',
-        route: 'monitoring-nontender',
-        hint: 'Klik untuk buka Monitoring Non Tender'
-      }
-    ]
+    dimensions,
+    __sourceRow: row || {}
   };
 }
 
-function analyzeDashboardData(raw) {
-  const itkpAllRows = raw.itkp || [];
-  const subOpdAllRows = raw.itkpSubOpd || [];
-  const planningRows = raw.perencanaan || [];
-  const realRows = raw.realisasi || [];
-
-  const getSatker = (row) => getField(row, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']);
-  const getMetode = (row) => getField(row, ['Metode Pengadaan', 'mtd_pemilihan', 'Sumber Transaksi']);
-  const getPagu = (row) => getField(row, ['Nilai Pagu', 'Pagu', 'Total Pagu']);
-  const getRealisasi = (row) => getField(row, ['Nilai Realisasi', 'Total Realisasi', 'nilai_realisasi']);
-  const getStatus = (row) => getField(row, ['Status Paket', 'status_paket', 'Status']);
-
-  const itkpOpdRows = itkpAllRows.filter((row) => !isCityAggregateName(getSatker(row)));
-  const subOpdRows = subOpdAllRows.filter((row) => !isCityAggregateName(getSatker(row)));
-  const cityRow = itkpAllRows.find((row) => isCityAggregateName(getSatker(row))) || null;
-  const cityProfile = buildItkpProfile(cityRow || {}, 'PEMERINTAH KOTA BOGOR');
-
-  const profiles = [cityProfile]
-    .concat(itkpOpdRows.map((row) => buildItkpProfile(row, getSatker(row))))
-    .filter((profile) => profile.name);
-
-  const selectedName = DASHBOARD_STATE.selectedItkpSatker || cityProfile.name;
-  const selectedProfile = profiles.find((profile) => profile.name === selectedName) || cityProfile;
-  DASHBOARD_STATE.selectedItkpSatker = selectedProfile.name;
-
-  const selectedIsCity = isCityAggregateName(selectedProfile.name);
-  const normalizeSatkerName = (value) => String(value || '')
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, ' ');
-
-  const selectedSatkerKey = normalizeSatkerName(selectedProfile.name);
-  const isSelectedSatkerRow = (row) => {
-    if (selectedIsCity) return true;
-    return normalizeSatkerName(getSatker(row)) === selectedSatkerKey;
-  };
-
-  const scopedPlanningRows = planningRows.filter(isSelectedSatkerRow);
-  const scopedRealRows = realRows.filter(isSelectedSatkerRow);
-
-  const totalPagu = sum(scopedPlanningRows.map(getPagu));
-  const totalRealisasi = sum(scopedRealRows.map(getRealisasi));
-  const realisasiPersen = totalPagu > 0 ? (totalRealisasi / totalPagu) * 100 : 0;
-
-  const selesaiRows = scopedRealRows.filter((row) => /selesai|completed|paket selesai/i.test(getStatus(row)));
-  const processRows = scopedRealRows.filter((row) => /process|proses|berlangsung|sedang/i.test(getStatus(row)));
-  const bastRows = scopedRealRows.filter((row) => String(getField(row, ['BAST', 'dok_realisasi'])).trim() && String(getField(row, ['BAST', 'dok_realisasi'])).trim() !== '-');
-
-  const byMetodePlanning = groupSum(scopedPlanningRows, getMetode, getPagu);
-  const byMetodeReal = groupSum(scopedRealRows, getMetode, getRealisasi);
-  const bySatkerPlanning = groupSum(scopedPlanningRows, getSatker, getPagu);
-  const bySatkerReal = groupSum(scopedRealRows, getSatker, getRealisasi);
-
-  const rankingSourceRows = subOpdRows.length ? subOpdRows : itkpOpdRows;
-  const scoreRows = rankingSourceRows.map((row) => ({
-    name: getSatker(row) || getField(row, ['Satuan Kerja']),
-    score: getItkpScore(row)
-  })).filter((item) => item.name && !isCityAggregateName(item.name));
-
-  const topItkp = [...scoreRows].sort((a, b) => b.score - a.score).slice(0, 8);
-  const lowItkp = [...scoreRows].sort((a, b) => a.score - b.score).slice(0, 8);
-
-  return {
-    itkpRows: itkpOpdRows,
-    itkpSubOpdRows: subOpdRows,
-    planningRows,
-    realRows,
-    totalOpd: itkpOpdRows.length,
-    totalSubOpd: subOpdRows.length,
-    scopeName: selectedProfile.name,
-    scopeIsCity: selectedIsCity,
-    scopedPlanningRows,
-    scopedRealRows,
-    totalPaketRup: scopedPlanningRows.length,
-    totalPaketRealisasi: scopedRealRows.length,
-    totalPagu,
-    totalRealisasi,
-    realisasiPersen,
-    selesaiCount: selesaiRows.length,
-    processCount: processRows.length,
-    bastCount: bastRows.length,
-    itkpOverall: cityProfile.score,
-    dimensions: selectedProfile.dimensions,
-    cityProfile,
-    selectedProfile,
-    itkpProfiles: profiles,
-    byMetodePlanning,
-    byMetodeReal,
-    bySatkerPlanning,
-    bySatkerReal,
-    topItkp,
-    lowItkp
-  };
+function getStrongestIndicators(profile) {
+  return [...(profile.dimensions || [])]
+    .map((item) => ({
+      ...item,
+      status: getIndicatorStatus(item.value, item.max)
+    }))
+    .sort((a, b) => b.status.percent - a.status.percent)
+    .slice(0, 3);
 }
+
+function getWeakestIndicators(profile) {
+  return [...(profile.dimensions || [])]
+    .map((item) => ({
+      ...item,
+      status: getIndicatorStatus(item.value, item.max)
+    }))
+    .sort((a, b) => a.status.percent - b.status.percent)
+    .slice(0, 3);
+}
+
+/* =========================================================
+   DASHBOARD DATA
+   ========================================================= */
 
 async function loadDashboardData(force = false) {
   if (DASHBOARD_STATE.data && !force) return DASHBOARD_STATE.data;
@@ -670,8 +694,16 @@ async function loadDashboardData(force = false) {
       fetchSheetRows(DASHBOARD_SHEETS.realisasi)
     ]);
 
-    DASHBOARD_STATE.data = analyzeDashboardData({ itkp, itkpSubOpd, perencanaan, realisasi });
+    DASHBOARD_STATE.raw = {
+      itkp,
+      itkpSubOpd,
+      perencanaan,
+      realisasi
+    };
+
+    DASHBOARD_STATE.data = analyzeDashboardData(DASHBOARD_STATE.raw);
     DASHBOARD_STATE.loadedAt = new Date();
+
     return DASHBOARD_STATE.data;
   } catch (error) {
     DASHBOARD_STATE.error = error;
@@ -681,19 +713,132 @@ async function loadDashboardData(force = false) {
   }
 }
 
+function analyzeDashboardData(raw) {
+  const itkpRows = raw.itkp || [];
+  const itkpSubRows = raw.itkpSubOpd || [];
+  const planningRows = raw.perencanaan || [];
+  const realRows = raw.realisasi || [];
+
+  const getSatker = (row) => getField(row, [
+    'Satuan Kerja',
+    'Nama Satuan Kerja',
+    'nama_satker'
+  ]);
+
+  const getMetode = (row) => getField(row, [
+    'Metode Pengadaan',
+    'mtd_pemilihan',
+    'Sumber Transaksi',
+    'Metode'
+  ]);
+
+  const getPagu = (row) => getField(row, [
+    'Nilai Pagu',
+    'Pagu',
+    'Total Pagu',
+    'pagu'
+  ]);
+
+  const getRealisasi = (row) => getField(row, [
+    'Nilai Realisasi',
+    'Total Realisasi',
+    'nilai_realisasi',
+    'Realisasi'
+  ]);
+
+  const getStatus = (row) => getField(row, [
+    'Status Paket',
+    'status_paket',
+    'Status'
+  ]);
+
+  const cityRow = itkpRows.find((row) => isCityAggregateName(getSatker(row))) || null;
+  const opdRows = itkpRows.filter((row) => !isCityAggregateName(getSatker(row)));
+  const cityProfile = buildItkpProfile(cityRow || {}, 'PEMERINTAH KOTA BOGOR');
+
+  const profiles = [cityProfile]
+    .concat(opdRows.map((row) => buildItkpProfile(row, getSatker(row))))
+    .filter((item) => item.name);
+
+  const selectedName = DASHBOARD_STATE.selectedItkpSatker || cityProfile.name;
+  const selectedProfile = profiles.find((item) => item.name === selectedName) || cityProfile;
+
+  DASHBOARD_STATE.selectedItkpSatker = selectedProfile.name;
+
+  const selectedIsCity = isCityAggregateName(selectedProfile.name);
+  const selectedKey = normalizeSatkerName(selectedProfile.name);
+
+  const isSelected = (row) => {
+    if (selectedIsCity) return true;
+    return normalizeSatkerName(getSatker(row)) === selectedKey;
+  };
+
+  const scopedPlanning = planningRows.filter(isSelected);
+  const scopedReal = realRows.filter(isSelected);
+
+  const totalPagu = sum(scopedPlanning.map(getPagu));
+  const totalRealisasi = sum(scopedReal.map(getRealisasi));
+  const realisasiPersen = totalPagu > 0 ? (totalRealisasi / totalPagu) * 100 : 0;
+
+  const selesaiRows = scopedReal.filter((row) => /selesai|completed|paket selesai/i.test(getStatus(row)));
+  const prosesRows = scopedReal.filter((row) => /proses|process|berlangsung|sedang/i.test(getStatus(row)));
+  const bastRows = scopedReal.filter((row) => {
+    const value = String(getField(row, ['BAST', 'dok_realisasi', 'Dokumen Realisasi'])).trim();
+    return value && value !== '-';
+  });
+
+  const rankingSource = itkpSubRows.length ? itkpSubRows : opdRows;
+
+  const scoreRows = rankingSource
+    .map((row) => ({
+      name: getSatker(row),
+      score: getItkpScore(row)
+    }))
+    .filter((item) => item.name && !isCityAggregateName(item.name));
+
+  const topItkp = [...scoreRows].sort((a, b) => b.score - a.score).slice(0, 8);
+  const lowItkp = [...scoreRows].sort((a, b) => a.score - b.score).slice(0, 8);
+
+  return {
+    cityProfile,
+    selectedProfile,
+    itkpProfiles: profiles,
+    scopeName: selectedProfile.name,
+    scopeIsCity: selectedIsCity,
+    totalOpd: opdRows.length,
+    totalSubOpd: itkpSubRows.length,
+    totalPaketRup: scopedPlanning.length,
+    totalPaketRealisasi: scopedReal.length,
+    totalPagu,
+    totalRealisasi,
+    realisasiPersen,
+    selesaiCount: selesaiRows.length,
+    processCount: prosesRows.length,
+    bastCount: bastRows.length,
+    byMetodePlanning: groupSum(scopedPlanning, getMetode, getPagu),
+    byMetodeReal: groupSum(scopedReal, getMetode, getRealisasi),
+    topItkp,
+    lowItkp,
+    strongestIndicators: getStrongestIndicators(selectedProfile),
+    weakestIndicators: getWeakestIndicators(selectedProfile)
+  };
+}
+
+/* =========================================================
+   DASHBOARD RENDER
+   ========================================================= */
+
 function renderDashboardSkeleton() {
   contentArea.innerHTML = `
-    <section class="hero-card hero-card--dashboard">
-      <div class="hero-glow"></div>
-      <div class="hero-kicker">SIPPBJ · Dashboard</div>
-      <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
-      <p>Menarik data dari FIX ITKP OPD, D_PERENCANAAN, dan D_REALISASI untuk merangkum profil ITKP, perencanaan, realisasi, metode pengadaan, OPD dominan, serta indikator progress pengadaan.</p>
+    <section class="hero-card">
+      <h3>Dashboard SIPPBJ</h3>
+      <p>Memuat data ITKP, perencanaan, realisasi, dan indikator pemanfaatan sistem.</p>
 
-      <div class="dashboard-loading">
-        <div class="loading-orb"></div>
-        <div>
-          <b>Memuat data dashboard...</b>
-          <span>Mengambil data Google Sheet dan menyusun analisis Kota Bogor.</span>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">Status</div>
+          <div class="value">Memuat</div>
+          <div class="desc">PANJI sedang membaca data dashboard.</div>
         </div>
       </div>
     </section>
@@ -701,30 +846,28 @@ function renderDashboardSkeleton() {
 }
 
 function renderDashboardError(error) {
+  destroyDashboardPanji();
+
   contentArea.innerHTML = `
-    <section class="hero-card hero-card--dashboard">
-      <div class="hero-kicker">SIPPBJ · Dashboard</div>
+    <section class="hero-card">
       <h3>Data dashboard belum bisa dimuat</h3>
       <p>${escapeHtml(error.message || 'Terjadi kendala saat mengambil data.')}</p>
-      <div class="hero-actions">
-        <button class="lux-button lux-button--light" type="button" id="retryDashboardButton">Coba Muat Ulang</button>
+
+      <div style="margin-top:18px;">
+        <button class="help-button" type="button" id="retryDashboardButton">Coba Muat Ulang</button>
       </div>
     </section>
 
     <section class="card">
       <h3>Yang perlu dicek</h3>
-      <div class="insight-list">
-        <div class="insight-item">
-          <b>1. Share spreadsheet</b>
-          <span>Pastikan file Google Sheet dapat dibaca minimal oleh viewer/link terkait.</span>
+      <div class="placeholder-grid">
+        <div class="placeholder-box">
+          <h4>Akses Google Sheet</h4>
+          <p>Pastikan spreadsheet dapat dibaca sebagai viewer/public.</p>
         </div>
-        <div class="insight-item">
-          <b>2. GID sheet</b>
-          <span>FIX ITKP OPD: 1217577518, FIX ITKP SUB OPD: 1682485707, D_PERENCANAAN: 1819757327, D_REALISASI: 325886021.</span>
-        </div>
-        <div class="insight-item">
-          <b>3. Header</b>
-          <span>Jangan ubah nama header utama seperti Nama Satuan Kerja, Metode Pengadaan, Nilai Pagu, Nilai Realisasi, dan Nilai ITKP.</span>
+        <div class="placeholder-box">
+          <h4>Header Data</h4>
+          <p>Pastikan header Satuan Kerja, Nilai ITKP, Pagu, Realisasi, dan Metode tidak berubah.</p>
         </div>
       </div>
     </section>
@@ -747,6 +890,7 @@ async function renderDashboard(force = false) {
     renderDashboardReady(data);
     bindDashboardEvents();
     initDashboardPanji(data);
+    requestAnimationFrame(initScrollAnimation);
   } catch (error) {
     console.error('Dashboard gagal dimuat:', error);
     renderDashboardError(error);
@@ -754,258 +898,144 @@ async function renderDashboard(force = false) {
 }
 
 function renderDashboardReady(data) {
+  const profile = data.selectedProfile;
+  const totalStatus = getTotalStatus(profile.score);
+
   const lastUpdate = DASHBOARD_STATE.loadedAt
-    ? DASHBOARD_STATE.loadedAt.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+    ? DASHBOARD_STATE.loadedAt.toLocaleString('id-ID', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    })
     : '-';
 
-  const selectedProfile = data.selectedProfile || data.cityProfile;
-  const scopeLabel = data.scopeIsCity ? 'Kota Bogor' : selectedProfile.name;
-  const scopeDesc = data.scopeIsCity
-    ? 'Akumulasi seluruh satuan kerja Kota Bogor'
-    : `Filter khusus ${selectedProfile.name}`;
-  const profileKicker = data.scopeIsCity
-    ? 'Profile Kota Bogor'
-    : `Profile ${selectedProfile.name}`;
-
   contentArea.innerHTML = `
-    <section class="hero-card hero-card--dashboard">
-      <div class="hero-glow"></div>
+    <section class="hero-card" data-panji-topic="dashboard">
+      <h3>Dashboard SIPPBJ</h3>
+      <p>Ringkasan pemanfaatan sistem ITKP, perencanaan, realisasi, dan profil satuan kerja. PANJI akan membaca indikator SiRUP, Toko Daring, e-Purchasing, e-Tendering, e-Kontrak, dan Non Tender.</p>
 
-      <div class="hero-topline">
-        <div>
-          <div class="hero-kicker">SIPPBJ · Dashboard</div>
-          <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
-          <p>Ringkasan interaktif dari ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD/Sub OPD berdasarkan data Google Sheet yang tersedia.</p>
-        </div>
-
-        <div class="hero-badge">
-          <span>Update</span>
-          <b>${escapeHtml(lastUpdate)}</b>
-        </div>
+      <div class="stats-grid">
+        ${renderKpiCard('ITKP', formatScore(profile.score), `${totalStatus.icon} ${totalStatus.label} · ${profile.name}`, 'itkp')}
+        ${renderKpiCard('Pagu RUP', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket perencanaan`, 'pagu')}
+        ${renderKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu`, 'realisasi')}
+        ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses`, 'paket')}
       </div>
 
-      <div class="stats-grid dashboard-kpi-grid">
-        ${renderKpiCard('Skor ITKP Kota Bogor', formatScore(data.itkpOverall), 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD', '📊')}
-        ${renderKpiCard('Pagu Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾')}
-        ${renderKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰')}
-        ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses · ${scopeLabel}`, '📦')}
-      </div>
-
-      <div class="hero-actions">
-        <button class="lux-button lux-button--light" type="button" id="refreshDashboardButton">Refresh Data</button>
-        <button class="lux-button lux-button--ghost" type="button" data-quick="monitoring-sirup">Buka ITKP SiRUP</button>
-        <button class="lux-button lux-button--ghost" type="button" data-quick="monitoring-perencanaan">Buka Monitoring Realisasi</button>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px;">
+        <button class="help-button" type="button" id="refreshDashboardButton">Refresh Data</button>
+        <button class="help-button" type="button" data-quick="monitoring-sirup">Buka SiRUP</button>
+        <button class="help-button" type="button" data-quick="monitoring-ekatalog">Buka eKatalog</button>
+        <button class="help-button" type="button" data-quick="simulasi-procurement-stacker">Buka PANJI Game</button>
       </div>
     </section>
 
-    <section class="dashboard-grid dashboard-grid--main">
-      <div class="card procurement-map-card">
-        <div class="section-title-row section-title-row--select">
+    <section class="grid-main">
+      <div class="card" data-panji-topic="itkp">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px;">
           <div>
-            <span class="section-kicker">${escapeHtml(profileKicker)}</span>
-            <h3>Radar Pemanfaatan Sistem ITKP</h3>
-            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, dibaca langsung dari kolom <b>Nilai ITKP Pemanfaatan Sistem</b>, dan tidak masuk ranking OPD.</p>
+            <h3>Profil ITKP Satuan Kerja</h3>
+            <div class="page-note">Update data: ${escapeHtml(lastUpdate)}</div>
           </div>
 
-          <label class="satker-select-wrap">
-            <span>Pilih Satuan Kerja</span>
-            <select id="itkpSatkerSelect" class="satker-select">
-              ${data.itkpProfiles.map((profile) => `
-                <option value="${escapeHtml(profile.name)}" ${profile.name === selectedProfile.name ? 'selected' : ''}>
-                  ${escapeHtml(profile.name)}
+          <label style="display:grid; gap:6px; min-width:320px;">
+            <span style="font-weight:800; color:#64748b; font-size:12px;">Pilih Satuan Kerja</span>
+            <select id="itkpSatkerSelect" style="min-height:42px; border-radius:14px; border:1px solid #dbe5f0; padding:0 12px; color:#102544; font-weight:800;">
+              ${data.itkpProfiles.map((item) => `
+                <option value="${escapeHtml(item.name)}" ${item.name === profile.name ? 'selected' : ''}>
+                  ${escapeHtml(item.name)}
                 </option>
               `).join('')}
             </select>
           </label>
         </div>
 
-        <div class="itkp-radar-layout">
-          <div class="score-orbit">
-            <div class="score-ring" style="--score:${Math.min(100, (selectedProfile.score / 30) * 100)}">
-              <div class="score-core">
-                <span>${escapeHtml(selectedProfile.name === 'PEMERINTAH KOTA BOGOR' ? 'ITKP KOTA' : 'ITKP OPD')}</span>
-                <b>${formatScore(selectedProfile.score)}</b>
-                <small>dari 30 poin</small>
+        <div class="summary-panels">
+          <div class="mini-card" data-panji-topic="score-ring">
+            <h4>${escapeHtml(profile.name)}</h4>
+            <div class="big-number">${formatScore(profile.score)}</div>
+            <div class="page-note">Skor ITKP dari maksimal 30 poin · ${escapeHtml(totalStatus.label)}</div>
+            <div class="progress-scale">
+              <div class="progress-track">
+                <div class="progress-bar" style="width:${Math.min(100, (profile.score / 30) * 100)}%"></div>
               </div>
             </div>
-            <div class="score-caption">${escapeHtml(selectedProfile.name)}</div>
           </div>
 
-          <div class="dimensions dimensions--lux dimensions--clickable">
-            ${selectedProfile.dimensions.map(renderDimension).join('')}
+          <div class="mini-card">
+            <h4>Indikator Pemanfaatan Sistem</h4>
+            <div class="dimensions">
+              ${profile.dimensions.map(renderDimension).join('')}
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Kinerja Realisasi · ${escapeHtml(scopeLabel)}</span>
-            <h3>Progress Pagu vs Realisasi</h3>
-          </div>
-          <span class="soft-pill">${formatPercent(data.realisasiPersen)}</span>
+      <div class="card" data-panji-topic="analysis">
+        <h3>Analisis PANJI</h3>
+        <div class="activities">
+          ${renderPanjiAnalysis(data)}
         </div>
 
-        <div class="money-progress">
-          <div class="money-row">
-            <span>Total Pagu</span>
-            <b>${formatMoney(data.totalPagu)}</b>
-          </div>
-          <div class="money-row">
-            <span>Total Realisasi</span>
-            <b>${formatMoney(data.totalRealisasi)}</b>
-          </div>
-          <div class="progress-track progress-track--tall">
-            <div class="progress-bar" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
-          </div>
-          <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi pada D_REALISASI dibanding nilai pagu pada D_PERENCANAAN.</p>
-        </div>
-
-        <div class="status-mini-grid">
-          ${renderSmallMetric('BAST Terisi', data.bastCount, 'Dokumen/referensi BAST')}
-          ${renderSmallMetric('Selesai', data.selesaiCount, 'Status paket selesai')}
-          ${renderSmallMetric('Proses', data.processCount, 'Masih berjalan/proses')}
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+          <button class="help-button" type="button" id="panjiExplainButton">PANJI Jelaskan</button>
+          <button class="help-button" type="button" id="panjiAdviceButton">Saran PANJI</button>
         </div>
       </div>
     </section>
 
-    <section class="dashboard-grid dashboard-grid--two">
-      <div class="card">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Perencanaan · ${escapeHtml(scopeLabel)}</span>
-            <h3>Komposisi Pagu per Metode</h3>
-          </div>
-          <span class="soft-pill">${formatNumber(data.totalPaketRup)} paket</span>
-        </div>
-        <div class="bar-list">
-          ${renderBarList(data.byMetodePlanning.slice(0, 8), data.byMetodePlanning[0]?.value || 1, 'pagu')}
+    <section class="grid-main">
+      <div class="card" data-panji-topic="weakest">
+        <h3>Prioritas Perbaikan</h3>
+        <div class="activities">
+          ${data.weakestIndicators.map(renderIndicatorInsight).join('')}
         </div>
       </div>
 
-      <div class="card">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Realisasi · ${escapeHtml(scopeLabel)}</span>
-            <h3>Komposisi Realisasi per Metode</h3>
-          </div>
-          <span class="soft-pill">${formatNumber(data.totalPaketRealisasi)} paket</span>
-        </div>
-        <div class="bar-list">
-          ${renderBarList(data.byMetodeReal.slice(0, 8), data.byMetodeReal[0]?.value || 1, 'realisasi')}
+      <div class="card" data-panji-topic="strongest">
+        <h3>Capaian Terbaik</h3>
+        <div class="activities">
+          ${data.strongestIndicators.map(renderIndicatorInsight).join('')}
         </div>
       </div>
     </section>
 
-    <section class="dashboard-grid dashboard-grid--two">
-      <div class="card">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Ranking Sub OPD</span>
-            <h3>Nilai ITKP Tertinggi</h3>
-          </div>
-          <span class="soft-pill">Top 8 · FIX ITKP SUB OPD</span>
-        </div>
-        <div class="rank-table">
-          ${renderRankRows(data.topItkp, 'top')}
-        </div>
+    <section class="grid-main">
+      <div class="card" data-panji-topic="metode-perencanaan">
+        <h3>Komposisi Pagu Perencanaan per Metode</h3>
+        ${renderLiteTable(data.byMetodePlanning, 'Metode', 'Pagu', 'value', formatMoney)}
       </div>
 
-      <div class="card">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Perlu Atensi</span>
-            <h3>Nilai ITKP Terendah</h3>
-          </div>
-          <span class="soft-pill">Bottom 8 · FIX ITKP SUB OPD</span>
-        </div>
-        <div class="rank-table">
-          ${renderRankRows(data.lowItkp, 'low')}
-        </div>
+      <div class="card" data-panji-topic="metode-realisasi">
+        <h3>Komposisi Realisasi per Metode</h3>
+        ${renderLiteTable(data.byMetodeReal, 'Metode', 'Realisasi', 'value', formatMoney)}
       </div>
     </section>
 
-    <section class="card">
-      <div class="section-title-row">
-        <div>
-          <span class="section-kicker">Profil Belanja · ${escapeHtml(scopeLabel)}</span>
-          <h3>${data.scopeIsCity ? 'Top OPD Berdasarkan Pagu Perencanaan & Realisasi' : 'Ringkasan Pagu Perencanaan & Realisasi OPD Terpilih'}</h3>
-        </div>
-        <span class="soft-pill">Profil belanja</span>
+    <section class="grid-main">
+      <div class="card" data-panji-topic="ranking-top">
+        <h3>Nilai ITKP Tertinggi</h3>
+        ${renderRanking(data.topItkp, false)}
       </div>
 
-      <div class="dashboard-grid dashboard-grid--two no-margin">
-        <div class="neo-panel">
-          <h4>Pagu Perencanaan Terbesar</h4>
-          <div class="compact-list">
-            ${renderCompactList(data.bySatkerPlanning.slice(0, 10), 'pagu')}
-          </div>
-        </div>
-
-        <div class="neo-panel">
-          <h4>Realisasi Terbesar</h4>
-          <div class="compact-list">
-            ${renderCompactList(data.bySatkerReal.slice(0, 10), 'realisasi')}
-          </div>
-        </div>
+      <div class="card" data-panji-topic="ranking-low">
+        <h3>Nilai ITKP Terendah</h3>
+        ${renderRanking(data.lowItkp, true)}
       </div>
     </section>
 
-    <section class="quick-grid">
-      ${renderQuickCard('📊', 'linear-gradient(135deg,#2665df,#3a8bff)', 'ITKP - SiRUP', 'Lihat monitoring indikator ITKP dari modul SiRUP.', 'monitoring-sirup')}
-      ${renderQuickCard('🛒', 'linear-gradient(135deg,#123a72,#2f9a8f)', 'ITKP - eKatalog', 'Pantau pemanfaatan transaksi katalog.', 'monitoring-ekatalog')}
-      ${renderQuickCard('📦', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Monitoring Realisasi', 'Pantau progress realisasi paket perangkat daerah.', 'monitoring-perencanaan')}
-      ${renderQuickCard('🗓️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
+    <section class="quick-grid" data-panji-topic="quick-menu">
+      ${renderQuickCard('📊', 'linear-gradient(135deg,#1d4ed8,#22d3ee)', 'ITKP - SiRUP', 'Cek pengumuman RUP dan indikator SiRUP.', 'monitoring-sirup')}
+      ${renderQuickCard('🛒', 'linear-gradient(135deg,#0f766e,#22c55e)', 'eKatalog', 'Cek Toko Daring dan e-Purchasing.', 'monitoring-ekatalog')}
+      ${renderQuickCard('🏗️', 'linear-gradient(135deg,#f97316,#f59e0b)', 'eTendering', 'Pantau tender dan seleksi.', 'monitoring-etendering')}
+      ${renderQuickCard('📑', 'linear-gradient(135deg,#111827,#2563eb)', 'eKontrak', 'Pantau pencatatan kontrak.', 'monitoring-ekontrak')}
     </section>
 
-    <div class="footer-note">© BenRama 2026 SIPPBJ - Dashboard UKPBJ Kota Bogor</div>
+    <div class="footer-note">© 2026 SIPPBJ - Dashboard dibantu PANJI Pengadaan Jitu</div>
   `;
 }
 
-function bindDashboardEvents() {
-  const refresh = document.getElementById('refreshDashboardButton');
-
-  if (refresh) {
-    refresh.addEventListener('click', () => {
-      DASHBOARD_STATE.data = null;
-      renderDashboard(true);
-    });
-  }
-
-  const satkerSelect = document.getElementById('itkpSatkerSelect');
-
-  if (satkerSelect) {
-    satkerSelect.addEventListener('change', () => {
-      DASHBOARD_STATE.selectedItkpSatker = satkerSelect.value;
-      if (DASHBOARD_STATE.data) {
-        DASHBOARD_STATE.data = analyzeDashboardData({
-          itkp: DASHBOARD_STATE.data.cityProfile && DASHBOARD_STATE.data.cityProfile.__sourceRow
-            ? DASHBOARD_STATE.data.itkpRows.concat([DASHBOARD_STATE.data.cityProfile.__sourceRow])
-            : DASHBOARD_STATE.data.itkpRows,
-          itkpSubOpd: DASHBOARD_STATE.data.itkpSubOpdRows,
-          perencanaan: DASHBOARD_STATE.data.planningRows,
-          realisasi: DASHBOARD_STATE.data.realRows
-        });
-        renderDashboardReady(DASHBOARD_STATE.data);
-        bindDashboardEvents();
-        initDashboardPanji(DASHBOARD_STATE.data, true);
-        initScrollAnimation();
-      }
-    });
-  }
-
-  contentArea.querySelectorAll('[data-quick], [data-route]').forEach((item) => {
-    item.addEventListener('click', () => {
-      const route = item.dataset.quick || item.dataset.route;
-      if (route) loadPage(route);
-    });
-  });
-}
-
-function renderKpiCard(label, value, desc, icon) {
+function renderKpiCard(label, value, desc, topic) {
   return `
-    <div class="stat-card stat-card--lux" data-panji-kpi="${escapeHtml(label)}" data-panji-value="${escapeHtml(value)}" data-panji-desc="${escapeHtml(desc)}">
-      <div class="stat-icon">${icon}</div>
+    <div class="stat-card" data-panji-topic="${escapeHtml(topic)}">
       <div class="label">${escapeHtml(label)}</div>
       <div class="value">${escapeHtml(value)}</div>
       <div class="desc">${escapeHtml(desc)}</div>
@@ -1013,360 +1043,727 @@ function renderKpiCard(label, value, desc, icon) {
   `;
 }
 
-function renderSmallMetric(label, value, desc) {
-  return `
-    <div class="small-metric">
-      <b>${formatNumber(value)}</b>
-      <span>${escapeHtml(label)}</span>
-      <small>${escapeHtml(desc)}</small>
-    </div>
-  `;
-}
-
 function renderDimension(item) {
-  const percent = item.max > 0 ? Math.min(100, (toNumber(item.value) / item.max) * 100) : 0;
-  const route = item.route || '';
+  const status = getIndicatorStatus(item.value, item.max);
+  const width = Math.min(100, Math.max(0, status.percent));
 
   return `
-    <button class="dim-row dim-row--${escapeHtml(item.accent || 'blue')} dim-row--button" type="button" data-route="${escapeHtml(route)}" title="${escapeHtml(item.hint || 'Klik untuk membuka modul monitoring')}">
-      <div class="dim-name">
-        <span>${escapeHtml(item.name)}</span>
-        <small>${escapeHtml(item.hint || 'Buka detail')}</small>
+    <button class="dim-row dim-row--button" type="button" data-indicator-id="${escapeHtml(item.id)}" data-route="${escapeHtml(item.route)}" data-panji-topic="${escapeHtml(item.id)}">
+      <div>
+        <b>${escapeHtml(item.name)}</b>
+        <div style="font-size:11px; color:#64748b; margin-top:2px;">${escapeHtml(status.label)}</div>
       </div>
       <div class="bar">
-        <span style="width:${percent}%"></span>
+        <span style="width:${width}%"></span>
       </div>
-      <div class="dim-value">${toNumber(item.value).toLocaleString('id-ID', { maximumFractionDigits: 2 })}/${item.max}</div>
+      <div>
+        ${formatScore(item.value)}
+        <div style="font-size:11px; color:#64748b;">/ ${formatScore(item.max)}</div>
+      </div>
     </button>
   `;
 }
 
-function renderBarList(items, maxValue, type) {
-  if (!items.length) {
-    return `<div class="empty-state">Belum ada data yang bisa ditampilkan.</div>`;
-  }
+function renderPanjiAnalysis(data) {
+  const profile = data.selectedProfile;
+  const status = getTotalStatus(profile.score);
+  const strong = data.strongestIndicators[0];
+  const weak = data.weakestIndicators[0];
 
-  return items.map((item, index) => {
-    const percent = maxValue > 0 ? Math.max(2, (item.value / maxValue) * 100) : 0;
-
-    return `
-      <div class="bar-item">
-        <div class="bar-item-top">
-          <div>
-            <span class="bar-index">${index + 1}</span>
-            <b>${escapeHtml(item.name)}</b>
-          </div>
-          <strong>${formatMoney(item.value)}</strong>
-        </div>
-        <div class="bar-item-sub">
-          <span>${formatNumber(item.count)} paket</span>
-          <span>${type === 'pagu' ? 'Pagu' : 'Realisasi'}</span>
-        </div>
-        <div class="bar-line">
-          <span style="width:${percent}%"></span>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderRankRows(items, mode) {
-  if (!items.length) {
-    return `<div class="empty-state">Belum ada nilai ITKP.</div>`;
-  }
-
-  return items.map((item, index) => `
-    <div class="rank-row rank-row--${mode}">
-      <div class="rank-number">${index + 1}</div>
-      <div class="rank-name">${escapeHtml(item.name)}</div>
-      <div class="rank-score">${toNumber(item.score).toLocaleString('id-ID', { maximumFractionDigits: 2 })}</div>
-    </div>
-  `).join('');
-}
-
-function renderCompactList(items, type) {
-  if (!items.length) {
-    return `<div class="empty-state">Belum ada data.</div>`;
-  }
-
-  return items.map((item, index) => `
-    <div class="compact-item">
-      <div class="compact-index">${index + 1}</div>
-      <div class="compact-main">
-        <b>${escapeHtml(item.name)}</b>
-        <span>${formatNumber(item.count)} paket · ${type === 'pagu' ? 'Pagu' : 'Realisasi'}</span>
-      </div>
-      <strong>${formatMoney(item.value)}</strong>
-    </div>
-  `).join('');
-}
-
-function renderActivity(color, icon, title, text, time) {
   return `
     <div class="activity-item">
-      <div class="activity-icon" style="background:${color}">${icon}</div>
-
+      <div class="activity-icon" style="background:#2563eb">PJ</div>
       <div>
-        <div class="activity-title">${escapeHtml(title)}</div>
-        <div class="activity-text">${escapeHtml(text)}</div>
+        <div class="activity-title">${escapeHtml(profile.name)} · ${escapeHtml(status.label)}</div>
+        <div class="activity-text">
+          Skor ITKP ${formatScore(profile.score)} dari 30. Indikator kuat: ${escapeHtml(strong ? strong.name : '-')}.
+          Prioritas pembenahan: ${escapeHtml(weak ? weak.name : '-')}.
+        </div>
       </div>
+      <div class="activity-time">${escapeHtml(status.icon)}</div>
+    </div>
+  `;
+}
 
-      <div class="activity-time">${escapeHtml(time)}</div>
+function renderIndicatorInsight(item) {
+  const status = getIndicatorStatus(item.value, item.max);
+
+  return `
+    <button class="activity-item insight-item--button" type="button" data-indicator-id="${escapeHtml(item.id)}" data-route="${escapeHtml(item.route)}" data-panji-topic="${escapeHtml(item.id)}">
+      <div class="activity-icon" style="background:${status.tone === 'danger' ? '#dc2626' : status.tone === 'warning' ? '#f59e0b' : '#16a34a'}">!</div>
+      <div>
+        <div class="activity-title">${escapeHtml(item.name)} · ${escapeHtml(status.label)}</div>
+        <div class="activity-text">${formatScore(item.value)} dari ${formatScore(item.max)} poin (${formatPercent(status.percent)}).</div>
+      </div>
+      <div class="activity-time">${status.tone === 'danger' ? 'Perlu' : 'OK'}</div>
+    </button>
+  `;
+}
+
+function renderLiteTable(rows, firstLabel, secondLabel, valueKey, formatter) {
+  const cleanRows = rows.slice(0, 8);
+
+  if (!cleanRows.length) {
+    return `<div class="page-note">Belum ada data yang bisa ditampilkan.</div>`;
+  }
+
+  return `
+    <div class="table-lite">
+      <div class="table-row table-head">
+        <div>${escapeHtml(firstLabel)}</div>
+        <div>${escapeHtml(secondLabel)}</div>
+      </div>
+      ${cleanRows.map((row) => `
+        <div class="table-row">
+          <div>${escapeHtml(row.name)}</div>
+          <div>${escapeHtml(formatter(row[valueKey]))}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderRanking(rows, lowMode = false) {
+  if (!rows.length) {
+    return `<div class="page-note">Belum ada data ranking.</div>`;
+  }
+
+  return `
+    <div class="table-lite">
+      <div class="table-row table-head">
+        <div>Satuan Kerja</div>
+        <div>Skor</div>
+      </div>
+      ${rows.map((item) => {
+        const status = getTotalStatus(item.score);
+
+        return `
+          <div class="table-row">
+            <div>${lowMode ? '⚠️ ' : '🏆 '}${escapeHtml(item.name)} <span style="color:#64748b;">· ${escapeHtml(status.label)}</span></div>
+            <div>${formatScore(item.score)}</div>
+          </div>
+        `;
+      }).join('')}
     </div>
   `;
 }
 
 function renderQuickCard(icon, bg, title, text, route) {
   return `
-    <button class="quick-card" type="button" data-quick="${escapeHtml(route)}">
-      <div class="quick-icon" style="background:${bg}">${icon}</div>
-
+    <button class="quick-card" type="button" data-quick="${escapeHtml(route)}" data-panji-topic="${escapeHtml(route)}">
+      <div class="quick-icon" style="background:${escapeHtml(bg)}">${escapeHtml(icon)}</div>
       <div>
         <div class="quick-title">${escapeHtml(title)}</div>
         <div class="quick-text">${escapeHtml(text)}</div>
       </div>
-
       <div class="quick-arrow">›</div>
     </button>
   `;
 }
 
-function renderIframePage(page) {
-  contentArea.innerHTML = `
-    <section class="embed-card">
-      <h3>${escapeHtml(page.title)}</h3>
-      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
-
-      <div class="embed-frame-wrap">
-        <iframe
-          class="embed-frame"
-          src="${page.url}"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
-      </div>
-    </section>
-  `;
-}
-
-function renderPlaceholderPage(pageKey, page) {
-  contentArea.innerHTML = `
-    <section class="card">
-      <h3>${escapeHtml(page.title)}</h3>
-
-      <div class="placeholder-grid">
-        <div class="placeholder-box">
-          <h4>Modul belum dihubungkan</h4>
-          <p>Halaman ini sudah disiapkan di portal utama. Nanti saat project GitHub/halaman monitoring selesai, tinggal isi URL atau module path di file <b>app.js</b>.</p>
-        </div>
-
-        <div class="placeholder-box">
-          <h4>Langkah berikutnya</h4>
-          <p>Cari route <b>${escapeHtml(pageKey)}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b>.</p>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function updateActiveMenu(key) {
-  document.querySelectorAll('.nav-link, .submenu-link').forEach((el) => {
-    el.classList.remove('active');
+function bindDashboardEvents() {
+  contentArea.querySelectorAll('[data-quick]').forEach((item) => {
+    item.addEventListener('click', () => loadPage(item.dataset.quick));
   });
 
-  const directButton = document.querySelector(`.nav-link[data-page="${key}"]`);
-  const subButton = document.querySelector(`.submenu-link[data-page="${key}"]`);
+  contentArea.querySelectorAll('[data-route]').forEach((item) => {
+    item.addEventListener('click', () => {
+      const route = item.dataset.route;
+      if (route) loadPage(route);
+    });
+  });
 
-  if (directButton) {
-    directButton.classList.add('active');
+  const select = document.getElementById('itkpSatkerSelect');
+
+  if (select) {
+    select.addEventListener('change', () => {
+      DASHBOARD_STATE.selectedItkpSatker = select.value;
+
+      if (DASHBOARD_STATE.raw) {
+        DASHBOARD_STATE.data = analyzeDashboardData(DASHBOARD_STATE.raw);
+      }
+
+      renderDashboardReady(DASHBOARD_STATE.data);
+      bindDashboardEvents();
+      initDashboardPanji(DASHBOARD_STATE.data, true);
+      requestAnimationFrame(initScrollAnimation);
+    });
   }
 
-  if (subButton) {
-    subButton.classList.add('active');
+  const refresh = document.getElementById('refreshDashboardButton');
+  if (refresh) {
+    refresh.addEventListener('click', () => {
+      DASHBOARD_STATE.data = null;
+      renderDashboard(true);
+    });
+  }
 
-    const group = subButton.closest('.nav-group');
-    if (group) {
-      group.classList.add('open');
-    }
+  const explain = document.getElementById('panjiExplainButton');
+  if (explain) {
+    explain.addEventListener('click', () => {
+      if (DASHBOARD_STATE.data) {
+        dashboardPanjiPaused = false;
+        dashboardPanjiSpeak(buildPanjiDashboardExplanation(DASHBOARD_STATE.data), 'talking');
+        highlightPanjiTarget(document.querySelector('[data-panji-topic="dashboard"]'));
+      }
+    });
+  }
+
+  const advice = document.getElementById('panjiAdviceButton');
+  if (advice) {
+    advice.addEventListener('click', () => {
+      if (DASHBOARD_STATE.data) {
+        dashboardPanjiPaused = false;
+        dashboardPanjiSpeak(buildPanjiRecommendation(DASHBOARD_STATE.data), 'thinking');
+        focusWeakestIndicator(DASHBOARD_STATE.data);
+      }
+    });
   }
 }
-
-function closeFlyout() {
-  if (activeFlyout) {
-    activeFlyout.remove();
-    activeFlyout = null;
-  }
-}
-
 
 /* =========================================================
-   PANJI DASHBOARD ASSISTANT
-   Tidak mengubah bentuk dashboard. PANJI hanya di-inject lewat JS,
-   bisa bergerak ke elemen, menjelaskan nilai, tombol, indikator,
-   serta memberi penilaian baik/cukup/butuh perhatian.
+   PANJI DASHBOARD
    ========================================================= */
 
-function getPanjiDashboardStatus(value, maxValue = 30) {
-  const score = toNumber(value);
-  const max = toNumber(maxValue) || 30;
-  const percent = max > 0 ? (score / max) * 100 : 0;
+function initDashboardPanji(data, fromSelection = false) {
+  if (activePageKey !== 'dashboard') return;
+  if (dashboardPanjiClosedUntilReload) return;
 
-  if (score <= 0) {
-    return {
-      label: 'Belum Terdeteksi',
-      tone: 'sad',
-      text: 'Data belum terlihat atau masih nol. Perlu cek sumber data dan pencatatannya.'
-    };
+  injectDashboardPanjiCss();
+
+  if (typeof dashboardPanjiDestroy === 'function') {
+    dashboardPanjiDestroy();
+    dashboardPanjiDestroy = null;
   }
 
-  if (percent >= 85) {
-    return {
-      label: 'Sangat Baik',
-      tone: 'happy',
-      text: 'Capaian sudah kuat. Tinggal dijaga konsistensi datanya.'
-    };
+  const panji = ensureDashboardPanjiElement();
+
+  const closeBtn = panji.querySelector('#dashPanjiClose');
+  const characterBtn = panji.querySelector('#dashPanjiCharacter');
+  const explainBtn = panji.querySelector('#dashPanjiExplain');
+  const analyzeBtn = panji.querySelector('#dashPanjiAnalyze');
+  const adviceBtn = panji.querySelector('#dashPanjiAdvice');
+  const closeActionBtn = panji.querySelector('#dashPanjiCloseAction');
+
+  const closePanji = () => {
+    dashboardPanjiClosedUntilReload = true;
+    clearDashboardPanjiHighlight();
+    destroyDashboardPanji();
+  };
+
+  const togglePause = () => {
+    if (dashboardPanjiClosedUntilReload) return;
+
+    dashboardPanjiPaused = !dashboardPanjiPaused;
+
+    if (dashboardPanjiPaused) {
+      panji.classList.remove('dash-panji-talking', 'dash-panji-happy', 'dash-panji-sad', 'dash-panji-thinking');
+      setDashboardPanjiText('Baik. PANJI diam dulu. Klik karakter PANJI lagi kalau ingin saya lanjut membaca dashboard.');
+      setDashboardPanjiEmote('🤐');
+      clearDashboardPanjiHighlight();
+      return;
+    }
+
+    dashboardPanjiSpeak(
+      dashboardPanjiLastMessage || buildPanjiSatkerAnalysis(data),
+      getPanjiMoodByData(data)
+    );
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', closePanji);
+  if (closeActionBtn) closeActionBtn.addEventListener('click', closePanji);
+
+  if (characterBtn) {
+    characterBtn.addEventListener('click', togglePause);
   }
 
-  if (percent >= 70) {
-    return {
-      label: 'Baik',
-      tone: 'happy',
-      text: 'Capaian sudah baik, tetapi masih bisa dioptimalkan.'
-    };
+  if (explainBtn) {
+    explainBtn.addEventListener('click', () => {
+      dashboardPanjiPaused = false;
+      dashboardPanjiSpeak(buildPanjiDashboardExplanation(data), 'talking');
+      highlightPanjiTarget(document.querySelector('[data-panji-topic="dashboard"]'));
+    });
   }
 
-  if (percent >= 50) {
-    return {
-      label: 'Cukup',
-      tone: 'thinking',
-      text: 'Capaian cukup, tetapi perlu penguatan agar tidak tertinggal.'
-    };
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener('click', () => {
+      dashboardPanjiPaused = false;
+      dashboardPanjiSpeak(buildPanjiSatkerAnalysis(data), getPanjiMoodByData(data));
+      highlightPanjiTarget(document.querySelector('[data-panji-topic="itkp"]'));
+    });
   }
 
-  return {
-    label: 'Butuh Perhatian',
-    tone: 'sad',
-    text: 'Capaian masih rendah dan sebaiknya jadi prioritas pembinaan/perbaikan.'
+  if (adviceBtn) {
+    adviceBtn.addEventListener('click', () => {
+      dashboardPanjiPaused = false;
+      dashboardPanjiSpeak(buildPanjiRecommendation(data), 'thinking');
+      focusWeakestIndicator(data);
+    });
+  }
+
+  bindDashboardPanjiHover(data);
+  initDashboardPanjiAutoPosition();
+
+  if (fromSelection) {
+    dashboardPanjiSpeak(buildPanjiSatkerAnalysis(data), getPanjiMoodByData(data));
+  } else {
+    dashboardPanjiSpeak(buildPanjiWelcome(data), 'intro');
+  }
+
+  dashboardPanjiDestroy = () => {
+    const existing = document.getElementById('dashboardPanji');
+    if (existing) existing.remove();
+    clearDashboardPanjiHighlight();
   };
 }
 
-function getPanjiIndicatorMeaning(name) {
-  const key = String(name || '').toLowerCase();
+function ensureDashboardPanjiElement() {
+  let panji = document.getElementById('dashboardPanji');
 
-  if (key.includes('sirup')) {
-    return 'SiRUP menunjukkan ketertiban perencanaan dan pengumuman RUP: paket, pagu, metode, dan jadwal.';
+  if (!panji) {
+    panji = document.createElement('div');
+    panji.id = 'dashboardPanji';
+    panji.className = 'dash-panji dash-panji-intro';
+
+    panji.innerHTML = `
+      <div class="dash-panji-bubble">
+        <button type="button" class="dash-panji-close" id="dashPanjiClose" title="Tutup PANJI">×</button>
+
+        <div class="dash-panji-top">
+          <div class="dash-panji-name">PANJI · Pengadaan Jitu</div>
+          <div class="dash-panji-emote" id="dashPanjiEmote">👋</div>
+        </div>
+
+        <div class="dash-panji-text" id="dashPanjiText"></div>
+
+        <div class="dash-panji-actions">
+          <button type="button" id="dashPanjiExplain">Jelaskan Dashboard</button>
+          <button type="button" id="dashPanjiAnalyze">Analisis OPD</button>
+          <button type="button" id="dashPanjiAdvice">Saran PANJI</button>
+          <button type="button" id="dashPanjiCloseAction">Tutup PANJI</button>
+        </div>
+      </div>
+
+      <button type="button" class="dash-panji-character" id="dashPanjiCharacter" title="Klik PANJI untuk diam / lanjut bicara">
+        <div class="dash-panji-glow"></div>
+
+        <div class="dash-panji-head">
+          <div class="dash-panji-hat">PBJ</div>
+          <div class="dash-panji-eye dash-panji-eye-left"></div>
+          <div class="dash-panji-eye dash-panji-eye-right"></div>
+          <div class="dash-panji-mouth"></div>
+        </div>
+
+        <div class="dash-panji-body">
+          <div class="dash-panji-badge">PJ</div>
+        </div>
+
+        <div class="dash-panji-hand dash-panji-hand-left"></div>
+        <div class="dash-panji-hand dash-panji-hand-right"></div>
+      </button>
+    `;
+
+    document.body.appendChild(panji);
   }
 
-  if (key.includes('toko')) {
-    return 'Toko Daring menunjukkan pemanfaatan kanal belanja digital sederhana untuk kebutuhan yang sesuai.';
-  }
-
-  if (key.includes('purchasing')) {
-    return 'e-Purchasing menunjukkan pemanfaatan e-Katalog untuk paket yang barang/jasanya tersedia dan sesuai kebutuhan.';
-  }
-
-  if (key.includes('tender')) {
-    return 'e-Tendering menunjukkan proses tender/seleksi melalui SPSE dan ketertiban data pemilihannya.';
-  }
-
-  if (key.includes('kontrak')) {
-    return 'e-Kontrak menunjukkan apakah hasil pemilihan sudah lanjut menjadi pencatatan kontrak elektronik.';
-  }
-
-  if (key.includes('non')) {
-    return 'Non Tender menunjukkan ketertiban pencatatan paket non tender/non e-Purchasing sampai realisasi.';
-  }
-
-  return 'Indikator ini perlu dibaca dari nilai, sumber data, dan keterkaitannya dengan proses PBJ.';
+  return panji;
 }
 
-function buildPanjiDashboardIntro(data) {
-  const profile = data.selectedProfile || data.cityProfile;
-  const status = getPanjiDashboardStatus(profile.score, 30);
+function destroyDashboardPanji() {
+  if (typeof dashboardPanjiDestroy === 'function') {
+    dashboardPanjiDestroy();
+    dashboardPanjiDestroy = null;
+  } else {
+    const panji = document.getElementById('dashboardPanji');
+    if (panji) panji.remove();
+  }
 
-  return `Halo, saya PANJI — Pengadaan Jitu.\n\nSaya tidak mengubah bentuk dashboard. Saya hanya hidup di atas dashboard untuk membantu membaca angka, tombol, indikator, dan memberi penilaian.\n\nSaat ini saya membaca ${profile.name}. Skor Pemanfaatan Sistem ITKP-nya ${formatScore(profile.score)} dari 30, kategori ${status.label}. ${status.text}`;
+  clearDashboardPanjiHighlight();
 }
 
-function buildPanjiFullDashboardAnalysis(data) {
-  const profile = data.selectedProfile || data.cityProfile;
-  const status = getPanjiDashboardStatus(profile.score, 30);
-  const dimensions = profile.dimensions || [];
+function dashboardPanjiSpeak(message, mood = 'talking') {
+  if (dashboardPanjiClosedUntilReload || dashboardPanjiPaused) return;
 
-  const indicatorText = dimensions.map((item) => {
-    const itemStatus = getPanjiDashboardStatus(item.value, item.max);
-    return `• ${item.name}: ${formatScore(item.value)} dari ${formatScore(item.max)} — ${itemStatus.label}`;
-  }).join('\n');
+  const panji = document.getElementById('dashboardPanji');
+  const textEl = document.getElementById('dashPanjiText');
 
-  const sorted = [...dimensions].sort((a, b) => {
-    const aPercent = a.max > 0 ? toNumber(a.value) / a.max : 0;
-    const bPercent = b.max > 0 ? toNumber(b.value) / b.max : 0;
-    return aPercent - bPercent;
+  if (!panji || !textEl) return;
+
+  const cleanMessage = String(message || '').trim();
+  dashboardPanjiLastMessage = cleanMessage;
+
+  panji.classList.remove(
+    'dash-panji-happy',
+    'dash-panji-sad',
+    'dash-panji-thinking',
+    'dash-panji-talking',
+    'dash-panji-intro'
+  );
+
+  if (mood === 'happy') {
+    panji.classList.add('dash-panji-happy', 'dash-panji-talking');
+    setDashboardPanjiEmote('😄');
+  } else if (mood === 'sad') {
+    panji.classList.add('dash-panji-sad', 'dash-panji-talking');
+    setDashboardPanjiEmote('😢');
+  } else if (mood === 'thinking') {
+    panji.classList.add('dash-panji-thinking', 'dash-panji-talking');
+    setDashboardPanjiEmote('🤔');
+  } else if (mood === 'intro') {
+    panji.classList.add('dash-panji-intro', 'dash-panji-talking');
+    setDashboardPanjiEmote('👋');
+  } else {
+    panji.classList.add('dash-panji-talking');
+    setDashboardPanjiEmote('🤖');
+  }
+
+  setDashboardPanjiText(cleanMessage);
+
+  clearTimeout(panji._talkTimer);
+  panji._talkTimer = setTimeout(() => {
+    panji.classList.remove('dash-panji-talking');
+  }, Math.min(7200, Math.max(2400, cleanMessage.length * 38)));
+}
+
+function setDashboardPanjiText(text) {
+  const textEl = document.getElementById('dashPanjiText');
+  if (!textEl) return;
+
+  textEl.innerHTML = escapeHtml(text).replace(/\n/g, '<br>');
+}
+
+function setDashboardPanjiEmote(icon) {
+  const emote = document.getElementById('dashPanjiEmote');
+  if (!emote) return;
+  emote.textContent = icon;
+}
+
+function getPanjiMoodByData(data) {
+  const status = getTotalStatus((data.selectedProfile || data.cityProfile).score);
+  return status.mood || 'thinking';
+}
+
+function bindDashboardPanjiHover(data) {
+  const targets = contentArea.querySelectorAll(
+    '[data-panji-topic], .stat-card, .dim-row--button, .quick-card, .activity-item, .table-row'
+  );
+
+  targets.forEach((target) => {
+    if (target.dataset.panjiHoverBound) return;
+
+    target.dataset.panjiHoverBound = '1';
+
+    let hoverTimer = null;
+
+    const enter = () => {
+      if (dashboardPanjiClosedUntilReload || dashboardPanjiPaused) return;
+
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(() => {
+        const message = buildPanjiElementExplanation(target, data);
+        if (!message) return;
+
+        highlightPanjiTarget(target);
+        dashboardPanjiSpeak(message, detectPanjiMoodFromTarget(target, data));
+      }, 320);
+    };
+
+    const leave = () => {
+      clearTimeout(hoverTimer);
+    };
+
+    target.addEventListener('mouseenter', enter);
+    target.addEventListener('focus', enter);
+    target.addEventListener('mouseleave', leave);
   });
+}
 
-  const weakest = sorted[0];
-  const strongest = sorted[sorted.length - 1];
+function buildPanjiElementExplanation(target, data) {
+  const topic = target.dataset.panjiTopic || '';
+  const indicatorId = target.dataset.indicatorId || '';
 
-  return `Analisis PANJI untuk ${profile.name}.\n\nTotal ITKP Pemanfaatan Sistem: ${formatScore(profile.score)} dari 30 — ${status.label}.\n\nRincian indikator:\n${indicatorText}\n\nYang paling kuat: ${strongest ? strongest.name : '-'}.\nYang perlu perhatian dulu: ${weakest ? weakest.name : '-'}.\n\nSaran PANJI: fokuskan perbaikan dari indikator terendah. Pastikan RUP/SiRUP tertib, katalog dicek, tender/seleksi tercatat, kontrak elektronik tidak tertinggal, paket non tender dicatat, dan realisasi tidak bolong.`;
+  if (indicatorId) {
+    return buildPanjiIndicatorExplanation(indicatorId, data);
+  }
+
+  if (topic === 'dashboard') return buildPanjiDashboardExplanation(data);
+  if (topic === 'itkp' || topic === 'score-ring') return buildPanjiSatkerAnalysis(data);
+  if (topic === 'analysis') return buildPanjiSatkerAnalysis(data);
+  if (topic === 'weakest') return buildPanjiRecommendation(data);
+  if (topic === 'strongest') return buildPanjiStrongestAnalysis(data);
+  if (topic === 'pagu') return 'Pagu RUP menunjukkan beban rencana pengadaan yang harus dikawal sejak perencanaan. Nilai besar bukan otomatis baik; yang penting paketnya diumumkan, metodenya tepat, jadwalnya wajar, dan tidak berhenti sebelum proses pemilihan.';
+  if (topic === 'realisasi') return 'Realisasi menunjukkan seberapa jauh rencana pengadaan sudah bergerak menjadi pelaksanaan. Capaian yang sehat harus tersambung ke kontrak, BAST, pembayaran, dan pencatatan akhir.';
+  if (topic === 'paket') return 'Jumlah paket perlu dibaca bersama nilai dan metode. Banyak paket tidak selalu buruk, tetapi perlu dicermati apakah ada kebutuhan sejenis yang seharusnya dikonsolidasikan atau paket kecil yang rawan luput pencatatan.';
+  if (topic === 'metode-perencanaan') return 'Komposisi metode pada perencanaan membantu melihat cara OPD memetakan kebutuhan. PANJI akan curiga kalau banyak paket sejenis tersebar tanpa konsolidasi atau metode tidak sejalan dengan nilai dan jenis pekerjaan.';
+  if (topic === 'metode-realisasi') return 'Komposisi realisasi per metode menunjukkan kanal mana yang benar-benar digunakan. Perencanaan yang baik harus terlihat nyambung ke transaksi, kontrak, BAST, dan realisasi.';
+  if (topic === 'ranking-top') return 'Ranking tertinggi menunjukkan OPD yang pemanfaatan sistemnya relatif tertib. Jadikan pembanding praktik baik, bukan sekadar daftar juara.';
+  if (topic === 'ranking-low') return 'Ranking terendah perlu dibaca sebagai daftar prioritas pembinaan. Fokusnya bukan menyalahkan OPD, tetapi mencari indikator yang paling lemah dan memperbaiki alur datanya.';
+  if (topic === 'quick-menu') return 'Menu akses cepat membantu masuk ke modul detail. Kalau angka dashboard terlihat lemah, jangan berhenti di ringkasan; buka modul terkait untuk menelusuri paket dan sumber datanya.';
+
+  if (topic === 'monitoring-sirup') return 'Menu SiRUP dipakai untuk menelusuri perencanaan. RUP adalah pintu awal sebelum bicara metode, kontrak, BAST, dan realisasi.';
+  if (topic === 'monitoring-ekatalog') return 'Menu eKatalog membaca Toko Daring dan e-Purchasing. Untuk paket yang tersedia di katalog, cek spesifikasi, harga, PDN/TKDN, penyedia, dan dokumentasi sebelum berpindah metode.';
+  if (topic === 'monitoring-etendering') return 'Menu eTendering penting untuk paket tender dan seleksi. Perhatikan nilai, jenis pekerjaan, metode, dokumen pemilihan, jadwal, dan kesinambungan ke kontrak.';
+  if (topic === 'monitoring-ekontrak') return 'Menu eKontrak membaca apakah hasil pemilihan sudah tersambung ke kontrak. Titik ini krusial karena kontrak mengikat pelaksanaan, pemeriksaan, BAST, pembayaran, dan realisasi.';
+  if (topic === 'simulasi-procurement-stacker') return 'Procurement Stacker adalah ruang latihan. Di sana PANJI menguji urutan PBJ, jebakan metode, katalog tidak tersedia, kontrak, adendum, BAST, dan realisasi.';
+
+  const text = cleanText(target.textContent).toLowerCase();
+
+  if (text.includes('sirup')) return buildPanjiIndicatorExplanation('sirup', data);
+  if (text.includes('toko daring')) return buildPanjiIndicatorExplanation('tokoDaring', data);
+  if (text.includes('purchasing') || text.includes('katalog')) return buildPanjiIndicatorExplanation('epurchasing', data);
+  if (text.includes('tendering') || text.includes('tender')) return buildPanjiIndicatorExplanation('etendering', data);
+  if (text.includes('kontrak')) return buildPanjiIndicatorExplanation('ekontrak', data);
+  if (text.includes('non tender')) return buildPanjiIndicatorExplanation('nontender', data);
+
+  return '';
+}
+
+function detectPanjiMoodFromTarget(target, data) {
+  const indicatorId = target.dataset.indicatorId || target.dataset.panjiTopic;
+  const profile = data.selectedProfile || data.cityProfile;
+  const indicator = (profile.dimensions || []).find((item) => item.id === indicatorId);
+
+  if (indicator) {
+    return getIndicatorStatus(indicator.value, indicator.max).mood;
+  }
+
+  if (indicatorId === 'weakest' || indicatorId === 'ranking-low') return 'thinking';
+  if (indicatorId === 'strongest' || indicatorId === 'ranking-top') return 'happy';
+
+  return 'thinking';
+}
+
+function buildPanjiWelcome(data) {
+  return `Halo, saya PANJI — Pengadaan Jitu. Saya akan membaca dashboard ini seperti pendamping PBJ. Pilih satuan kerja, nanti saya nilai SiRUP, Toko Daring, e-Purchasing, e-Tendering, e-Kontrak, dan Non Tender dengan bahasa pengadaan yang lebih tajam.`;
+}
+
+function buildPanjiDashboardExplanation(data) {
+  return `Dashboard ini adalah peta kendali PBJ. ITKP membaca pemanfaatan sistem dari SiRUP sampai Non Tender, sedangkan pagu dan realisasi menunjukkan apakah rencana sudah bergerak menjadi pelaksanaan. Fokusnya bukan sekadar angka, tapi kesinambungan data: RUP, metode, transaksi, kontrak, BAST, pembayaran, dan realisasi harus tersambung.`;
+}
+
+function buildPanjiSatkerAnalysis(data) {
+  const profile = data.selectedProfile || data.cityProfile;
+  const status = getTotalStatus(profile.score);
+  const strong = data.strongestIndicators[0];
+  const weak = data.weakestIndicators[0];
+
+  let text = `${profile.name} berada pada kategori ${status.label} dengan skor ITKP ${formatScore(profile.score)} dari 30. `;
+
+  if (strong) {
+    text += `Indikator paling kuat adalah ${strong.name}, artinya bagian itu relatif lebih tertib. `;
+  }
+
+  if (weak) {
+    text += `Titik yang perlu dikawal adalah ${weak.name}. ${buildPanjiIndicatorExplanation(weak.id, data)}`;
+  } else {
+    text += 'Belum ada indikator yang terbaca rinci. Cek kembali struktur data agar analisis bisa lebih tajam.';
+  }
+
+  return text;
+}
+
+function buildPanjiStrongestAnalysis(data) {
+  const strong = data.strongestIndicators[0];
+
+  if (!strong) {
+    return 'Belum ada indikator kuat yang bisa dibaca. Pastikan data ITKP per indikator sudah tersedia.';
+  }
+
+  return `${strong.name} menjadi capaian terkuat. ${buildPanjiIndicatorExplanation(strong.id, data)} Pertahankan pola kerja ini dan pastikan indikator lain ikut tersambung ke rantai PBJ yang sama.`;
 }
 
 function buildPanjiRecommendation(data) {
-  const profile = data.selectedProfile || data.cityProfile;
-  const dimensions = [...(profile.dimensions || [])]
-    .map((item) => ({
-      ...item,
-      percent: item.max > 0 ? (toNumber(item.value) / item.max) * 100 : 0,
-      status: getPanjiDashboardStatus(item.value, item.max)
-    }))
-    .sort((a, b) => a.percent - b.percent)
-    .slice(0, 3);
-
-  const priorityText = dimensions.map((item, index) => {
-    return `${index + 1}. ${item.name} — ${item.status.label}. ${getPanjiIndicatorMeaning(item.name)}`;
-  }).join('\n\n');
-
-  return `Rekomendasi PANJI untuk ${profile.name}.\n\nPrioritas perbaikan:\n${priorityText || '-'}\n\nKesimpulan: jangan cuma mengejar angka. Pastikan alur PBJ tertib dari perencanaan, pemilihan metode, transaksi, kontrak, BAST, sampai realisasi.`;
-}
-
-function buildPanjiKpiExplanation(label, value, desc, data) {
-  const cleanLabel = String(label || '').trim();
+  const weak = data.weakestIndicators || [];
   const profile = data.selectedProfile || data.cityProfile;
 
-  if (/itkp/i.test(cleanLabel)) {
-    const status = getPanjiDashboardStatus(profile.score, 30);
-    return `Kartu ${cleanLabel} menampilkan nilai ${formatScore(profile.score)} dari 30 untuk ${profile.name}. Kategorinya ${status.label}. ${status.text}`;
+  if (!weak.length) {
+    return `Belum cukup data untuk menentukan prioritas ${profile.name}. Mulai dari cek RUP, metode, transaksi katalog atau tender, kontrak, BAST, dan realisasi. Data yang rapi membuat evaluasi OPD jauh lebih akurat.`;
   }
 
-  if (/pagu/i.test(cleanLabel)) {
-    return `Kartu Pagu Perencanaan bernilai ${value}. Dashboard membaca total pagu paket dari data perencanaan untuk scope ${data.scopeName}. Angka ini dipakai sebagai pembanding terhadap realisasi.`;
+  const first = weak[0];
+  const second = weak[1];
+
+  let text = `Prioritas pertama untuk ${profile.name} adalah ${first.name}. ${buildPanjiIndicatorExplanation(first.id, data)} `;
+
+  if (second) {
+    text += `Setelah itu kawal ${second.name}, karena indikator lemah kedua sering menjadi penyebab rantai data tidak utuh.`;
   }
 
-  if (/realisasi/i.test(cleanLabel) && !/paket/i.test(cleanLabel)) {
-    const status = getPanjiDashboardStatus(data.realisasiPersen, 100);
-    return `Kartu Realisasi bernilai ${value}, atau ${formatPercent(data.realisasiPersen)} dari pagu. Kategorinya ${status.label}. Kalau rendah, cek paket yang belum jalan, belum kontrak, belum BAST, atau belum tercatat.`;
-  }
-
-  if (/paket/i.test(cleanLabel)) {
-    return `Kartu Paket Realisasi bernilai ${value}. PANJI membaca jumlah paket realisasi, paket selesai, dan paket yang masih proses. Kalau banyak yang belum selesai, cek kontrak, BAST, dan pencatatan realisasi.`;
-  }
-
-  return `Kartu ${cleanLabel} bernilai ${value}. ${desc || 'PANJI membaca kartu ini sebagai ringkasan dashboard.'}`;
+  return text;
 }
 
-function buildPanjiDimensionExplanationByElement(button, data) {
-  const name = button.querySelector('.dim-name span')?.textContent?.trim() || 'Indikator';
-  const valueText = button.querySelector('.dim-value')?.textContent?.trim() || '';
+function buildPanjiIndicatorExplanation(indicatorId, data) {
   const profile = data.selectedProfile || data.cityProfile;
-  const found = (profile.dimensions || []).find((item) => item.name === name);
-  const status = found ? getPanjiDashboardStatus(found.value, found.max) : { label: 'Perlu dicek', text: '', tone: 'thinking' };
+  const indicator = (profile.dimensions || []).find((item) => item.id === indicatorId);
 
-  return `${name} untuk ${profile.name}: ${valueText}. Kategorinya ${status.label}.\n\n${getPanjiIndicatorMeaning(name)}\n\n${status.text}`;
+  if (!indicator) {
+    return 'Indikator ini belum terbaca dari data dashboard. Cek header dan sumber data agar PANJI bisa memberi analisis yang tepat.';
+  }
+
+  const status = getIndicatorStatus(indicator.value, indicator.max);
+  const nilai = `${formatScore(indicator.value)} dari ${formatScore(indicator.max)} poin`;
+
+  if (indicatorId === 'sirup') {
+    if (status.label === 'Sangat Baik' || status.label === 'Baik') {
+      return `SiRUP sudah ${status.label.toLowerCase()} (${nilai}). Perencanaan dan pengumuman RUP terlihat relatif tertib sebagai pintu awal PBJ. Yang perlu dijaga adalah konsistensi RUP dengan metode, jadwal, kontrak, BAST, dan realisasi.`;
+    }
+
+    if (status.label === 'Belum Terdeteksi') {
+      return `SiRUP belum terbaca kuat (${nilai}). Periksa apakah paket sudah diumumkan di RUP, metode sudah tepat, jadwal pemilihan wajar, dan pagu tidak berhenti sebagai rencana saja.`;
+    }
+
+    return `SiRUP masih ${status.label.toLowerCase()} (${nilai}). Risiko utamanya adalah paket berjalan tanpa pijakan perencanaan yang rapi. Rapikan RUP terlebih dahulu sebelum masuk ke pemilihan, kontrak, dan realisasi.`;
+  }
+
+  if (indicatorId === 'tokoDaring') {
+    if (status.label === 'Sangat Baik' || status.label === 'Baik') {
+      return `Toko Daring sudah ${status.label.toLowerCase()} (${nilai}). Kanal belanja digital sederhana mulai dimanfaatkan. Tetap pastikan kebutuhan, kewajaran harga, dan dokumen pertanggungjawaban tetap rapi.`;
+    }
+
+    if (status.label === 'Belum Terdeteksi') {
+      return `Toko Daring belum terlihat (${nilai}). Untuk kebutuhan sederhana yang tersedia melalui kanal toko daring, OPD dapat mengoptimalkannya sepanjang sesuai kebutuhan, ketentuan, dan kewajaran harga.`;
+    }
+
+    return `Toko Daring masih ${status.label.toLowerCase()} (${nilai}). Ini bukan sekadar memakai aplikasi, tetapi memilih kanal pengadaan yang tepat untuk belanja sederhana.`;
+  }
+
+  if (indicatorId === 'epurchasing') {
+    if (status.label === 'Sangat Baik' || status.label === 'Baik') {
+      return `e-Purchasing sudah ${status.label.toLowerCase()} (${nilai}). Paket yang tersedia di katalog tampaknya diarahkan ke kanal yang tepat. Tetap jaga kesesuaian spesifikasi, kewajaran harga, PDN/TKDN, penyedia, dan dokumentasi klarifikasi atau negosiasi.`;
+    }
+
+    if (status.label === 'Belum Terdeteksi') {
+      return `e-Purchasing belum terlihat (${nilai}). Untuk barang/jasa yang tersedia di katalog, jangan langsung memakai metode lain. Cek katalog lebih dulu, dokumentasikan hasilnya, baru evaluasi metode bila katalog tidak sesuai.`;
+    }
+
+    return `e-Purchasing masih ${status.label.toLowerCase()} (${nilai}). Risiko yang sering muncul adalah paket katalog tidak dimanfaatkan atau pindah metode tanpa bukti cek katalog. Pastikan perubahan metode punya dokumentasi jelas.`;
+  }
+
+  if (indicatorId === 'etendering') {
+    if (status.label === 'Sangat Baik' || status.label === 'Baik') {
+      return `e-Tendering sudah ${status.label.toLowerCase()} (${nilai}). Proses tender atau seleksi relatif tercatat melalui sistem. Tetap perhatikan kesesuaian metode, dokumen pemilihan, jadwal, evaluasi, dan kesinambungan ke kontrak.`;
+    }
+
+    if (status.label === 'Belum Terdeteksi') {
+      return `e-Tendering belum terlihat (${nilai}). Bila ada paket yang seharusnya melalui tender atau seleksi, pastikan prosesnya tercatat di sistem dan tidak berhenti di luar pemantauan.`;
+    }
+
+    return `e-Tendering masih ${status.label.toLowerCase()} (${nilai}). Cek apakah paket bernilai besar atau jasa konsultansi sudah memakai metode yang tepat. Jangan memaksakan metode sederhana hanya karena ingin cepat.`;
+  }
+
+  if (indicatorId === 'ekontrak') {
+    if (status.label === 'Sangat Baik' || status.label === 'Baik') {
+      return `e-Kontrak sudah ${status.label.toLowerCase()} (${nilai}). Pencatatan kontrak terlihat cukup tertib setelah pemilihan. Tahap berikutnya yang harus dijaga adalah monitoring pelaksanaan, pemeriksaan hasil, BAST, pembayaran, dan realisasi.`;
+    }
+
+    if (status.label === 'Belum Terdeteksi') {
+      return `e-Kontrak belum terbaca (${nilai}). Ini perlu dicek, karena kontrak adalah penghubung antara hasil pemilihan dan pelaksanaan pekerjaan. Tanpa pencatatan kontrak, data BAST dan realisasi bisa ikut lemah.`;
+    }
+
+    return `e-Kontrak masih ${status.label.toLowerCase()} (${nilai}). Biasanya masalahnya bukan paket tidak ada, tetapi kontrak belum tertib dicatat. Risiko utamanya adalah proses pemilihan tidak tersambung ke pelaksanaan, BAST, dan realisasi.`;
+  }
+
+  if (indicatorId === 'nontender') {
+    if (status.label === 'Sangat Baik' || status.label === 'Baik') {
+      return `Non Tender sudah ${status.label.toLowerCase()} (${nilai}). Pengadaan langsung atau proses non tender tampaknya cukup tertib dicatat. Tetap pastikan paket kecil tidak diremehkan: dokumen, SPK atau bukti transaksi, BAST, dan realisasi harus rapi.`;
+    }
+
+    if (status.label === 'Belum Terdeteksi') {
+      return `Non Tender belum terlihat (${nilai}). Pengadaan langsung dan paket non tender sering dianggap kecil, padahal tetap harus tercatat. Pastikan paket, penyedia, bukti transaksi, BAST, dan realisasi tidak bolong.`;
+    }
+
+    return `Non Tender masih ${status.label.toLowerCase()} (${nilai}). Banyak paket bernilai kecil justru rawan luput dari pencatatan. Rapikan pengadaan langsung, bukti transaksi, BAST, dan realisasi agar monitoring tidak timpang.`;
+  }
+
+  return `${indicator.name} berada pada kategori ${status.label} (${nilai}). Baca indikator ini sebagai bagian dari rantai PBJ, bukan angka berdiri sendiri.`;
 }
 
-function buildPanjiQuickExplanation(button) {
-  const title = button.querySelector('.quick-title')?.textContent?.trim() || 'Menu';
-  const text = button.querySelector('.quick-text')?.textContent?.trim() || '';
+function highlightPanjiTarget(target) {
+  clearDashboardPanjiHighlight();
 
-  return `Tombol ${title} dipakai untuk membuka modul terkait. ${text}\n\nKalau diklik, dashboard membuka modul detailnya. PANJI bisa bantu user tahu indikator mana yang harus dicek.`;
+  if (!target || !target.classList) return;
+
+  target.classList.add('panji-elegant-focus');
+
+  try {
+    target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest'
+    });
+  } catch (error) {
+    console.warn('PANJI gagal scroll ke elemen:', error);
+  }
+}
+
+function focusWeakestIndicator(data) {
+  const weak = data.weakestIndicators && data.weakestIndicators[0];
+  if (!weak) return;
+
+  const target = contentArea.querySelector(`[data-indicator-id="${weak.id}"]`) ||
+    contentArea.querySelector(`[data-panji-topic="${weak.id}"]`);
+
+  highlightPanjiTarget(target);
+}
+
+function clearDashboardPanjiHighlight() {
+  document.querySelectorAll('.panji-elegant-focus').forEach((item) => {
+    item.classList.remove('panji-elegant-focus');
+  });
+}
+
+function initDashboardPanjiAutoPosition() {
+  const panji = document.getElementById('dashboardPanji');
+  if (!panji) return;
+
+  let ticking = false;
+
+  const update = () => {
+    const baseBottom = 86;
+    const maxBottom = 280;
+    const gap = 22;
+    let nextBottom = baseBottom;
+
+    const footer = document.querySelector('.footer-note');
+
+    if (footer) {
+      const footerRect = footer.getBoundingClientRect();
+      const panjiRect = panji.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const panjiNormalTop = viewportHeight - baseBottom - panjiRect.height;
+      const overlap = footerRect.bottom - panjiNormalTop;
+
+      if (footerRect.top < viewportHeight && overlap > 0) {
+        nextBottom = baseBottom + overlap + gap;
+      }
+    }
+
+    nextBottom = Math.max(baseBottom, Math.min(maxBottom, Math.round(nextBottom)));
+    panji.style.setProperty('--dash-panji-bottom', `${nextBottom}px`);
+    ticking = false;
+  };
+
+  const requestUpdate = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  };
+
+  update();
+
+  window.addEventListener('scroll', requestUpdate, { passive: true });
+  window.addEventListener('resize', requestUpdate);
+
+  const oldDestroy = dashboardPanjiDestroy;
+
+  dashboardPanjiDestroy = () => {
+    window.removeEventListener('scroll', requestUpdate);
+    window.removeEventListener('resize', requestUpdate);
+
+    if (typeof oldDestroy === 'function') {
+      oldDestroy();
+    }
+  };
 }
 
 function injectDashboardPanjiCss() {
@@ -1375,94 +1772,65 @@ function injectDashboardPanjiCss() {
   const style = document.createElement('style');
   style.id = 'dashboard-panji-css';
   style.textContent = `
+    .dim-row--button,
+    .insight-item--button{
+      border:0;
+      background:transparent;
+      text-align:left;
+      cursor:pointer;
+    }
+
     .dash-panji{
       position:fixed;
-      right:var(--dash-panji-right,34px);
-      bottom:var(--dash-panji-bottom,86px);
-      left:auto;
-      top:auto;
+      right:34px;
+      bottom:var(--dash-panji-bottom, 86px);
       z-index:999999;
       display:flex;
       align-items:flex-end;
       gap:14px;
       pointer-events:none;
-      transition:
-        left .45s cubic-bezier(.2,.8,.2,1),
-        top .45s cubic-bezier(.2,.8,.2,1),
-        right .45s cubic-bezier(.2,.8,.2,1),
-        bottom .45s cubic-bezier(.2,.8,.2,1),
-        transform .25s ease;
+      transition:bottom .22s ease;
     }
 
     .dash-panji *{
       pointer-events:auto;
     }
 
-    /* POP UP BERCERITA: narasi jadi story bar, bukan kolom yang menutupi dashboard */
     .dash-panji-bubble{
-      position:fixed;
-      left:50%;
-      right:auto;
-      bottom:24px;
-      width:min(760px, calc(100vw - 390px));
-      min-width:520px;
-      min-height:0;
-      max-height:172px;
-      overflow:auto;
-      padding:14px 16px;
+      width:350px;
+      min-height:116px;
+      max-height:260px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      position:relative;
+      padding:16px;
       border-radius:22px;
       background:
-        radial-gradient(circle at top left, rgba(59,130,246,.16), transparent 38%),
-        linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,251,255,.96));
-      border:1px solid rgba(219,234,254,.98);
-      box-shadow:
-        0 22px 48px rgba(15,23,42,.18),
-        inset 0 1px 0 rgba(255,255,255,.85);
-      backdrop-filter:blur(16px);
-      -webkit-backdrop-filter:blur(16px);
-      transform:translateX(-50%);
-      animation:dashPanjiStoryIn .28s ease both;
-    }
-
-    .dash-panji-bubble::before{
-      content:"";
-      position:absolute;
-      left:0;
-      top:0;
-      right:0;
-      height:3px;
-      border-radius:22px 22px 0 0;
-      background:linear-gradient(90deg,#123a72,#2563eb,#22d3ee,#0f766e);
+        radial-gradient(circle at top left, rgba(59,130,246,.14), transparent 38%),
+        rgba(255,255,255,.97);
+      border:1px solid rgba(219,234,254,.95);
+      box-shadow:0 22px 48px rgba(15,23,42,.18);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      animation:dashPanjiBubbleIdle 3.8s ease-in-out infinite;
     }
 
     .dash-panji-bubble::after{
-      content:"Cerita PANJI";
+      content:"";
       position:absolute;
-      right:48px;
-      top:10px;
-      font-size:10px;
-      font-weight:950;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      color:#94a3b8;
+      right:-10px;
+      bottom:34px;
+      width:20px;
+      height:20px;
+      background:rgba(255,255,255,.97);
+      border-right:1px solid rgba(219,234,254,.95);
+      border-bottom:1px solid rgba(219,234,254,.95);
+      transform:rotate(-45deg);
     }
 
-    @keyframes dashPanjiStoryIn{
-      from{
-        opacity:0;
-        transform:translateX(-50%) translateY(18px) scale(.98);
-      }
-      to{
-        opacity:1;
-        transform:translateX(-50%) translateY(0) scale(1);
-      }
-    }
-
-    .dash-panji.dash-panji-minimized .dash-panji-bubble{
-      opacity:0;
-      visibility:hidden;
-      transform:translateX(-50%) translateY(20px) scale(.96);
-      pointer-events:none;
+    @keyframes dashPanjiBubbleIdle{
+      0%,100%{transform:translateY(0);}
+      50%{transform:translateY(-4px);}
     }
 
     .dash-panji-top{
@@ -1470,8 +1838,7 @@ function injectDashboardPanjiCss() {
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      margin-bottom:8px;
-      padding-right:120px;
+      margin-bottom:10px;
     }
 
     .dash-panji-name{
@@ -1486,19 +1853,17 @@ function injectDashboardPanjiCss() {
       font-weight:950;
       letter-spacing:.08em;
       box-shadow:0 8px 18px rgba(37,99,235,.22);
-      white-space:nowrap;
     }
 
     .dash-panji-emote{
-      width:30px;
-      height:30px;
-      flex-shrink:0;
+      width:34px;
+      height:34px;
       border-radius:999px;
       display:flex;
       align-items:center;
       justify-content:center;
       background:#eef4fb;
-      font-size:17px;
+      font-size:18px;
       animation:dashPanjiEmote 2s ease-in-out infinite;
     }
 
@@ -1510,21 +1875,20 @@ function injectDashboardPanjiCss() {
     .dash-panji-text{
       color:#102544;
       font-size:14px;
-      line-height:1.58;
+      line-height:1.68;
       font-weight:750;
-      padding-right:6px;
     }
 
     .dash-panji-actions{
       display:flex;
       gap:8px;
-      margin-top:10px;
+      margin-top:12px;
       flex-wrap:wrap;
     }
 
     .dash-panji-actions button{
       border:none;
-      min-height:32px;
+      min-height:34px;
       padding:0 11px;
       border-radius:11px;
       cursor:pointer;
@@ -1543,8 +1907,8 @@ function injectDashboardPanjiCss() {
 
     .dash-panji-close{
       position:absolute;
-      right:12px;
-      top:12px;
+      right:-8px;
+      top:-8px;
       width:28px;
       height:28px;
       z-index:5;
@@ -1571,7 +1935,6 @@ function injectDashboardPanjiCss() {
         dashPanjiFloat 2.8s ease-in-out infinite,
         dashPanjiTilt 4.2s ease-in-out infinite;
       transform-origin:center bottom;
-      filter:drop-shadow(0 16px 20px rgba(15,23,42,.18));
     }
 
     @keyframes dashPanjiFloat{
@@ -1589,7 +1952,7 @@ function injectDashboardPanjiCss() {
       position:absolute;
       inset:22px 4px 0;
       border-radius:999px;
-      background:radial-gradient(circle,rgba(37,99,235,.28),transparent 68%);
+      background:radial-gradient(circle, rgba(37,99,235,.28), transparent 68%);
       filter:blur(10px);
       animation:dashPanjiGlow 2.4s ease-in-out infinite;
     }
@@ -1607,7 +1970,7 @@ function injectDashboardPanjiCss() {
       height:76px;
       border-radius:28px 28px 25px 25px;
       background:
-        radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),
+        radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
         linear-gradient(135deg,#f8fbff,#c7ddff);
       border:2px solid #123a72;
       box-shadow:
@@ -1746,6 +2109,7 @@ function injectDashboardPanjiCss() {
         border-radius:0 0 999px 999px;
         background:transparent;
       }
+
       50%{
         height:15px;
         width:20px;
@@ -1759,7 +2123,7 @@ function injectDashboardPanjiCss() {
 
     .dash-panji-happy .dash-panji-head{
       background:
-        radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),
+        radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
         linear-gradient(135deg,#ecfdf5,#bbf7d0);
       border-color:#16a34a;
     }
@@ -1774,7 +2138,7 @@ function injectDashboardPanjiCss() {
 
     .dash-panji-sad .dash-panji-head{
       background:
-        radial-gradient(circle at 28% 22%,rgba(255,255,255,.95),transparent 18%),
+        radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
         linear-gradient(135deg,#fff1f2,#fecdd3);
       border-color:#dc2626;
     }
@@ -1821,742 +2185,126 @@ function injectDashboardPanjiCss() {
       50%{transform:translateY(-7px) scale(1.08);}
     }
 
-    .dash-panji-highlight{
-      position:relative;
-      z-index:9999;
-      outline:3px solid rgba(37,99,235,.45);
-      outline-offset:5px;
+    .dash-panji-intro .dash-panji-character{
+      animation:dashPanjiIntro .85s cubic-bezier(.2,.8,.2,1);
+    }
+
+    @keyframes dashPanjiIntro{
+      0%{opacity:0;transform:translateY(38px) scale(.82) rotate(-8deg);}
+      60%{opacity:1;transform:translateY(-10px) scale(1.05) rotate(4deg);}
+      100%{opacity:1;transform:translateY(0) scale(1) rotate(0deg);}
+    }
+
+    .panji-elegant-focus{
+      position:relative !important;
+      z-index:20 !important;
+      outline:3px solid rgba(37,99,235,.88) !important;
+      outline-offset:5px !important;
       box-shadow:
-        0 0 0 9px rgba(37,99,235,.10),
-        0 18px 42px rgba(37,99,235,.16) !important;
+        0 0 0 8px rgba(37,99,235,.12),
+        0 0 28px rgba(37,99,235,.30),
+        0 18px 36px rgba(15,23,42,.12) !important;
+      border-radius:18px !important;
+      animation:panjiElegantPulse 1.2s ease-in-out infinite !important;
+    }
+
+    @keyframes panjiElegantPulse{
+      0%,100%{
+        outline-color:rgba(37,99,235,.88);
+        box-shadow:
+          0 0 0 7px rgba(37,99,235,.12),
+          0 0 22px rgba(37,99,235,.25),
+          0 18px 36px rgba(15,23,42,.10);
+      }
+
+      50%{
+        outline-color:rgba(14,165,233,.95);
+        box-shadow:
+          0 0 0 12px rgba(14,165,233,.14),
+          0 0 34px rgba(14,165,233,.32),
+          0 18px 36px rgba(15,23,42,.12);
+      }
     }
 
     @media(max-width:1400px){
-      .dash-panji-bubble{
-        width:min(650px, calc(100vw - 330px));
-        min-width:460px;
-        max-height:160px;
+      .dash-panji{
+        right:24px;
       }
+
+      .dash-panji-bubble{
+        width:320px;
+        max-height:240px;
+      }
+
       .dash-panji-character{
         width:102px;
         height:132px;
       }
     }
-
-    @media(max-width:1100px){
-      .dash-panji-bubble{
-        left:24px;
-        right:24px;
-        bottom:20px;
-        width:auto;
-        min-width:0;
-        transform:none;
-      }
-    }
   `;
 
-  style.textContent += `
-    /* FIX: PANJI diam di kanan bawah, narasi ikut bubble kecil, bukan story bar */
-    .dash-panji{
-      position:fixed !important;
-      right:34px !important;
-      bottom:var(--dash-panji-bottom,86px) !important;
-      left:auto !important;
-      top:auto !important;
-      transform:none !important;
-      display:flex !important;
-      align-items:flex-end !important;
-      gap:14px !important;
-      pointer-events:none !important;
-      transition:bottom .22s ease, opacity .22s ease !important;
-    }
-
-    .dash-panji-bubble{
-      position:relative !important;
-      left:auto !important;
-      right:auto !important;
-      bottom:auto !important;
-      transform:none !important;
-      width:360px !important;
-      min-width:0 !important;
-      min-height:118px !important;
-      max-height:260px !important;
-      padding:16px !important;
-      border-radius:22px !important;
-      overflow:auto !important;
-      animation:dashPanjiBubbleIdle 3.8s ease-in-out infinite !important;
-    }
-
-    .dash-panji-bubble::before,
-    .dash-panji-bubble::after{
-      content:none !important;
-      display:none !important;
-    }
-
-    .dash-panji.dash-panji-minimized .dash-panji-bubble,
-    .dash-panji.dash-panji-muted .dash-panji-bubble{
-      opacity:0 !important;
-      visibility:hidden !important;
-      width:0 !important;
-      min-width:0 !important;
-      min-height:0 !important;
-      max-height:0 !important;
-      padding:0 !important;
-      border:0 !important;
-      overflow:hidden !important;
-      pointer-events:none !important;
-    }
-
-    .dash-panji-top{
-      padding-right:0 !important;
-      margin-bottom:10px !important;
-    }
-
-    .dash-panji-highlight{
-      outline:3px solid rgba(37,99,235,.30);
-      box-shadow:0 0 0 7px rgba(37,99,235,.08) !important;
-      border-radius:18px;
-    }
-
-    @keyframes dashPanjiBubbleIdle{
-      0%,100%{transform:translateY(0);}
-      50%{transform:translateY(-4px);}
-    }
-
-    /* FIX RGB: highlight elemen yang sedang dijelaskan PANJI dibuat jelas dan muter */
-    .dash-panji-highlight{
-      position:relative !important;
-      z-index:9999 !important;
-      border-radius:18px !important;
-      outline:4px solid rgba(34,211,238,.95) !important;
-      outline-offset:8px !important;
-      box-shadow:
-        0 0 0 8px rgba(37,99,235,.18),
-        0 0 24px rgba(34,211,238,.65),
-        0 0 48px rgba(236,72,153,.38),
-        0 18px 42px rgba(15,23,42,.18) !important;
-      animation:dashPanjiRgbGlow 1.15s linear infinite !important;
-    }
-
-    .dash-panji-highlight::after{
-      content:"PANJI menjelaskan ini";
-      position:absolute;
-      right:14px;
-      top:-22px;
-      z-index:10000;
-      display:inline-flex;
-      align-items:center;
-      min-height:24px;
-      padding:0 10px;
-      border-radius:999px;
-      color:#fff;
-      font-size:10px;
-      font-weight:950;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e,#06b6d4,#2563eb,#a855f7,#ef4444);
-      background-size:260% 100%;
-      box-shadow:0 8px 18px rgba(15,23,42,.24);
-      animation:dashPanjiRgbLabel 1.25s linear infinite;
-      pointer-events:none;
-      white-space:nowrap;
-    }
-
-    .dash-panji-silenced .dash-panji-character{
-      filter:grayscale(.35) drop-shadow(0 12px 18px rgba(15,23,42,.14));
-      opacity:.82;
-    }
-
-    .dash-panji-silenced .dash-panji-mouth{
-      animation:none !important;
-    }
-
-    .dash-panji-chunk-badge{
-      display:inline-flex;
-      align-items:center;
-      min-height:22px;
-      margin-bottom:7px;
-      padding:0 9px;
-      border-radius:999px;
-      background:#eff6ff;
-      border:1px solid #dbeafe;
-      color:#123a72;
-      font-size:10px;
-      font-weight:950;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-
-    @keyframes dashPanjiRgbGlow{
-      0%{
-        outline-color:#ef4444;
-        box-shadow:0 0 0 8px rgba(239,68,68,.18),0 0 28px rgba(239,68,68,.72),0 0 54px rgba(245,158,11,.34),0 18px 42px rgba(15,23,42,.18);
-      }
-      20%{
-        outline-color:#f59e0b;
-        box-shadow:0 0 0 8px rgba(245,158,11,.18),0 0 28px rgba(245,158,11,.72),0 0 54px rgba(34,197,94,.34),0 18px 42px rgba(15,23,42,.18);
-      }
-      40%{
-        outline-color:#22c55e;
-        box-shadow:0 0 0 8px rgba(34,197,94,.18),0 0 28px rgba(34,197,94,.72),0 0 54px rgba(6,182,212,.34),0 18px 42px rgba(15,23,42,.18);
-      }
-      60%{
-        outline-color:#06b6d4;
-        box-shadow:0 0 0 8px rgba(6,182,212,.18),0 0 28px rgba(6,182,212,.72),0 0 54px rgba(37,99,235,.34),0 18px 42px rgba(15,23,42,.18);
-      }
-      80%{
-        outline-color:#a855f7;
-        box-shadow:0 0 0 8px rgba(168,85,247,.18),0 0 28px rgba(168,85,247,.72),0 0 54px rgba(236,72,153,.34),0 18px 42px rgba(15,23,42,.18);
-      }
-      100%{
-        outline-color:#ef4444;
-        box-shadow:0 0 0 8px rgba(239,68,68,.18),0 0 28px rgba(239,68,68,.72),0 0 54px rgba(245,158,11,.34),0 18px 42px rgba(15,23,42,.18);
-      }
-    }
-
-    @keyframes dashPanjiRgbLabel{
-      from{background-position:0% 50%;}
-      to{background-position:260% 50%;}
-    }
-  `;
   document.head.appendChild(style);
 }
 
-function ensureDashboardPanjiElement() {
-  injectDashboardPanjiCss();
+/* =========================================================
+   PAGE RENDERERS
+   ========================================================= */
 
-  let panji = document.getElementById('dashboardPanji');
-  if (!panji) {
-    panji = document.createElement('div');
-    panji.id = 'dashboardPanji';
-    panji.className = 'dash-panji';
-    document.body.appendChild(panji);
-  }
+function showModuleLoading(title = 'Memuat modul...') {
+  contentArea.innerHTML = `
+    <section class="card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
+    </section>
+  `;
+}
 
-  panji.innerHTML = `
-    <div class="dash-panji-bubble">
-      <button type="button" class="dash-panji-close" id="dashPanjiClose">×</button>
-      <div class="dash-panji-top">
-        <div class="dash-panji-name">PANJI · Pengadaan Jitu</div>
-        <div class="dash-panji-emote" id="dashPanjiEmote">🤖</div>
-      </div>
-      <div class="dash-panji-text" id="dashPanjiText"></div>
-      <div class="dash-panji-actions">
-        <button type="button" id="dashPanjiExplain">Jelaskan Dashboard</button>
-        <button type="button" id="dashPanjiTour">Panduan Elemen</button>
-        <button type="button" id="dashPanjiAdvice">Rekomendasi</button>
-        <button type="button" id="dashPanjiMini">Tutup PANJI</button>
-      </div>
-    </div>
+function renderIframePage(page) {
+  destroyDashboardPanji();
 
-    <button type="button" class="dash-panji-character" id="dashPanjiCharacter" title="PANJI Pengadaan Jitu">
-      <div class="dash-panji-glow"></div>
-      <div class="dash-panji-head">
-        <div class="dash-panji-hat">PBJ</div>
-        <div class="dash-panji-eye dash-panji-eye-left"></div>
-        <div class="dash-panji-eye dash-panji-eye-right"></div>
-        <div class="dash-panji-mouth"></div>
+  contentArea.innerHTML = `
+    <section class="embed-card">
+      <h3>${escapeHtml(page.title)}</h3>
+      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
+      <div class="embed-frame-wrap">
+        <iframe
+          class="embed-frame"
+          src="${escapeHtml(page.url)}"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
       </div>
-      <div class="dash-panji-body"><div class="dash-panji-badge">PJ</div></div>
-      <div class="dash-panji-hand dash-panji-hand-left"></div>
-      <div class="dash-panji-hand dash-panji-hand-right"></div>
-    </button>
+    </section>
   `;
 
-  return panji;
+  requestAnimationFrame(initScrollAnimation);
 }
 
-function clearDashboardPanjiHighlight() {
-  document.querySelectorAll('.dash-panji-highlight').forEach((item) => {
-    item.classList.remove('dash-panji-highlight');
-  });
+function renderPlaceholderPage(pageKey, page) {
+  destroyDashboardPanji();
+
+  contentArea.innerHTML = `
+    <section class="card">
+      <h3>${escapeHtml(page.title)}</h3>
+      <div class="placeholder-grid">
+        <div class="placeholder-box">
+          <h4>Modul belum dihubungkan</h4>
+          <p>Halaman ini sudah disiapkan di portal utama. Route aktif: <b>${escapeHtml(pageKey)}</b>.</p>
+        </div>
+        <div class="placeholder-box">
+          <h4>Langkah berikutnya</h4>
+          <p>Ubah route ini menjadi <b>module</b> atau <b>iframe</b> saat halaman detail sudah tersedia.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  requestAnimationFrame(initScrollAnimation);
 }
 
-function moveDashboardPanjiHome() {
-  const panji = document.getElementById('dashboardPanji');
-  if (!panji) return;
-
-  panji.style.left = 'auto';
-  panji.style.top = 'auto';
-  panji.style.right = 'var(--dash-panji-right, 34px)';
-  panji.style.bottom = 'var(--dash-panji-bottom, 86px)';
-}
-
-function moveDashboardPanjiToElement(target) {
-  moveDashboardPanjiHome();
-  clearDashboardPanjiHighlight();
-
-  if (target && target.classList) {
-    target.classList.add('dash-panji-highlight');
-  }
-}
-function splitDashboardPanjiMessage(message) {
-  const clean = String(message || '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-
-  if (!clean) return [''];
-
-  const paragraphs = clean.split(/\n\n+/).map((item) => item.trim()).filter(Boolean);
-  const chunks = [];
-  const maxLength = 230;
-
-  paragraphs.forEach((paragraph) => {
-    if (paragraph.length <= maxLength) {
-      chunks.push(paragraph);
-      return;
-    }
-
-    const sentences = paragraph
-      .split(/(?<=[.!?])\s+/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-    let current = '';
-
-    sentences.forEach((sentence) => {
-      if (!current) {
-        current = sentence;
-        return;
-      }
-
-      if ((current + ' ' + sentence).length <= maxLength) {
-        current += ' ' + sentence;
-      } else {
-        chunks.push(current);
-        current = sentence;
-      }
-    });
-
-    if (current) chunks.push(current);
-  });
-
-  return chunks.length ? chunks : [clean];
-}
-
-function clearDashboardPanjiSpeechTimers() {
-  const panji = document.getElementById('dashboardPanji');
-
-  if (dashboardPanjiSequenceTimer) {
-    clearTimeout(dashboardPanjiSequenceTimer);
-    dashboardPanjiSequenceTimer = null;
-  }
-
-  if (panji) {
-    clearTimeout(panji._talkTimer);
-    clearTimeout(panji._tourTimer);
-    if (dashboardPanjiSequenceTimer) {
-      clearTimeout(dashboardPanjiSequenceTimer);
-      dashboardPanjiSequenceTimer = null;
-    }
-    panji.classList.remove('dash-panji-talking');
-  }
-}
-
-function setDashboardPanjiMood(panji, emote, mood) {
-  panji.classList.remove('dash-panji-happy', 'dash-panji-sad', 'dash-panji-thinking', 'dash-panji-talking');
-  panji.classList.add('dash-panji-talking');
-
-  if (mood === 'happy') {
-    panji.classList.add('dash-panji-happy');
-    if (emote) emote.textContent = '😄';
-  } else if (mood === 'sad') {
-    panji.classList.add('dash-panji-sad');
-    if (emote) emote.textContent = '😢';
-  } else if (mood === 'thinking') {
-    panji.classList.add('dash-panji-thinking');
-    if (emote) emote.textContent = '🤔';
-  } else if (emote) {
-    emote.textContent = '🤖';
-  }
-}
-
-function renderDashboardPanjiChunk(chunks, index, mood) {
-  const panji = document.getElementById('dashboardPanji');
-  const textEl = document.getElementById('dashPanjiText');
-  const emote = document.getElementById('dashPanjiEmote');
-
-  if (!panji || !textEl) return;
-  if (dashboardPanjiMuted || dashboardPanjiSilenced) return;
-
-  const total = chunks.length;
-  const safeIndex = Math.min(index, total - 1);
-  const chunk = chunks[safeIndex] || '';
-
-  setDashboardPanjiMood(panji, emote, mood);
-
-  const badge = total > 1
-    ? `<div class="dash-panji-chunk-badge">Narasi ${safeIndex + 1}/${total}</div>`
-    : '';
-
-  textEl.innerHTML = `${badge}${escapeHtml(chunk).replace(/\n/g, '<br>')}`;
-
-  clearTimeout(panji._talkTimer);
-  panji._talkTimer = setTimeout(() => {
-    if (panji && !dashboardPanjiSequenceTimer) {
-      panji.classList.remove('dash-panji-talking');
-    }
-  }, Math.min(2600, Math.max(1200, String(chunk).length * 28)));
-
-  if (safeIndex < total - 1) {
-    clearTimeout(dashboardPanjiSequenceTimer);
-    dashboardPanjiSequenceTimer = setTimeout(() => {
-      dashboardPanjiSequenceTimer = null;
-      renderDashboardPanjiChunk(chunks, safeIndex + 1, mood);
-    }, Math.min(4200, Math.max(2400, String(chunk).length * 45)));
-  } else {
-    clearTimeout(dashboardPanjiSequenceTimer);
-    dashboardPanjiSequenceTimer = null;
-    panji._talkTimer = setTimeout(() => {
-      panji.classList.remove('dash-panji-talking');
-    }, Math.min(2600, Math.max(1200, String(chunk).length * 28)));
-  }
-}
-
-function dashboardPanjiSpeak(message, mood = 'talking', target = null) {
-  if (dashboardPanjiMuted || dashboardPanjiSilenced) return;
-
-  const panji = document.getElementById('dashboardPanji');
-  const textEl = document.getElementById('dashPanjiText');
-
-  if (!panji || !textEl) return;
-
-  dashboardPanjiLastSpeak = { message, mood, target };
-
-  clearDashboardPanjiSpeechTimers();
-
-  panji.classList.remove('dash-panji-minimized', 'dash-panji-muted', 'dash-panji-silenced');
-
-  if (target) {
-    moveDashboardPanjiToElement(target);
-  }
-
-  const chunks = splitDashboardPanjiMessage(message);
-  renderDashboardPanjiChunk(chunks, 0, mood);
-}
-
-function toggleDashboardPanjiSilence(data) {
-  const panji = document.getElementById('dashboardPanji');
-
-  if (!panji || dashboardPanjiMuted) return;
-
-  if (!dashboardPanjiSilenced) {
-    dashboardPanjiSilenced = true;
-    clearDashboardPanjiSpeechTimers();
-    clearDashboardPanjiHighlight();
-    moveDashboardPanjiHome();
-    panji.classList.add('dash-panji-minimized', 'dash-panji-silenced');
-    return;
-  }
-
-  dashboardPanjiSilenced = false;
-  panji.classList.remove('dash-panji-minimized', 'dash-panji-silenced');
-
-  const last = dashboardPanjiLastSpeak || {
-    message: buildPanjiDashboardIntro(data),
-    mood: 'talking',
-    target: null
-  };
-
-  dashboardPanjiSpeak(last.message, last.mood, last.target);
-}
-
-function closeDashboardPanjiUntilReload(panji) {
-  dashboardPanjiMuted = true;
-  dashboardPanjiSilenced = true;
-  clearDashboardPanjiSpeechTimers();
-  clearDashboardPanjiHighlight();
-  moveDashboardPanjiHome();
-
-  if (panji) {
-    panji.classList.add('dash-panji-minimized', 'dash-panji-muted', 'dash-panji-silenced');
-  }
-}
-
-
-function startDashboardPanjiTour(data) {
-  const steps = [
-    {
-      selector: '.hero-card--dashboard',
-      message: 'Area pembuka dashboard menampilkan profil PBJ Kota Bogor, update data, dan tombol cepat untuk masuk ke modul.',
-      mood: 'talking'
-    },
-    {
-      selector: '.dashboard-kpi-grid .stat-card--lux:nth-child(1)',
-      message: 'Kartu Skor ITKP menilai kualitas pemanfaatan sistem dari total 30 poin. Semakin tinggi, semakin baik pemanfaatan SiRUP, katalog, tender, kontrak, dan pencatatan non tender.',
-      mood: 'thinking'
-    },
-    {
-      selector: '.procurement-map-card',
-      message: 'Radar Pemanfaatan Sistem ITKP membaca nilai per indikator. Pilih satuan kerja di dropdown, lalu PANJI akan menentukan mana yang baik, cukup, atau butuh perhatian.',
-      mood: 'talking'
-    },
-    {
-      selector: '.dimensions--clickable',
-      message: 'Daftar indikator terdiri dari SiRUP, Toko Daring, e-Purchasing, e-Tendering, e-Kontrak, dan Non Tender. Arahkan mouse ke tiap indikator, PANJI akan jelaskan arti nilainya.',
-      mood: 'happy'
-    },
-    {
-      selector: '.money-progress',
-      message: 'Progress ini membandingkan pagu dengan realisasi. Kalau realisasi masih rendah, perlu cek paket yang belum jalan, belum kontrak, belum BAST, atau belum tercatat realisasinya.',
-      mood: 'thinking'
-    },
-    {
-      selector: '.quick-grid',
-      message: 'Tombol akses cepat membantu user masuk ke modul detail. PANJI bisa jelaskan fungsi setiap tombol, lalu user bisa klik untuk masuk ke modul detail.',
-      mood: 'happy'
-    }
-  ];
-
-  let index = 0;
-
-  const runStep = () => {
-    const step = steps[index];
-    const target = document.querySelector(step.selector);
-
-    if (dashboardPanjiMuted || dashboardPanjiSilenced) return;
-
-    if (target) {
-      dashboardPanjiSpeak(step.message, step.mood, target);
-    }
-
-    index += 1;
-
-    const panji = document.getElementById('dashboardPanji');
-    if (!panji) return;
-
-    if (index < steps.length) {
-      clearTimeout(panji._tourTimer);
-      panji._tourTimer = setTimeout(runStep, 4200);
-    } else {
-      clearTimeout(panji._tourTimer);
-      panji._tourTimer = setTimeout(() => {
-        clearDashboardPanjiHighlight();
-        moveDashboardPanjiHome();
-        dashboardPanjiSpeak('Selesai. Sekarang arahkan mouse ke kartu, indikator, atau tombol mana pun. PANJI akan jelaskan fungsi dan nilainya tanpa mengubah bentuk dashboard.', 'happy');
-      }, 4200);
-    }
-  };
-
-  runStep();
-}
-
-function initDashboardPanji(data, fromSelection = false) {
-  if (!data || activePageKey !== 'dashboard') return;
-
-  if (typeof dashboardPanjiDestroy === 'function') {
-    dashboardPanjiDestroy();
-    dashboardPanjiDestroy = null;
-  }
-
-  const panji = ensureDashboardPanjiElement();
-
-  const closeBtn = document.getElementById('dashPanjiClose');
-  const miniBtn = document.getElementById('dashPanjiMini');
-  const characterBtn = document.getElementById('dashPanjiCharacter');
-  const explainBtn = document.getElementById('dashPanjiExplain');
-  const tourBtn = document.getElementById('dashPanjiTour');
-  const adviceBtn = document.getElementById('dashPanjiAdvice');
-
-  const closePanji = () => {
-    closeDashboardPanjiUntilReload(panji);
-  };
-
-  const wakePanjiForButton = () => {
-    if (dashboardPanjiMuted) return false;
-    dashboardPanjiSilenced = false;
-    panji.classList.remove('dash-panji-minimized', 'dash-panji-muted', 'dash-panji-silenced');
-    return true;
-  };
-
-  if (closeBtn) closeBtn.addEventListener('click', closePanji);
-  if (miniBtn) miniBtn.addEventListener('click', closePanji);
-
-  if (characterBtn) {
-    characterBtn.addEventListener('click', () => {
-      toggleDashboardPanjiSilence(data);
-    });
-  }
-
-  if (explainBtn) {
-    explainBtn.addEventListener('click', () => {
-      if (!wakePanjiForButton()) return;
-      clearDashboardPanjiHighlight();
-      moveDashboardPanjiHome();
-      dashboardPanjiSpeak(
-        buildPanjiFullDashboardAnalysis(data),
-        getPanjiDashboardStatus((data.selectedProfile || data.cityProfile).score, 30).tone
-      );
-    });
-  }
-
-  if (tourBtn) {
-    tourBtn.addEventListener('click', () => {
-      if (!wakePanjiForButton()) return;
-      startDashboardPanjiTour(data);
-    });
-  }
-
-  if (adviceBtn) {
-    adviceBtn.addEventListener('click', () => {
-      if (!wakePanjiForButton()) return;
-      clearDashboardPanjiHighlight();
-      moveDashboardPanjiHome();
-      dashboardPanjiSpeak(buildPanjiRecommendation(data), 'thinking');
-    });
-  }
-
-  const cleanups = [];
-
-  const bindHover = (el, handler) => {
-    let timer = null;
-    const enter = () => {
-      clearTimeout(timer);
-      timer = setTimeout(handler, 280);
-    };
-    const leave = () => {
-      clearTimeout(timer);
-    };
-
-    el.addEventListener('mouseenter', enter);
-    el.addEventListener('mouseleave', leave);
-    el.addEventListener('focus', enter);
-
-    return () => {
-      el.removeEventListener('mouseenter', enter);
-      el.removeEventListener('mouseleave', leave);
-      el.removeEventListener('focus', enter);
-    };
-  };
-
-  contentArea.querySelectorAll('.stat-card--lux').forEach((card) => {
-    cleanups.push(bindHover(card, () => {
-      const label = card.dataset.panjiKpi || card.querySelector('.label')?.textContent || 'Kartu Dashboard';
-      const value = card.dataset.panjiValue || card.querySelector('.value')?.textContent || '';
-      const desc = card.dataset.panjiDesc || card.querySelector('.desc')?.textContent || '';
-      dashboardPanjiSpeak(buildPanjiKpiExplanation(label, value, desc, data), 'thinking', card);
-    }));
-  });
-
-  contentArea.querySelectorAll('.dim-row--button').forEach((button) => {
-    cleanups.push(bindHover(button, () => {
-      const message = buildPanjiDimensionExplanationByElement(button, data);
-      const name = button.querySelector('.dim-name span')?.textContent || '';
-      const profile = data.selectedProfile || data.cityProfile;
-      const item = (profile.dimensions || []).find((dim) => dim.name === name);
-      const mood = item ? getPanjiDashboardStatus(item.value, item.max).tone : 'thinking';
-      dashboardPanjiSpeak(message, mood, button);
-    }));
-  });
-
-  contentArea.querySelectorAll('.quick-card').forEach((button) => {
-    cleanups.push(bindHover(button, () => {
-      dashboardPanjiSpeak(buildPanjiQuickExplanation(button), 'happy', button);
-    }));
-  });
-
-  const scoreRing = contentArea.querySelector('.score-ring');
-  if (scoreRing) {
-    cleanups.push(bindHover(scoreRing, () => {
-      const profile = data.selectedProfile || data.cityProfile;
-      const status = getPanjiDashboardStatus(profile.score, 30);
-      dashboardPanjiSpeak(
-        `Lingkaran ini menunjukkan skor ITKP ${profile.name}: ${formatScore(profile.score)} dari 30. Kategorinya ${status.label}. ${status.text}`,
-        status.tone,
-        scoreRing
-      );
-    }));
-  }
-
-  const moneyProgress = contentArea.querySelector('.money-progress');
-  if (moneyProgress) {
-    cleanups.push(bindHover(moneyProgress, () => {
-      const status = getPanjiDashboardStatus(data.realisasiPersen, 100);
-      dashboardPanjiSpeak(
-        `Panel ini membandingkan pagu dengan realisasi untuk ${data.scopeName}. Persentasenya ${formatPercent(data.realisasiPersen)}, kategori ${status.label}. Kalau rendah, cek paket yang belum kontrak, belum BAST, atau belum tercatat realisasinya.`,
-        status.tone,
-        moneyProgress
-      );
-    }));
-  }
-
-  contentArea.querySelectorAll('.rank-table').forEach((table, index) => {
-    cleanups.push(bindHover(table, () => {
-      const message = index === 0
-        ? 'Ranking nilai ITKP tertinggi menampilkan OPD/Sub OPD yang bisa jadi contoh praktik baik pemanfaatan sistem.'
-        : 'Ranking nilai ITKP terendah membantu menentukan prioritas pembinaan dan perbaikan data, bukan untuk menyalahkan.';
-      dashboardPanjiSpeak(message, index === 0 ? 'happy' : 'thinking', table);
-    }));
-  });
-
-  const updatePanjiBottom = () => {
-    const footer = document.querySelector('.footer-note');
-    const baseBottom = 86;
-    const maxBottom = 260;
-    let nextBottom = baseBottom;
-
-    if (footer) {
-      const rect = footer.getBoundingClientRect();
-      const panjiRect = panji.getBoundingClientRect();
-      const normalTop = window.innerHeight - baseBottom - panjiRect.height;
-      const overlap = rect.bottom - normalTop;
-
-      if (rect.top < window.innerHeight && overlap > 0) {
-        nextBottom = Math.min(maxBottom, baseBottom + overlap + 20);
-      }
-    }
-
-    panji.style.setProperty('--dash-panji-bottom', `${Math.round(nextBottom)}px`);
-  };
-
-  window.addEventListener('scroll', updatePanjiBottom, { passive: true });
-  window.addEventListener('resize', updatePanjiBottom);
-  updatePanjiBottom();
-
-  if (dashboardPanjiMuted) {
-    panji.classList.add('dash-panji-minimized', 'dash-panji-muted');
-    clearDashboardPanjiHighlight();
-    moveDashboardPanjiHome();
-  }
-
-  const firstMessage = fromSelection
-    ? buildPanjiFullDashboardAnalysis(data)
-    : buildPanjiDashboardIntro(data);
-  const firstMood = getPanjiDashboardStatus((data.selectedProfile || data.cityProfile).score, 30).tone;
-
-  clearDashboardPanjiHighlight();
-  moveDashboardPanjiHome();
-  dashboardPanjiSpeak(firstMessage, fromSelection ? firstMood : 'talking');
-
-  dashboardPanjiDestroy = () => {
-    clearTimeout(panji._talkTimer);
-    clearTimeout(panji._tourTimer);
-    if (dashboardPanjiSequenceTimer) {
-      clearTimeout(dashboardPanjiSequenceTimer);
-      dashboardPanjiSequenceTimer = null;
-    }
-    cleanups.forEach((fn) => {
-      try {
-        fn();
-      } catch (error) {
-        console.error(error);
-      }
-    });
-    window.removeEventListener('scroll', updatePanjiBottom);
-    window.removeEventListener('resize', updatePanjiBottom);
-    clearDashboardPanjiHighlight();
-    if (panji && panji.parentNode) {
-      panji.remove();
-    }
-  };
-}
-
-function destroyDashboardPanji() {
-  if (typeof dashboardPanjiDestroy === 'function') {
-    dashboardPanjiDestroy();
-    dashboardPanjiDestroy = null;
-  }
-}
+/* =========================================================
+   MODULE LOADER
+   ========================================================= */
 
 function cleanupDynamicModule() {
   closeFlyout();
@@ -2570,26 +2318,16 @@ function cleanupDynamicModule() {
   if (typeof currentModuleDestroy === 'function') {
     try {
       currentModuleDestroy();
-    } catch (error) {
-      console.warn('Cleanup module lama gagal:', error);
+    } catch (err) {
+      console.error('Gagal destroy module lama:', err);
     }
   }
 
   currentModuleDestroy = null;
+  window.__moduleInit = undefined;
 
-  try {
-    delete window.__moduleInit;
-  } catch (error) {
-    window.__moduleInit = undefined;
-  }
-
-  document.querySelectorAll('[data-dynamic-module-css]').forEach((el) => {
-    el.remove();
-  });
-
-  document.querySelectorAll('[data-dynamic-module-js]').forEach((el) => {
-    el.remove();
-  });
+  document.querySelectorAll('[data-dynamic-module-css]').forEach((el) => el.remove());
+  document.querySelectorAll('[data-dynamic-module-js]').forEach((el) => el.remove());
 }
 
 function loadExternalScriptOnce(src) {
@@ -2608,6 +2346,7 @@ function loadExternalScriptOnce(src) {
     }
 
     const script = document.createElement('script');
+
     script.src = src;
     script.async = false;
     script.dataset.dynamicExternalScript = 'true';
@@ -2618,73 +2357,10 @@ function loadExternalScriptOnce(src) {
       resolve();
     };
 
-    script.onerror = () => {
-      reject(new Error(`Gagal memuat ${src}`));
-    };
+    script.onerror = () => reject(new Error(`Gagal memuat ${src}`));
 
     document.body.appendChild(script);
   });
-}
-
-function loadModuleCss(href) {
-  return new Promise((resolve, reject) => {
-    if (!href) {
-      resolve();
-      return;
-    }
-
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = cacheBust(href);
-    link.setAttribute('data-dynamic-module-css', 'true');
-
-    link.onload = () => resolve();
-    link.onerror = () => reject(new Error(`Gagal memuat CSS ${href}`));
-
-    document.head.appendChild(link);
-  });
-}
-
-function loadModuleJs(src) {
-  return new Promise((resolve, reject) => {
-    if (!src) {
-      resolve();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = cacheBust(src);
-    script.async = false;
-    script.setAttribute('data-dynamic-module-js', 'true');
-
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Gagal memuat JS ${src}`));
-
-    document.body.appendChild(script);
-  });
-}
-
-async function fetchModuleHtml(path) {
-  const response = await fetch(cacheBust(path), {
-    cache: 'no-store'
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} saat memuat HTML ${path}`);
-  }
-
-  return response.text();
-}
-
-function extractModuleBody(rawHtml) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(rawHtml, 'text/html');
-
-  if (doc.body && doc.body.innerHTML.trim()) {
-    return doc.body.innerHTML;
-  }
-
-  return rawHtml;
 }
 
 async function renderModulePage(page) {
@@ -2697,26 +2373,25 @@ async function renderModulePage(page) {
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
       for (const src of page.externalScripts) {
         await loadExternalScriptOnce(src);
-
-        if (token !== activeModuleToken) {
-          return false;
-        }
       }
     }
 
-    const rawHtml = await fetchModuleHtml(page.html);
+    const response = await fetch(cacheBust(page.html), { cache: 'no-cache' });
 
-    if (token !== activeModuleToken) {
-      return false;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} saat memuat ${page.html}`);
     }
 
-    await loadModuleCss(page.css);
+    const rawHtml = await response.text();
 
-    if (token !== activeModuleToken) {
-      return false;
-    }
+    if (token !== activeModuleToken) return;
 
-    const moduleContent = extractModuleBody(rawHtml);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawHtml, 'text/html');
+
+    const moduleContent = doc.body && doc.body.innerHTML.trim()
+      ? doc.body.innerHTML
+      : rawHtml;
 
     contentArea.innerHTML = `
       <section class="module-page module-page--native">
@@ -2726,21 +2401,44 @@ async function renderModulePage(page) {
 
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    if (token !== activeModuleToken) {
-      return false;
+    if (token !== activeModuleToken) return;
+
+    if (page.css) {
+      await new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = cacheBust(page.css);
+        link.setAttribute('data-dynamic-module-css', 'true');
+
+        link.onload = resolve;
+        link.onerror = () => reject(new Error(`Gagal memuat CSS ${page.css}`));
+
+        document.head.appendChild(link);
+      });
     }
 
-    await loadModuleJs(page.js);
+    if (token !== activeModuleToken) return;
 
-    if (token !== activeModuleToken) {
-      return false;
+    if (page.js) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+
+        script.src = cacheBust(page.js);
+        script.defer = true;
+        script.setAttribute('data-dynamic-module-js', 'true');
+
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`Gagal memuat JS ${page.js}`));
+
+        document.body.appendChild(script);
+      });
     }
 
-    const moduleContainer = contentArea.querySelector('.module-page--native') || contentArea;
+    if (token !== activeModuleToken) return;
 
     if (typeof window.__moduleInit === 'function') {
       const destroyFn = window.__moduleInit({
-        container: moduleContainer,
+        container: contentArea,
         route: page
       });
 
@@ -2749,13 +2447,9 @@ async function renderModulePage(page) {
       currentModuleDestroy = null;
     }
 
-    return true;
+    requestAnimationFrame(initScrollAnimation);
   } catch (error) {
     console.error('Gagal memuat module:', error);
-
-    if (token !== activeModuleToken) {
-      return false;
-    }
 
     contentArea.innerHTML = `
       <section class="card">
@@ -2764,74 +2458,79 @@ async function renderModulePage(page) {
         <p><b>Detail:</b> ${escapeHtml(error.message)}</p>
       </section>
     `;
-
-    return false;
   }
 }
 
+/* =========================================================
+   ROUTER + MENU
+   ========================================================= */
+
 async function loadPage(key) {
+  if (loadingPageKey === key) return;
+
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
 
-  if (loadingPageKey === key) {
-    return;
-  }
-
-  if (activePageKey === key) {
-    updateActiveMenu(key);
-    return;
-  }
-
   loadingPageKey = key;
+  activePageKey = key;
+
   updateActiveMenu(key);
 
+  if (page.type !== 'module') {
+    cleanupDynamicModule();
+    contentArea.classList.remove('module-mode');
+  } else {
+    contentArea.classList.add('module-mode');
+  }
+
   try {
-    let success = true;
-
-    if (page.type !== 'module') {
-      activeModuleToken++;
-      cleanupDynamicModule();
-      contentArea.classList.remove('module-mode');
-    } else {
-      contentArea.classList.add('module-mode');
-    }
-
     if (page.type === 'iframe') {
       renderIframePage(page);
     } else if (page.type === 'module') {
-      success = await renderModulePage(page);
+      await renderModulePage(page);
     } else if (page.type === 'placeholder') {
       renderPlaceholderPage(key, page);
     } else {
-      renderDashboard();
+      await renderDashboard();
     }
-
-    if (success) {
-      activePageKey = key;
-    }
-
-    initScrollAnimation();
+  } finally {
+    loadingPageKey = '';
 
     if (window.innerWidth <= 980 && sidebar) {
       sidebar.classList.remove('mobile-open');
     }
-  } finally {
-    if (loadingPageKey === key) {
-      loadingPageKey = '';
-    }
+  }
+}
+
+function updateActiveMenu(key) {
+  document.querySelectorAll('.nav-link, .submenu-link').forEach((el) => {
+    el.classList.remove('active');
+  });
+
+  const directButton = document.querySelector(`.nav-link[data-page="${key}"]`);
+  const subButton = document.querySelector(`.submenu-link[data-page="${key}"]`);
+
+  if (directButton) {
+    directButton.classList.add('active');
+  }
+
+  if (subButton) {
+    subButton.classList.add('active');
+
+    const group = subButton.closest('.nav-group');
+    if (group) group.classList.add('open');
+  }
+}
+
+function closeFlyout() {
+  if (activeFlyout) {
+    activeFlyout.remove();
+    activeFlyout = null;
   }
 }
 
 function bindMenu() {
   document.querySelectorAll('[data-page]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const pageKey = button.dataset.page;
-
-      if (!pageKey) {
-        return;
-      }
-
-      loadPage(pageKey);
-    });
+    button.addEventListener('click', () => loadPage(button.dataset.page));
   });
 
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
@@ -2839,9 +2538,7 @@ function bindMenu() {
       const groupName = button.dataset.toggleGroup;
       const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
 
-      if (!group) {
-        return;
-      }
+      if (!group) return;
 
       if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 980) {
         event.preventDefault();
@@ -2865,9 +2562,7 @@ function bindMenu() {
   }
 
   document.addEventListener('click', (event) => {
-    if (!activeFlyout) {
-      return;
-    }
+    if (!activeFlyout) return;
 
     const clickedInsideFlyout = activeFlyout.contains(event.target);
     const clickedToggle = event.target.closest('[data-toggle-group]');
@@ -2887,9 +2582,7 @@ function bindMenu() {
 }
 
 function toggleFlyout(toggleButton, groupName) {
-  if (!toggleButton) {
-    return;
-  }
+  if (!toggleButton) return;
 
   if (activeFlyout && activeFlyout.dataset.group === groupName) {
     closeFlyout();
@@ -2900,29 +2593,26 @@ function toggleFlyout(toggleButton, groupName) {
 
   const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
 
-  if (!group) {
-    return;
-  }
+  if (!group) return;
 
   const submenuLinks = group.querySelectorAll('.submenu-link');
 
-  if (!submenuLinks.length) {
-    return;
-  }
-
-  const titleMap = {
-    itkp: 'ITKP',
-    realisasi: 'Realisasi Paket',
-    simulasi: 'Simulasi'
-  };
+  if (!submenuLinks.length) return;
 
   const flyout = document.createElement('div');
+
   flyout.className = 'sidebar-flyout';
   flyout.dataset.group = groupName;
 
+  const titleMap = {
+    monitoring: 'Monitoring',
+    simulasi: 'Simulasi',
+    itkp: 'ITKP',
+    realisasi: 'Realisasi Paket'
+  };
+
   flyout.innerHTML = `
     <div class="sidebar-flyout-title">${escapeHtml(titleMap[groupName] || 'Menu')}</div>
-
     ${Array.from(submenuLinks).map((link) => {
       const isActive = link.classList.contains('active') ? ' active' : '';
 
