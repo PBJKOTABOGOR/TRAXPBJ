@@ -187,7 +187,6 @@ function initScrollAnimation() {
   };
 }
 
-
 const DASHBOARD_SHEETS = {
   itkp: {
     title: 'FIX ITKP OPD',
@@ -758,6 +757,9 @@ function renderDashboardReady(data) {
   const scopeDesc = data.scopeIsCity
     ? 'Akumulasi seluruh satuan kerja Kota Bogor'
     : `Filter khusus ${selectedProfile.name}`;
+  const profileKicker = data.scopeIsCity
+    ? 'Profile Kota Bogor'
+    : `Profile ${selectedProfile.name}`;
 
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
@@ -794,7 +796,7 @@ function renderDashboardReady(data) {
       <div class="card procurement-map-card">
         <div class="section-title-row section-title-row--select">
           <div>
-            <span class="section-kicker">Profile Kota Bogor</span>
+            <span class="section-kicker">${escapeHtml(profileKicker)}</span>
             <h3>Radar Pemanfaatan Sistem ITKP</h3>
             <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, dibaca langsung dari kolom <b>Nilai ITKP Pemanfaatan Sistem</b>, dan tidak masuk ranking OPD.</p>
           </div>
