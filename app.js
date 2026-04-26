@@ -1,6 +1,6 @@
 const APP_ROUTES = {
   dashboard: {
-    title: 'Dashboard SIPPBJ',
+    title: 'Dashboard TRAXPBJ',
     subtitle: 'Ringkasan informasi utama untuk monitoring dan analisis pengadaan.',
     type: 'internal'
   },
@@ -16,7 +16,7 @@ const APP_ROUTES = {
 
   'monitoring-ekatalog': {
     title: 'Monitoring eKatalog',
-    subtitle: 'Monitoring indikator pemanfaatan eKatalog, Toko Daring, dan e-Purchasing.',
+    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKatalog.',
     type: 'module',
     html: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.html',
     css: 'modules/monitoring/itkp-ekatalog/itkp-ekatalog.css',
@@ -25,7 +25,7 @@ const APP_ROUTES = {
 
   'monitoring-etendering': {
     title: 'Monitoring eTendering',
-    subtitle: 'Monitoring indikator pemanfaatan eTendering.',
+    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eTendering.',
     type: 'module',
     html: 'modules/monitoring/itkp-etendering/itkp-etendering.html',
     css: 'modules/monitoring/itkp-etendering/itkp-etendering.css',
@@ -34,7 +34,7 @@ const APP_ROUTES = {
 
   'monitoring-ekontrak': {
     title: 'Monitoring eKontrak',
-    subtitle: 'Monitoring indikator pemanfaatan eKontrak.',
+    subtitle: 'Halaman ini disiapkan untuk monitoring indikator pemanfaatan eKontrak.',
     type: 'module',
     html: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.html',
     css: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.css',
@@ -113,6 +113,85 @@ let dashboardPanjiDestroy = null;
 let dashboardPanjiClosedUntilReload = false;
 let dashboardPanjiPaused = false;
 let dashboardPanjiLastMessage = '';
+let dashboardPanjiIdleTimer = null;
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function cacheBust(url) {
+  const joiner = url.includes('?') ? '&' : '?';
+  return `${url}${joiner}v=${Date.now()}`;
+}
+
+function showModuleLoading(title = 'Memuat modul...') {
+  contentArea.innerHTML = `
+    <section class="card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
+    </section>
+  `;
+}
+
+function initScrollAnimation() {
+  if (typeof scrollAnimationDestroy === 'function') {
+    scrollAnimationDestroy();
+    scrollAnimationDestroy = null;
+  }
+
+  let progress = document.getElementById('luxScrollProgress');
+
+  if (!progress) {
+    progress = document.createElement('div');
+    progress.id = 'luxScrollProgress';
+    progress.className = 'lux-scroll-progress';
+    document.body.appendChild(progress);
+  }
+
+  const updateProgress = () => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+
+    progress.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+  };
+
+  const revealItems = contentArea.querySelectorAll(
+    '.hero-card, .card, .quick-card, .embed-card, .module-page--native > *'
+  );
+
+  revealItems.forEach((item, index) => {
+    item.classList.add('lux-reveal');
+    item.style.transitionDelay = `${Math.min(index * 45, 260)}ms`;
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.12,
+    rootMargin: '0px 0px -30px 0px'
+  });
+
+  revealItems.forEach((item) => observer.observe(item));
+
+  updateProgress();
+  window.addEventListener('scroll', updateProgress, { passive: true });
+
+  scrollAnimationDestroy = () => {
+    window.removeEventListener('scroll', updateProgress);
+    observer.disconnect();
+  };
+}
 
 const DASHBOARD_SHEETS = {
   itkp: {
@@ -146,40 +225,16 @@ const DASHBOARD_STATE = {
   selectedItkpSatker: 'PEMERINTAH KOTA BOGOR'
 };
 
-/* =========================================================
-   BASIC HELPERS
-   ========================================================= */
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function cacheBust(url) {
-  const joiner = url.includes('?') ? '&' : '?';
-  return `${url}${joiner}v=${Date.now()}`;
-}
-
 function normalizeHeader(value) {
   return String(value || '')
     .toLowerCase()
     .replace(/\s+/g, ' ')
-    .replace(/[^\w\s%()/-]/g, '')
-    .trim();
-}
-
-function cleanText(value) {
-  return String(value || '')
-    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s%()-]/g, '')
     .trim();
 }
 
 function getField(row, candidates) {
-  const map = row && row.__normalized ? row.__normalized : {};
+  const map = row.__normalized || {};
 
   for (const candidate of candidates) {
     const key = normalizeHeader(candidate);
@@ -188,10 +243,10 @@ function getField(row, candidates) {
     }
   }
 
-  const wanted = candidates.map(normalizeHeader);
+  const candidateText = candidates.map(normalizeHeader);
 
   for (const [key, value] of Object.entries(map)) {
-    if (wanted.some((item) => key.includes(item) || item.includes(key))) {
+    if (candidateText.some((item) => key.includes(item) || item.includes(key))) {
       return value;
     }
   }
@@ -239,40 +294,19 @@ function formatNumber(value) {
 
 function formatMoney(value) {
   const number = toNumber(value);
-
-  if (number >= 1_000_000_000_000) {
-    return `Rp ${(number / 1_000_000_000_000).toLocaleString('id-ID', {
-      maximumFractionDigits: 2
-    })} T`;
-  }
-
-  if (number >= 1_000_000_000) {
-    return `Rp ${(number / 1_000_000_000).toLocaleString('id-ID', {
-      maximumFractionDigits: 2
-    })} M`;
-  }
-
-  if (number >= 1_000_000) {
-    return `Rp ${(number / 1_000_000).toLocaleString('id-ID', {
-      maximumFractionDigits: 2
-    })} Jt`;
-  }
-
+  if (number >= 1_000_000_000_000) return `Rp ${(number / 1_000_000_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} T`;
+  if (number >= 1_000_000_000) return `Rp ${(number / 1_000_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} M`;
+  if (number >= 1_000_000) return `Rp ${(number / 1_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} Jt`;
   return `Rp ${formatNumber(number)}`;
 }
 
 function formatPercent(value) {
-  return `${toNumber(value).toLocaleString('id-ID', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })}%`;
+  const number = toNumber(value);
+  return `${number.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
 }
 
 function formatScore(value) {
-  return toNumber(value).toLocaleString('id-ID', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  return toNumber(value).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function parseCsv(text) {
@@ -305,11 +339,7 @@ function parseCsv(text) {
     if ((char === '\n' || char === '\r') && !quote) {
       if (char === '\r' && next === '\n') i += 1;
       row.push(value);
-
-      if (row.some((cell) => String(cell).trim() !== '')) {
-        rows.push(row);
-      }
-
+      if (row.some((cell) => String(cell).trim() !== '')) rows.push(row);
       row = [];
       value = '';
       continue;
@@ -319,10 +349,7 @@ function parseCsv(text) {
   }
 
   row.push(value);
-
-  if (row.some((cell) => String(cell).trim() !== '')) {
-    rows.push(row);
-  }
+  if (row.some((cell) => String(cell).trim() !== '')) rows.push(row);
 
   return rows;
 }
@@ -351,7 +378,6 @@ async function fetchSheetRows(config) {
     headers.forEach((header, index) => {
       const cleanHeader = String(header || '').trim();
       const cell = String(cells[index] || '').trim();
-
       row[cleanHeader] = cell;
       normalized[normalizeHeader(cleanHeader)] = cell;
     });
@@ -363,20 +389,12 @@ async function fetchSheetRows(config) {
   });
 }
 
-function sum(values) {
-  return values.reduce((total, value) => total + toNumber(value), 0);
-}
-
 function groupSum(rows, keyGetter, valueGetter) {
   const map = new Map();
 
   rows.forEach((row) => {
     const key = String(keyGetter(row) || 'Tidak Terisi').trim() || 'Tidak Terisi';
-    const prev = map.get(key) || {
-      name: key,
-      count: 0,
-      value: 0
-    };
+    const prev = map.get(key) || { name: key, count: 0, value: 0 };
 
     prev.count += 1;
     prev.value += toNumber(valueGetter(row));
@@ -386,20 +404,19 @@ function groupSum(rows, keyGetter, valueGetter) {
   return Array.from(map.values()).sort((a, b) => b.value - a.value);
 }
 
-function normalizeSatkerName(value) {
-  return String(value || '')
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, ' ');
+function avg(values) {
+  const cleaned = values.map(toNumber).filter((value) => Number.isFinite(value));
+  if (!cleaned.length) return 0;
+  return cleaned.reduce((total, value) => total + value, 0) / cleaned.length;
+}
+
+function sum(values) {
+  return values.reduce((total, value) => total + toNumber(value), 0);
 }
 
 function isCityAggregateName(name) {
-  return normalizeSatkerName(name) === 'PEMERINTAH KOTA BOGOR';
+  return String(name || '').trim().toUpperCase() === 'PEMERINTAH KOTA BOGOR';
 }
-
-/* =========================================================
-   ITKP ANALYSIS HELPERS
-   ========================================================= */
 
 function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
   const map = row && row.__normalized ? row.__normalized : {};
@@ -411,10 +428,16 @@ function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
 
   Object.entries(map).forEach(([key, value]) => {
     const number = toNumber(value);
-    if (!Number.isFinite(number) || number <= 0) return;
 
-    const matched = required.every((word) => key.includes(word));
-    if (!matched) return;
+    if (!Number.isFinite(number) || number <= 0) {
+      return;
+    }
+
+    const isMatch = required.every((word) => key.includes(word));
+
+    if (!isMatch) {
+      return;
+    }
 
     let weight = 0;
     optional.forEach((word) => {
@@ -432,15 +455,14 @@ function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
 
 function getLastReasonableItkpNumber(row) {
   const map = row && row.__normalized ? row.__normalized : {};
-
   const values = Object.entries(map)
     .filter(([key]) => {
-      return !key.includes('total rup') &&
-        !key.includes('total komitmen') &&
-        !key.includes('total pagu') &&
-        !key.includes('total realisasi') &&
-        !key.includes('paket') &&
-        !key.includes('pagu');
+      return !key.includes('total rup')
+        && !key.includes('total komitmen')
+        && !key.includes('total pagu')
+        && !key.includes('total realisasi')
+        && !key.includes('paket')
+        && !key.includes('pagu');
     })
     .map(([, value]) => toNumber(value))
     .filter((value) => Number.isFinite(value) && value > 0 && value <= 30);
@@ -449,7 +471,7 @@ function getLastReasonableItkpNumber(row) {
 }
 
 function getItkpScore(row) {
-  const exactValue = toNumber(getField(row || {}, [
+  const exactValue = toNumber(getField(row, [
     'Nilai ITKP Indikator Pemanfaatan Sistem - skor maksimal 30 (point)',
     'Nilai ITKP - Pemanfaatan Sistem - skor maksimal 30 (point)',
     'Nilai ITKP Pemanfaatan Sistem - skor maksimal 30 (point)',
@@ -459,15 +481,19 @@ function getItkpScore(row) {
     'Pemanfaatan Sistem'
   ]));
 
-  if (exactValue > 0) return exactValue;
+  if (exactValue > 0) {
+    return exactValue;
+  }
 
   const headerValue = findNumericByHeader(
-    row || {},
+    row,
     ['nilai itkp', 'pemanfaatan sistem'],
     ['skor maksimal 30', '30', 'point']
   );
 
-  if (headerValue > 0) return headerValue;
+  if (headerValue > 0) {
+    return headerValue;
+  }
 
   if (isCityAggregateName(getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']))) {
     return getLastReasonableItkpNumber(row || {});
@@ -525,6 +551,194 @@ function getIndicatorStatus(value, max) {
   };
 }
 
+function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
+  const name = getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']) || fallbackName;
+
+  return {
+    name,
+    __sourceRow: row || {},
+    score: getItkpScore(row || {}),
+    dimensions: [
+      {
+        id: 'sirup',
+        name: 'SiRUP',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 10 (point) (SIRUP)', 'SIRUP'])),
+        max: 10,
+        accent: 'blue',
+        route: 'monitoring-sirup',
+        hint: 'Klik untuk buka Monitoring SiRUP'
+      },
+      {
+        id: 'tokoDaring',
+        name: 'Toko Daring',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)', 'Toko Daring'])),
+        max: 1,
+        accent: 'teal',
+        route: 'monitoring-ekatalog',
+        hint: 'Klik untuk buka Monitoring eKatalog/Toko Daring'
+      },
+      {
+        id: 'epurchasing',
+        name: 'e-Purchasing',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 4 (point) (Epurchasing)', 'Epurchasing', 'ePurchasing'])),
+        max: 4,
+        accent: 'purple',
+        route: 'monitoring-ekatalog',
+        hint: 'Klik untuk buka Monitoring eKatalog'
+      },
+      {
+        id: 'etendering',
+        name: 'e-Tendering',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (etendering)', 'eTendering'])),
+        max: 5,
+        accent: 'orange',
+        route: 'monitoring-etendering',
+        hint: 'Klik untuk buka Monitoring eTendering'
+      },
+      {
+        id: 'ekontrak',
+        name: 'e-Kontrak',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (ekontrak)', 'eKontrak'])),
+        max: 5,
+        accent: 'green',
+        route: 'monitoring-ekontrak',
+        hint: 'Klik untuk buka Monitoring eKontrak'
+      },
+      {
+        id: 'nontender',
+        name: 'Non Tender',
+        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)', 'Non etendering', 'Non ePurchasing', 'Non Tender'])),
+        max: 5,
+        accent: 'red',
+        route: 'monitoring-nontender',
+        hint: 'Klik untuk buka Monitoring Non Tender'
+      }
+    ]
+  };
+}
+
+function analyzeDashboardData(raw) {
+  const itkpAllRows = raw.itkp || [];
+  const subOpdAllRows = raw.itkpSubOpd || [];
+  const planningRows = raw.perencanaan || [];
+  const realRows = raw.realisasi || [];
+
+  const getSatker = (row) => getField(row, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']);
+  const getMetode = (row) => getField(row, ['Metode Pengadaan', 'mtd_pemilihan', 'Sumber Transaksi']);
+  const getPagu = (row) => getField(row, ['Nilai Pagu', 'Pagu', 'Total Pagu']);
+  const getRealisasi = (row) => getField(row, ['Nilai Realisasi', 'Total Realisasi', 'nilai_realisasi']);
+  const getStatus = (row) => getField(row, ['Status Paket', 'status_paket', 'Status']);
+
+  const itkpOpdRows = itkpAllRows.filter((row) => !isCityAggregateName(getSatker(row)));
+  const subOpdRows = subOpdAllRows.filter((row) => !isCityAggregateName(getSatker(row)));
+  const cityRow = itkpAllRows.find((row) => isCityAggregateName(getSatker(row))) || null;
+  const cityProfile = buildItkpProfile(cityRow || {}, 'PEMERINTAH KOTA BOGOR');
+
+  const profiles = [cityProfile]
+    .concat(itkpOpdRows.map((row) => buildItkpProfile(row, getSatker(row))))
+    .filter((profile) => profile.name);
+
+  const selectedName = DASHBOARD_STATE.selectedItkpSatker || cityProfile.name;
+  const selectedProfile = profiles.find((profile) => profile.name === selectedName) || cityProfile;
+  DASHBOARD_STATE.selectedItkpSatker = selectedProfile.name;
+
+  const selectedIsCity = isCityAggregateName(selectedProfile.name);
+  const normalizeSatkerName = (value) => String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ');
+
+  const selectedSatkerKey = normalizeSatkerName(selectedProfile.name);
+  const isSelectedSatkerRow = (row) => {
+    if (selectedIsCity) return true;
+    return normalizeSatkerName(getSatker(row)) === selectedSatkerKey;
+  };
+
+  const scopedPlanningRows = planningRows.filter(isSelectedSatkerRow);
+  const scopedRealRows = realRows.filter(isSelectedSatkerRow);
+
+  const totalPagu = sum(scopedPlanningRows.map(getPagu));
+  const totalRealisasi = sum(scopedRealRows.map(getRealisasi));
+  const realisasiPersen = totalPagu > 0 ? (totalRealisasi / totalPagu) * 100 : 0;
+
+  const selesaiRows = scopedRealRows.filter((row) => /selesai|completed|paket selesai/i.test(getStatus(row)));
+  const processRows = scopedRealRows.filter((row) => /process|proses|berlangsung|sedang/i.test(getStatus(row)));
+  const bastRows = scopedRealRows.filter((row) => String(getField(row, ['BAST', 'dok_realisasi'])).trim() && String(getField(row, ['BAST', 'dok_realisasi'])).trim() !== '-');
+
+  const byMetodePlanning = groupSum(scopedPlanningRows, getMetode, getPagu);
+  const byMetodeReal = groupSum(scopedRealRows, getMetode, getRealisasi);
+  const bySatkerPlanning = groupSum(scopedPlanningRows, getSatker, getPagu);
+  const bySatkerReal = groupSum(scopedRealRows, getSatker, getRealisasi);
+
+  const rankingSourceRows = subOpdRows.length ? subOpdRows : itkpOpdRows;
+  const scoreRows = rankingSourceRows.map((row) => ({
+    name: getSatker(row) || getField(row, ['Satuan Kerja']),
+    score: getItkpScore(row)
+  })).filter((item) => item.name && !isCityAggregateName(item.name));
+
+  const topItkp = [...scoreRows].sort((a, b) => b.score - a.score).slice(0, 8);
+  const lowItkp = [...scoreRows].sort((a, b) => a.score - b.score).slice(0, 8);
+
+  return {
+    itkpRows: itkpOpdRows,
+    itkpSubOpdRows: subOpdRows,
+    planningRows,
+    realRows,
+    totalOpd: itkpOpdRows.length,
+    totalSubOpd: subOpdRows.length,
+    scopeName: selectedProfile.name,
+    scopeIsCity: selectedIsCity,
+    scopedPlanningRows,
+    scopedRealRows,
+    totalPaketRup: scopedPlanningRows.length,
+    totalPaketRealisasi: scopedRealRows.length,
+    totalPagu,
+    totalRealisasi,
+    realisasiPersen,
+    selesaiCount: selesaiRows.length,
+    processCount: processRows.length,
+    bastCount: bastRows.length,
+    itkpOverall: cityProfile.score,
+    dimensions: selectedProfile.dimensions,
+    cityProfile,
+    selectedProfile,
+    itkpProfiles: profiles,
+    byMetodePlanning,
+    byMetodeReal,
+    bySatkerPlanning,
+    bySatkerReal,
+    topItkp,
+    lowItkp
+  };
+}
+
+async function loadDashboardData(force = false) {
+  if (DASHBOARD_STATE.data && !force) return DASHBOARD_STATE.data;
+  if (DASHBOARD_STATE.loading) return DASHBOARD_STATE.data;
+
+  DASHBOARD_STATE.loading = true;
+  DASHBOARD_STATE.error = null;
+
+  try {
+    const [itkp, itkpSubOpd, perencanaan, realisasi] = await Promise.all([
+      fetchSheetRows(DASHBOARD_SHEETS.itkp),
+      fetchSheetRows(DASHBOARD_SHEETS.itkpSubOpd),
+      fetchSheetRows(DASHBOARD_SHEETS.perencanaan),
+      fetchSheetRows(DASHBOARD_SHEETS.realisasi)
+    ]);
+
+    DASHBOARD_STATE.raw = { itkp, itkpSubOpd, perencanaan, realisasi };
+    DASHBOARD_STATE.data = analyzeDashboardData(DASHBOARD_STATE.raw);
+    DASHBOARD_STATE.loadedAt = new Date();
+    return DASHBOARD_STATE.data;
+  } catch (error) {
+    DASHBOARD_STATE.error = error;
+    throw error;
+  } finally {
+    DASHBOARD_STATE.loading = false;
+  }
+}
+
 function getTotalStatus(score) {
   const value = toNumber(score);
 
@@ -563,98 +777,6 @@ function getTotalStatus(score) {
   };
 }
 
-function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
-  const name = getField(row || {}, [
-    'Satuan Kerja',
-    'Nama Satuan Kerja',
-    'nama_satker'
-  ]) || fallbackName;
-
-  const dimensions = [
-    {
-      id: 'sirup',
-      name: 'SiRUP',
-      value: toNumber(getField(row || {}, [
-        'Nilai ITKP - skor maksimal 10 (point) (SIRUP)',
-        'Nilai ITKP skor maksimal 10 point SIRUP',
-        'SIRUP',
-        'sirup'
-      ])),
-      max: 10,
-      route: 'monitoring-sirup'
-    },
-    {
-      id: 'tokoDaring',
-      name: 'Toko Daring',
-      value: toNumber(getField(row || {}, [
-        'Nilai ITKP - skor maksimal 1 (point) (Toko Daring)',
-        'Nilai ITKP skor maksimal 1 point Toko Daring',
-        'Toko Daring',
-        'toko daring'
-      ])),
-      max: 1,
-      route: 'monitoring-ekatalog'
-    },
-    {
-      id: 'epurchasing',
-      name: 'e-Purchasing',
-      value: toNumber(getField(row || {}, [
-        'Nilai ITKP - skor maksimal 4 (point) (Epurchasing)',
-        'Nilai ITKP skor maksimal 4 point Epurchasing',
-        'Epurchasing',
-        'ePurchasing',
-        'e-Purchasing'
-      ])),
-      max: 4,
-      route: 'monitoring-ekatalog'
-    },
-    {
-      id: 'etendering',
-      name: 'e-Tendering',
-      value: toNumber(getField(row || {}, [
-        'Nilai ITKP - skor maksimal 5 (point) (etendering)',
-        'Nilai ITKP skor maksimal 5 point etendering',
-        'eTendering',
-        'e-Tendering'
-      ])),
-      max: 5,
-      route: 'monitoring-etendering'
-    },
-    {
-      id: 'ekontrak',
-      name: 'e-Kontrak',
-      value: toNumber(getField(row || {}, [
-        'Nilai ITKP - skor maksimal 5 (point) (ekontrak)',
-        'Nilai ITKP skor maksimal 5 point ekontrak',
-        'eKontrak',
-        'e-Kontrak'
-      ])),
-      max: 5,
-      route: 'monitoring-ekontrak'
-    },
-    {
-      id: 'nontender',
-      name: 'Non Tender',
-      value: toNumber(getField(row || {}, [
-        'Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)',
-        'Nilai ITKP skor maksimal 5 point Non etendering Non ePurchasing',
-        'Non etendering',
-        'Non ePurchasing',
-        'Non Tender'
-      ])),
-      max: 5,
-      route: 'monitoring-nontender'
-    }
-  ];
-
-  return {
-    name,
-    score: getItkpScore(row || {}),
-    dimensions,
-    __sourceRow: row || {}
-  };
-}
-
 function getStrongestIndicators(profile) {
   return [...(profile.dimensions || [])]
     .map((item) => ({
@@ -675,170 +797,35 @@ function getWeakestIndicators(profile) {
     .slice(0, 3);
 }
 
-/* =========================================================
-   DASHBOARD DATA
-   ========================================================= */
-
-async function loadDashboardData(force = false) {
-  if (DASHBOARD_STATE.data && !force) return DASHBOARD_STATE.data;
-  if (DASHBOARD_STATE.loading) return DASHBOARD_STATE.data;
-
-  DASHBOARD_STATE.loading = true;
-  DASHBOARD_STATE.error = null;
-
-  try {
-    const [itkp, itkpSubOpd, perencanaan, realisasi] = await Promise.all([
-      fetchSheetRows(DASHBOARD_SHEETS.itkp),
-      fetchSheetRows(DASHBOARD_SHEETS.itkpSubOpd),
-      fetchSheetRows(DASHBOARD_SHEETS.perencanaan),
-      fetchSheetRows(DASHBOARD_SHEETS.realisasi)
-    ]);
-
-    DASHBOARD_STATE.raw = {
-      itkp,
-      itkpSubOpd,
-      perencanaan,
-      realisasi
-    };
-
-    DASHBOARD_STATE.data = analyzeDashboardData(DASHBOARD_STATE.raw);
-    DASHBOARD_STATE.loadedAt = new Date();
-
-    return DASHBOARD_STATE.data;
-  } catch (error) {
-    DASHBOARD_STATE.error = error;
-    throw error;
-  } finally {
-    DASHBOARD_STATE.loading = false;
-  }
-}
-
-function analyzeDashboardData(raw) {
-  const itkpRows = raw.itkp || [];
-  const itkpSubRows = raw.itkpSubOpd || [];
-  const planningRows = raw.perencanaan || [];
-  const realRows = raw.realisasi || [];
-
-  const getSatker = (row) => getField(row, [
-    'Satuan Kerja',
-    'Nama Satuan Kerja',
-    'nama_satker'
-  ]);
-
-  const getMetode = (row) => getField(row, [
-    'Metode Pengadaan',
-    'mtd_pemilihan',
-    'Sumber Transaksi',
-    'Metode'
-  ]);
-
-  const getPagu = (row) => getField(row, [
-    'Nilai Pagu',
-    'Pagu',
-    'Total Pagu',
-    'pagu'
-  ]);
-
-  const getRealisasi = (row) => getField(row, [
-    'Nilai Realisasi',
-    'Total Realisasi',
-    'nilai_realisasi',
-    'Realisasi'
-  ]);
-
-  const getStatus = (row) => getField(row, [
-    'Status Paket',
-    'status_paket',
-    'Status'
-  ]);
-
-  const cityRow = itkpRows.find((row) => isCityAggregateName(getSatker(row))) || null;
-  const opdRows = itkpRows.filter((row) => !isCityAggregateName(getSatker(row)));
-  const cityProfile = buildItkpProfile(cityRow || {}, 'PEMERINTAH KOTA BOGOR');
-
-  const profiles = [cityProfile]
-    .concat(opdRows.map((row) => buildItkpProfile(row, getSatker(row))))
-    .filter((item) => item.name);
-
-  const selectedName = DASHBOARD_STATE.selectedItkpSatker || cityProfile.name;
-  const selectedProfile = profiles.find((item) => item.name === selectedName) || cityProfile;
-
-  DASHBOARD_STATE.selectedItkpSatker = selectedProfile.name;
-
-  const selectedIsCity = isCityAggregateName(selectedProfile.name);
-  const selectedKey = normalizeSatkerName(selectedProfile.name);
-
-  const isSelected = (row) => {
-    if (selectedIsCity) return true;
-    return normalizeSatkerName(getSatker(row)) === selectedKey;
-  };
-
-  const scopedPlanning = planningRows.filter(isSelected);
-  const scopedReal = realRows.filter(isSelected);
-
-  const totalPagu = sum(scopedPlanning.map(getPagu));
-  const totalRealisasi = sum(scopedReal.map(getRealisasi));
-  const realisasiPersen = totalPagu > 0 ? (totalRealisasi / totalPagu) * 100 : 0;
-
-  const selesaiRows = scopedReal.filter((row) => /selesai|completed|paket selesai/i.test(getStatus(row)));
-  const prosesRows = scopedReal.filter((row) => /proses|process|berlangsung|sedang/i.test(getStatus(row)));
-  const bastRows = scopedReal.filter((row) => {
-    const value = String(getField(row, ['BAST', 'dok_realisasi', 'Dokumen Realisasi'])).trim();
-    return value && value !== '-';
-  });
-
-  const rankingSource = itkpSubRows.length ? itkpSubRows : opdRows;
-
-  const scoreRows = rankingSource
-    .map((row) => ({
-      name: getSatker(row),
-      score: getItkpScore(row)
-    }))
-    .filter((item) => item.name && !isCityAggregateName(item.name));
-
-  const topItkp = [...scoreRows].sort((a, b) => b.score - a.score).slice(0, 8);
-  const lowItkp = [...scoreRows].sort((a, b) => a.score - b.score).slice(0, 8);
-
-  return {
-    cityProfile,
-    selectedProfile,
-    itkpProfiles: profiles,
-    scopeName: selectedProfile.name,
-    scopeIsCity: selectedIsCity,
-    totalOpd: opdRows.length,
-    totalSubOpd: itkpSubRows.length,
-    totalPaketRup: scopedPlanning.length,
-    totalPaketRealisasi: scopedReal.length,
-    totalPagu,
-    totalRealisasi,
-    realisasiPersen,
-    selesaiCount: selesaiRows.length,
-    processCount: prosesRows.length,
-    bastCount: bastRows.length,
-    byMetodePlanning: groupSum(scopedPlanning, getMetode, getPagu),
-    byMetodeReal: groupSum(scopedReal, getMetode, getRealisasi),
-    topItkp,
-    lowItkp,
-    strongestIndicators: getStrongestIndicators(selectedProfile),
-    weakestIndicators: getWeakestIndicators(selectedProfile)
-  };
-}
-
-/* =========================================================
-   DASHBOARD RENDER
-   ========================================================= */
-
 function renderDashboardSkeleton() {
   contentArea.innerHTML = `
     <section class="hero-card">
-      <h3>Dashboard SIPPBJ</h3>
-      <p>Memuat data ITKP, perencanaan, realisasi, dan indikator pemanfaatan sistem.</p>
+      <h3>Dashboard TRAXPBJ</h3>
+      <p>Memuat data ITKP, perencanaan, realisasi, dan indikator pemanfaatan sistem pengadaan.</p>
 
       <div class="stats-grid">
         <div class="stat-card">
           <div class="label">Status</div>
           <div class="value">Memuat</div>
           <div class="desc">PANJI sedang membaca data dashboard.</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">ITKP</div>
+          <div class="value">...</div>
+          <div class="desc">Mengambil data pemanfaatan sistem.</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">RUP</div>
+          <div class="value">...</div>
+          <div class="desc">Mengambil data perencanaan.</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Realisasi</div>
+          <div class="value">...</div>
+          <div class="desc">Mengambil data realisasi.</div>
         </div>
       </div>
     </section>
@@ -851,7 +838,7 @@ function renderDashboardError(error) {
   contentArea.innerHTML = `
     <section class="hero-card">
       <h3>Data dashboard belum bisa dimuat</h3>
-      <p>${escapeHtml(error.message || 'Terjadi kendala saat mengambil data.')}</p>
+      <p>${escapeHtml(error.message || 'Terjadi kendala saat mengambil data dashboard.')}</p>
 
       <div style="margin-top:18px;">
         <button class="help-button" type="button" id="retryDashboardButton">Coba Muat Ulang</button>
@@ -860,11 +847,13 @@ function renderDashboardError(error) {
 
     <section class="card">
       <h3>Yang perlu dicek</h3>
+
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Akses Google Sheet</h4>
-          <p>Pastikan spreadsheet dapat dibaca sebagai viewer/public.</p>
+          <p>Pastikan spreadsheet dapat dibaca sebagai viewer/public, terutama sheet ITKP, Perencanaan, dan Realisasi.</p>
         </div>
+
         <div class="placeholder-box">
           <h4>Header Data</h4>
           <p>Pastikan header Satuan Kerja, Nilai ITKP, Pagu, Realisasi, dan Metode tidak berubah.</p>
@@ -873,9 +862,10 @@ function renderDashboardError(error) {
     </section>
   `;
 
-  const retry = document.getElementById('retryDashboardButton');
-  if (retry) {
-    retry.addEventListener('click', () => {
+  const retryButton = document.getElementById('retryDashboardButton');
+
+  if (retryButton) {
+    retryButton.addEventListener('click', () => {
       DASHBOARD_STATE.data = null;
       renderDashboard(true);
     });
@@ -887,6 +877,7 @@ async function renderDashboard(force = false) {
 
   try {
     const data = await loadDashboardData(force);
+
     renderDashboardReady(data);
     bindDashboardEvents();
     initDashboardPanji(data);
@@ -900,6 +891,11 @@ async function renderDashboard(force = false) {
 function renderDashboardReady(data) {
   const profile = data.selectedProfile;
   const totalStatus = getTotalStatus(profile.score);
+  const strongestIndicators = getStrongestIndicators(profile);
+  const weakestIndicators = getWeakestIndicators(profile);
+
+  data.strongestIndicators = strongestIndicators;
+  data.weakestIndicators = weakestIndicators;
 
   const lastUpdate = DASHBOARD_STATE.loadedAt
     ? DASHBOARD_STATE.loadedAt.toLocaleString('id-ID', {
@@ -910,14 +906,18 @@ function renderDashboardReady(data) {
 
   contentArea.innerHTML = `
     <section class="hero-card" data-panji-topic="dashboard">
-      <h3>Dashboard SIPPBJ</h3>
-      <p>Ringkasan pemanfaatan sistem ITKP, perencanaan, realisasi, dan profil satuan kerja. PANJI akan membaca indikator SiRUP, Toko Daring, e-Purchasing, e-Tendering, e-Kontrak, dan Non Tender.</p>
+      <h3>Dashboard TRAXPBJ</h3>
+      <p>
+        Ringkasan pemanfaatan sistem ITKP, perencanaan, realisasi, dan profil satuan kerja.
+        PANJI akan membantu membaca indikator SiRUP, Toko Daring, e-Purchasing, e-Tendering,
+        e-Kontrak, dan Non Tender.
+      </p>
 
       <div class="stats-grid">
-        ${renderKpiCard('ITKP', formatScore(profile.score), `${totalStatus.icon} ${totalStatus.label} · ${profile.name}`, 'itkp')}
-        ${renderKpiCard('Pagu RUP', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket perencanaan`, 'pagu')}
-        ${renderKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu`, 'realisasi')}
-        ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses`, 'paket')}
+        ${renderDashboardKpiCard('ITKP', formatScore(profile.score), `${totalStatus.icon} ${totalStatus.label} · ${profile.name}`, 'itkp')}
+        ${renderDashboardKpiCard('Pagu RUP', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket perencanaan`, 'pagu')}
+        ${renderDashboardKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu`, 'realisasi')}
+        ${renderDashboardKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses`, 'paket')}
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px;">
@@ -953,17 +953,22 @@ function renderDashboardReady(data) {
             <h4>${escapeHtml(profile.name)}</h4>
             <div class="big-number">${formatScore(profile.score)}</div>
             <div class="page-note">Skor ITKP dari maksimal 30 poin · ${escapeHtml(totalStatus.label)}</div>
+
             <div class="progress-scale">
               <div class="progress-track">
                 <div class="progress-bar" style="width:${Math.min(100, (profile.score / 30) * 100)}%"></div>
               </div>
+            </div>
+
+            <div class="page-note">
+              Penilaian PANJI: ${escapeHtml(buildShortTotalAssessment(profile.score))}
             </div>
           </div>
 
           <div class="mini-card">
             <h4>Indikator Pemanfaatan Sistem</h4>
             <div class="dimensions">
-              ${profile.dimensions.map(renderDimension).join('')}
+              ${profile.dimensions.map(renderDashboardDimension).join('')}
             </div>
           </div>
         </div>
@@ -971,6 +976,7 @@ function renderDashboardReady(data) {
 
       <div class="card" data-panji-topic="analysis">
         <h3>Analisis PANJI</h3>
+
         <div class="activities">
           ${renderPanjiAnalysis(data)}
         </div>
@@ -986,14 +992,14 @@ function renderDashboardReady(data) {
       <div class="card" data-panji-topic="weakest">
         <h3>Prioritas Perbaikan</h3>
         <div class="activities">
-          ${data.weakestIndicators.map(renderIndicatorInsight).join('')}
+          ${weakestIndicators.map(renderIndicatorInsight).join('')}
         </div>
       </div>
 
       <div class="card" data-panji-topic="strongest">
         <h3>Capaian Terbaik</h3>
         <div class="activities">
-          ${data.strongestIndicators.map(renderIndicatorInsight).join('')}
+          ${strongestIndicators.map(renderIndicatorInsight).join('')}
         </div>
       </div>
     </section>
@@ -1029,11 +1035,29 @@ function renderDashboardReady(data) {
       ${renderQuickCard('📑', 'linear-gradient(135deg,#111827,#2563eb)', 'eKontrak', 'Pantau pencatatan kontrak.', 'monitoring-ekontrak')}
     </section>
 
-    <div class="footer-note">© 2026 SIPPBJ - Dashboard dibantu PANJI Pengadaan Jitu</div>
+    <div class="footer-note">© 2026 TRAXPBJ - Dashboard dibantu PANJI Pengadaan Jitu</div>
   `;
 }
 
-function renderKpiCard(label, value, desc, topic) {
+function buildShortTotalAssessment(score) {
+  const status = getTotalStatus(score);
+
+  if (status.label === 'Sangat Baik') {
+    return 'pemanfaatan sistem sudah kuat, tinggal menjaga konsistensi data dari RUP sampai realisasi.';
+  }
+
+  if (status.label === 'Baik') {
+    return 'fondasi sistem sudah berjalan, tetapi beberapa indikator masih bisa dikuatkan.';
+  }
+
+  if (status.label === 'Cukup') {
+    return 'sistem sudah mulai dimanfaatkan, tetapi belum merata di semua tahapan PBJ.';
+  }
+
+  return 'perlu perhatian karena pemanfaatan sistem belum cukup kuat untuk menopang monitoring PBJ.';
+}
+
+function renderDashboardKpiCard(label, value, desc, topic) {
   return `
     <div class="stat-card" data-panji-topic="${escapeHtml(topic)}">
       <div class="label">${escapeHtml(label)}</div>
@@ -1043,7 +1067,7 @@ function renderKpiCard(label, value, desc, topic) {
   `;
 }
 
-function renderDimension(item) {
+function renderDashboardDimension(item) {
   const status = getIndicatorStatus(item.value, item.max);
   const width = Math.min(100, Math.max(0, status.percent));
 
@@ -1053,9 +1077,11 @@ function renderDimension(item) {
         <b>${escapeHtml(item.name)}</b>
         <div style="font-size:11px; color:#64748b; margin-top:2px;">${escapeHtml(status.label)}</div>
       </div>
+
       <div class="bar">
         <span style="width:${width}%"></span>
       </div>
+
       <div>
         ${formatScore(item.value)}
         <div style="font-size:11px; color:#64748b;">/ ${formatScore(item.max)}</div>
@@ -1067,19 +1093,22 @@ function renderDimension(item) {
 function renderPanjiAnalysis(data) {
   const profile = data.selectedProfile;
   const status = getTotalStatus(profile.score);
-  const strong = data.strongestIndicators[0];
-  const weak = data.weakestIndicators[0];
+  const strongest = data.strongestIndicators && data.strongestIndicators[0];
+  const weakest = data.weakestIndicators && data.weakestIndicators[0];
 
   return `
     <div class="activity-item">
       <div class="activity-icon" style="background:#2563eb">PJ</div>
+
       <div>
         <div class="activity-title">${escapeHtml(profile.name)} · ${escapeHtml(status.label)}</div>
         <div class="activity-text">
-          Skor ITKP ${formatScore(profile.score)} dari 30. Indikator kuat: ${escapeHtml(strong ? strong.name : '-')}.
-          Prioritas pembenahan: ${escapeHtml(weak ? weak.name : '-')}.
+          Skor ITKP ${formatScore(profile.score)} dari 30.
+          Indikator kuat: ${escapeHtml(strongest ? strongest.name : '-')}.
+          Prioritas pembenahan: ${escapeHtml(weakest ? weakest.name : '-')}.
         </div>
       </div>
+
       <div class="activity-time">${escapeHtml(status.icon)}</div>
     </div>
   `;
@@ -1090,11 +1119,17 @@ function renderIndicatorInsight(item) {
 
   return `
     <button class="activity-item insight-item--button" type="button" data-indicator-id="${escapeHtml(item.id)}" data-route="${escapeHtml(item.route)}" data-panji-topic="${escapeHtml(item.id)}">
-      <div class="activity-icon" style="background:${status.tone === 'danger' ? '#dc2626' : status.tone === 'warning' ? '#f59e0b' : '#16a34a'}">!</div>
+      <div class="activity-icon" style="background:${status.tone === 'danger' ? '#dc2626' : status.tone === 'warning' ? '#f59e0b' : '#16a34a'}">
+        ${status.tone === 'danger' ? '!' : '✓'}
+      </div>
+
       <div>
         <div class="activity-title">${escapeHtml(item.name)} · ${escapeHtml(status.label)}</div>
-        <div class="activity-text">${formatScore(item.value)} dari ${formatScore(item.max)} poin (${formatPercent(status.percent)}).</div>
+        <div class="activity-text">
+          ${formatScore(item.value)} dari ${formatScore(item.max)} poin (${formatPercent(status.percent)}).
+        </div>
       </div>
+
       <div class="activity-time">${status.tone === 'danger' ? 'Perlu' : 'OK'}</div>
     </button>
   `;
@@ -1113,6 +1148,7 @@ function renderLiteTable(rows, firstLabel, secondLabel, valueKey, formatter) {
         <div>${escapeHtml(firstLabel)}</div>
         <div>${escapeHtml(secondLabel)}</div>
       </div>
+
       ${cleanRows.map((row) => `
         <div class="table-row">
           <div>${escapeHtml(row.name)}</div>
@@ -1134,30 +1170,22 @@ function renderRanking(rows, lowMode = false) {
         <div>Satuan Kerja</div>
         <div>Skor</div>
       </div>
+
       ${rows.map((item) => {
         const status = getTotalStatus(item.score);
 
         return `
           <div class="table-row">
-            <div>${lowMode ? '⚠️ ' : '🏆 '}${escapeHtml(item.name)} <span style="color:#64748b;">· ${escapeHtml(status.label)}</span></div>
+            <div>
+              ${lowMode ? '⚠️ ' : '🏆 '}
+              ${escapeHtml(item.name)}
+              <span style="color:#64748b;">· ${escapeHtml(status.label)}</span>
+            </div>
             <div>${formatScore(item.score)}</div>
           </div>
         `;
       }).join('')}
     </div>
-  `;
-}
-
-function renderQuickCard(icon, bg, title, text, route) {
-  return `
-    <button class="quick-card" type="button" data-quick="${escapeHtml(route)}" data-panji-topic="${escapeHtml(route)}">
-      <div class="quick-icon" style="background:${escapeHtml(bg)}">${escapeHtml(icon)}</div>
-      <div>
-        <div class="quick-title">${escapeHtml(title)}</div>
-        <div class="quick-text">${escapeHtml(text)}</div>
-      </div>
-      <div class="quick-arrow">›</div>
-    </button>
   `;
 }
 
@@ -1198,25 +1226,23 @@ function bindDashboardEvents() {
     });
   }
 
-  const explain = document.getElementById('panjiExplainButton');
-  if (explain) {
-    explain.addEventListener('click', () => {
-      if (DASHBOARD_STATE.data) {
-        dashboardPanjiPaused = false;
-        dashboardPanjiSpeak(buildPanjiDashboardExplanation(DASHBOARD_STATE.data), 'talking');
-        highlightPanjiTarget(document.querySelector('[data-panji-topic="dashboard"]'));
-      }
+  const panjiExplainButton = document.getElementById('panjiExplainButton');
+  if (panjiExplainButton) {
+    panjiExplainButton.addEventListener('click', () => {
+      if (!DASHBOARD_STATE.data) return;
+      dashboardPanjiPaused = false;
+      dashboardPanjiSpeak(buildPanjiDashboardExplanation(DASHBOARD_STATE.data), 'talking');
+      highlightPanjiTarget(document.querySelector('[data-panji-topic="dashboard"]'));
     });
   }
 
-  const advice = document.getElementById('panjiAdviceButton');
-  if (advice) {
-    advice.addEventListener('click', () => {
-      if (DASHBOARD_STATE.data) {
-        dashboardPanjiPaused = false;
-        dashboardPanjiSpeak(buildPanjiRecommendation(DASHBOARD_STATE.data), 'thinking');
-        focusWeakestIndicator(DASHBOARD_STATE.data);
-      }
+  const panjiAdviceButton = document.getElementById('panjiAdviceButton');
+  if (panjiAdviceButton) {
+    panjiAdviceButton.addEventListener('click', () => {
+      if (!DASHBOARD_STATE.data) return;
+      dashboardPanjiPaused = false;
+      dashboardPanjiSpeak(buildPanjiRecommendation(DASHBOARD_STATE.data), 'thinking');
+      focusWeakestIndicator(DASHBOARD_STATE.data);
     });
   }
 }
@@ -1238,12 +1264,12 @@ function initDashboardPanji(data, fromSelection = false) {
 
   const panji = ensureDashboardPanjiElement();
 
-  const closeBtn = panji.querySelector('#dashPanjiClose');
-  const characterBtn = panji.querySelector('#dashPanjiCharacter');
-  const explainBtn = panji.querySelector('#dashPanjiExplain');
-  const analyzeBtn = panji.querySelector('#dashPanjiAnalyze');
-  const adviceBtn = panji.querySelector('#dashPanjiAdvice');
-  const closeActionBtn = panji.querySelector('#dashPanjiCloseAction');
+  const closeButton = panji.querySelector('#dashPanjiClose');
+  const closeActionButton = panji.querySelector('#dashPanjiCloseAction');
+  const characterButton = panji.querySelector('#dashPanjiCharacter');
+  const explainButton = panji.querySelector('#dashPanjiExplain');
+  const analyzeButton = panji.querySelector('#dashPanjiAnalyze');
+  const adviceButton = panji.querySelector('#dashPanjiAdvice');
 
   const closePanji = () => {
     dashboardPanjiClosedUntilReload = true;
@@ -1258,7 +1284,7 @@ function initDashboardPanji(data, fromSelection = false) {
 
     if (dashboardPanjiPaused) {
       panji.classList.remove('dash-panji-talking', 'dash-panji-happy', 'dash-panji-sad', 'dash-panji-thinking');
-      setDashboardPanjiText('Baik. PANJI diam dulu. Klik karakter PANJI lagi kalau ingin saya lanjut membaca dashboard.');
+      setDashboardPanjiText('Baik, PANJI diam dulu. Klik karakter PANJI lagi kalau ingin saya lanjut membaca dashboard.');
       setDashboardPanjiEmote('🤐');
       clearDashboardPanjiHighlight();
       return;
@@ -1270,31 +1296,28 @@ function initDashboardPanji(data, fromSelection = false) {
     );
   };
 
-  if (closeBtn) closeBtn.addEventListener('click', closePanji);
-  if (closeActionBtn) closeActionBtn.addEventListener('click', closePanji);
+  if (closeButton) closeButton.addEventListener('click', closePanji);
+  if (closeActionButton) closeActionButton.addEventListener('click', closePanji);
+  if (characterButton) characterButton.addEventListener('click', togglePause);
 
-  if (characterBtn) {
-    characterBtn.addEventListener('click', togglePause);
-  }
-
-  if (explainBtn) {
-    explainBtn.addEventListener('click', () => {
+  if (explainButton) {
+    explainButton.addEventListener('click', () => {
       dashboardPanjiPaused = false;
       dashboardPanjiSpeak(buildPanjiDashboardExplanation(data), 'talking');
       highlightPanjiTarget(document.querySelector('[data-panji-topic="dashboard"]'));
     });
   }
 
-  if (analyzeBtn) {
-    analyzeBtn.addEventListener('click', () => {
+  if (analyzeButton) {
+    analyzeButton.addEventListener('click', () => {
       dashboardPanjiPaused = false;
       dashboardPanjiSpeak(buildPanjiSatkerAnalysis(data), getPanjiMoodByData(data));
       highlightPanjiTarget(document.querySelector('[data-panji-topic="itkp"]'));
     });
   }
 
-  if (adviceBtn) {
-    adviceBtn.addEventListener('click', () => {
+  if (adviceButton) {
+    adviceButton.addEventListener('click', () => {
       dashboardPanjiPaused = false;
       dashboardPanjiSpeak(buildPanjiRecommendation(data), 'thinking');
       focusWeakestIndicator(data);
@@ -1303,6 +1326,7 @@ function initDashboardPanji(data, fromSelection = false) {
 
   bindDashboardPanjiHover(data);
   initDashboardPanjiAutoPosition();
+  startDashboardPanjiIdleTips(data);
 
   if (fromSelection) {
     dashboardPanjiSpeak(buildPanjiSatkerAnalysis(data), getPanjiMoodByData(data));
@@ -1313,7 +1337,13 @@ function initDashboardPanji(data, fromSelection = false) {
   dashboardPanjiDestroy = () => {
     const existing = document.getElementById('dashboardPanji');
     if (existing) existing.remove();
+
     clearDashboardPanjiHighlight();
+
+    if (dashboardPanjiIdleTimer) {
+      clearTimeout(dashboardPanjiIdleTimer);
+      dashboardPanjiIdleTimer = null;
+    }
   };
 }
 
@@ -1379,6 +1409,11 @@ function destroyDashboardPanji() {
   }
 
   clearDashboardPanjiHighlight();
+
+  if (dashboardPanjiIdleTimer) {
+    clearTimeout(dashboardPanjiIdleTimer);
+    dashboardPanjiIdleTimer = null;
+  }
 }
 
 function dashboardPanjiSpeak(message, mood = 'talking') {
@@ -1390,6 +1425,8 @@ function dashboardPanjiSpeak(message, mood = 'talking') {
   if (!panji || !textEl) return;
 
   const cleanMessage = String(message || '').trim();
+  if (!cleanMessage) return;
+
   dashboardPanjiLastMessage = cleanMessage;
 
   panji.classList.remove(
@@ -1435,11 +1472,13 @@ function setDashboardPanjiText(text) {
 function setDashboardPanjiEmote(icon) {
   const emote = document.getElementById('dashPanjiEmote');
   if (!emote) return;
+
   emote.textContent = icon;
 }
 
 function getPanjiMoodByData(data) {
-  const status = getTotalStatus((data.selectedProfile || data.cityProfile).score);
+  const profile = data.selectedProfile || data.cityProfile;
+  const status = getTotalStatus(profile.score);
   return status.mood || 'thinking';
 }
 
@@ -1459,8 +1498,10 @@ function bindDashboardPanjiHover(data) {
       if (dashboardPanjiClosedUntilReload || dashboardPanjiPaused) return;
 
       clearTimeout(hoverTimer);
+
       hoverTimer = setTimeout(() => {
         const message = buildPanjiElementExplanation(target, data);
+
         if (!message) return;
 
         highlightPanjiTarget(target);
@@ -1487,24 +1528,63 @@ function buildPanjiElementExplanation(target, data) {
   }
 
   if (topic === 'dashboard') return buildPanjiDashboardExplanation(data);
-  if (topic === 'itkp' || topic === 'score-ring') return buildPanjiSatkerAnalysis(data);
+  if (topic === 'itkp') return buildPanjiSatkerAnalysis(data);
+  if (topic === 'score-ring') return buildPanjiSatkerAnalysis(data);
   if (topic === 'analysis') return buildPanjiSatkerAnalysis(data);
   if (topic === 'weakest') return buildPanjiRecommendation(data);
   if (topic === 'strongest') return buildPanjiStrongestAnalysis(data);
-  if (topic === 'pagu') return 'Pagu RUP menunjukkan beban rencana pengadaan yang harus dikawal sejak perencanaan. Nilai besar bukan otomatis baik; yang penting paketnya diumumkan, metodenya tepat, jadwalnya wajar, dan tidak berhenti sebelum proses pemilihan.';
-  if (topic === 'realisasi') return 'Realisasi menunjukkan seberapa jauh rencana pengadaan sudah bergerak menjadi pelaksanaan. Capaian yang sehat harus tersambung ke kontrak, BAST, pembayaran, dan pencatatan akhir.';
-  if (topic === 'paket') return 'Jumlah paket perlu dibaca bersama nilai dan metode. Banyak paket tidak selalu buruk, tetapi perlu dicermati apakah ada kebutuhan sejenis yang seharusnya dikonsolidasikan atau paket kecil yang rawan luput pencatatan.';
-  if (topic === 'metode-perencanaan') return 'Komposisi metode pada perencanaan membantu melihat cara OPD memetakan kebutuhan. PANJI akan curiga kalau banyak paket sejenis tersebar tanpa konsolidasi atau metode tidak sejalan dengan nilai dan jenis pekerjaan.';
-  if (topic === 'metode-realisasi') return 'Komposisi realisasi per metode menunjukkan kanal mana yang benar-benar digunakan. Perencanaan yang baik harus terlihat nyambung ke transaksi, kontrak, BAST, dan realisasi.';
-  if (topic === 'ranking-top') return 'Ranking tertinggi menunjukkan OPD yang pemanfaatan sistemnya relatif tertib. Jadikan pembanding praktik baik, bukan sekadar daftar juara.';
-  if (topic === 'ranking-low') return 'Ranking terendah perlu dibaca sebagai daftar prioritas pembinaan. Fokusnya bukan menyalahkan OPD, tetapi mencari indikator yang paling lemah dan memperbaiki alur datanya.';
-  if (topic === 'quick-menu') return 'Menu akses cepat membantu masuk ke modul detail. Kalau angka dashboard terlihat lemah, jangan berhenti di ringkasan; buka modul terkait untuk menelusuri paket dan sumber datanya.';
 
-  if (topic === 'monitoring-sirup') return 'Menu SiRUP dipakai untuk menelusuri perencanaan. RUP adalah pintu awal sebelum bicara metode, kontrak, BAST, dan realisasi.';
-  if (topic === 'monitoring-ekatalog') return 'Menu eKatalog membaca Toko Daring dan e-Purchasing. Untuk paket yang tersedia di katalog, cek spesifikasi, harga, PDN/TKDN, penyedia, dan dokumentasi sebelum berpindah metode.';
-  if (topic === 'monitoring-etendering') return 'Menu eTendering penting untuk paket tender dan seleksi. Perhatikan nilai, jenis pekerjaan, metode, dokumen pemilihan, jadwal, dan kesinambungan ke kontrak.';
-  if (topic === 'monitoring-ekontrak') return 'Menu eKontrak membaca apakah hasil pemilihan sudah tersambung ke kontrak. Titik ini krusial karena kontrak mengikat pelaksanaan, pemeriksaan, BAST, pembayaran, dan realisasi.';
-  if (topic === 'simulasi-procurement-stacker') return 'Procurement Stacker adalah ruang latihan. Di sana PANJI menguji urutan PBJ, jebakan metode, katalog tidak tersedia, kontrak, adendum, BAST, dan realisasi.';
+  if (topic === 'pagu') {
+    return 'Pagu RUP menunjukkan beban rencana pengadaan yang harus dikawal sejak perencanaan. Nilai besar bukan otomatis baik; yang penting paket sudah diumumkan, metode tepat, jadwal wajar, dan tidak berhenti sebelum proses pemilihan.';
+  }
+
+  if (topic === 'realisasi') {
+    return 'Realisasi menunjukkan seberapa jauh rencana pengadaan sudah bergerak menjadi pelaksanaan. Capaian yang sehat harus tersambung ke kontrak, BAST, pembayaran, dan pencatatan akhir.';
+  }
+
+  if (topic === 'paket') {
+    return 'Jumlah paket perlu dibaca bersama nilai dan metode. Banyak paket tidak selalu buruk, tetapi perlu dicermati apakah ada kebutuhan sejenis yang seharusnya dikonsolidasikan atau paket kecil yang rawan luput pencatatan.';
+  }
+
+  if (topic === 'metode-perencanaan') {
+    return 'Komposisi metode pada perencanaan membantu melihat cara OPD memetakan kebutuhan. PANJI akan curiga kalau banyak paket sejenis tersebar tanpa konsolidasi atau metode tidak sejalan dengan nilai dan jenis pekerjaan.';
+  }
+
+  if (topic === 'metode-realisasi') {
+    return 'Komposisi realisasi per metode menunjukkan kanal mana yang benar-benar digunakan. Perencanaan yang baik harus terlihat nyambung ke transaksi, kontrak, BAST, dan realisasi.';
+  }
+
+  if (topic === 'ranking-top') {
+    return 'Ranking tertinggi menunjukkan OPD yang pemanfaatan sistemnya relatif tertib. Jadikan pembanding praktik baik, bukan sekadar daftar juara.';
+  }
+
+  if (topic === 'ranking-low') {
+    return 'Ranking terendah perlu dibaca sebagai prioritas pembinaan. Fokusnya bukan menyalahkan OPD, tetapi mencari indikator yang paling lemah dan memperbaiki alur datanya.';
+  }
+
+  if (topic === 'quick-menu') {
+    return 'Menu akses cepat membantu masuk ke modul detail. Kalau angka dashboard terlihat lemah, jangan berhenti di ringkasan; buka modul terkait untuk menelusuri paket dan sumber datanya.';
+  }
+
+  if (topic === 'monitoring-sirup') {
+    return 'Menu SiRUP dipakai untuk menelusuri perencanaan. RUP adalah pintu awal sebelum bicara metode, kontrak, BAST, dan realisasi.';
+  }
+
+  if (topic === 'monitoring-ekatalog') {
+    return 'Menu eKatalog membaca Toko Daring dan e-Purchasing. Untuk paket yang tersedia di katalog, cek spesifikasi, harga, PDN/TKDN, penyedia, dan dokumentasi sebelum berpindah metode.';
+  }
+
+  if (topic === 'monitoring-etendering') {
+    return 'Menu eTendering penting untuk paket tender dan seleksi. Perhatikan nilai, jenis pekerjaan, metode, dokumen pemilihan, jadwal, dan kesinambungan ke kontrak.';
+  }
+
+  if (topic === 'monitoring-ekontrak') {
+    return 'Menu eKontrak membaca apakah hasil pemilihan sudah tersambung ke kontrak. Titik ini krusial karena kontrak mengikat pelaksanaan, pemeriksaan, BAST, pembayaran, dan realisasi.';
+  }
+
+  if (topic === 'simulasi-procurement-stacker') {
+    return 'Procurement Stacker adalah ruang latihan. Di sana PANJI menguji urutan PBJ, jebakan metode, katalog tidak tersedia, kontrak, adendum, BAST, dan realisasi.';
+  }
 
   const text = cleanText(target.textContent).toLowerCase();
 
@@ -1534,27 +1614,27 @@ function detectPanjiMoodFromTarget(target, data) {
 }
 
 function buildPanjiWelcome(data) {
-  return `Halo, saya PANJI — Pengadaan Jitu. Saya akan membaca dashboard ini seperti pendamping PBJ. Pilih satuan kerja, nanti saya nilai SiRUP, Toko Daring, e-Purchasing, e-Tendering, e-Kontrak, dan Non Tender dengan bahasa pengadaan yang lebih tajam.`;
+  return 'Halo, saya PANJI — Pengadaan Jitu. Saya akan membaca dashboard ini seperti pendamping PBJ. Pilih satuan kerja, nanti saya nilai SiRUP, Toko Daring, e-Purchasing, e-Tendering, e-Kontrak, dan Non Tender dengan bahasa pengadaan yang lebih tajam.';
 }
 
 function buildPanjiDashboardExplanation(data) {
-  return `Dashboard ini adalah peta kendali PBJ. ITKP membaca pemanfaatan sistem dari SiRUP sampai Non Tender, sedangkan pagu dan realisasi menunjukkan apakah rencana sudah bergerak menjadi pelaksanaan. Fokusnya bukan sekadar angka, tapi kesinambungan data: RUP, metode, transaksi, kontrak, BAST, pembayaran, dan realisasi harus tersambung.`;
+  return 'Dashboard ini adalah peta kendali PBJ. ITKP membaca pemanfaatan sistem dari SiRUP sampai Non Tender, sedangkan pagu dan realisasi menunjukkan apakah rencana sudah bergerak menjadi pelaksanaan. Fokusnya bukan sekadar angka, tapi kesinambungan data: RUP, metode, transaksi, kontrak, BAST, pembayaran, dan realisasi harus tersambung.';
 }
 
 function buildPanjiSatkerAnalysis(data) {
   const profile = data.selectedProfile || data.cityProfile;
   const status = getTotalStatus(profile.score);
-  const strong = data.strongestIndicators[0];
-  const weak = data.weakestIndicators[0];
+  const strongest = data.strongestIndicators && data.strongestIndicators[0];
+  const weakest = data.weakestIndicators && data.weakestIndicators[0];
 
   let text = `${profile.name} berada pada kategori ${status.label} dengan skor ITKP ${formatScore(profile.score)} dari 30. `;
 
-  if (strong) {
-    text += `Indikator paling kuat adalah ${strong.name}, artinya bagian itu relatif lebih tertib. `;
+  if (strongest) {
+    text += `Indikator paling kuat adalah ${strongest.name}, artinya bagian itu relatif lebih tertib. `;
   }
 
-  if (weak) {
-    text += `Titik yang perlu dikawal adalah ${weak.name}. ${buildPanjiIndicatorExplanation(weak.id, data)}`;
+  if (weakest) {
+    text += `Titik yang perlu dikawal adalah ${weakest.name}. ${buildPanjiIndicatorExplanation(weakest.id, data)}`;
   } else {
     text += 'Belum ada indikator yang terbaca rinci. Cek kembali struktur data agar analisis bisa lebih tajam.';
   }
@@ -1563,13 +1643,13 @@ function buildPanjiSatkerAnalysis(data) {
 }
 
 function buildPanjiStrongestAnalysis(data) {
-  const strong = data.strongestIndicators[0];
+  const strongest = data.strongestIndicators && data.strongestIndicators[0];
 
-  if (!strong) {
+  if (!strongest) {
     return 'Belum ada indikator kuat yang bisa dibaca. Pastikan data ITKP per indikator sudah tersedia.';
   }
 
-  return `${strong.name} menjadi capaian terkuat. ${buildPanjiIndicatorExplanation(strong.id, data)} Pertahankan pola kerja ini dan pastikan indikator lain ikut tersambung ke rantai PBJ yang sama.`;
+  return `${strongest.name} menjadi capaian terkuat. ${buildPanjiIndicatorExplanation(strongest.id, data)} Pertahankan pola kerja ini dan pastikan indikator lain ikut tersambung ke rantai PBJ yang sama.`;
 }
 
 function buildPanjiRecommendation(data) {
@@ -1678,6 +1758,32 @@ function buildPanjiIndicatorExplanation(indicatorId, data) {
   return `${indicator.name} berada pada kategori ${status.label} (${nilai}). Baca indikator ini sebagai bagian dari rantai PBJ, bukan angka berdiri sendiri.`;
 }
 
+function startDashboardPanjiIdleTips(data) {
+  if (dashboardPanjiIdleTimer) {
+    clearTimeout(dashboardPanjiIdleTimer);
+    dashboardPanjiIdleTimer = null;
+  }
+
+  const tips = [
+    'Catatan PANJI: nilai ITKP yang bagus tetap harus dibaca bersama realisasi. Sistem boleh aktif, tapi kontrak, BAST, pembayaran, dan realisasi tetap harus tertib.',
+    'Dalam PBJ, cepat saja tidak cukup. Metode harus tepat, bukti harus ada, dan alur data jangan putus dari RUP sampai realisasi.',
+    'Kalau indikator katalog rendah, jangan langsung menyimpulkan OPD buruk. Cek dulu apakah kebutuhannya memang tersedia di katalog dan apakah hasil ceknya terdokumentasi.',
+    'Paket non tender sering terlihat kecil, tapi justru rawan luput. Pencatatan tetap penting agar monitoring tidak bolong.'
+  ];
+
+  const run = () => {
+    if (activePageKey !== 'dashboard') return;
+    if (dashboardPanjiClosedUntilReload || dashboardPanjiPaused) return;
+
+    const randomTip = tips[Math.floor(Math.random() * tips.length)];
+    dashboardPanjiSpeak(randomTip, 'thinking');
+
+    dashboardPanjiIdleTimer = setTimeout(run, 32000);
+  };
+
+  dashboardPanjiIdleTimer = setTimeout(run, 24000);
+}
+
 function highlightPanjiTarget(target) {
   clearDashboardPanjiHighlight();
 
@@ -1700,7 +1806,8 @@ function focusWeakestIndicator(data) {
   const weak = data.weakestIndicators && data.weakestIndicators[0];
   if (!weak) return;
 
-  const target = contentArea.querySelector(`[data-indicator-id="${weak.id}"]`) ||
+  const target =
+    contentArea.querySelector(`[data-indicator-id="${weak.id}"]`) ||
     contentArea.querySelector(`[data-panji-topic="${weak.id}"]`);
 
   highlightPanjiTarget(target);
@@ -1740,6 +1847,7 @@ function initDashboardPanjiAutoPosition() {
 
     nextBottom = Math.max(baseBottom, Math.min(maxBottom, Math.round(nextBottom)));
     panji.style.setProperty('--dash-panji-bottom', `${nextBottom}px`);
+
     ticking = false;
   };
 
@@ -1778,6 +1886,11 @@ function injectDashboardPanjiCss() {
       background:transparent;
       text-align:left;
       cursor:pointer;
+    }
+
+    .dim-row--button:hover,
+    .insight-item--button:hover{
+      transform:translateY(-1px);
     }
 
     .dash-panji{
@@ -2241,22 +2354,20 @@ function injectDashboardPanjiCss() {
         height:132px;
       }
     }
+
+    @media(max-width:900px){
+      .dash-panji{
+        right:12px;
+        bottom:var(--dash-panji-bottom, 92px);
+      }
+
+      .dash-panji-bubble{
+        width:286px;
+      }
+    }
   `;
 
   document.head.appendChild(style);
-}
-
-/* =========================================================
-   PAGE RENDERERS
-   ========================================================= */
-
-function showModuleLoading(title = 'Memuat modul...') {
-  contentArea.innerHTML = `
-    <section class="card">
-      <h3>${escapeHtml(title)}</h3>
-      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
-    </section>
-  `;
 }
 
 function renderIframePage(page) {
@@ -2266,6 +2377,7 @@ function renderIframePage(page) {
     <section class="embed-card">
       <h3>${escapeHtml(page.title)}</h3>
       <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
+
       <div class="embed-frame-wrap">
         <iframe
           class="embed-frame"
@@ -2286,20 +2398,43 @@ function renderPlaceholderPage(pageKey, page) {
   contentArea.innerHTML = `
     <section class="card">
       <h3>${escapeHtml(page.title)}</h3>
+
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Modul belum dihubungkan</h4>
-          <p>Halaman ini sudah disiapkan di portal utama. Route aktif: <b>${escapeHtml(pageKey)}</b>.</p>
+          <p>
+            Halaman ini sudah disiapkan di portal utama.
+            Route aktif: <b>${escapeHtml(pageKey)}</b>.
+          </p>
         </div>
+
         <div class="placeholder-box">
           <h4>Langkah berikutnya</h4>
-          <p>Ubah route ini menjadi <b>module</b> atau <b>iframe</b> saat halaman detail sudah tersedia.</p>
+          <p>
+            Ubah route ini menjadi <b>module</b> atau <b>iframe</b>
+            saat halaman detail sudah tersedia.
+          </p>
         </div>
       </div>
     </section>
   `;
 
   requestAnimationFrame(initScrollAnimation);
+}
+
+function renderQuickCard(icon, bg, title, text, route) {
+  return `
+    <button class="quick-card" type="button" data-quick="${escapeHtml(route)}" data-panji-topic="${escapeHtml(route)}">
+      <div class="quick-icon" style="background:${escapeHtml(bg)}">${escapeHtml(icon)}</div>
+
+      <div>
+        <div class="quick-title">${escapeHtml(title)}</div>
+        <div class="quick-text">${escapeHtml(text)}</div>
+      </div>
+
+      <div class="quick-arrow">›</div>
+    </button>
+  `;
 }
 
 /* =========================================================
@@ -2376,7 +2511,9 @@ async function renderModulePage(page) {
       }
     }
 
-    const response = await fetch(cacheBust(page.html), { cache: 'no-cache' });
+    const response = await fetch(cacheBust(page.html), {
+      cache: 'no-cache'
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status} saat memuat ${page.html}`);
@@ -2406,6 +2543,7 @@ async function renderModulePage(page) {
     if (page.css) {
       await new Promise((resolve, reject) => {
         const link = document.createElement('link');
+
         link.rel = 'stylesheet';
         link.href = cacheBust(page.css);
         link.setAttribute('data-dynamic-module-css', 'true');
@@ -2462,7 +2600,7 @@ async function renderModulePage(page) {
 }
 
 /* =========================================================
-   ROUTER + MENU
+   ROUTER
    ========================================================= */
 
 async function loadPage(key) {
@@ -2501,6 +2639,10 @@ async function loadPage(key) {
   }
 }
 
+/* =========================================================
+   SIDEBAR + MENU
+   ========================================================= */
+
 function updateActiveMenu(key) {
   document.querySelectorAll('.nav-link, .submenu-link').forEach((el) => {
     el.classList.remove('active');
@@ -2517,7 +2659,9 @@ function updateActiveMenu(key) {
     subButton.classList.add('active');
 
     const group = subButton.closest('.nav-group');
-    if (group) group.classList.add('open');
+    if (group) {
+      group.classList.add('open');
+    }
   }
 }
 
@@ -2530,10 +2674,23 @@ function closeFlyout() {
 
 function bindMenu() {
   document.querySelectorAll('[data-page]').forEach((button) => {
-    button.addEventListener('click', () => loadPage(button.dataset.page));
+    if (button.dataset.menuBound === '1') return;
+
+    button.dataset.menuBound = '1';
+
+    button.addEventListener('click', () => {
+      const pageKey = button.dataset.page;
+      if (pageKey) {
+        loadPage(pageKey);
+      }
+    });
   });
 
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
+    if (button.dataset.toggleBound === '1') return;
+
+    button.dataset.toggleBound = '1';
+
     button.addEventListener('click', (event) => {
       const groupName = button.dataset.toggleGroup;
       const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
@@ -2550,7 +2707,9 @@ function bindMenu() {
     });
   });
 
-  if (sidebarToggleButton && sidebar) {
+  if (sidebarToggleButton && sidebar && sidebarToggleButton.dataset.sidebarBound !== '1') {
+    sidebarToggleButton.dataset.sidebarBound = '1';
+
     sidebarToggleButton.addEventListener('click', () => {
       if (window.innerWidth <= 980) {
         sidebar.classList.toggle('mobile-open');
@@ -2613,6 +2772,7 @@ function toggleFlyout(toggleButton, groupName) {
 
   flyout.innerHTML = `
     <div class="sidebar-flyout-title">${escapeHtml(titleMap[groupName] || 'Menu')}</div>
+
     ${Array.from(submenuLinks).map((link) => {
       const isActive = link.classList.contains('active') ? ' active' : '';
 
@@ -2634,12 +2794,20 @@ function toggleFlyout(toggleButton, groupName) {
   flyout.querySelectorAll('[data-page]').forEach((btn) => {
     btn.addEventListener('click', () => {
       closeFlyout();
-      loadPage(btn.dataset.page);
+
+      const pageKey = btn.dataset.page;
+      if (pageKey) {
+        loadPage(pageKey);
+      }
     });
   });
 
   activeFlyout = flyout;
 }
+
+/* =========================================================
+   BOOT
+   ========================================================= */
 
 bindMenu();
 loadPage('dashboard');
