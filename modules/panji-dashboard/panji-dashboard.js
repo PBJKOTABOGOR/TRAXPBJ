@@ -197,8 +197,7 @@
   }
 
   function createPanji() {
-    if (sessionStorage.getItem(PANJI_CONFIG.storageKeyClosed) === '1') {
-      state.isClosed = true;
+    if (state.isClosed) {
       return;
     }
 
@@ -343,7 +342,6 @@
 
   function closePanjiUntilReload() {
     state.isClosed = true;
-    sessionStorage.setItem(PANJI_CONFIG.storageKeyClosed, '1');
     clearHighlight();
 
     if (state.root) {
