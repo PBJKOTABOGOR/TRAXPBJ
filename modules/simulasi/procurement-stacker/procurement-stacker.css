@@ -2731,3 +2731,189 @@
     font-size:20px;
   }
 }
+
+/* =========================================================
+   REVISI TENDER RUSH + PANJI KECIL
+   - ruang jatuh paket diperpanjang
+   - tombol metode dibuat lebih ringkas
+   - bubble PANJI diperkecil agar tidak nutup game
+   ========================================================= */
+
+.ps-ready-card{
+  min-height:360px;
+}
+
+.panji-assistant{
+  right:14px !important;
+  bottom:var(--panji-bottom, 18px) !important;
+  gap:8px !important;
+}
+
+.panji-bubble{
+  width:250px !important;
+  min-height:0 !important;
+  max-height:178px !important;
+  padding:11px 12px !important;
+  border-radius:18px !important;
+}
+
+.panji-bubble::after{
+  right:-7px !important;
+  bottom:26px !important;
+  width:14px !important;
+  height:14px !important;
+}
+
+.panji-name{
+  min-height:22px !important;
+  padding:0 8px !important;
+  font-size:9px !important;
+  letter-spacing:.08em !important;
+}
+
+.panji-emote{
+  width:26px !important;
+  height:26px !important;
+  font-size:14px !important;
+}
+
+.panji-text{
+  font-size:12px !important;
+  line-height:1.5 !important;
+  font-weight:750 !important;
+}
+
+.panji-actions{
+  margin-top:8px !important;
+  gap:6px !important;
+}
+
+.panji-actions button{
+  min-height:28px !important;
+  padding:0 8px !important;
+  border-radius:9px !important;
+  font-size:10px !important;
+}
+
+.panji-character{
+  transform:scale(.78) !important;
+  transform-origin:right bottom !important;
+}
+
+.panji-assistant.panji-minimized .panji-character{
+  transform:scale(.82) !important;
+}
+
+.ps-rush-arena{
+  padding:14px !important;
+}
+
+.ps-rush-hud{
+  gap:8px !important;
+  margin-bottom:8px !important;
+}
+
+.ps-rush-hud > div{
+  padding:9px 11px !important;
+  border-radius:15px !important;
+}
+
+.ps-rush-hud label{
+  font-size:10px !important;
+  margin-bottom:5px !important;
+}
+
+.ps-rush-hud strong{
+  font-size:22px !important;
+}
+
+.ps-rush-time-track{
+  height:10px !important;
+  margin-bottom:10px !important;
+}
+
+.ps-rush-fall-lane{
+  min-height:430px !important;
+  margin-bottom:10px !important;
+}
+
+.ps-rush-fall-lane::after{
+  bottom:16px !important;
+  font-size:11px !important;
+  padding:7px 11px !important;
+}
+
+.ps-rush-package{
+  width:min(460px, calc(100% - 30px)) !important;
+  padding:16px !important;
+  animation-duration:var(--rush-duration, 10s) !important;
+}
+
+@keyframes psRushDrop{
+  from{
+    top:14px;
+  }
+
+  to{
+    top:285px;
+  }
+}
+
+.ps-rush-package h3{
+  font-size:21px !important;
+}
+
+.ps-rush-package p{
+  font-size:13px !important;
+  line-height:1.5 !important;
+}
+
+.ps-rush-drop-grid{
+  gap:8px !important;
+}
+
+.ps-rush-drop{
+  min-height:68px !important;
+  padding:9px 10px !important;
+  border-radius:16px !important;
+  grid-template-columns:30px 1fr !important;
+  gap:5px 8px !important;
+}
+
+.ps-rush-key{
+  width:30px !important;
+  height:30px !important;
+  border-radius:10px !important;
+  font-size:13px !important;
+}
+
+.ps-rush-icon{
+  font-size:18px !important;
+}
+
+.ps-rush-drop strong{
+  font-size:12px !important;
+}
+
+.ps-rush-result{
+  margin-bottom:10px !important;
+  padding:10px 12px !important;
+  font-size:12px !important;
+  line-height:1.5 !important;
+}
+
+@media (max-width:900px){
+  .panji-bubble{
+    width:220px !important;
+    max-height:150px !important;
+  }
+
+  .ps-rush-fall-lane{
+    min-height:360px !important;
+  }
+
+  @keyframes psRushDrop{
+    from{ top:12px; }
+    to{ top:230px; }
+  }
+}
