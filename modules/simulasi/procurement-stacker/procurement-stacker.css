@@ -3305,3 +3305,222 @@
 
   .ps-rush-package h3{ font-size:18px !important; }
 }
+
+
+/* =========================================================
+   REVISI 5 — PANJI PROPORSI, EKSPRESI MINIMIZE, TENDER RUSH COMPACT
+   ========================================================= */
+
+/* Saat hasil akhir, tombol Tanya PANJI tidak perlu tampil di bubble. */
+.panji-assistant.panji-result-mode #panjiHintBtn{
+  display:none !important;
+}
+
+/* Normalisasi ukuran PANJI agar badan/tangan tidak gepeng walau ada override lama. */
+.panji-character{
+  width:88px !important;
+  height:118px !important;
+  min-width:88px !important;
+  min-height:118px !important;
+  max-width:88px !important;
+  max-height:118px !important;
+  padding:0 !important;
+  display:block !important;
+  overflow:visible !important;
+  flex:0 0 88px !important;
+  transform-origin:center bottom !important;
+}
+
+.panji-head{
+  left:50% !important;
+  top:8px !important;
+  width:62px !important;
+  height:62px !important;
+  transform:translateX(-50%) !important;
+  border-radius:22px 22px 20px 20px !important;
+}
+
+.panji-hat{
+  left:50% !important;
+  top:-12px !important;
+  width:50px !important;
+  height:23px !important;
+  transform:translateX(-50%) !important;
+  font-size:9px !important;
+}
+
+.panji-eye{
+  top:27px !important;
+  width:9px !important;
+  height:13px !important;
+}
+
+.panji-eye-left{ left:17px !important; }
+.panji-eye-right{ right:17px !important; }
+
+.panji-mouth{
+  left:50% !important;
+  bottom:13px !important;
+  width:16px !important;
+  height:8px !important;
+  transform:translateX(-50%) !important;
+}
+
+.panji-body{
+  left:50% !important;
+  top:71px !important;
+  width:52px !important;
+  height:40px !important;
+  transform:translateX(-50%) !important;
+  border-radius:18px 18px 15px 15px !important;
+}
+
+.panji-badge{
+  width:26px !important;
+  height:26px !important;
+  font-size:9px !important;
+}
+
+.panji-hand{
+  top:78px !important;
+  width:13px !important;
+  height:30px !important;
+  border-radius:999px !important;
+  transform-origin:top center !important;
+}
+
+.panji-hand-left{
+  left:8px !important;
+  right:auto !important;
+  transform:rotate(22deg) !important;
+}
+
+.panji-hand-right{
+  right:8px !important;
+  left:auto !important;
+  transform:rotate(-22deg) !important;
+}
+
+/* Ekspresi tetap tampak saat minimize: bubble diam, karakter tetap berubah mood. */
+.panji-assistant.panji-minimized .panji-character{
+  opacity:1 !important;
+  filter:drop-shadow(0 14px 20px rgba(37,99,235,.28)) !important;
+}
+
+.panji-assistant.panji-happy.panji-minimized .panji-head{
+  box-shadow:0 0 0 6px rgba(22,163,74,.13), 0 14px 28px rgba(18,58,114,.20) !important;
+}
+
+.panji-assistant.panji-sad.panji-minimized .panji-head{
+  box-shadow:0 0 0 6px rgba(220,38,38,.13), 0 14px 28px rgba(18,58,114,.20) !important;
+}
+
+/* Tender Rush card turun dibuat lebih kecil lagi supaya arena terasa lega. */
+.ps-rush-package{
+  width:min(360px, calc(100% - 72px)) !important;
+  min-height:82px !important;
+  padding:12px 14px !important;
+  border-radius:17px !important;
+}
+
+.ps-rush-package h3{
+  font-size:18px !important;
+  line-height:1.18 !important;
+  margin:6px 0 6px !important;
+}
+
+.ps-rush-package p{
+  font-size:12px !important;
+  line-height:1.42 !important;
+}
+
+.ps-rush-package-top{
+  gap:8px !important;
+  margin-bottom:6px !important;
+}
+
+.ps-rush-package-top span{
+  font-size:9px !important;
+  padding:4px 8px !important;
+}
+
+.ps-rush-package-top b{
+  font-size:11px !important;
+}
+
+@keyframes psRushDrop{
+  from{
+    top:16px;
+    transform:translateX(-50%) scale(.96);
+  }
+  40%{
+    transform:translateX(-50%) scale(.99);
+  }
+  to{
+    top:300px;
+    transform:translateX(-50%) scale(.99);
+  }
+}
+
+/* Animasi final PANJI dibuat stabil, tidak menarik posisi badan/tangan. */
+.panji-assistant.panji-celebrate .panji-character{
+  animation:panjiCelebrateFlipV5 1.05s ease-in-out 0s 3 !important;
+}
+
+.panji-assistant.panji-cry .panji-character{
+  animation:panjiCryShakeV5 .32s ease-in-out 0s 14 !important;
+}
+
+.panji-assistant.panji-celebrate .panji-hand-left{
+  animation:panjiHappyWaveLeftV5 .45s ease-in-out 0s 6 !important;
+}
+
+.panji-assistant.panji-celebrate .panji-hand-right{
+  animation:panjiHappyWaveRightV5 .45s ease-in-out 0s 6 !important;
+}
+
+@keyframes panjiCelebrateFlipV5{
+  0%{ transform:translateY(0) rotate(0deg) scale(1); }
+  22%{ transform:translateY(-22px) rotate(-8deg) scale(1.04); }
+  48%{ transform:translateY(-4px) rotate(8deg) scale(.98); }
+  72%{ transform:translateY(-16px) rotate(360deg) scale(1.04); }
+  100%{ transform:translateY(0) rotate(360deg) scale(1); }
+}
+
+@keyframes panjiCryShakeV5{
+  0%,100%{ transform:translateX(0) rotate(0deg); }
+  25%{ transform:translateX(-3px) rotate(-1deg); }
+  75%{ transform:translateX(3px) rotate(1deg); }
+}
+
+@keyframes panjiHappyWaveLeftV5{
+  0%,100%{ transform:rotate(22deg); }
+  50%{ transform:rotate(58deg); }
+}
+
+@keyframes panjiHappyWaveRightV5{
+  0%,100%{ transform:rotate(-22deg); }
+  50%{ transform:rotate(-58deg); }
+}
+
+@media (max-width:900px){
+  .panji-character{
+    width:74px !important;
+    height:100px !important;
+    min-width:74px !important;
+    min-height:100px !important;
+    max-width:74px !important;
+    max-height:100px !important;
+    flex-basis:74px !important;
+  }
+
+  .panji-head{ width:54px !important; height:54px !important; }
+  .panji-body{ top:62px !important; width:46px !important; height:35px !important; }
+  .panji-hand{ top:68px !important; width:11px !important; height:26px !important; }
+
+  .ps-rush-package{
+    width:min(300px, calc(100% - 52px)) !important;
+    min-height:76px !important;
+    padding:10px 12px !important;
+  }
+}
