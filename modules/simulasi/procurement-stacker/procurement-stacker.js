@@ -922,10 +922,12 @@
       CHALLENGE_RAW[5],
       BONUS_LEVEL_8_SNAKE,
       CHALLENGE_RAW[6],
-      CHALLENGE_RAW[7]
+      CHALLENGE_RAW[7],
+      CHALLENGE_RAW[8],
+      CHALLENGE_RAW[9]
     ].filter(Boolean);
 
-    return list.slice(0, 10);
+    return list.slice(0, 12);
   }
 
   const CHALLENGES = buildMainChallengeFlow().map(buildChallenge);
@@ -1002,7 +1004,8 @@
     levelTimeLeft: 0,
     levelTimeLimit: 0,
     stoppedReason: '',
-    stoppedLevel: 0
+    stoppedLevel: 0,
+    pipelineTutorialSeen: false
   };
 
   const PLAYER_STATE = {
@@ -2825,8 +2828,25 @@
 
   function renderPipelineChallenge(challenge) {
     const placedIds = new Set(GAME_STATE.placed.filter(Boolean).map(item => item.id));
+    const showPipelineTutorial = !GAME_STATE.pipelineTutorialSeen && getCurrentLevelNumber() === 1;
 
     return `
+      ${showPipelineTutorial ? `
+        <div class="ps-pipeline-tutorial">
+          <div class="ps-tutorial-panji">PANJI</div>
+          <div>
+            <h4>Pelan-pelan dulu, ini cara main pipeline.</h4>
+            <ol>
+              <li><b>Baca kasusnya di panel atas</b>: lihat nama paket, nilai/pagu, dan tingkat kesulitan.</li>
+              <li><b>Baca tujuan pipeline</b>: susun kartu proses dari kiri ke kanan.</li>
+              <li><b>Cara meletakkan kartu</b>: drag kartu ke slot, atau klik kartu lalu klik slot biru.</li>
+              <li><b>Jangan asal taruh</b>: slot harus diisi urut dari kiri. Kartu jebakan bikin risiko naik.</li>
+              <li><b>Butuh arahan?</b> klik tombol <b>Tanya PANJI</b> untuk hint, tapi skor berkurang sedikit.</li>
+            </ol>
+            <button type="button" class="ps-btn ps-btn-primary" id="btnClosePipelineTutorial">Oke, saya paham</button>
+          </div>
+        </div>
+      ` : ''}
       <div class="ps-pipeline">
         ${challenge.idealIds.map((_, index) => renderSlot(index)).join('')}
       </div>
@@ -3085,12 +3105,17 @@
       <div class="ps-bonus3d-wrap">
         <div class="ps-bonus3d-stage">
           <div class="ps-bonus3d-sky"></div>
+          <div class="ps-bonus3d-cloud c1"></div>
+          <div class="ps-bonus3d-cloud c2"></div>
+          <div class="ps-bonus3d-road"></div>
+          <div class="ps-bonus3d-player"><span>PPK</span></div>
+          <div class="ps-bonus3d-companion"><span>PANJI</span></div>
           <div class="ps-bonus3d-map">
             ${bonus.nodes.map((node, index) => `
               <button type="button" class="ps-bonus3d-node ${bonus.activeNode === node.id ? 'active' : ''} ${bonus.completed[node.id] ? 'done' : ''}" data-bonus-node="${node.id}" style="--i:${index}">
                 <span class="ps-bonus3d-orb">${bonus.completed[node.id] ? '✅' : node.icon}</span>
                 <b>${escapeHtml(node.title)}</b>
-                <small>${bonus.completed[node.id] ? 'Selesai' : 'Belum'}</small>
+                <small>${bonus.completed[node.id] ? '✓ Sudah dikunjungi' : 'Quest belum'}</small>
               </button>
             `).join('')}
           </div>
@@ -3201,31 +3226,32 @@
   function renderBonusSnakeChallenge() {
     const snake = getBonusSnakeState();
     return `
-      <div class="ps-snake-wrap">
+      <div class="ps-snake-wrap ps-snake-wrap-big">
         <div class="ps-snake-info">
           <div class="ps-bonus3d-kicker">Bonus Level 8 • Mood Booster</div>
           <h3>PANJI Star Snake</h3>
-          <p>Ambil bintang sebanyak mungkin. Hindari tembok, badan sendiri, dan jebakan revisi. Pakai tombol arah / WASD.</p>
+          <p>Ambil bintang sebanyak mungkin. Hindari tembok, badan sendiri, dan jebakan revisi. Pakai tombol arah / WASD. Bonus ini boleh diulang, atau dilewati kalau user mau lanjut level berikutnya.</p>
           <div class="ps-snake-score-row">
             <div><label>Bintang</label><b>${snake.score}/${snake.target}</b></div>
             <div><label>Status</label><b>${snake.finished ? 'Selesai' : snake.running ? 'Berjalan' : 'Siap'}</b></div>
             <div><label>Bonus</label><b>${Math.min(120, snake.score * 10)}</b></div>
           </div>
           <div class="ps-bonus3d-panji">
-            <b>PANJI:</b> Ini level santai. Tapi tetap ada maknanya: fokus, jangan rakus, dan hindari jebakan yang bikin proses berantakan.
+            <b>PANJI:</b> Ini level santai. Fokus ambil ⭐ Bintang Semangat, jangan rakus, dan hindari 🧾 Revisi. Kalau nabrak, kamu boleh ulang lagi.
           </div>
           <div class="ps-buttons">
-            <button type="button" class="ps-btn ps-btn-primary" id="btnStartSnake" ${snake.running || snake.finished ? 'disabled' : ''}>Mulai Snake</button>
-            <button type="button" class="ps-btn ps-btn-soft" id="btnResetSnake">Reset Snake</button>
+            <button type="button" class="ps-btn ps-btn-primary" id="btnStartSnake" ${snake.running ? 'disabled' : ''}>${snake.finished ? 'Main Lagi Snake' : 'Mulai Snake'}</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnResetSnake">Ulangi Level Bonus</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnSkipSnake">Lewati Level Bonus</button>
           </div>
         </div>
-        <div class="ps-snake-stage">
-          <canvas id="psSnakeCanvas" width="480" height="480" aria-label="PANJI Star Snake"></canvas>
-          <div class="ps-snake-caption">⭐ Bintang = poin · 🧾 Revisi = jebakan</div>
+        <div class="ps-snake-stage ps-snake-stage-big">
+          <canvas id="psSnakeCanvas" width="620" height="620" aria-label="PANJI Star Snake"></canvas>
+          <div class="ps-snake-caption">⭐ Bintang = poin · 🧾 Revisi = jebakan · WASD/Arrow = gerak</div>
         </div>
       </div>
       ${snake.finished ? `
-        <div class="ps-explanation"><strong>Bonus Snake selesai:</strong><br>Kamu mendapat ${snake.score} bintang. Poin bonus masuk skor akhir. PANJI akan pakai hasil ini sebagai bagian kecil dari analisa fokus dan ketelitian.</div>
+        <div class="ps-explanation"><strong>Bonus Snake selesai:</strong><br>Kamu mendapat ${snake.score} bintang. Poin bonus masuk skor akhir. Klik <b>Main Lagi Snake</b> kalau mau memperbaiki skor, atau <b>Lanjut Soal Berikutnya</b>.</div>
       ` : ''}
     `;
   }
@@ -3495,8 +3521,14 @@
   }
 
   function startBonusSnakeGame() {
-    const snake = getBonusSnakeState();
-    if (snake.running || snake.finished) return;
+    let snake = getBonusSnakeState();
+    if (snake.running) return;
+    if (snake.finished) {
+      GAME_STATE.bonusSnake = createBonusSnakeState();
+      GAME_STATE.progress = 0;
+      snake = getBonusSnakeState();
+      renderGame();
+    }
     clearBonusSnakeTimers();
     snake.running = true;
     showPanji('Gas! Ambil bintang, jangan tabrak revisi. Ini refreshing tapi skor bonusnya tetap dihitung.', 'happy');
@@ -3568,6 +3600,20 @@
     snake.snake.pop();
     snake.ticks += 1;
     drawBonusSnake();
+  }
+
+  function skipBonusSnake() {
+    clearBonusSnakeTimers();
+    const snake = getBonusSnakeState();
+    if (!snake.finished) {
+      snake.running = false;
+      snake.finished = true;
+      GAME_STATE.progress = 100;
+      addLog('info', 'Bonus Snake dilewati', 'User memilih melewati bonus level 8. Skor bonus tidak ditambahkan, tapi game tetap bisa lanjut.');
+      showPanji('Oke, level bonus dilewati. Tidak apa-apa, kita lanjut ke level berikutnya.', 'thinking');
+      showToast('Bonus level dilewati', 'info');
+      renderGame();
+    }
   }
 
   function resetBonusSnake() {
@@ -3848,6 +3894,20 @@
     const btnResetSnake = root.querySelector('#btnResetSnake');
     if (btnResetSnake) {
       btnResetSnake.addEventListener('click', () => resetBonusSnake());
+    }
+
+    const btnSkipSnake = root.querySelector('#btnSkipSnake');
+    if (btnSkipSnake) {
+      btnSkipSnake.addEventListener('click', () => skipBonusSnake());
+    }
+
+    const btnClosePipelineTutorial = root.querySelector('#btnClosePipelineTutorial');
+    if (btnClosePipelineTutorial) {
+      btnClosePipelineTutorial.addEventListener('click', () => {
+        GAME_STATE.pipelineTutorialSeen = true;
+        renderGame();
+        showPanji('Oke. Sekarang baca kasus di panel atas, pilih kartu, lalu taruh dari slot kiri ke kanan.', 'happy');
+      });
     }
 
     if (GAME_STATE.current && GAME_STATE.current.type === 'bonusSnake') {
