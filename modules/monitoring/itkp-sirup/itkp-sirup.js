@@ -795,11 +795,64 @@ function renderPdnBadge(value) {
     : '<span class="badge badge-red">Tidak</span>';
 }
 
-function exportCsv(filename, rows) {
-  if (!rows || !rows.length) {
-    alert('Tidak ada data untuk diexport.');
+function exportRows(rows, filename) {
+  if (!Array.isArray(rows) || !rows.length) {
+    alert('Tidak ada data yang bisa diexport.');
     return;
   }
+
+  if (!window.XLSX) {
+    alert('Library XLSX belum dimuat. Pastikan xlsx.full.min.js sudah ditambahkan di index.html sebelum app.js.');
+    return;
+  }
+
+  const safeFilename = String(filename || 'export-data.xlsx')
+    .replace(/\.csv$/i, '.xlsx')
+    .replace(/\.xls$/i, '.xlsx');
+
+  const cleanRows = rows.map(row => {
+    const obj = {};
+
+    Object.keys(row || {}).forEach(key => {
+      let value = row[key];
+
+      if (value == null) {
+        value = '';
+      }
+
+      obj[key] = value;
+    });
+
+    return obj;
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(cleanRows);
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+  const colWidths = [];
+
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    let maxLength = 10;
+
+    for (let row = range.s.r; row <= range.e.r; row++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+      const cell = worksheet[cellAddress];
+
+      if (cell && cell.v != null) {
+        maxLength = Math.max(maxLength, String(cell.v).length);
+      }
+    }
+
+    colWidths.push({ wch: Math.min(maxLength + 2, 45) });
+  }
+
+  worksheet['!cols'] = colWidths;
+
+  XLSX.writeFile(workbook, safeFilename);
+}
 
   const headers = Object.keys(rows[0]);
   const csv = [
