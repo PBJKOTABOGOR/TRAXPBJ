@@ -4084,3 +4084,201 @@
   .ps-bonus3d-wrap,.ps-snake-wrap-big{grid-template-columns:1fr !important}
   .ps-snake-stage-big{min-height:auto !important}
 }
+
+/* =========================================================
+   FIX V6 - tutorial, bonus open world, snake tap, feedback
+   ========================================================= */
+.ps-pipeline-tutorial{
+  position:relative;
+  overflow:hidden;
+  border:2px solid #bfdbfe;
+  background:
+    radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 28%),
+    linear-gradient(180deg,#ffffff 0%,#eff6ff 100%);
+  box-shadow:0 18px 38px rgba(37,99,235,.16);
+  animation:psTutorialPop .32s ease;
+}
+.ps-pipeline-tutorial::after{
+  content:"⬇ taruh kartu ke slot kiri → kanan";
+  position:absolute;
+  right:18px;
+  bottom:16px;
+  padding:9px 12px;
+  border-radius:999px;
+  background:#123a72;
+  color:#fff;
+  font-size:12px;
+  font-weight:950;
+  box-shadow:0 12px 26px rgba(18,58,114,.18);
+}
+.ps-tutorial-panji{
+  animation:panjiTutorBounce 1.2s ease-in-out infinite;
+}
+@keyframes psTutorialPop{
+  from{opacity:0;transform:translateY(12px) scale(.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes panjiTutorBounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-7px)}
+}
+
+.ps-bonus3d-fullscreen{
+  display:grid;
+  grid-template-columns:minmax(560px,1.3fr) minmax(360px,.7fr);
+  gap:18px;
+  min-height:680px;
+}
+.ps-bonus3d-scene{
+  position:relative;
+  min-height:680px;
+  border-radius:34px;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg,#8bd3ff 0%,#c7f1ff 35%,#7dd46f 36%,#24864d 100%);
+  box-shadow:inset 0 -28px 80px rgba(8,47,73,.25),0 24px 50px rgba(15,23,42,.14);
+  perspective:900px;
+  transform-style:preserve-3d;
+}
+.ps-bonus3d-scene::before{
+  content:"";
+  position:absolute;
+  inset:42% -10% -15%;
+  background:
+    radial-gradient(ellipse at center, rgba(255,255,255,.34), transparent 55%),
+    linear-gradient(90deg, rgba(255,255,255,.22), transparent, rgba(255,255,255,.20));
+  transform:rotateX(62deg);
+  border-radius:50%;
+}
+.ps-bonus3d-mountain{
+  position:absolute;
+  width:260px;
+  height:260px;
+  background:linear-gradient(135deg,#1d4ed8,#0f766e);
+  transform:rotate(45deg);
+  border-radius:28px;
+  opacity:.62;
+  top:145px;
+}
+.ps-bonus3d-mountain.m1{left:5%}
+.ps-bonus3d-mountain.m2{right:8%;top:170px;transform:rotate(45deg) scale(.72)}
+.ps-bonus3d-portal{
+  position:absolute;
+  right:40px;
+  top:70px;
+  width:126px;
+  height:126px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:12px;
+  font-weight:950;
+  color:#fff;
+  background:radial-gradient(circle,#a78bfa,#4c1d95 62%,#1e1b4b 100%);
+  box-shadow:0 0 28px rgba(124,58,237,.7), inset 0 0 30px rgba(255,255,255,.18);
+  animation:portalPulse 2.2s ease-in-out infinite;
+}
+.ps-bonus3d-portal.open{
+  background:radial-gradient(circle,#fde68a,#22c55e 58%,#0f766e 100%);
+  box-shadow:0 0 38px rgba(34,197,94,.8), inset 0 0 30px rgba(255,255,255,.25);
+}
+@keyframes portalPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.ps-bonus3d-fullscreen .ps-bonus3d-map{
+  position:absolute;
+  left:8%;
+  right:8%;
+  top:230px;
+  bottom:70px;
+  transform:rotateX(56deg) rotateZ(-2deg);
+  transform-style:preserve-3d;
+}
+.ps-bonus3d-fullscreen .ps-bonus3d-node{
+  transform:translateZ(36px) rotateX(-56deg);
+  box-shadow:0 18px 32px rgba(15,23,42,.20);
+}
+.ps-bonus3d-node.locked{
+  opacity:.55;
+  filter:grayscale(.45);
+  cursor:not-allowed;
+}
+.ps-bonus3d-story-panel{
+  max-height:680px;
+  overflow:auto;
+}
+.ps-bonus3d-choice{
+  text-align:left;
+}
+.ps-bonus3d-choice::before{
+  content:"🎲";
+  margin-right:6px;
+}
+.ps-bonus3d-player,.ps-bonus3d-companion{
+  z-index:4;
+}
+
+#psSnakeCanvas{
+  touch-action:none;
+  cursor:pointer;
+}
+.ps-snake-stage-big #psSnakeCanvas{
+  width:min(74vh,720px) !important;
+  height:min(74vh,720px) !important;
+  max-width:100%;
+  border-radius:28px;
+  box-shadow:0 22px 52px rgba(15,23,42,.25);
+}
+.ps-snake-wrap-big{
+  grid-template-columns:.72fr 1.28fr !important;
+  align-items:stretch;
+}
+.ps-snake-caption::after{
+  content:"  • di HP cukup tap arah yang mau dituju";
+  font-weight:900;
+  color:#123a72;
+}
+
+.ps-final-feedback-box{
+  margin:14px 0;
+  padding:16px;
+  border-radius:22px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  display:grid;
+  gap:10px;
+}
+.ps-final-feedback-box strong{
+  color:#9a3412;
+  font-size:17px;
+}
+.ps-final-feedback-box p{
+  margin:4px 0 0;
+  color:#9a3412;
+  line-height:1.55;
+  font-size:13px;
+}
+.ps-final-feedback-box textarea{
+  width:100%;
+  resize:vertical;
+  border:1px solid #fdba74;
+  border-radius:16px;
+  padding:12px 14px;
+  font:inherit;
+  color:#102544;
+  background:#fff;
+}
+.ps-lb-feedback{
+  display:block;
+  margin-top:6px;
+  padding:8px 10px;
+  border-radius:12px;
+  background:#eef4fb;
+  color:#334155;
+  font-style:normal;
+  line-height:1.45;
+  font-size:12px;
+}
+@media(max-width:1100px){
+  .ps-bonus3d-fullscreen,.ps-snake-wrap-big{grid-template-columns:1fr !important}
+  .ps-bonus3d-scene{min-height:520px}
+  .ps-bonus3d-story-panel{max-height:none}
+}
