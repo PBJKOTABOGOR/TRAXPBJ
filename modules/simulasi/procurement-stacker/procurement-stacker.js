@@ -23,7 +23,6 @@
 
   let leaderboardModalEl = null;
   let leaderboardRefreshTimer = null;
-  let leaderboardPanjiIntroShown = false;
 
   const CARD_LIBRARY = {
     rup: {
@@ -950,6 +949,34 @@
     return leaderboardModalEl;
   }
 
+  function attachPanjiToLeaderboardModal() {
+    if (!leaderboardModalEl) return;
+
+    const panel = leaderboardModalEl.querySelector('.ps-leaderboard-panel');
+    const panji = document.querySelector('.panji-assistant');
+
+    if (!panel || !panji) return;
+
+    const rect = panel.getBoundingClientRect();
+
+    const right = Math.max(10, window.innerWidth - rect.right - 8);
+    const bottom = Math.max(10, window.innerHeight - rect.bottom + 10);
+
+    panji.classList.add('panji-leaderboard-mode');
+    panji.style.setProperty('--panji-lb-right', `${right}px`);
+    panji.style.setProperty('--panji-lb-bottom', `${bottom}px`);
+  }
+
+  function detachPanjiFromLeaderboardModal() {
+    const panji = document.querySelector('.panji-assistant');
+
+    if (!panji) return;
+
+    panji.classList.remove('panji-leaderboard-mode');
+    panji.style.removeProperty('--panji-lb-right');
+    panji.style.removeProperty('--panji-lb-bottom');
+  }
+
   function openLeaderboardModal(tab = 'player', force = false) {
     ensureLeaderboardModal();
     leaderboardModalEl.dataset.activeTab = tab;
@@ -957,17 +984,20 @@
     leaderboardModalEl.classList.remove('ps-hidden');
     renderLeaderboardModalContent();
 
-    if (!leaderboardPanjiIntroShown && typeof showPanji === 'function') {
-      leaderboardPanjiIntroShown = true;
-      setTimeout(() => {
-        if (!destroyed && leaderboardModalEl && !leaderboardModalEl.classList.contains('ps-hidden')) {
-          showPanji(
-            'Halo! PANJI di sini. Sebelum mulai mini game, isi dulu nama dan instansi kamu ya. Setelah selesai, skor otomatis masuk ke leaderboard Google Sheet.',
-            'happy'
-          );
-        }
-      }, 250);
-    }
+    setTimeout(() => {
+      attachPanjiToLeaderboardModal();
+
+      if (typeof showPanji === 'function') {
+        showPanji(
+          'Halo! PANJI di sini. Isi dulu nama dan instansi kamu ya. Setelah selesai main, skor otomatis masuk leaderboard.',
+          'happy'
+        );
+
+        setTimeout(attachPanjiToLeaderboardModal, 80);
+        setTimeout(attachPanjiToLeaderboardModal, 250);
+        setTimeout(attachPanjiToLeaderboardModal, 600);
+      }
+    }, 120);
 
     if (tab === 'leaderboard' || !PLAYER_STATE.leaderboard.length) {
       fetchLeaderboard();
@@ -977,6 +1007,7 @@
   function closeLeaderboardModal() {
     if (!leaderboardModalEl) return;
     leaderboardModalEl.classList.add('ps-hidden');
+    detachPanjiFromLeaderboardModal();
   }
 
   function renderLeaderboardModalContent() {
