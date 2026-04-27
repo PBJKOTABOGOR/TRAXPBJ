@@ -2908,26 +2908,63 @@
         <div class="ps-result-hero">
           <h2>🎮 Procurement Stacker</h2>
           <p>
-            Sebelum mulai, PANJI akan kenalan dulu dan minta data pemain. Isi nama serta instansi/OPD agar skor akhir bisa masuk leaderboard.
+            Sebelum mulai, isi dulu nama pemain dan instansi/OPD. Setelah itu langsung klik <b>Mulai Main</b>.
+            Jadi tidak nunggu popup lagi.
           </p>
         </div>
 
         <div class="ps-result-note">
           <strong>Alur game:</strong><br>
-          Soal akan bercampur: susun pipeline, pilihan ABCD, Tender Rush, dan bonus level lompat ambil poin. Bonus level tidak memakai timer, jadi lebih santai.
+          Soal akan bercampur: susun pipeline, pilihan ABCD, Tender Rush, dan bonus level lompat ambil poin.
+          Bonus level tidak memakai timer, jadi lebih santai.
         </div>
 
-        <div class="ps-buttons">
-          <button type="button" class="ps-btn ps-btn-primary" id="btnOpenPlayerModal">
-            Isi Nama & Instansi
-          </button>
-        </div>
+        <form class="ps-player-form ps-ready-player-form" id="psReadyPlayerForm">
+          <label>
+            <span>Nama Pemain</span>
+            <input type="text" name="nama" value="${escapeHtml(PLAYER_STATE.nama || '')}" placeholder="Contoh: Benni Ramadhan" autocomplete="name" required>
+          </label>
+          <label>
+            <span>Instansi / OPD</span>
+            <input type="text" name="instansi" value="${escapeHtml(PLAYER_STATE.instansi || '')}" placeholder="Contoh: UKPBJ Kota Bogor" required>
+          </label>
+          <div class="ps-ready-actions">
+            <button type="submit" class="ps-btn ps-btn-primary">
+              Simpan & Mulai Main
+            </button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnOpenPlayerModal">
+              Lihat Leaderboard
+            </button>
+          </div>
+        </form>
       </section>
     `;
 
+    const form = root.querySelector('#psReadyPlayerForm');
+    if (form) {
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+
+        const nama = form.querySelector('[name="nama"]')?.value || '';
+        const instansi = form.querySelector('[name="instansi"]')?.value || '';
+
+        if (!String(nama).trim() || !String(instansi).trim()) {
+          showToast('Nama dan instansi wajib diisi dulu.', 'bad');
+          showPanji('Isi nama dan instansi dulu ya, baru kita mulai mainnya.', 'thinking');
+          return;
+        }
+
+        savePlayerProfile(nama, instansi);
+        PLAYER_STATE.lastSaveMessage = 'Data pemain tersimpan. Game dimulai.';
+        showToast('Data pemain tersimpan. Mulai main!', 'ok');
+        showPanji('Siap! Data pemain sudah masuk. Kita mulai dari soal pertama ya.', 'happy');
+        startGame();
+      });
+    }
+
     const btn = root.querySelector('#btnOpenPlayerModal');
     if (btn) {
-      btn.addEventListener('click', () => openLeaderboardModal('player', true));
+      btn.addEventListener('click', () => openLeaderboardModal('leaderboard', false));
     }
 
     requestAnimationFrame(updatePanjiAutoBottom);
@@ -4244,12 +4281,6 @@
     renderReadyScreen();
     showPanji('Halo, perkenalkan. Aku PANJI, Pengadaan Jitu. Sebelum main, isi dulu nama pemain dan instansi atau OPD kamu ya.', 'happy');
 
-    setTimeout(() => {
-      if (!destroyed) {
-        openLeaderboardModal('player', true);
-      }
-    }, 650);
-
     leaderboardRefreshTimer = setInterval(() => {
       if (!destroyed && leaderboardModalEl && !leaderboardModalEl.classList.contains('ps-hidden')) {
         fetchLeaderboard();
@@ -4263,6 +4294,8 @@
       clearLevelTimer();
       clearTenderRushTimers();
       disableTenderRushKeyboard();
+      clearJumpRunnerLoop();
+      disableJumpRunnerKeyboard();
       clearPanjiIntroTimers();
       clearPanjiTalkTimer();
 
