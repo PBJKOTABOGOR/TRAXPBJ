@@ -857,7 +857,7 @@
       caseTitle: 'Mini Game PBJ Runner',
       desc: 'Bantu karakter mini PBJ berlari sambil melompat, ambil poin kuning, dan hindari trap merah. Tidak ada timer, jadi mainnya santai saja.',
       difficulty: `Bonus Level ${levelNo} - Santai`,
-      targetScore: 12,
+      targetScore: 14,
       maxLives: 3,
       explanation: 'Mini game ini cuma selingan biar otak tidak tegang. Ambil poin, hindari trap, lalu lanjut ke level berikutnya.'
     };
@@ -1746,9 +1746,9 @@
       success: false,
       playerY: 0,
       velocityY: 0,
-      gravity: 0.64,
-      jumpForce: 12.2,
-      speed: 4.7,
+      gravity: 0.56,
+      jumpForce: 11.4,
+      speed: 2.85,
       score: 0,
       targetScore: Number(challenge.targetScore || 12),
       lives: Number(challenge.maxLives || 3),
@@ -1756,11 +1756,14 @@
       collectibles: [],
       obstacles: [],
       invincibleUntil: 0,
-      nextCollectibleAt: 520,
-      nextObstacleAt: 1350,
+      nextCollectibleAt: 360,
+      nextObstacleAt: 1850,
+      jumpCount: 0,
+      maxJumps: 2,
+      funCombo: 0,
       elapsed: 0,
       nextId: 1,
-      statusText: 'Klik mulai, lalu lompat untuk ambil poin PBJ.',
+      statusText: 'Klik mulai, lalu bantu PANJI kecil ngumpulin mood booster PBJ.',
       overlayTitle: '',
       overlayText: ''
     };
@@ -1795,13 +1798,15 @@
     if (objectLayer) {
       objectLayer.innerHTML = `
         ${runner.collectibles.map(item => `
-          <div class="ps-jump-token" style="left:${item.x}px; bottom:${48 + item.y}px;">
-            <span class="ps-jump-token-label">Poin</span>
+          <div class="ps-jump-token ${escapeHtml(item.kind || '')}" style="left:${item.x}px; bottom:${48 + item.y}px;">
+            <span class="ps-jump-token-emoji">${escapeHtml(item.emoji || '⭐')}</span>
+            <span class="ps-jump-token-label">${escapeHtml(item.label || 'Poin')}</span>
           </div>
         `).join('')}
         ${runner.obstacles.map(item => `
-          <div class="ps-jump-obstacle" style="left:${item.x}px; bottom:48px; height:${item.h}px; width:${item.w}px;">
-            <span class="ps-jump-obstacle-label">Trap</span>
+          <div class="ps-jump-obstacle ${escapeHtml(item.kind || '')}" style="left:${item.x}px; bottom:48px; height:${item.h}px; width:${item.w}px;">
+            <span class="ps-jump-obstacle-emoji">${escapeHtml(item.emoji || '⚠️')}</span>
+            <span class="ps-jump-obstacle-label">${escapeHtml(item.label || 'Trap')}</span>
           </div>
         `).join('')}
       `;
@@ -1865,38 +1870,57 @@
     if (runner.playerY <= 0) {
       runner.playerY = 0;
       runner.velocityY = 0;
+      runner.jumpCount = 0;
     }
 
     runner.collectibles.forEach(item => { item.x -= runner.speed * factor; });
-    runner.obstacles.forEach(item => { item.x -= (runner.speed + 0.55) * factor; });
+    runner.obstacles.forEach(item => { item.x -= (runner.speed + 0.18) * factor; });
     runner.collectibles = runner.collectibles.filter(item => item.x > -60);
     runner.obstacles = runner.obstacles.filter(item => item.x > -70);
 
     runner.nextCollectibleAt -= deltaMs;
     if (runner.nextCollectibleAt <= 0) {
-      const yOptions = [18, 24, 36, 56, 78, 102, 126];
+      const yOptions = [18, 24, 34, 52, 72, 94, 116];
+      const funItems = [
+        { label: 'Kopi', emoji: '☕', kind: 'coffee', value: 2, message: 'Kopi aman! Mood PANJI naik lagi.' },
+        { label: 'Bintang', emoji: '⭐', kind: 'star', value: 1, message: 'Bintang semangat masuk kantong.' },
+        { label: 'Mie', emoji: '🍜', kind: 'noodle', value: 2, message: 'Mie lembur didapat. Energi balik!' },
+        { label: 'Dokumen', emoji: '📄', kind: 'doc', value: 1, message: 'Dokumen aman. Administrasi tersenyum.' },
+        { label: 'Koin', emoji: '🪙', kind: 'coin', value: 1, message: 'Koin PANJI masuk.' }
+      ];
+      const picked = funItems[Math.floor(Math.random() * funItems.length)];
       runner.collectibles.push({
         id: runner.nextId++,
         x: Math.max(760, Math.round((root && root.getBoundingClientRect ? root.getBoundingClientRect().width : 760) - 80)),
         y: yOptions[Math.floor(Math.random() * yOptions.length)],
-        w: 30,
-        h: 30
+        w: 34,
+        h: 34,
+        ...picked
       });
-      runner.nextCollectibleAt = 520 + Math.random() * 780;
+      runner.nextCollectibleAt = 740 + Math.random() * 1200;
     }
 
     runner.nextObstacleAt -= deltaMs;
     if (runner.nextObstacleAt <= 0) {
-      const w = 24 + Math.round(Math.random() * 10);
-      const h = 30 + Math.round(Math.random() * 12);
+      const traps = [
+        { label: 'Revisi', emoji: '📝', kind: 'revisi', message: 'Aduh, revisi dadakan nyerempet!' },
+        { label: 'Deadline', emoji: '🔥', kind: 'deadline', message: 'Deadline menyerang. Lompat yang tinggi!' },
+        { label: 'Berkas', emoji: '📚', kind: 'berkas', message: 'Ketiban berkas numpuk. Tetap gas!' },
+        { label: 'Loading', emoji: '🐌', kind: 'loading', message: 'Loading lama menghadang.' },
+        { label: 'Ngantuk', emoji: '💤', kind: 'sleepy', message: 'Ngantuk menyerang PANJI kecil.' }
+      ];
+      const picked = traps[Math.floor(Math.random() * traps.length)];
+      const w = 32 + Math.round(Math.random() * 10);
+      const h = 30 + Math.round(Math.random() * 10);
       runner.obstacles.push({
         id: runner.nextId++,
         x: Math.max(760, Math.round((root && root.getBoundingClientRect ? root.getBoundingClientRect().width : 760) - 80)),
         y: 0,
         w,
-        h
+        h,
+        ...picked
       });
-      runner.nextObstacleAt = 1050 + Math.random() * 1050;
+      runner.nextObstacleAt = 2100 + Math.random() * 1650;
     }
 
     const playerRect = { x: 54, y: runner.playerY, w: 42, h: 50 };
@@ -1905,10 +1929,18 @@
     runner.collectibles.forEach(item => {
       const hit = rectOverlap(playerRect, { x: item.x, y: item.y, w: item.w, h: item.h });
       if (hit) {
-        runner.score += 1;
-        GAME_STATE.score += 5;
-        runner.statusText = 'Nice! Poin PBJ berhasil diambil.';
-        showToast('Poin +1', 'ok');
+        const itemValue = Math.max(1, Number(item.value || 1));
+        runner.score += itemValue;
+        runner.funCombo += 1;
+        GAME_STATE.score += itemValue * 5;
+        runner.statusText = `${item.message || 'Poin PBJ berhasil diambil.'} Combo x${runner.funCombo}.`;
+        showToast(`${item.emoji || '⭐'} ${item.label || 'Poin'} +${itemValue}`, 'ok');
+
+        if (runner.funCombo > 0 && runner.funCombo % 4 === 0) {
+          GAME_STATE.score += 5;
+          runner.statusText = `Combo lucu x${runner.funCombo}! Bonus skor +5. PANJI makin semangat.`;
+          showPanji('Wih combo-nya jalan! Ambil terus kopi, bintang, dan dokumen aman.', 'happy');
+        }
       } else {
         remainingCollectibles.push(item);
       }
@@ -1922,14 +1954,15 @@
         const hit = rectOverlap(playerRect, { x: item.x, y: item.y, w: item.w, h: item.h });
         if (hit) {
           runner.lives = Math.max(0, runner.lives - 1);
-          runner.invincibleUntil = Date.now() + 1100;
+          runner.funCombo = 0;
+          runner.invincibleUntil = Date.now() + 1500;
           GAME_STATE.score = Math.max(0, GAME_STATE.score - 2);
           GAME_STATE.risk += 3;
           runner.statusText = runner.lives > 0
-            ? 'Aduh kena trap. Lompat lagi, masih bisa lanjut.'
+            ? (item.message || 'Aduh kena trap. Lompat lagi, masih bisa lanjut.')
             : 'Waduh, nyawa habis.';
-          showToast(runner.lives > 0 ? 'Kena trap. Hati-hati.' : 'Nyawa habis.', 'bad');
-          showPanji(runner.lives > 0 ? 'Hati-hati ya, hindari trap merahnya. Ambil poin kuningnya saja.' : 'Tidak apa-apa, bonus level ini selesai dulu ya.', runner.lives > 0 ? 'thinking' : 'sad');
+          showToast(runner.lives > 0 ? `${item.emoji || '⚠️'} ${item.label || 'Trap'}!` : 'Nyawa habis.', 'bad');
+          showPanji(runner.lives > 0 ? `${item.message || 'Kena trap.'} Tenang, PANJI kebal sebentar. Lanjut ambil poin lagi.` : 'Tidak apa-apa, bonus level ini selesai dulu ya.', runner.lives > 0 ? 'thinking' : 'sad');
           break;
         }
       }
@@ -1992,7 +2025,7 @@
     enableJumpRunnerKeyboard();
     syncJumpRunnerUi();
     startJumpRunnerLoop();
-    showPanji('Bonus level 4 dimulai. Tugasmu gampang: ambil poin kuning, hindari trap merah, dan santai karena tidak ada timer.', 'happy');
+    showPanji('Bonus level 4 dimulai. Ini santai aja: ambil kopi, mie, bintang, koin, dokumen aman. Kalau kena revisi atau deadline, PANJI jatuh lucu lalu kebal sebentar.', 'happy');
   }
 
   function jumpRunnerJump() {
@@ -2000,9 +2033,10 @@
     const runner = GAME_STATE.jumpRunner;
     if (!challenge || challenge.type !== 'jumpRunner' || !runner || !runner.running || runner.finished) return;
 
-    if (runner.playerY === 0) {
-      runner.velocityY = runner.jumpForce;
-      runner.statusText = 'Hop! Ambil poin sebanyak mungkin.';
+    if (runner.jumpCount < runner.maxJumps) {
+      runner.velocityY = runner.jumpCount === 0 ? runner.jumpForce : runner.jumpForce * 0.84;
+      runner.jumpCount += 1;
+      runner.statusText = runner.jumpCount === 1 ? 'Hop! Kejar poin mood booster.' : 'Double jump! PANJI kecil lagi gaya.';
       syncJumpRunnerUi();
     }
   }
@@ -3164,8 +3198,8 @@
               <div class="ps-jump-kicker">Bonus level 4 • santai</div>
               <h3>Lompat Ambil Poin PBJ</h3>
               <p>
-                Ini mini game ringan. Karakter kecil versi PBJ akan berlari otomatis seperti game dino saat koneksi putus.
-                Tugasmu cukup <b>lompat</b>, <b>ambil poin kuning</b>, dan <b>hindari trap merah</b>.
+                Ini mini game selingan biar nggak tegang. PANJI kecil lari seperti dino koneksi putus, tapi versi PBJ lucu.
+                Tugasmu cukup <b>lompat</b>, ambil <b>kopi, mie, koin, bintang, dan dokumen aman</b>, lalu hindari trap kocak.
               </p>
               <div class="ps-jump-stats">
                 <div class="ps-jump-stat"><label>Target Poin</label><strong>${runner.targetScore}</strong></div>
@@ -3177,8 +3211,8 @@
               <h4>Cara main</h4>
               <ul>
                 <li>Tekan <b>Spasi</b> / <b>↑</b> atau klik tombol <b>Lompat</b>.</li>
-                <li>Setiap poin yang diambil menambah skor game utama.</li>
-                <li>Kalau kena trap, nyawa berkurang. Tapi santai, ini bonus level.</li>
+                <li>Kopi dan mie dapat poin lebih besar. Combo juga bisa kasih bonus skor.</li>
+                <li>Kalau kena trap, PANJI jatuh lucu dan kebal sebentar. Tapi santai, ini bonus level.</li>
                 <li>Begitu target poin terpenuhi, game lanjut otomatis ke soal berikutnya.</li>
               </ul>
               <div class="ps-buttons" style="margin-top:14px">
@@ -3250,7 +3284,7 @@
           ` : ''}
         </div>
         <div class="ps-jump-controlbar">
-          <div class="ps-jump-tip">Kontrol: <b>Spasi</b>, <b>↑</b>, atau klik tombol <b>Lompat</b>. Tidak ada batas waktu.</div>
+          <div class="ps-jump-tip">Kontrol: <b>Spasi</b>, <b>↑</b>, atau klik <b>Lompat</b>. Bisa double jump. Tidak ada batas waktu.</div>
           <div class="ps-buttons" style="margin:0">
             <button type="button" class="ps-btn ps-btn-primary" id="btnJumpRunnerJump" ${runner.running && !runner.finished ? '' : 'disabled'}>Lompat</button>
           </div>
