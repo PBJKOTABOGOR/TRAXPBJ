@@ -21,6 +21,7 @@
   let panjiCharacterBtn = null;
   let panjiCloseBtn = null;
   let panjiUserMinimized = false;
+  let panjiIntroAlreadyShown = false;
 
   let leaderboardModalEl = null;
   let leaderboardRefreshTimer = null;
@@ -1184,6 +1185,10 @@
     leaderboardModalEl.classList.remove('ps-hidden');
     renderLeaderboardModalContent();
 
+    if (panjiEl) {
+      panjiEl.classList.toggle('panji-result-mode', GAME_STATE.stage === 'result' || GAME_STATE.finished);
+    }
+
     setTimeout(() => {
       attachPanjiToLeaderboardModal();
 
@@ -1224,6 +1229,7 @@
   function closeLeaderboardModal() {
     if (!leaderboardModalEl) return;
     leaderboardModalEl.classList.add('ps-hidden');
+    if (panjiEl) panjiEl.classList.remove('panji-result-mode');
     detachPanjiFromLeaderboardModal();
   }
 
@@ -1432,6 +1438,74 @@
     return result;
   }
 
+
+  function prepareQuizRuntimeOptions(challenge) {
+    const options = Array.isArray(challenge && challenge.options) ? challenge.options : [];
+    const mapped = options.map((text, originalIndex) => ({ text, originalIndex }));
+    let shuffled = shuffleArray(mapped);
+
+    if (mapped.length > 1) {
+      let guard = 0;
+      while (shuffled.findIndex(item => item.originalIndex === challenge.answer) === challenge.answer && guard < 10) {
+        shuffled = shuffleArray(mapped);
+        guard += 1;
+      }
+    }
+
+    challenge.runtimeOptions = shuffled;
+    challenge.runtimeAnswer = shuffled.findIndex(item => item.originalIndex === challenge.answer);
+
+    if (challenge.runtimeAnswer < 0) {
+      challenge.runtimeOptions = mapped;
+      challenge.runtimeAnswer = Number(challenge.answer || 0);
+    }
+  }
+
+  function resetPanjiVisualState() {
+    if (!panjiEl) return;
+
+    panjiEl.classList.remove(
+      'panji-happy',
+      'panji-sad',
+      'panji-thinking',
+      'panji-intro',
+      'panji-talking',
+      'panji-celebrate',
+      'panji-cry',
+      'panji-result-mode'
+    );
+
+    panjiEl.classList.add('panji-thinking');
+
+    if (panjiEmoteEl) {
+      panjiEmoteEl.textContent = '🤔';
+    }
+  }
+
+  function setPanjiMoodOnly(mood = 'thinking') {
+    if (!panjiEl) return;
+
+    panjiEl.classList.remove(
+      'panji-happy',
+      'panji-sad',
+      'panji-thinking',
+      'panji-talking',
+      'panji-celebrate',
+      'panji-cry'
+    );
+
+    panjiEl.classList.add(`panji-${mood}`);
+
+    if (panjiEmoteEl) {
+      panjiEmoteEl.textContent =
+        mood === 'happy'
+          ? '😄'
+          : mood === 'sad'
+            ? '😭'
+            : '🤔';
+    }
+  }
+
   function getCurrentChallenge() {
     return GAME_STATE.current;
   }
@@ -1457,18 +1531,33 @@
     if (!allPackages.length) return [];
 
     const count = Math.min(Number(challenge.packageCount || allPackages.length || 5), allPackages.length);
-    let randomized = shuffleArray(allPackages).slice(0, count);
-
-    /* Hindari pola jawaban terasa berurutan 1-2-3-4-5 jika hasil shuffle kebetulan terlalu rapi. */
     const methodOrder = ['ekatalog', 'pengadaanLangsung', 'tenderSeleksi', 'swakelola', 'dikecualikan'];
-    const isSequential = randomized.every((item, index) => item.correct === methodOrder[index % methodOrder.length]);
-    const isReverseSequential = randomized.every((item, index) => item.correct === methodOrder[(methodOrder.length - 1 - index) % methodOrder.length]);
 
-    if ((isSequential || isReverseSequential) && randomized.length > 2) {
-      randomized = [randomized[2], randomized[0], randomized[4] || randomized[1], randomized[1], randomized[3]].filter(Boolean);
+    function scorePattern(list) {
+      let score = 0;
+      for (let i = 0; i < list.length; i += 1) {
+        const expectedForward = methodOrder[i % methodOrder.length];
+        const expectedReverse = methodOrder[(methodOrder.length - 1 - i) % methodOrder.length];
+        if (list[i].correct === expectedForward) score += 2;
+        if (list[i].correct === expectedReverse) score += 2;
+        if (i > 0 && list[i].correct === list[i - 1].correct) score += 1;
+      }
+      return score;
     }
 
-    return randomized.map((item, index) => ({
+    let best = shuffleArray(allPackages).slice(0, count);
+    let bestScore = scorePattern(best);
+
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const candidate = shuffleArray(allPackages).slice(0, count);
+      const candidateScore = scorePattern(candidate);
+      if (candidateScore < bestScore) {
+        best = candidate;
+        bestScore = candidateScore;
+      }
+    }
+
+    return best.map((item, index) => ({
       ...item,
       rushId: `rush-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`
     }));
@@ -1676,6 +1765,24 @@
     if (GAME_STATE.levelTimeLeft <= 0) {
       stopGameEarly('time');
     }
+  }
+
+
+  function applyLevelTimeBonus(seconds, reasonText = 'Bonus waktu') {
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || challenge.type === 'tenderRush') return;
+    if (!GAME_STATE.levelTimeLimit || GAME_STATE.stage === 'result' || GAME_STATE.finished) return;
+
+    const bonus = Math.max(1, Number(seconds || 0));
+    GAME_STATE.levelTimeLeft = Math.min(
+      Number(GAME_STATE.levelTimeLimit || 0),
+      Number(GAME_STATE.levelTimeLeft || 0) + bonus
+    );
+
+    addLog('ok', reasonText, 'Waktu level bertambah ' + bonus + ' detik karena jawaban/urutan benar.');
+    showToast('Waktu +' + bonus + ' detik', 'ok');
+    updateLevelTimerUi();
   }
 
   function stopGameEarly(reason = 'time') {
@@ -1934,6 +2041,7 @@
 
     if (panjiHintBtn) {
       panjiHintBtn.addEventListener('click', () => {
+        if (panjiEl && panjiEl.classList.contains('panji-result-mode')) return;
         requestHintFromPanji();
       });
     }
@@ -2060,6 +2168,7 @@
     if (!panjiEl || !panjiTextEl) return;
 
     if (panjiUserMinimized || panjiEl.classList.contains('panji-minimized')) {
+      setPanjiMoodOnly(mood);
       return;
     }
 
@@ -2277,8 +2386,18 @@
     GAME_STATE.levelTimeLimit = 0;
     GAME_STATE.stoppedReason = '';
     GAME_STATE.stoppedLevel = 0;
+    GAME_STATE.pipelineCombo = 0;
 
-    showPanjiIntro();
+    resetPanjiVisualState();
+    panjiUserMinimized = false;
+
+    if (!panjiIntroAlreadyShown) {
+      showPanjiIntro();
+      panjiIntroAlreadyShown = true;
+    } else {
+      showPanji('Game dimulai ulang dari Soal 1. Aku langsung bantu kalau kamu butuh arahan, tanpa perkenalan lagi.', 'thinking');
+    }
+
     loadChallenge();
   }
 
@@ -2307,6 +2426,7 @@
       GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
       GAME_STATE.tenderRush = null;
       GAME_STATE.progress = 0;
+      GAME_STATE.pipelineCombo = 0;
 
       addLog(
         'info',
@@ -2340,6 +2460,7 @@
       GAME_STATE.shuffledCards = [];
       GAME_STATE.tenderRush = null;
       GAME_STATE.progress = 100;
+      prepareQuizRuntimeOptions(challenge);
 
       addLog(
         'info',
@@ -2754,17 +2875,22 @@
   }
 
   function renderQuizChallenge(challenge) {
+    const options = Array.isArray(challenge.runtimeOptions) && challenge.runtimeOptions.length
+      ? challenge.runtimeOptions
+      : (challenge.options || []).map((text, originalIndex) => ({ text, originalIndex }));
+    const correctRuntimeIndex = Number.isInteger(challenge.runtimeAnswer) ? challenge.runtimeAnswer : Number(challenge.answer || 0);
+
     return `
       <div class="ps-quiz-question">
         ${escapeHtml(challenge.question)}
       </div>
 
       <div class="ps-quiz-options">
-        ${challenge.options.map((option, index) => {
+        ${options.map((option, index) => {
           let cls = '';
 
           if (GAME_STATE.answered) {
-            if (index === challenge.answer) cls = 'correct';
+            if (index === correctRuntimeIndex) cls = 'correct';
             else if (index === GAME_STATE.selectedAnswer) cls = 'wrong';
           }
 
@@ -2775,7 +2901,7 @@
               data-answer-index="${index}"
               ${GAME_STATE.answered ? 'disabled' : ''}
             >
-              ${String.fromCharCode(65 + index)}. ${escapeHtml(option)}
+              ${String.fromCharCode(65 + index)}. ${escapeHtml(option.text)}
             </button>
           `;
         }).join('')}
@@ -3252,6 +3378,13 @@
     GAME_STATE.selectedCardId = null;
     GAME_STATE.progress = Math.round((getPlacedCount() / challenge.idealIds.length) * 100);
     GAME_STATE.score += 10;
+    GAME_STATE.pipelineCombo = Number(GAME_STATE.pipelineCombo || 0) + 1;
+    applyLevelTimeBonus(2, 'Kartu benar: bonus waktu');
+
+    if (GAME_STATE.pipelineCombo > 1 && GAME_STATE.pipelineCombo % 3 === 0) {
+      applyLevelTimeBonus(4, 'Combo pipeline: bonus waktu');
+      showToast('Combo ' + GAME_STATE.pipelineCombo + 'x! Waktu +4 detik', 'ok');
+    }
 
     addLog('ok', `${item.label} benar`, getCorrectMessage(item.id));
 
@@ -3315,13 +3448,14 @@
     GAME_STATE.wrong += 1;
     GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
     GAME_STATE.selectedCardId = null;
+    GAME_STATE.pipelineCombo = 0;
 
     addLog('bad', 'Urutan belum tepat', message);
 
     showToast('Belum tepat. Risiko naik.', 'bad');
     showPanji(getPanjiWrongMessage(cardId, message), 'sad');
     flashScreen('bad');
-    applyLevelTimePenalty(8, 'Pipeline salah');
+    applyLevelTimePenalty(2, 'Pipeline salah');
 
     if (GAME_STATE.stage === 'result') return;
 
@@ -3341,7 +3475,9 @@
     GAME_STATE.selectedAnswer = selectedIndex;
     GAME_STATE.answered = true;
 
-    if (selectedIndex === challenge.answer) {
+    const correctAnswerIndex = Number.isInteger(challenge.runtimeAnswer) ? challenge.runtimeAnswer : Number(challenge.answer || 0);
+
+    if (selectedIndex === correctAnswerIndex) {
       GAME_STATE.score += 20;
       GAME_STATE.correct += 1;
 
