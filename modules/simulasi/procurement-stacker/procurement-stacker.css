@@ -3147,3 +3147,161 @@
     100%{ top:285px; transform:translateX(-50%) scale(1); }
   }
 }
+
+
+/* =========================================================
+   REVISI 4 — Tender Rush random UX, PANJI final reaction,
+   smaller package card, animated pipeline cards
+   ========================================================= */
+
+.ps-rush-package{
+  width:min(430px, calc(100% - 80px)) !important;
+  min-height:104px !important;
+  padding:15px 17px !important;
+  border-radius:18px !important;
+  animation:psRushDrop var(--rush-duration, 10s) linear forwards, psRushCardPulse 1.8s ease-in-out infinite !important;
+}
+
+.ps-rush-package.correct,
+.ps-rush-package.wrong{
+  animation:none !important;
+}
+
+.ps-rush-package h3{
+  font-size:21px !important;
+  line-height:1.18 !important;
+  margin:7px 0 6px !important;
+}
+
+.ps-rush-package p{
+  font-size:12.5px !important;
+  line-height:1.45 !important;
+}
+
+.ps-rush-package-top span{
+  font-size:10px !important;
+  padding:5px 9px !important;
+}
+
+.ps-rush-package-top b{
+  font-size:12px !important;
+}
+
+@keyframes psRushCardPulse{
+  0%,100%{ box-shadow:0 20px 46px rgba(15,23,42,.12), 0 0 0 rgba(37,99,235,0); }
+  50%{ box-shadow:0 26px 56px rgba(15,23,42,.16), 0 0 22px rgba(37,99,235,.16); }
+}
+
+.ps-bank .ps-action-card{
+  animation:psPipelineCardIdle 3.2s ease-in-out infinite;
+  animation-delay:calc((var(--ps-card-i, 0)) * .08s);
+}
+
+.ps-bank .ps-action-card:nth-child(2n){ animation-delay:.18s; }
+.ps-bank .ps-action-card:nth-child(3n){ animation-delay:.32s; }
+.ps-bank .ps-action-card:nth-child(4n){ animation-delay:.46s; }
+
+.ps-action-card::after{
+  content:"";
+  position:absolute;
+  inset:-40% auto auto -70%;
+  width:60%;
+  height:180%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.62), transparent);
+  transform:rotate(22deg);
+  opacity:0;
+  pointer-events:none;
+}
+
+.ps-bank .ps-action-card:hover::after,
+.ps-bank .ps-action-card.selected::after{
+  animation:psCardShine .72s ease;
+}
+
+@keyframes psPipelineCardIdle{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-3px); }
+}
+
+@keyframes psCardShine{
+  0%{ left:-70%; opacity:0; }
+  20%{ opacity:1; }
+  100%{ left:130%; opacity:0; }
+}
+
+.ps-slot .ps-action-card{
+  animation:none !important;
+}
+
+/* card PANJI bilang di leaderboard disembunyikan total; PANJI berbicara lewat bubble sendiri */
+.ps-lb-panji-note{
+  display:none !important;
+}
+
+.panji-assistant.panji-celebrate .panji-character{
+  animation:panjiCelebrateFlip 1.05s ease-in-out 0s 3;
+}
+
+.panji-assistant.panji-celebrate .panji-hand-left{
+  animation:panjiHappyWaveLeft .45s ease-in-out 0s 6;
+}
+
+.panji-assistant.panji-celebrate .panji-hand-right{
+  animation:panjiHappyWaveRight .45s ease-in-out 0s 6;
+}
+
+@keyframes panjiCelebrateFlip{
+  0%{ transform:translateY(0) rotate(0deg) scale(1); }
+  22%{ transform:translateY(-24px) rotate(-8deg) scale(1.04); }
+  48%{ transform:translateY(-5px) rotate(8deg) scale(.98); }
+  72%{ transform:translateY(-18px) rotate(360deg) scale(1.04); }
+  100%{ transform:translateY(0) rotate(360deg) scale(1); }
+}
+
+@keyframes panjiHappyWaveLeft{
+  0%,100%{ transform:rotate(24deg); }
+  50%{ transform:rotate(62deg); }
+}
+
+@keyframes panjiHappyWaveRight{
+  0%,100%{ transform:rotate(-24deg); }
+  50%{ transform:rotate(-62deg); }
+}
+
+.panji-assistant.panji-cry .panji-character{
+  animation:panjiCryShake .32s ease-in-out 0s 14;
+}
+
+.panji-assistant.panji-cry .panji-head::after{
+  content:"";
+  position:absolute;
+  left:17px;
+  top:37px;
+  width:6px;
+  height:19px;
+  border-radius:999px;
+  background:#38bdf8;
+  box-shadow:28px 0 0 #38bdf8;
+  animation:panjiTears .55s linear 0s infinite;
+}
+
+@keyframes panjiCryShake{
+  0%,100%{ transform:translateX(-50%) translateY(0); }
+  25%{ transform:translateX(calc(-50% - 3px)) translateY(1px); }
+  75%{ transform:translateX(calc(-50% + 3px)) translateY(-1px); }
+}
+
+@keyframes panjiTears{
+  from{ opacity:1; transform:translateY(0); }
+  to{ opacity:.15; transform:translateY(13px); }
+}
+
+@media (max-width:900px){
+  .ps-rush-package{
+    width:min(340px, calc(100% - 38px)) !important;
+    min-height:96px !important;
+    padding:13px 14px !important;
+  }
+
+  .ps-rush-package h3{ font-size:18px !important; }
+}
