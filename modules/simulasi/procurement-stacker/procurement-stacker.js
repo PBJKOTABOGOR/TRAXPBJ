@@ -23,6 +23,7 @@
 
   let leaderboardModalEl = null;
   let leaderboardRefreshTimer = null;
+  let leaderboardPanjiTimers = [];
 
   const CARD_LIBRARY = {
     rup: {
@@ -977,6 +978,66 @@
     panji.style.removeProperty('--panji-lb-bottom');
   }
 
+  function clearLeaderboardPanjiTimers() {
+    leaderboardPanjiTimers.forEach((timer) => clearTimeout(timer));
+    leaderboardPanjiTimers = [];
+  }
+
+  function scheduleLeaderboardPanjiIntro() {
+    clearLeaderboardPanjiTimers();
+
+    leaderboardPanjiTimers.push(setTimeout(() => {
+      attachPanjiToLeaderboardModal();
+
+      if (typeof showPanji === 'function') {
+        showPanji(
+          'Halo, perkenalkan. Aku PANJI, singkatan dari Pengadaan Jitu. Aku asisten kecil yang akan menemani kamu belajar alur Pengadaan Barang/Jasa lewat mini game ini.',
+          'happy'
+        );
+      }
+
+      setTimeout(attachPanjiToLeaderboardModal, 120);
+      setTimeout(attachPanjiToLeaderboardModal, 400);
+    }, 250));
+
+    leaderboardPanjiTimers.push(setTimeout(() => {
+      attachPanjiToLeaderboardModal();
+
+      if (typeof showPanji === 'function') {
+        showPanji(
+          'Sebelum mulai, isi dulu nama pemain dan instansi atau OPD kamu. Nanti setelah kamu selesai bermain, skor akhirnya otomatis masuk ke leaderboard.',
+          'thinking'
+        );
+      }
+
+      setTimeout(attachPanjiToLeaderboardModal, 120);
+      setTimeout(attachPanjiToLeaderboardModal, 400);
+    }, 7800));
+  }
+
+  function showPanjiHowToPlayAfterPlayerSaved() {
+    clearLeaderboardPanjiTimers();
+    detachPanjiFromLeaderboardModal();
+
+    leaderboardPanjiTimers.push(setTimeout(() => {
+      if (typeof showPanji === 'function') {
+        showPanji(
+          'Oke, data pemain sudah tersimpan. Cara mainnya begini: baca kasus di atas, lalu susun kartu proses pengadaan ke slot yang benar dari kiri ke kanan.',
+          'happy'
+        );
+      }
+    }, 450));
+
+    leaderboardPanjiTimers.push(setTimeout(() => {
+      if (typeof showPanji === 'function') {
+        showPanji(
+          'Kalau muncul soal pilihan, pilih jawaban paling aman sesuai aturan PBJ. Hindari kartu jebakan seperti Kontrak Dulu, Lewati RUP, atau Bayar Dulu, karena itu menambah risiko dan mengurangi nilai.',
+          'thinking'
+        );
+      }
+    }, 8200));
+  }
+
   function openLeaderboardModal(tab = 'player', force = false) {
     ensureLeaderboardModal();
     leaderboardModalEl.dataset.activeTab = tab;
@@ -984,20 +1045,20 @@
     leaderboardModalEl.classList.remove('ps-hidden');
     renderLeaderboardModalContent();
 
-    setTimeout(() => {
-      attachPanjiToLeaderboardModal();
+    if (!(GAME_STATE.stage === 'result' || GAME_STATE.finished)) {
+      scheduleLeaderboardPanjiIntro();
+    } else {
+      setTimeout(() => {
+        attachPanjiToLeaderboardModal();
 
-      if (typeof showPanji === 'function') {
-        showPanji(
-          'Halo! PANJI di sini. Isi dulu nama dan instansi kamu ya. Setelah selesai main, skor otomatis masuk leaderboard.',
-          'happy'
-        );
-
-        setTimeout(attachPanjiToLeaderboardModal, 80);
-        setTimeout(attachPanjiToLeaderboardModal, 250);
-        setTimeout(attachPanjiToLeaderboardModal, 600);
-      }
-    }, 120);
+        if (typeof showPanji === 'function') {
+          showPanji(
+            'Ini hasil akhir kamu. Cek nilai dan ranking leaderboard-nya. Semakin tinggi skor, semakin rapi alur PBJ yang kamu susun.',
+            'happy'
+          );
+        }
+      }, 180);
+    }
 
     if (tab === 'leaderboard' || !PLAYER_STATE.leaderboard.length) {
       fetchLeaderboard();
@@ -1007,6 +1068,7 @@
   function closeLeaderboardModal() {
     if (!leaderboardModalEl) return;
     leaderboardModalEl.classList.add('ps-hidden');
+    clearLeaderboardPanjiTimers();
     detachPanjiFromLeaderboardModal();
   }
 
@@ -1086,6 +1148,7 @@
           submitFinalScoreToLeaderboard();
         } else {
           closeLeaderboardModal();
+          showPanjiHowToPlayAfterPlayerSaved();
         }
 
         renderLeaderboardModalContent();
@@ -1554,8 +1617,8 @@
     }
 
     const talkDuration = Math.min(
-      6200,
-      Math.max(1300, String(message || '').length * 34)
+      12000,
+      Math.max(2600, String(message || '').length * 58)
     );
 
     panjiTalkTimer = setTimeout(() => {
