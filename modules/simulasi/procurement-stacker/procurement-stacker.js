@@ -23,6 +23,7 @@
 
   let leaderboardModalEl = null;
   let leaderboardRefreshTimer = null;
+  let leaderboardPanjiIntroShown = false;
 
   const CARD_LIBRARY = {
     rup: {
@@ -942,11 +943,6 @@
 
     leaderboardModalEl.querySelectorAll('[data-leaderboard-close]').forEach(button => {
       button.addEventListener('click', () => {
-        if (!hasPlayerProfile()) {
-          showToast('Isi nama dan instansi dulu untuk masuk leaderboard.', 'info');
-          return;
-        }
-
         closeLeaderboardModal();
       });
     });
@@ -960,6 +956,18 @@
     leaderboardModalEl.dataset.force = force ? 'true' : 'false';
     leaderboardModalEl.classList.remove('ps-hidden');
     renderLeaderboardModalContent();
+
+    if (!leaderboardPanjiIntroShown && typeof showPanji === 'function') {
+      leaderboardPanjiIntroShown = true;
+      setTimeout(() => {
+        if (!destroyed && leaderboardModalEl && !leaderboardModalEl.classList.contains('ps-hidden')) {
+          showPanji(
+            'Halo! PANJI di sini. Sebelum mulai mini game, isi dulu nama dan instansi kamu ya. Setelah selesai, skor otomatis masuk ke leaderboard Google Sheet.',
+            'happy'
+          );
+        }
+      }, 250);
+    }
 
     if (tab === 'leaderboard' || !PLAYER_STATE.leaderboard.length) {
       fetchLeaderboard();
