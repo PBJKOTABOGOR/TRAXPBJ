@@ -850,57 +850,43 @@
   function getAuditWolfScenarioPool() {
     return [
       {
-        caseTitle: 'Audit Wolf — Paket Spesifikasi Mengarah',
-        desc: 'Malam hari ada perubahan spesifikasi pada paket laptop pelayanan. Pagi harinya PANJI menemukan indikasi spek mengarah. Pilih siapa aktor risikonya.',
-        narrative: 'Town hall PBJ sedang tegang. Satu paket berubah diam-diam, lalu jejak edit muncul di log.',
-        culpritHint: 'Perhatikan siapa yang paling defensif dan siapa yang memberikan alibi yang justru tidak diminta.',
+        caseTitle: 'Bonus Level 4 — Audit Wolf: Spek Mengarah',
+        desc: 'Bonus santai dulu. Semalam ada paket laptop yang spesifikasinya tiba-tiba berubah terlalu detail. Yuk cari siapa biang masalahnya.',
+        cityTitle: 'Kota Audit — Distrik Perencanaan',
+        citySubtitle: 'Lampu kota masih nyala. Ruang rapat belum sepi, tapi jejak edit di dokumen sudah bikin heboh.',
+        culpritHint: 'Cari yang bicaranya paling muter-muter dan terlalu semangat membela perubahan spesifikasi.',
         culpritRole: 'Spek Mengarah',
         culpritActor: 'DM',
-        revealPrefix: 'Modus malam ini adalah perubahan spesifikasi yang mengunci persaingan sehat.',
+        revealPrefix: 'Setelah sidang dibuka, ketahuan kalau ada yang sengaja mendorong spesifikasi ke arah merek tertentu.',
+        panjiIntro: 'Santai dulu ya. Di bonus ini kamu tinggal baca gerak-gerik warga kota audit, terus tebak siapa yang bikin paket jadi berisiko.',
         actors: [
-          { id: 'AW1', initials: 'RK', alias: 'R.K.', claimRole: 'PPK Baik', actualRole: 'PPK Baik', team: 'aman', aura: 'navy', statement: 'Saya baru cek kebutuhan output. Saya belum sentuh rincian merek karena fokusnya fungsi.' },
-          { id: 'AW2', initials: 'PT', alias: 'P.T.', claimRole: 'Pokja Teliti', actualRole: 'Pokja Teliti', team: 'aman', aura: 'gold', statement: 'Saat saya buka draft, ada satu bagian RAM dan tipe prosesor berubah terlalu spesifik sekitar tengah malam.' },
-          { id: 'AW3', initials: 'AR', alias: 'A.R.', claimRole: 'Auditor', actualRole: 'Auditor', team: 'aman', aura: 'teal', statement: 'Jejak revisi mengarah ke akun internal. Ada yang sengaja menambah detail yang tidak diminta di KAK.' },
-          { id: 'AW4', initials: 'DM', alias: 'D.M.', claimRole: 'Tim Perencana', actualRole: 'Spek Mengarah', team: 'penyusup', aura: 'crimson', statement: 'Saya cuma bantu merapikan. Kalau mereknya kebetulan mirip ya itu demi kualitas, bukan masalah besar.' },
-          { id: 'AW5', initials: 'AS', alias: 'A.S.', claimRole: 'Admin SiRUP', actualRole: 'Admin SiRUP', team: 'aman', aura: 'violet', statement: 'Data RUP aman. Yang berubah bukan RUP, tapi lampiran spesifikasi paket turunannya.' },
-          { id: 'AW6', initials: 'PH', alias: 'P.H.', claimRole: 'PPHP Pemeriksa', actualRole: 'PPHP Pemeriksa', team: 'aman', aura: 'green', statement: 'Kalau spek mengarah dibiarkan, nanti saat pemeriksaan hasil kita susah jelaskan dasar kebutuhannya.' },
-          { id: 'AW7', initials: 'PJ', alias: 'P.J.', claimRole: 'PANJI', actualRole: 'PANJI', team: 'aman', aura: 'sky', statement: 'Aku menemukan kata kunci model tertentu muncul mendadak. Itu red flag kuat.' }
+          { id: 'AW1', initials: 'RK', alias: 'R.K.', claimRole: 'PPK Baik', actualRole: 'PPK Baik', aura: 'navy', title: 'Penanggung jawab paket', statement: 'Aku dari awal cuma minta spesifikasi yang fungsional. Yang penting kebutuhan tercapai, bukan mengejar merek.' },
+          { id: 'AW2', initials: 'PT', alias: 'P.T.', claimRole: 'Pokja Teliti', actualRole: 'Pokja Teliti', aura: 'gold', title: 'Penjaga proses', statement: 'Aku lihat ada tambahan detail yang terlalu sempit. Kalau begini, persaingan jadi tidak sehat.' },
+          { id: 'AW3', initials: 'AR', alias: 'A.R.', claimRole: 'Auditor', actualRole: 'Auditor', aura: 'teal', title: 'Pengawas kota', statement: 'Jejak revisinya ada. Perubahannya bukan soal fungsi, tapi cenderung mengunci pilihan.' },
+          { id: 'AW4', initials: 'DM', alias: 'D.M.', claimRole: 'Tim Perencana', actualRole: 'Spek Mengarah', aura: 'crimson', title: 'Penyusun draft', statement: 'Ya namanya juga biar bagus. Kalau detailnya mirip produk tertentu ya kebetulan saja, jangan dibawa serius.' },
+          { id: 'AW5', initials: 'AS', alias: 'A.S.', claimRole: 'Admin SiRUP', actualRole: 'Admin SiRUP', aura: 'violet', title: 'Penjaga data', statement: 'RUP aman. Yang berubah justru lampiran spesifikasinya. Jadi masalahnya ada di dokumen teknis.' },
+          { id: 'AW6', initials: 'PH', alias: 'P.H.', claimRole: 'PPHP Pemeriksa', actualRole: 'PPHP Pemeriksa', aura: 'green', title: 'Pemeriksa hasil', statement: 'Kalau spesifikasi sudah condong, nanti pemeriksaan pun susah dipertanggungjawabkan.' },
+          { id: 'AW7', initials: 'PJ', alias: 'P.J.', claimRole: 'PANJI', actualRole: 'PANJI', aura: 'sky', title: 'Asisten kota', statement: 'Aku nemu red flag. Ada frasa teknis yang muncul mendadak padahal sebelumnya tidak ada.' }
         ]
       },
       {
-        caseTitle: 'Audit Wolf — Paket Dipecah Diam-Diam',
-        desc: 'Paket meubelair kantor yang semula utuh kini terbelah menjadi beberapa paket kecil. PANJI menduga ada upaya pecah paket. Tentukan pelakunya.',
-        narrative: 'Laporan pagi menunjukkan nilai paket tiba-tiba tersebar ke beberapa akun kerja. Kota Audit langsung siaga.',
-        culpritHint: 'Lihat siapa yang paling sering bicara soal “biar cepat” dan menganggap pemecahan paket hal biasa.',
+        caseTitle: 'Bonus Level 8 — Audit Wolf: Pecah Paket',
+        desc: 'Sekarang suasana kota makin ramai. Ada kebutuhan meubelair yang tiba-tiba dipecah jadi beberapa paket kecil. Siapa yang sengaja main akal?',
+        cityTitle: 'Kota Audit — Distrik Operasional',
+        citySubtitle: 'Di bawah lampu kota, daftar paket terlihat rapi. Tapi PANJI tahu ada pola yang tidak beres.',
+        culpritHint: 'Perhatikan siapa yang merasa memecah paket itu hal biasa demi cepat selesai.',
         culpritRole: 'Pecah Paket',
         culpritActor: 'BS',
-        revealPrefix: 'Modus malam ini adalah memecah satu kebutuhan sejenis menjadi beberapa paket kecil.',
+        revealPrefix: 'Setelah voting, terbukti ada yang mencoba memecah kebutuhan sejenis supaya proses berubah.',
+        panjiIntro: 'Otaknya dipakai, tapi jangan tegang. Baca alibi mereka pelan-pelan. Yang kelihatan santai belum tentu aman.',
         actors: [
-          { id: 'BW1', initials: 'NB', alias: 'N.B.', claimRole: 'PPK Baik', actualRole: 'PPK Baik', team: 'aman', aura: 'navy', statement: 'Kebutuhan meja dan kursi itu satu rumpun. Dari awal saya minta dihitung sebagai kebutuhan sejenis.' },
-          { id: 'BW2', initials: 'BS', alias: 'B.S.', claimRole: 'Staf Pengadaan', actualRole: 'Pecah Paket', team: 'penyusup', aura: 'crimson', statement: 'Kalau dibagi per ruangan kan lebih cepat. Toh tiap ruangan beda kebutuhan, tidak perlu dibesar-besarkan.' },
-          { id: 'BW3', initials: 'AT', alias: 'A.T.', claimRole: 'Auditor', actualRole: 'Auditor', team: 'aman', aura: 'gold', statement: 'Nomor referensi kebutuhan, jenis barang, dan jadwalnya identik. Indikasinya kuat ini satu paket yang dibelah.' },
-          { id: 'BW4', initials: 'PK', alias: 'P.K.', claimRole: 'Pokja Teliti', actualRole: 'Pokja Teliti', team: 'aman', aura: 'teal', statement: 'Kalau kebutuhan sejenis dipisah tanpa dasar, metode bisa berubah. Itu risiko tata kelola yang serius.' },
-          { id: 'BW5', initials: 'SR', alias: 'S.R.', claimRole: 'Admin SiRUP', actualRole: 'Admin SiRUP', team: 'aman', aura: 'violet', statement: 'Di data perencanaan saya lihat waktunya sama dan sumber dananya sama. Polanya tidak wajar.' },
-          { id: 'BW6', initials: 'PP', alias: 'P.P.', claimRole: 'PPHP Pemeriksa', actualRole: 'PPHP Pemeriksa', team: 'aman', aura: 'green', statement: 'Kalau seperti ini, nanti pemeriksaan administrasi akan menanyakan dasar pemaketannya.' },
-          { id: 'BW7', initials: 'PJ', alias: 'P.J.', claimRole: 'PANJI', actualRole: 'PANJI', team: 'aman', aura: 'sky', statement: 'Aku mencium bau paket kembar. Kalau kebutuhan sejenis dipecah, risiko langsung naik.' }
-        ]
-      },
-      {
-        caseTitle: 'Audit Wolf — Pembayaran sebelum BAST',
-        desc: 'Ada usulan pencairan pembayaran padahal BAST belum lengkap. Cari siapa aktor risiko yang mendorong langkah itu.',
-        narrative: 'Lampu balai kota redup. Satu dokumen pembayaran meloncat mendahului pemeriksaan dan BAST.',
-        culpritHint: 'Cermati siapa yang ingin membalik urutan kontrak–pemeriksaan–BAST–pembayaran.',
-        culpritRole: 'Bayar Sebelum BAST',
-        culpritActor: 'LF',
-        revealPrefix: 'Modus malam ini adalah mendorong pencairan sebelum syarat serah terima hasil terpenuhi.',
-        actors: [
-          { id: 'CW1', initials: 'LF', alias: 'L.F.', claimRole: 'Staf Keuangan', actualRole: 'Bayar Sebelum BAST', team: 'penyusup', aura: 'crimson', statement: 'Kalau sudah ada invoice, kenapa tidak dicairkan dulu? Dokumen BAST bisa menyusul supaya penyedia tidak marah.' },
-          { id: 'CW2', initials: 'HB', alias: 'H.B.', claimRole: 'PPHP Pemeriksa', actualRole: 'PPHP Pemeriksa', team: 'aman', aura: 'green', statement: 'Saya belum tandatangani pemeriksaan hasil. Jadi belum ada dasar untuk BAST maupun pembayaran.' },
-          { id: 'CW3', initials: 'AD', alias: 'A.D.', claimRole: 'Auditor', actualRole: 'Auditor', team: 'aman', aura: 'gold', statement: 'Urutannya jelas: hasil diperiksa dulu, baru BAST, lalu pembayaran. Melompat urutan berisiko temuan.' },
-          { id: 'CW4', initials: 'PR', alias: 'P.R.', claimRole: 'PPK Baik', actualRole: 'PPK Baik', team: 'aman', aura: 'navy', statement: 'Saya minta dokumen lengkap dulu. Tidak ada instruksi untuk membayar sebelum serah terima.' },
-          { id: 'CW5', initials: 'ST', alias: 'S.T.', claimRole: 'Pokja Teliti', actualRole: 'Pokja Teliti', team: 'aman', aura: 'teal', statement: 'Kalau dipaksa cair sekarang, jejak administratifnya jomplang. Itu bukan hanya soal cepat atau lambat.' },
-          { id: 'CW6', initials: 'IR', alias: 'I.R.', claimRole: 'Admin SiRUP', actualRole: 'Admin SiRUP', team: 'aman', aura: 'violet', statement: 'Di dashboard realisasi, statusnya belum boleh hijau kalau BAST belum ada.' },
-          { id: 'CW7', initials: 'PJ', alias: 'P.J.', claimRole: 'PANJI', actualRole: 'PANJI', team: 'aman', aura: 'sky', statement: 'Kalau pembayaran melompat sebelum BAST, serigala risikonya lagi berkeliaran.' }
+          { id: 'BW1', initials: 'NB', alias: 'N.B.', claimRole: 'PPK Baik', actualRole: 'PPK Baik', aura: 'navy', title: 'Pemilik kebutuhan', statement: 'Dari awal kebutuhan ini saya minta dihitung utuh, karena barangnya sejenis dan waktunya juga sama.' },
+          { id: 'BW2', initials: 'BS', alias: 'B.S.', claimRole: 'Staf Pengadaan', actualRole: 'Pecah Paket', aura: 'crimson', title: 'Pengatur paket', statement: 'Kalau dibagi per ruangan kan enak, cepat, dan tidak ribet. Menurutku itu biasa saja.' },
+          { id: 'BW3', initials: 'AT', alias: 'A.T.', claimRole: 'Auditor', actualRole: 'Auditor', aura: 'gold', title: 'Pemerhati pola', statement: 'Sumber dana, jadwal, dan jenis barangnya sama. Sulit dibantah, ini pola pecah paket.' },
+          { id: 'BW4', initials: 'PK', alias: 'P.K.', claimRole: 'Pokja Teliti', actualRole: 'Pokja Teliti', aura: 'teal', title: 'Penjaga fairness', statement: 'Kalau kebutuhan sejenis dipisah tanpa alasan kuat, metode bisa melenceng. Itu berbahaya.' },
+          { id: 'BW5', initials: 'SR', alias: 'S.R.', claimRole: 'Admin SiRUP', actualRole: 'Admin SiRUP', aura: 'violet', title: 'Pengawas data', statement: 'Dari data yang aku lihat, semuanya nyambung. Cuma dibelah-belah saja.' },
+          { id: 'BW6', initials: 'PP', alias: 'P.P.', claimRole: 'PPHP Pemeriksa', actualRole: 'PPHP Pemeriksa', aura: 'green', title: 'Pemeriksa akhir', statement: 'Kalau begini, nanti pertanyaan paling awal pasti soal dasar pemaketannya.' },
+          { id: 'BW7', initials: 'PJ', alias: 'P.J.', claimRole: 'PANJI', actualRole: 'PANJI', aura: 'sky', title: 'Asisten kota', statement: 'Ada bau paket kembar. Tinggal cari siapa yang paling diuntungkan kalau kebutuhan itu dipecah.' }
         ]
       }
     ];
@@ -911,32 +897,22 @@
     const picked = pool[variantIndex % pool.length];
     return {
       type: 'auditWolf',
-      title: `Bonus Level ${levelNo} — Audit Wolf`,
+      title: picked.caseTitle,
       caseTitle: picked.caseTitle,
       desc: picked.desc,
-      budget: 'Bonus Mode',
-      difficulty: `Level ${levelNo} - Audit Wolf`,
+      difficulty: `Bonus Level ${levelNo}`,
+      explanation: 'Baca alibi, amati siapa yang paling janggal, lalu voting aktor risikonya. Tidak ada timer di bonus level ini.',
       scenario: picked,
-      timeLimit: levelNo >= 8 ? 70 : 90,
-      explanation: 'Audit Wolf adalah bonus investigasi bergaya social deduction. Baca alibi, lihat inkonsistensi, lalu voting aktor risiko PBJ yang paling patut dicurigai.'
+      bonusNoTimer: true
     };
   }
 
   function buildAuditWolfRuntime(challenge) {
     const scenario = challenge && challenge.scenario ? challenge.scenario : null;
     const actors = scenario && Array.isArray(scenario.actors)
-      ? shuffleArray(scenario.actors.map((actor, index) => ({ ...actor, seat: index + 1, votes: 0, revealed: false })))
+      ? shuffleArray(scenario.actors.map((actor, index) => ({ ...actor, seat: index + 1, votes: 0 })))
       : [];
-
     const culprit = actors.find(actor => actor.actualRole === scenario.culpritRole || actor.initials === scenario.culpritActor) || actors[0] || null;
-    const safeActors = actors.filter(actor => actor !== culprit);
-    const discussionFeed = actors.map((actor, index) => ({
-      actorId: actor.id,
-      initials: actor.initials,
-      role: actor.claimRole,
-      text: actor.statement,
-      delay: 120 * index
-    }));
 
     return {
       phase: 'intro',
@@ -944,17 +920,22 @@
       culpritId: culprit ? culprit.id : '',
       selectedId: '',
       inspectedId: actors[0] ? actors[0].id : '',
-      botVotes: [],
       resolved: false,
       playerCorrect: false,
-      eventPulse: 0,
-      discussionFeed,
       dayStory: [
-        '🌙 Malam turun. Kota Audit PBJ masuk fase pemantauan.',
-        '📜 PANJI menemukan jejak tindakan mencurigakan di log paket.',
-        '⚖️ Pagi hari, sidang dibuka. Pilih aktor risiko yang paling kuat indikasinya.'
+        '🌙 Malam turun. Kota Audit mulai sepi, tapi ada jejak aktivitas mencurigakan di dokumen paket.',
+        '📌 PANJI menemukan perubahan yang bikin alur pengadaan jadi rawan.',
+        '☀️ Pagi datang. Sekarang waktunya baca alibi mereka dan pilih siapa yang paling patut dicurigai.'
       ],
-      revealText: scenario ? `${scenario.revealPrefix} Aktor yang terungkap adalah ${culprit.initials} • ${culprit.actualRole}.` : ''
+      revealText: scenario ? `${scenario.revealPrefix} Aktor yang terungkap: ${culprit.initials} • ${culprit.actualRole}.` : '',
+      discussionFeed: actors.map((actor, idx) => ({
+        actorId: actor.id,
+        initials: actor.initials,
+        role: actor.claimRole,
+        title: actor.title,
+        text: actor.statement,
+        delay: idx * 120
+      }))
     };
   }
 
@@ -965,7 +946,7 @@
 
   function queueAuditWolfTimer(fn, delay) {
     const timer = setTimeout(() => {
-      auditWolfTimers = auditWolfTimers.filter(item => item != timer);
+      auditWolfTimers = auditWolfTimers.filter(item => item !== timer);
       fn();
     }, delay);
     auditWolfTimers.push(timer);
@@ -996,7 +977,7 @@
       }
 
       levelNo += 1;
-      if (levelNo > baseList.length + rushLevels.size + auditWolfLevels.size + 8) break;
+      if (levelNo > baseList.length + rushLevels.size + auditWolfLevels.size + 10) break;
     }
 
     return expanded;
@@ -1813,8 +1794,7 @@
 
 
   function getDefaultLevelTime(challenge) {
-    if (!challenge || challenge.type === 'tenderRush') return 0;
-    if (challenge.type === 'auditWolf') return Number(challenge.timeLimit || 80);
+    if (!challenge || challenge.type === 'tenderRush' || challenge.type === 'auditWolf') return 0;
 
     const levelNo = getCurrentLevelNumber();
     const base = challenge.type === 'quiz'
@@ -1855,7 +1835,7 @@
       if (destroyed || GAME_STATE.finished) return;
 
       const activeChallenge = getCurrentChallenge();
-      if (!activeChallenge || activeChallenge.type === 'tenderRush') return;
+      if (!activeChallenge || activeChallenge.type === 'tenderRush' || activeChallenge.type === 'auditWolf') return;
 
       GAME_STATE.levelTimeLeft = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0) - 1);
       updateLevelTimerUi();
@@ -1870,9 +1850,20 @@
     const text = root && root.querySelector('#psLevelTimeText');
     const bar = root && root.querySelector('#psLevelTimeBar');
     const wrap = root && root.querySelector('.ps-level-time-card');
+    const challenge = getCurrentChallenge();
     const left = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0));
     const limit = Math.max(1, Number(GAME_STATE.levelTimeLimit || 1));
     const percent = Math.max(0, Math.min(100, (left / limit) * 100));
+
+    if (challenge && challenge.type === 'auditWolf') {
+      if (text) text.textContent = 'Tanpa Timer';
+      if (bar) bar.style.width = '100%';
+      if (wrap) {
+        wrap.classList.remove('danger');
+        wrap.classList.remove('warning');
+      }
+      return;
+    }
 
     if (text) text.textContent = left ? `${left}s` : '-';
     if (bar) bar.style.width = percent + '%';
@@ -1886,7 +1877,7 @@
   function applyLevelTimePenalty(seconds, reasonText = 'Kesalahan') {
     const challenge = getCurrentChallenge();
 
-    if (!challenge || challenge.type === 'tenderRush') return;
+    if (!challenge || challenge.type === 'tenderRush' || challenge.type === 'auditWolf') return;
     if (!GAME_STATE.levelTimeLimit || GAME_STATE.stage === 'result' || GAME_STATE.finished) return;
 
     const penalty = Math.max(1, Number(seconds || 0));
@@ -1904,7 +1895,7 @@
   function applyLevelTimeBonus(seconds, reasonText = 'Bonus waktu') {
     const challenge = getCurrentChallenge();
 
-    if (!challenge || challenge.type === 'tenderRush') return;
+    if (!challenge || challenge.type === 'tenderRush' || challenge.type === 'auditWolf') return;
     if (!GAME_STATE.levelTimeLimit || GAME_STATE.stage === 'result' || GAME_STATE.finished) return;
 
     const bonus = Math.max(1, Number(seconds || 0));
@@ -2438,13 +2429,13 @@
     }
 
     if (challenge.type === 'auditWolf') {
-      const state = GAME_STATE.auditWolf || {};
+      const wolf = GAME_STATE.auditWolf || {};
       const scenario = challenge.scenario || {};
-      const culprit = (state.actors || []).find(actor => actor.id === state.culpritId);
+      const culprit = (wolf.actors || []).find(actor => actor.id === wolf.culpritId);
       if (culprit) {
-        return `Hint PANJI: ${scenario.culpritHint || 'Cari aktor yang paling inkonsisten.'} Tokoh yang paling perlu dicermati adalah ${culprit.initials} karena alibinya paling tidak nyambung dengan bukti malam.`;
+        return `Hint PANJI: ${scenario.culpritHint || 'Cari yang alibinya paling janggal.'} Coba sorot ${culprit.initials}. Omongannya kelihatan paling tidak enak didengar.`;
       }
-      return 'Hint PANJI: di Audit Wolf, fokus ke inkonsistensi alibi, urutan proses PBJ, dan siapa yang paling ingin melompati tahapan.';
+      return 'Hint PANJI: fokus ke yang terlalu santai saat ada masalah. Biasanya dia paling banyak alasan.';
     }
 
     if (challenge.hint) {
@@ -2505,7 +2496,7 @@
 
     if (challenge.type === 'auditWolf') {
       showPanji(
-        'Ini Audit Wolf. Gayanya mirip social deduction: ada fase malam, diskusi, lalu voting. Baca alibi tiap inisial dan cari aktor risiko PBJ yang paling janggal.',
+        (challenge.scenario && challenge.scenario.panjiIntro) || 'Bonus level dulu. Baca alibi warga kota audit, lalu pilih siapa biang masalahnya.',
         'thinking'
       );
       return;
@@ -2558,7 +2549,6 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
-    clearAuditWolfTimers();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
 
@@ -2620,7 +2610,7 @@
       addLog(
         'info',
         'Bonus Audit Wolf dimulai',
-        'Masuk fase malam, baca alibi tiap aktor berinisial, lalu voting siapa aktor risiko PBJ.'
+        'Baca alibi warga kota audit, lalu pilih siapa aktor risiko yang paling mencurigakan.'
       );
     } else {
       GAME_STATE.stage = 'quiz';
@@ -2824,9 +2814,9 @@
             <label>Salah</label>
             <strong>${GAME_STATE.wrong}</strong>
           </div>
-          <div class="ps-score-card ps-level-time-card">
-            <label>Waktu Level</label>
-            <strong id="psLevelTimeText">${challenge.type === 'tenderRush' ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
+          <div class="ps-score-card ps-level-time-card ${challenge.type === 'auditWolf' ? 'bonus-mode' : ''}">
+            <label>${challenge.type === 'auditWolf' ? 'Mode Bonus' : 'Waktu Level'}</label>
+            <strong id="psLevelTimeText">${challenge.type === 'tenderRush' ? '-' : challenge.type === 'auditWolf' ? 'Tanpa Timer' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
             <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
           </div>
         </div>
@@ -3053,177 +3043,163 @@
   function renderAuditWolfChallenge(challenge) {
     const wolf = GAME_STATE.auditWolf || buildAuditWolfRuntime(challenge);
     const actors = Array.isArray(wolf.actors) ? wolf.actors : [];
+    const phase = wolf.phase || 'intro';
     const inspected = actors.find(actor => actor.id === (wolf.inspectedId || wolf.selectedId)) || actors[0] || null;
     const selected = actors.find(actor => actor.id === wolf.selectedId) || null;
-    const phaseLabels = {
-      intro: 'Briefing',
-      night: 'Malam',
-      discussion: 'Diskusi',
-      voting: 'Voting',
-      reveal: 'Pengungkapan'
-    };
-
-    const phase = wolf.phase || 'intro';
-    const topBadge = `<div class="aw-kicker">Strategy Bonus • ${escapeHtml(phaseLabels[phase] || 'Audit Wolf')}</div>`;
-    const rightPanel = inspected
-      ? `
-        <div class="aw-inspector-card ${inspected.id === wolf.culpritId && phase === 'reveal' ? 'culprit' : ''}">
-          <div class="aw-inspector-avatar aura-${escapeHtml(inspected.aura || 'navy')}">${escapeHtml(inspected.initials)}</div>
-          <div class="aw-inspector-copy">
-            <strong>${escapeHtml(inspected.alias || inspected.initials)}</strong>
-            <span>${escapeHtml(phase === 'reveal' ? inspected.actualRole : inspected.claimRole)}</span>
-          </div>
-          <p>${escapeHtml(inspected.statement)}</p>
-          <div class="aw-inspector-meta">
-            <span>Seat ${escapeHtml(inspected.seat || '')}</span>
-            <span>${escapeHtml(phase === 'reveal' ? (inspected.team === 'penyusup' ? 'Tim Penyusup' : 'Tim Aman') : 'Role tertutup')}</span>
-            <span>${escapeHtml(Number(inspected.votes || 0))} vote</span>
-          </div>
-        </div>
-      `
-      : '';
+    const scenario = challenge.scenario || {};
+    const phaseNames = { intro: 'Pembuka', night: 'Malam', discussion: 'Diskusi', voting: 'Voting', reveal: 'Hasil' };
 
     if (phase === 'intro') {
       return `
         <div class="aw-shell">
-          <div class="aw-stage aw-stage-intro">
-            <div class="aw-stage-main">
-              ${topBadge}
-              <h3>${escapeHtml(challenge.caseTitle)}</h3>
-              <p>${escapeHtml(challenge.desc)}</p>
-              <div class="aw-story-banner">
-                <div class="aw-moon"></div>
-                <div class="aw-story-copy">${escapeHtml(challenge.scenario.narrative || '')}</div>
+          <div class="aw-city-stage">
+            <div class="aw-city-sky"></div>
+            <div class="aw-city-moon"></div>
+            <div class="aw-city-stars"></div>
+            <div class="aw-city-hills"></div>
+            <div class="aw-city-line aw-city-back"></div>
+            <div class="aw-city-line aw-city-front"></div>
+            <div class="aw-stage-copy">
+              <div class="aw-kicker">Bonus Level • Audit Wolf</div>
+              <h3>${escapeHtml(scenario.cityTitle || challenge.caseTitle || 'Kota Audit')}</h3>
+              <p>${escapeHtml(scenario.citySubtitle || challenge.desc || '')}</p>
+              <div class="aw-intro-box">
+                <strong>${escapeHtml(challenge.caseTitle || '')}</strong>
+                <p>${escapeHtml(challenge.desc || '')}</p>
               </div>
-              <div class="aw-info-row">
-                <div class="aw-info-card"><label>Mode</label><strong>Single Player vs Bot</strong></div>
-                <div class="aw-info-card"><label>Target</label><strong>Temukan aktor risiko PBJ</strong></div>
-                <div class="aw-info-card"><label>Petunjuk</label><strong>Inisial + role klaim</strong></div>
+              <div class="aw-intro-steps">
+                <div class="aw-intro-step"><b>1</b><span>Baca gerak-gerik tiap warga</span></div>
+                <div class="aw-intro-step"><b>2</b><span>Pilih yang paling mencurigakan</span></div>
+                <div class="aw-intro-step"><b>3</b><span>Voting dan lihat hasilnya</span></div>
               </div>
-            </div>
-            <div class="aw-stage-side">
-              <div class="aw-side-panel">
-                <h4>Rangkaian Fase</h4>
-                <ol>
-                  <li>Malam: sistem memunculkan indikasi masalah.</li>
-                  <li>Diskusi: tiap aktor berinisial memberi alibi.</li>
-                  <li>Voting: pilih siapa perusak paket.</li>
-                  <li>Reveal: tim aman atau penyusup terungkap.</li>
-                </ol>
-                <button type="button" class="ps-btn ps-btn-primary" id="btnStartAuditWolf">Masuk Sidang Audit</button>
-              </div>
+              <button type="button" class="ps-btn ps-btn-primary aw-start-btn" id="btnStartAuditWolf">Mulai Bonus Level</button>
             </div>
           </div>
         </div>
       `;
     }
 
+    const actorCards = actors.map(actor => {
+      const selectedClass = wolf.selectedId === actor.id ? 'selected' : '';
+      const inspectedClass = (wolf.inspectedId || wolf.selectedId) === actor.id ? 'inspected' : '';
+      const culpritClass = phase === 'reveal' && wolf.culpritId === actor.id ? 'culprit' : '';
+      return `
+        <button type="button" class="aw-actor-card aura-${escapeHtml(actor.aura || 'navy')} ${selectedClass} ${inspectedClass} ${culpritClass}" data-aw-select="${escapeHtml(actor.id)}">
+          <div class="aw-actor-portrait">
+            <div class="aw-portrait-bg"></div>
+            <div class="aw-portrait-head"></div>
+            <div class="aw-portrait-body"></div>
+            <div class="aw-portrait-badge">${escapeHtml(actor.initials)}</div>
+          </div>
+          <div class="aw-actor-text">
+            <strong>${escapeHtml(actor.alias || actor.initials)}</strong>
+            <span>${escapeHtml(phase === 'reveal' ? actor.actualRole : actor.claimRole)}</span>
+            <small>${escapeHtml(actor.title || '')}</small>
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    const feed = (wolf.discussionFeed || []).map((item, idx) => `
+      <div class="aw-feed-item" style="animation-delay:${idx * .06}s">
+        <div class="aw-feed-mark">${escapeHtml(item.initials)}</div>
+        <div class="aw-feed-bubble">
+          <strong>${escapeHtml(item.initials)} • ${escapeHtml(item.role)}</strong>
+          <p>${escapeHtml(item.text)}</p>
+        </div>
+      </div>
+    `).join('');
+
+    const inspectedHtml = inspected ? `
+      <div class="aw-inspect-card ${phase === 'reveal' && inspected.id === wolf.culpritId ? 'culprit' : ''}">
+        <div class="aw-inspect-hero aura-${escapeHtml(inspected.aura || 'navy')}">
+          <div class="aw-portrait-head"></div>
+          <div class="aw-portrait-body"></div>
+          <div class="aw-inspect-initials">${escapeHtml(inspected.initials)}</div>
+        </div>
+        <div class="aw-inspect-copy">
+          <strong>${escapeHtml(inspected.alias || inspected.initials)}</strong>
+          <span>${escapeHtml(phase === 'reveal' ? inspected.actualRole : inspected.claimRole)}</span>
+          <small>${escapeHtml(inspected.title || '')}</small>
+          <p>${escapeHtml(inspected.statement || '')}</p>
+        </div>
+      </div>
+    ` : '';
+
     const timeline = `
-      <div class="aw-timeline">
-        ${['intro','night','discussion','voting','reveal'].map(step => `
-          <div class="aw-timeline-step ${step === phase ? 'active' : ''} ${['night','discussion','voting','reveal'].indexOf(step) <= ['night','discussion','voting','reveal'].indexOf(phase) ? 'done' : ''}">${escapeHtml(phaseLabels[step])}</div>
-        `).join('')}
+      <div class="aw-phase-row">
+        ${['night', 'discussion', 'voting', 'reveal'].map(key => `<div class="aw-phase-pill ${phase === key ? 'active' : ''}">${escapeHtml(phaseNames[key])}</div>`).join('')}
       </div>
     `;
 
-    const actorGrid = `
-      <div class="aw-actor-grid ${phase === 'reveal' ? 'reveal-mode' : ''}">
-        ${actors.map(actor => {
-          const isSelected = wolf.selectedId === actor.id;
-          const isInspected = (wolf.inspectedId || wolf.selectedId) === actor.id;
-          const isCulprit = wolf.culpritId === actor.id;
-          return `
-            <button type="button" class="aw-actor-card aura-${escapeHtml(actor.aura || 'navy')} ${isSelected ? 'selected' : ''} ${isInspected ? 'inspected' : ''} ${phase === 'reveal' && isCulprit ? 'culprit' : ''}" data-aw-select="${escapeHtml(actor.id)}">
-              <div class="aw-actor-ring"></div>
-              <div class="aw-actor-avatar">${escapeHtml(actor.initials)}</div>
-              <strong>${escapeHtml(actor.alias || actor.initials)}</strong>
-              <span>${escapeHtml(phase === 'reveal' ? actor.actualRole : actor.claimRole)}</span>
-              <div class="aw-actor-tags">
-                <em>${escapeHtml(phase === 'reveal' ? (actor.team === 'penyusup' ? 'Tim Penyusup' : 'Tim Aman') : 'Klaim terbuka')}</em>
-                <b>${escapeHtml(Number(actor.votes || 0))} vote</b>
-              </div>
-            </button>
-          `;
-        }).join('')}
-      </div>
-    `;
-
-    const boardFeed = `
-      <div class="aw-feed-panel">
-        <div class="aw-feed-head">Ruang Diskusi</div>
-        <div class="aw-feed-list">
-          ${(wolf.discussionFeed || []).map((item, index) => `
-            <div class="aw-feed-item" style="animation-delay:${index * .08}s">
-              <div class="aw-feed-avatar">${escapeHtml(item.initials)}</div>
-              <div class="aw-feed-bubble">
-                <strong>${escapeHtml(item.initials)} • ${escapeHtml(item.role)}</strong>
-                <p>${escapeHtml(item.text)}</p>
-              </div>
+    let centerBoard = '';
+    if (phase === 'night') {
+      centerBoard = `
+        <div class="aw-night-board">
+          ${(wolf.dayStory || []).map((line, idx) => `<div class="aw-night-line" style="animation-delay:${idx * .2}s">${escapeHtml(line)}</div>`).join('')}
+        </div>
+      `;
+    } else if (phase === 'discussion') {
+      centerBoard = `
+        <div class="aw-main-board">
+          <div class="aw-board-title">Pilih Warga Kota yang Mau Kamu Sorot</div>
+          <div class="aw-actor-grid">${actorCards}</div>
+          <div class="aw-feed-panel">
+            <div class="aw-feed-title">Obrolan Warga Kota Audit</div>
+            <div class="aw-feed-list">${feed}</div>
+          </div>
+        </div>
+      `;
+    } else if (phase === 'voting') {
+      centerBoard = `
+        <div class="aw-main-board">
+          <div class="aw-board-title">Siapa yang Mau Kamu Voting?</div>
+          <div class="aw-actor-grid">${actorCards}</div>
+          <div class="aw-vote-box">
+            <div>
+              <label>Pilihanmu</label>
+              <strong>${selected ? `${escapeHtml(selected.alias)} • ${escapeHtml(selected.claimRole)}` : 'Belum ada'}</strong>
             </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-
-    const nightBoard = `
-      <div class="aw-night-board">
-        ${(wolf.dayStory || []).map((line, idx) => `
-          <div class="aw-night-line" style="animation-delay:${idx * .28}s">${escapeHtml(line)}</div>
-        `).join('')}
-      </div>
-    `;
-
-    const votingBar = phase === 'voting'
-      ? `
-        <div class="aw-vote-bar">
-          <div class="aw-vote-copy">
-            <label>Pilihanmu</label>
-            <strong>${selected ? `${escapeHtml(selected.initials)} • ${escapeHtml(selected.claimRole)}` : 'Belum ada'}</strong>
-          </div>
-          <button type="button" class="ps-btn ps-btn-primary" id="btnAuditWolfVote" ${selected ? '' : 'disabled'}>Voting Aktor Ini</button>
-        </div>
-      `
-      : '';
-
-    const revealPanel = phase === 'reveal'
-      ? `
-        <div class="aw-reveal-banner ${wolf.playerCorrect ? 'good' : 'bad'}">
-          <div class="aw-reveal-icon">${wolf.playerCorrect ? '✓' : '!'}</div>
-          <div>
-            <strong>${wolf.playerCorrect ? 'Tepat sasaran' : 'Belum tepat'}</strong>
-            <p>${escapeHtml(wolf.revealText || '')}</p>
+            <button type="button" class="ps-btn ps-btn-primary" id="btnAuditWolfVote" ${selected ? '' : 'disabled'}>Kunci Voting</button>
           </div>
         </div>
-      `
-      : '';
+      `;
+    } else {
+      centerBoard = `
+        <div class="aw-main-board">
+          <div class="aw-board-title">Hasil Sidang Kota Audit</div>
+          <div class="aw-actor-grid reveal-mode">${actorCards}</div>
+          <div class="aw-reveal-banner ${wolf.playerCorrect ? 'good' : 'bad'}">
+            <div class="aw-reveal-icon">${wolf.playerCorrect ? '✓' : '!'}</div>
+            <div>
+              <strong>${wolf.playerCorrect ? 'Sip, tebakanmu benar.' : 'Belum tepat, tapi lanjut lagi.'}</strong>
+              <p>${escapeHtml(wolf.revealText || '')}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     return `
       <div class="aw-shell phase-${escapeHtml(phase)}">
-        <div class="aw-stage-header">
+        <div class="aw-top-head">
           <div>
-            ${topBadge}
-            <h3>${escapeHtml(challenge.caseTitle)}</h3>
-            <p>${escapeHtml(challenge.desc)}</p>
+            <div class="aw-kicker">Bonus Level • Audit Wolf</div>
+            <h3>${escapeHtml(challenge.caseTitle || '')}</h3>
+            <p>${escapeHtml(challenge.desc || '')}</p>
           </div>
-          <div class="aw-stage-badges">
-            <span class="aw-badge">${escapeHtml(challenge.difficulty || 'Bonus')}</span>
-            <span class="aw-badge">${escapeHtml(phaseLabels[phase] || '')}</span>
-          </div>
+          <div class="aw-head-note">Tanpa timer • Santai tapi tetap mikir</div>
         </div>
         ${timeline}
-        ${phase === 'night' ? nightBoard : ''}
-        <div class="aw-board-layout ${phase === 'night' ? 'night-only' : ''}">
-          <div class="aw-board-main">
-            ${phase !== 'night' ? actorGrid : ''}
-            ${phase === 'discussion' ? boardFeed : ''}
-            ${phase === 'voting' ? votingBar : ''}
-            ${revealPanel}
+        <div class="aw-layout">
+          <div class="aw-left-panel">
+            ${centerBoard}
           </div>
-          <div class="aw-board-side">
-            ${rightPanel}
-            <div class="aw-side-panel compact">
+          <div class="aw-right-panel">
+            ${inspectedHtml}
+            <div class="aw-side-note">
               <h4>Catatan PANJI</h4>
-              <p>${escapeHtml(challenge.scenario.culpritHint || '')}</p>
+              <p>${escapeHtml(scenario.culpritHint || 'Perhatikan yang paling janggal.')}</p>
               ${phase === 'discussion' ? '<button type="button" class="ps-btn ps-btn-soft" id="btnAuditWolfToVote">Lanjut ke Voting</button>' : ''}
               ${phase === 'reveal' ? '<button type="button" class="ps-btn ps-btn-primary" id="btnAuditWolfContinue">Lanjut Soal Berikutnya</button>' : ''}
             </div>
@@ -3233,23 +3209,11 @@
     `;
   }
 
-  function answerAuditWolf(actorId) {
-    const wolf = GAME_STATE.auditWolf;
-    const challenge = getCurrentChallenge();
-    if (!wolf || !challenge || challenge.type !== 'auditWolf') return;
-    if (wolf.phase !== 'voting' || wolf.resolved) return;
-    wolf.selectedId = actorId;
-    wolf.inspectedId = actorId;
-    renderGame();
-  }
-
   function inspectAuditWolfActor(actorId) {
     const wolf = GAME_STATE.auditWolf;
-    if (!wolf || !Array.isArray(wolf.actors)) return;
+    if (!wolf) return;
     wolf.inspectedId = actorId;
-    if (wolf.phase === 'voting') {
-      wolf.selectedId = actorId;
-    }
+    if (wolf.phase === 'voting') wolf.selectedId = actorId;
     renderGame();
   }
 
@@ -3262,16 +3226,14 @@
     clearAuditWolfTimers();
     wolf.phase = 'night';
     renderGame();
-    showToast('Malam dimulai. Sistem memantau jejak risiko...', 'info');
-    showPanji('Perhatikan bukti malam. Setelah itu kamu akan membaca alibi tiap aktor berinisial.', 'thinking');
+    showPanji('Oke, kita mulai. Lihat dulu kejadian semalam di kota audit.', 'thinking');
 
     queueAuditWolfTimer(() => {
       if (!GAME_STATE.auditWolf) return;
       GAME_STATE.auditWolf.phase = 'discussion';
       renderGame();
-      showToast('Fase diskusi dimulai.', 'ok');
-      showPanji('Baca pernyataan tiap aktor. Cari yang paling janggal atau terlalu defensif.', 'thinking');
-    }, 2500);
+      showPanji('Sekarang baca alibi mereka satu-satu. Pilih yang paling aneh.', 'thinking');
+    }, 2400);
   }
 
   function moveAuditWolfToVoting() {
@@ -3280,45 +3242,24 @@
     clearAuditWolfTimers();
     wolf.phase = 'voting';
     renderGame();
-    showPanji('Sekarang pilih satu aktor yang paling kamu curigai sebagai perusak paket.', 'thinking');
+    showPanji('Kalau sudah yakin, pilih satu orang lalu kunci votingnya.', 'thinking');
   }
 
   function commitAuditWolfVote() {
     const challenge = getCurrentChallenge();
     const wolf = GAME_STATE.auditWolf;
-    if (!challenge || challenge.type !== 'auditWolf' || !wolf) return;
-    if (wolf.phase !== 'voting' || !wolf.selectedId || wolf.resolved) return;
+    if (!challenge || challenge.type !== 'auditWolf' || !wolf || wolf.phase !== 'voting' || !wolf.selectedId || wolf.resolved) return;
 
     const culprit = (wolf.actors || []).find(actor => actor.id === wolf.culpritId);
     const selected = (wolf.actors || []).find(actor => actor.id === wolf.selectedId);
-    if (!selected || !culprit) return;
+    if (!culprit || !selected) return;
 
     wolf.resolved = true;
     wolf.playerCorrect = selected.id === culprit.id;
-
-    const votes = [];
-    votes.push({ from: 'YOU', to: selected.id });
-
-    (wolf.actors || []).forEach(actor => {
-      if (actor.id === selected.id) {
-        actor.votes = 0;
-      } else {
-        actor.votes = 0;
-      }
-    });
-
-    const supporters = shuffleArray((wolf.actors || []).filter(actor => actor.id !== culprit.id));
-    supporters.forEach((actor, index) => {
-      const targetId = index < 3 ? culprit.id : (index % 2 === 0 ? selected.id : culprit.id);
-      votes.push({ from: actor.initials, to: targetId });
-    });
-
-    wolf.botVotes = votes;
-    votes.forEach(v => {
-      const target = (wolf.actors || []).find(actor => actor.id === v.to);
-      if (target) target.votes = Number(target.votes || 0) + 1;
-    });
-
+    (wolf.actors || []).forEach(actor => actor.votes = 0);
+    selected.votes += 1;
+    culprit.votes += 3;
+    if (selected.id !== culprit.id) selected.votes += 1;
     wolf.phase = 'reveal';
     GAME_STATE.progress = 100;
     GAME_STATE.answered = true;
@@ -3328,23 +3269,23 @@
       GAME_STATE.score += 30;
       GAME_STATE.correct += 1;
       GAME_STATE.risk = Math.max(0, GAME_STATE.risk - 6);
-      addLog('ok', 'Audit Wolf berhasil', `Kamu berhasil menemukan ${culprit.initials} sebagai aktor ${culprit.actualRole}.`);
-      showToast('Voting tepat. Risiko berkurang.', 'ok');
-      showPanji(`Bagus! ${culprit.initials} terbukti sebagai ${culprit.actualRole}. Kamu berhasil menahan risiko PBJ sebelum paket rusak.`, 'happy');
+      addLog('ok', 'Audit Wolf berhasil', `Kamu berhasil menebak ${culprit.initials} sebagai aktor ${culprit.actualRole}.`);
+      showToast('Tebakanmu benar.', 'ok');
+      showPanji(`Nah, itu dia biangnya: ${culprit.initials}. Mantap, kamu bisa baca situasi dengan baik.`, 'happy');
       flashScreen('ok');
       spawnConfetti();
     } else {
       GAME_STATE.score = Math.max(0, GAME_STATE.score - 12);
       GAME_STATE.wrong += 1;
       GAME_STATE.risk += 14;
-      addLog('bad', 'Audit Wolf meleset', `Pilihanmu ${selected.initials}, padahal aktor risikonya adalah ${culprit.initials} • ${culprit.actualRole}.`);
-      showToast('Voting meleset. Risiko naik.', 'bad');
-      showPanji(`Kali ini meleset. Aktor risikonya adalah ${culprit.initials} • ${culprit.actualRole}. Ingat: alibi paling lemah biasanya muncul saat urutan PBJ mau dilompati.`, 'sad');
+      addLog('bad', 'Audit Wolf meleset', `Pilihanmu ${selected.initials}, padahal yang bikin masalah adalah ${culprit.initials}.`);
+      showToast('Masih meleset.', 'bad');
+      showPanji(`Yang benar ${culprit.initials}. Gapapa, next coba lihat siapa yang paling banyak alasan.`, 'sad');
       flashScreen('bad');
     }
 
     renderGame();
-    scheduleAutoNext('Bonus selesai. Otomatis lanjut ke soal berikutnya...', 2600);
+    scheduleAutoNext('Bonus selesai. Bentar lagi lanjut ke soal berikutnya...', 2600);
   }
 
   function renderQuizChallenge(challenge) {
