@@ -23,28 +23,30 @@ const BONUS_RUN_HAZARDS = [
 ];
 
 
+
 const BONUS_RUN_CHALLENGE = {
   type: 'bonusRun',
-  bonusMode: 'mario',
-  title: 'Level 4 — PANJI Power Run',
-  caseTitle: 'Bonus Mario Style — Berantas Monster Korupsi',
-  desc: 'Bonus time! PANJI lari santai seperti game platformer. Ambil koin/super poin, hindari jebakan, dan saat super aktif tembak monster korupsi.',
-  budget: 'Bonus Santuy',
+  bonusMode: 'auditWolf4',
+  title: 'Level 4 — Audit Wolf: Siapa Perusak Paket?',
+  caseTitle: 'Bonus Werewolf PBJ — Paket Berubah Aneh',
+  desc: 'Bonus investigasi ringan. Malam hari ada paket dirusak penyusup. Pagi hari PANJI memberi laporan. Tebak aktor risiko yang paling mungkin menjadi pelaku.',
+  budget: 'Bonus Investigasi',
   difficulty: 'Level 4 - Bonus',
-  timeLimit: 35,
-  explanation: 'PANJI Power Run adalah jeda ringan. Fokusnya refreshing: lompat, sliding, ambil poin, dan tembak monster korupsi saat super aktif.'
+  timeLimit: 0,
+  explanation: 'Audit Wolf adalah bonus level single player vs bot. Tujuannya melatih insting membaca risiko PBJ lewat alur malam, pagi, diskusi, voting, dan hasil.'
 };
+
 
 const BONUS_PLANE_CHALLENGE = {
   type: 'bonusRun',
-  bonusMode: 'plane',
-  title: 'Level 8 — PANJI Sky Shooter',
-  caseTitle: 'Bonus Pesawat Jadul — Serang Monster Korupsi',
-  desc: 'Bonus time kedua! PANJI terbang seperti game tembak-tembakan pesawat jadul. Gerakkan pesawat, tembak monster korupsi, dan ambil power point.',
-  budget: 'Bonus Shooter',
+  bonusMode: 'auditWolf8',
+  title: 'Level 8 — Audit Wolf: Sidang Paket Bermasalah',
+  caseTitle: 'Bonus Werewolf PBJ — Penyusup Makin Licin',
+  desc: 'Bonus investigasi lanjutan. Penyusup menyamar di antara tim aman. Baca laporan PANJI, dengarkan bot berdiskusi, lalu voting siapa perusak paket.',
+  budget: 'Bonus Investigasi',
   difficulty: 'Level 8 - Bonus',
-  timeLimit: 40,
-  explanation: 'PANJI Sky Shooter adalah bonus level pesawat jadul: tembak monster korupsi, ambil power point, dan lanjut ke level berikutnya dengan mood fresh.'
+  timeLimit: 0,
+  explanation: 'Audit Wolf level 8 menambah variasi kasus dan bot yang lebih ramai. Kalau tebakan benar, risiko turun; kalau salah, paket makin rawan.'
 };
 
 
@@ -4481,6 +4483,413 @@ const BONUS_PLANE_CHALLENGE = {
     };
 
     return messages[cardId] || `Aduh, belum tepat. ${fallbackMessage}`;
+  }
+
+
+
+  const WOLF_SAFE_ROLES = [
+    { id: 'ppk', name: 'PPK Baik', icon: '🧑‍💼', side: 'safe', desc: 'Menjaga dokumen, kebutuhan, dan proses tetap tertib.' },
+    { id: 'pokja', name: 'Pokja Teliti', icon: '🕵️', side: 'safe', desc: 'Membaca dokumen dengan detail dan mencari kejanggalan.' },
+    { id: 'pphp', name: 'PPHP Pemeriksa', icon: '🔬', side: 'safe', desc: 'Memeriksa hasil sebelum serah terima.' },
+    { id: 'auditor', name: 'Auditor', icon: '📊', side: 'safe', desc: 'Melihat pola risiko dan bukti pendukung.' },
+    { id: 'adminSirup', name: 'Admin SiRUP', icon: '📋', side: 'safe', desc: 'Memastikan perencanaan dan pengumuman paket tertib.' },
+    { id: 'panjiRole', name: 'PANJI', icon: '🪽', side: 'safe', desc: 'Asisten Pengadaan Jitu yang membaca sinyal risiko.' }
+  ];
+
+  const WOLF_RISK_ROLES = [
+    { id: 'spekMengarahWolf', name: 'Spek Mengarah', icon: '🚫', side: 'risk', signature: 'spesifikasi tiba-tiba terlalu sempit, seperti mengarah ke merek/penyedia tertentu', clue: 'Perhatikan perubahan spesifikasi yang terlalu detail dan tidak netral.' },
+    { id: 'pecahPaketWolf', name: 'Pecah Paket', icon: '💣', side: 'risk', signature: 'paket sejenis mendadak terbagi kecil-kecil dengan waktu berdekatan', clue: 'Lihat pola paket mirip, nilai mepet, dan jadwal berdekatan.' },
+    { id: 'kontrakDuluWolf', name: 'Kontrak Duluan', icon: '🚨', side: 'risk', signature: 'dokumen kontrak muncul sebelum proses pemilihan benar-benar tertib', clue: 'Cari siapa yang mendorong lompat proses.' },
+    { id: 'bayarSebelumBastWolf', name: 'Bayar Sebelum BAST', icon: '💸', side: 'risk', signature: 'pembayaran didorong padahal pemeriksaan/BAST belum jelas', clue: 'Cek aktor yang memaksa pembayaran cepat tanpa bukti cukup.' },
+    { id: 'penyediaTitipanWolf', name: 'Penyedia Titipan', icon: '🎭', side: 'risk', signature: 'satu penyedia terasa sudah diarahkan sejak awal diskusi', clue: 'Waspadai kalimat yang mengarahkan ke satu penyedia.' },
+    { id: 'rupGelapWolf', name: 'RUP Gelap', icon: '🌑', side: 'risk', signature: 'paket diproses tanpa jejak perencanaan yang jelas di RUP/SiRUP', clue: 'Cek apakah dasar perencanaannya lemah atau sengaja diabaikan.' }
+  ];
+
+  const WOLF_CASES = [
+    {
+      title: 'Spesifikasi Paket Tiba-tiba Berubah',
+      night: 'Malam ini, ada satu paket yang tiba-tiba berubah spesifikasinya menjadi terlalu sempit dan terasa mengarah.',
+      panji: 'PANJI menemukan jejak perubahan spesifikasi yang tidak biasa. Siapa aktor risiko yang paling mungkin merusak paket?',
+      likely: 'spekMengarahWolf'
+    },
+    {
+      title: 'Paket Sejenis Pecah Menjadi Beberapa Bagian',
+      night: 'Malam ini, paket sejenis muncul dalam beberapa bagian kecil dengan nilai yang terlihat sengaja dibuat aman.',
+      panji: 'PANJI melihat pola nilai dan jadwal yang mencurigakan. Siapa penyusupnya?',
+      likely: 'pecahPaketWolf'
+    },
+    {
+      title: 'Kontrak Muncul Terlalu Cepat',
+      night: 'Malam ini, rancangan kontrak sudah bergerak duluan padahal proses pemilihan belum selesai dengan rapi.',
+      panji: 'PANJI mencium proses yang melompat. Siapa yang mendorong kejadian ini?',
+      likely: 'kontrakDuluWolf'
+    },
+    {
+      title: 'Pembayaran Didorong Sebelum Barang Diperiksa',
+      night: 'Malam ini, ada tekanan agar pembayaran segera diproses meskipun pemeriksaan dan BAST belum jelas.',
+      panji: 'PANJI melihat risiko pembayaran sebelum bukti memadai. Siapa perusaknya?',
+      likely: 'bayarSebelumBastWolf'
+    },
+    {
+      title: 'Penyedia Tertentu Mendadak Selalu Disebut',
+      night: 'Malam ini, diskusi paket terasa mengarah ke satu penyedia tertentu sejak awal.',
+      panji: 'PANJI mendengar pola kalimat yang terlalu mengarahkan. Siapa penyusupnya?',
+      likely: 'penyediaTitipanWolf'
+    },
+    {
+      title: 'Paket Jalan Tanpa Dasar RUP yang Jelas',
+      night: 'Malam ini, satu paket bergerak cepat tanpa jejak perencanaan yang kuat di RUP/SiRUP.',
+      panji: 'PANJI kehilangan jejak perencanaan. Siapa aktor risiko yang paling cocok?',
+      likely: 'rupGelapWolf'
+    }
+  ];
+
+  function createBonusRunState(challenge) {
+    const difficulty = challenge && challenge.bonusMode === 'auditWolf8' ? 'hard' : 'normal';
+    const rounds = difficulty === 'hard' ? 4 : 3;
+    return {
+      mode: 'auditWolf',
+      difficulty,
+      started: false,
+      finished: false,
+      phase: 'intro',
+      round: 1,
+      maxRounds: rounds,
+      score: 0,
+      correct: 0,
+      wrong: 0,
+      riskMeter: difficulty === 'hard' ? 34 : 24,
+      eliminated: [],
+      suspects: [],
+      currentCase: null,
+      culprit: null,
+      selectedVote: '',
+      discussion: [],
+      revealText: '',
+      panjiLine: 'Audit Wolf siap dimulai. Dengarkan laporan malam, baca diskusi bot, lalu pilih aktor risiko yang paling mencurigakan.'
+    };
+  }
+
+  function getBonusRunState() {
+    if (!GAME_STATE.bonusRun) GAME_STATE.bonusRun = createBonusRunState(getCurrentChallenge() || {});
+    return GAME_STATE.bonusRun;
+  }
+
+  function clearBonusRunLoop() {
+    if (bonusRunFrame) {
+      cancelAnimationFrame(bonusRunFrame);
+      bonusRunFrame = null;
+    }
+    if (bonusRunKeyHandler) {
+      document.removeEventListener('keydown', bonusRunKeyHandler);
+      bonusRunKeyHandler = null;
+    }
+  }
+
+  function startBonusRun() {
+    const challenge = getCurrentChallenge();
+    const run = getBonusRunState();
+    if (!challenge || challenge.type !== 'bonusRun' || !run) return;
+
+    run.started = true;
+    run.finished = false;
+    run.phase = 'night';
+    run.round = 1;
+    run.score = 0;
+    run.correct = 0;
+    run.wrong = 0;
+    run.riskMeter = run.difficulty === 'hard' ? 34 : 24;
+    run.eliminated = [];
+    prepareWolfRound();
+    showPanji('Malam pertama dimulai. Ada penyusup yang merusak paket. Baca jejak kasusnya, lalu bantu aku voting aktor risiko yang paling mencurigakan.', 'thinking');
+    renderGame();
+  }
+
+  function prepareWolfRound() {
+    const run = getBonusRunState();
+    const casePool = shuffleArray(WOLF_CASES);
+    let selectedCase = casePool.find(item => !run.currentCase || item.title !== run.currentCase.title) || casePool[0];
+    const riskPool = shuffleArray(WOLF_RISK_ROLES);
+    let culprit = riskPool.find(item => item.id === selectedCase.likely) || riskPool[0];
+    if (run.difficulty === 'hard' && Math.random() < 0.35) {
+      culprit = riskPool[0];
+      selectedCase = { ...selectedCase, likely: culprit.id, panji: selectedCase.panji + ' Jejaknya agak samar, jangan langsung percaya bot yang terlalu yakin.' };
+    }
+
+    const safeCount = run.difficulty === 'hard' ? 3 : 2;
+    const riskCount = run.difficulty === 'hard' ? 4 : 3;
+    const risks = shuffleArray([culprit, ...riskPool.filter(item => item.id !== culprit.id)]).slice(0, riskCount);
+    const safes = shuffleArray(WOLF_SAFE_ROLES).slice(0, safeCount);
+    const suspects = shuffleArray([...risks, ...safes]).map((item, index) => ({ ...item, seat: index + 1 }));
+
+    run.currentCase = selectedCase;
+    run.culprit = culprit;
+    run.suspects = suspects;
+    run.selectedVote = '';
+    run.revealText = '';
+    run.discussion = buildWolfDiscussion(run);
+    run.panjiLine = selectedCase.panji;
+  }
+
+  function buildWolfDiscussion(run) {
+    const names = run.suspects.map(item => item.name);
+    const culpritName = run.culprit.name;
+    const safeLines = [
+      `Pokja Teliti: Aku lihat perubahan ini tidak wajar. Cek pola, jangan cuma percaya suara paling keras.`,
+      `Auditor: Jejak risikonya kuat. Pelaku biasanya meninggalkan tanda di proses, nilai, atau dokumen.`,
+      `Admin SiRUP: Aku ingin lihat dasar perencanaannya. Kalau RUP lemah, harus hati-hati.`,
+      `PPHP Pemeriksa: Jangan sampai barang diterima atau dibayar sebelum hasilnya jelas.`
+    ];
+    const mislead = shuffleArray(names.filter(name => name !== culpritName)).slice(0, 2);
+    const wolfLines = [
+      `${culpritName}: Menurutku ini biasa saja, jangan dibesar-besarkan. Kita pilih yang lain saja.`,
+      `${mislead[0] || 'Bot OPD'}: Aku curiga ${mislead[1] || 'aktor lain'}, tapi buktinya belum kuat.`,
+      `PANJI: Ada yang sedang mengalihkan perhatian. Cocokkan cerita malam dengan signature masing-masing aktor.`
+    ];
+    return shuffleArray([...safeLines.slice(0, run.difficulty === 'hard' ? 3 : 2), ...wolfLines]);
+  }
+
+  function advanceWolfPhase(next) {
+    const run = getBonusRunState();
+    if (!run || run.finished) return;
+    run.phase = next;
+    if (next === 'discussion') {
+      run.panjiLine = 'Diskusi dimulai. Jangan percaya satu kalimat saja. Cocokkan bukti malam dengan ciri risiko aktor.';
+    } else if (next === 'vote') {
+      run.panjiLine = 'Saatnya voting. Pilih aktor risiko yang paling sesuai dengan jejak kasus.';
+    } else if (next === 'morning') {
+      run.panjiLine = run.currentCase.panji;
+    }
+    renderGame();
+  }
+
+  function voteWolfSuspect(roleId) {
+    const run = getBonusRunState();
+    if (!run || run.phase !== 'vote') return;
+
+    const choice = run.suspects.find(item => item.id === roleId);
+    const isCorrect = roleId === run.culprit.id;
+    run.selectedVote = roleId;
+    run.phase = 'reveal';
+
+    if (isCorrect) {
+      run.correct += 1;
+      run.score += run.difficulty === 'hard' ? 90 : 75;
+      run.riskMeter = Math.max(0, run.riskMeter - (run.difficulty === 'hard' ? 18 : 22));
+      GAME_STATE.score += run.difficulty === 'hard' ? 35 : 30;
+      GAME_STATE.correct += 1;
+      run.revealText = `Benar! ${choice.name} adalah aktor risiko. ${run.culprit.clue} Risiko paket turun.`;
+      showPanji('Tebakanmu benar! Risiko PBJ turun. Kamu membaca jejak kasus dengan bagus.', 'happy');
+      spawnConfetti();
+    } else {
+      run.wrong += 1;
+      run.score = Math.max(0, run.score - 25);
+      run.riskMeter = Math.min(100, run.riskMeter + (run.difficulty === 'hard' ? 18 : 14));
+      GAME_STATE.risk += run.difficulty === 'hard' ? 8 : 6;
+      GAME_STATE.wrong += 1;
+      run.revealText = `Belum tepat. Kamu memilih ${choice ? choice.name : 'aktor lain'}, padahal pelakunya ${run.culprit.name}. ${run.culprit.clue} Paket makin rawan.`;
+      showPanji('Yah, belum tepat. Penyusup berhasil mengalihkan perhatian. Baca lagi signature risikonya.', 'sad');
+    }
+
+    addLog(isCorrect ? 'ok' : 'bad', `Audit Wolf ronde ${run.round}`, run.revealText);
+    renderGame();
+  }
+
+  function nextWolfRound() {
+    const run = getBonusRunState();
+    if (!run || run.finished) return;
+
+    if (run.round >= run.maxRounds) {
+      finishBonusRun();
+      return;
+    }
+
+    run.round += 1;
+    run.phase = 'night';
+    prepareWolfRound();
+    showPanji(`Ronde ${run.round} dimulai. Malam kembali turun, penyusup mencoba merusak paket lagi.`, 'thinking');
+    renderGame();
+  }
+
+  function finishBonusRun() {
+    const challenge = getCurrentChallenge();
+    const run = getBonusRunState();
+    if (!challenge || challenge.type !== 'bonusRun' || !run || run.finished) return;
+
+    run.finished = true;
+    run.phase = 'finished';
+    GAME_STATE.progress = 100;
+    GAME_STATE.score += Math.max(10, run.score);
+    if (run.correct >= Math.ceil(run.maxRounds / 2)) GAME_STATE.correct += 1;
+    else GAME_STATE.wrong += 1;
+
+    const resultText = run.correct >= Math.ceil(run.maxRounds / 2)
+      ? `Audit Wolf selesai. Kamu berhasil membaca ${run.correct}/${run.maxRounds} penyusup. Risiko terkendali dan tim aman makin percaya diri.`
+      : `Audit Wolf selesai. Kamu baru menemukan ${run.correct}/${run.maxRounds} penyusup. Tidak apa-apa, ini latihan membaca pola risiko.`;
+
+    addLog(run.correct >= Math.ceil(run.maxRounds / 2) ? 'ok' : 'bad', 'Bonus Audit Wolf selesai', resultText);
+    showToast('Audit Wolf selesai. Otomatis lanjut...', 'ok');
+    showPanji(resultText + ' Kita lanjut ke level berikutnya.', run.correct >= Math.ceil(run.maxRounds / 2) ? 'happy' : 'thinking');
+    renderGame();
+    scheduleAutoNext('Bonus selesai. Otomatis lanjut ke level berikutnya...');
+  }
+
+  function renderBonusRunChallenge(challenge) {
+    const run = getBonusRunState() || createBonusRunState(challenge);
+    const isHard = run.difficulty === 'hard';
+
+    if (!run.started) {
+      return `
+        <div class="wolf-shell ${isHard ? 'hard' : 'normal'}">
+          <div class="wolf-hero-card">
+            <div class="wolf-kicker">${isHard ? 'Level 8 Bonus' : 'Level 4 Bonus'} • Werewolf PBJ Single Player vs Bot</div>
+            <h3>🐺 Audit Wolf: Siapa Perusak Paket?</h3>
+            <p>
+              Malam hari penyusup merusak paket. Pagi hari PANJI membacakan laporan. Bot akan berdiskusi,
+              lalu kamu voting siapa aktor risiko yang paling mencurigakan. Ini bonus game, bukan soal PBJ berat.
+            </p>
+            <div class="wolf-role-strip">
+              <span>🧑‍💼 PPK Baik</span><span>🕵️ Pokja Teliti</span><span>📊 Auditor</span><span>🚫 Spek Mengarah</span><span>💣 Pecah Paket</span><span>💸 Bayar Sebelum BAST</span>
+            </div>
+            <button type="button" class="ps-btn ps-btn-primary wolf-start-btn" id="btnStartBonusRun">Mulai Audit Wolf</button>
+          </div>
+        </div>
+      `;
+    }
+
+    const suspectCards = run.suspects.map(item => {
+      const voted = run.selectedVote === item.id ? 'voted' : '';
+      const revealed = run.phase === 'reveal' || run.phase === 'finished';
+      const correct = revealed && item.id === run.culprit.id ? 'correct' : '';
+      const wrong = revealed && run.selectedVote === item.id && item.id !== run.culprit.id ? 'wrong' : '';
+      const disabled = run.phase !== 'vote' ? 'disabled' : '';
+      return `
+        <button type="button" class="wolf-suspect ${voted} ${correct} ${wrong}" data-wolf-vote="${escapeHtml(item.id)}" ${disabled}>
+          <span class="wolf-seat">${item.seat}</span>
+          <span class="wolf-icon">${item.icon}</span>
+          <strong>${escapeHtml(item.name)}</strong>
+          <small>${escapeHtml(item.side === 'risk' && revealed ? item.signature : item.desc || 'Peran masih misterius.')}</small>
+        </button>
+      `;
+    }).join('');
+
+    const discussion = run.discussion.map((line, index) => `
+      <div class="wolf-chat ${index % 2 ? 'bot' : 'safe'}">
+        <span>${index % 2 ? '🤖' : '💬'}</span>
+        <p>${escapeHtml(line)}</p>
+      </div>
+    `).join('');
+
+    const phaseBody = run.phase === 'night' ? `
+      <div class="wolf-phase-panel night">
+        <div class="wolf-moon">🌙</div>
+        <h4>Malam</h4>
+        <p>${escapeHtml(run.currentCase.night)}</p>
+        <button type="button" class="ps-btn ps-btn-primary" data-wolf-phase="morning">Lanjut ke Pagi</button>
+      </div>
+    ` : run.phase === 'morning' ? `
+      <div class="wolf-phase-panel morning">
+        <div class="wolf-sun">☀️</div>
+        <h4>Pagi</h4>
+        <p>${escapeHtml(run.panjiLine)}</p>
+        <button type="button" class="ps-btn ps-btn-primary" data-wolf-phase="discussion">Mulai Diskusi Bot</button>
+      </div>
+    ` : run.phase === 'discussion' ? `
+      <div class="wolf-discussion">
+        <h4>Diskusi Bot</h4>
+        ${discussion}
+        <button type="button" class="ps-btn ps-btn-primary" data-wolf-phase="vote">Masuk Voting</button>
+      </div>
+    ` : run.phase === 'vote' ? `
+      <div class="wolf-vote-note">
+        <h4>Voting</h4>
+        <p>Pilih satu aktor yang paling sesuai dengan cerita malam dan signature risikonya.</p>
+      </div>
+    ` : `
+      <div class="wolf-reveal ${run.selectedVote === run.culprit.id ? 'win' : 'lose'}">
+        <h4>${run.selectedVote === run.culprit.id ? '✅ Penyusup Terbongkar' : '⚠️ Penyusup Lolos'}</h4>
+        <p>${escapeHtml(run.revealText)}</p>
+        <button type="button" class="ps-btn ps-btn-primary" data-wolf-next>
+          ${run.round >= run.maxRounds ? 'Selesaikan Bonus' : 'Lanjut Ronde Berikutnya'}
+        </button>
+      </div>
+    `;
+
+    return `
+      <div class="wolf-shell ${isHard ? 'hard' : 'normal'}">
+        <div class="wolf-hud">
+          <div><label>Ronde</label><b>${run.round}/${run.maxRounds}</b></div>
+          <div><label>Benar</label><b>${run.correct}</b></div>
+          <div><label>Salah</label><b>${run.wrong}</b></div>
+          <div><label>Skor Wolf</label><b>${run.score}</b></div>
+          <div><label>Risiko Paket</label><b>${run.riskMeter}%</b></div>
+        </div>
+        <div class="wolf-risk-track"><span style="width:${Math.max(0, Math.min(100, run.riskMeter))}%"></span></div>
+        <div class="wolf-case-card">
+          <div class="wolf-case-top">
+            <span>${run.phase === 'night' ? '🌙 Malam' : run.phase === 'morning' ? '☀️ Pagi' : run.phase === 'discussion' ? '🗣️ Diskusi' : run.phase === 'vote' ? '🗳️ Voting' : '🔎 Hasil'}</span>
+            <b>${escapeHtml(run.currentCase.title)}</b>
+          </div>
+          ${phaseBody}
+        </div>
+        <div class="wolf-board">
+          ${suspectCards}
+        </div>
+      </div>
+    `;
+  }
+
+  const __wolfBindGameEvents = bindGameEvents;
+  bindGameEvents = function () {
+    __wolfBindGameEvents();
+    if (!root) return;
+    root.querySelectorAll('[data-wolf-phase]').forEach(button => {
+      button.addEventListener('click', () => advanceWolfPhase(button.dataset.wolfPhase));
+    });
+    root.querySelectorAll('[data-wolf-vote]').forEach(button => {
+      button.addEventListener('click', () => voteWolfSuspect(button.dataset.wolfVote));
+    });
+    const next = root.querySelector('[data-wolf-next]');
+    if (next) next.addEventListener('click', nextWolfRound);
+  };
+
+  function getHintMessage(challenge) {
+    if (!challenge) return 'PANJI belum punya hint untuk soal ini.';
+    if (challenge.type === 'bonusRun') {
+      const run = getBonusRunState();
+      if (!run || !run.currentCase) return 'Hint Audit Wolf: cocokkan cerita malam dengan ciri aktor risiko. Jangan percaya bot yang terlalu cepat mengalihkan tuduhan.';
+      return `Hint Audit Wolf: kasusnya tentang "${run.currentCase.title}". ${run.culprit ? run.culprit.clue : 'Cocokkan pola kejadian dengan signature aktor risiko.'}`;
+    }
+    if (challenge.type === 'tenderRush') {
+      const pkg = getActiveTenderRushPackage(challenge);
+      if (pkg) return `Hint Tender Rush: paket "${pkg.title}" lebih aman masuk jalur ${TENDER_RUSH_METHODS[pkg.correct] ? TENDER_RUSH_METHODS[pkg.correct].label : 'metode yang sesuai'}. ${pkg.explanation}`;
+      return 'Hint Tender Rush: baca jenis paket, pagu, dan clue. Jangan asal pilih metode tercepat.';
+    }
+    if (challenge.type === 'pipeline') {
+      const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
+      const expectedId = challenge.idealIds && challenge.idealIds[nextEmpty];
+      const expectedCard = challenge.cards && challenge.cards.find(item => item.id === expectedId);
+      if (expectedCard) return `Hint PANJI: slot berikutnya cari kartu "${expectedCard.label}". Susun dari kiri ke kanan dan hindari jebakan.`;
+      return 'Hint PANJI: cek lagi urutan tahap PBJ dari awal sampai akhir.';
+    }
+    return challenge.hint ? `Hint PANJI: ${challenge.hint}` : 'Baca kata kunci soal dan pilih jawaban paling sesuai prinsip PBJ.';
+  }
+
+  function panjiForChallenge(challenge) {
+    if (!challenge) return;
+    if (challenge.type === 'bonusRun') {
+      showPanji('Bonus Audit Wolf dimulai. Ini single player vs bot: malam ada paket dirusak, pagi aku umumkan jejaknya, lalu kamu voting aktor risiko.', 'thinking');
+      return;
+    }
+    if (challenge.type === 'tenderRush') {
+      showPanji('Ini Tender Rush. Baca jenis paket, pagu, dan clue. Pilih tombol 1 sampai 5 sesuai metode paling aman.', 'thinking');
+      return;
+    }
+    if (challenge.type === 'pipeline') {
+      showPanji('Ini soal pipeline. Susun kartu dari kiri ke kanan secara tertib. Jangan lompat proses dan hindari kartu jebakan.', 'thinking');
+      return;
+    }
+    showPanji('Ini soal ABCD. Baca kata kunci dan pilih jawaban yang paling sesuai prinsip PBJ.', 'thinking');
   }
 
   window.__moduleInit = function ({ container }) {
