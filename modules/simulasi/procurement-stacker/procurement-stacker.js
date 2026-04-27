@@ -3912,10 +3912,22 @@ function startBonusRun() {
 
 function handleBonusRunJump() {
   const run = getCurrentBonusRunState();
-  if (!run || !run.started || run.finished || !run.onGround) return;
+  if (!run || !run.started || run.finished) return;
+
+  const now = performance.now();
+  if (now < Number(run.slideUntil || 0)) return;
+
+  if (run.onGround) {
+    run.jumpUsed = 0;
+  }
+
+  if (Number(run.jumpUsed || 0) >= Number(run.maxJumps || 2)) return;
+
   run.onGround = false;
-  run.runnerVelocity = 700;
+  run.jumpUsed = Number(run.jumpUsed || 0) + 1;
+  run.runnerVelocity = run.jumpUsed === 1 ? 700 : 620;
   run.jumpCount += 1;
+  run.lastStatus = run.jumpUsed === 2 ? 'Double jump! PANJI lompat dua kali biar lolos jebakan.' : 'PANJI lompat! Ambil item semangat di udara.';
 
   const runner = root && root.querySelector('#psBonusRunner');
   if (runner) {
@@ -3923,6 +3935,24 @@ function handleBonusRunJump() {
     void runner.offsetWidth;
     runner.classList.add('is-jumping');
   }
+
+  syncBonusHud();
+}
+
+function handleBonusRunSlide() {
+  const run = getCurrentBonusRunState();
+  if (!run || !run.started || run.finished) return;
+  if (!run.onGround) return;
+
+  run.slideUntil = performance.now() + 720;
+  run.lastStatus = 'Sliding! PANJI merunduk biar lolos jebakan rendah.';
+
+  const runner = root && root.querySelector('#psBonusRunner');
+  if (runner) {
+    runner.classList.add('is-sliding');
+  }
+
+  syncBonusHud();
 }
 
 function pickRandomBonusObject(elapsed) {
@@ -3961,10 +3991,13 @@ function renderBonusRunObject(obj) {
 }
 
 function bonusRunCollides(obj, stageWidth) {
+  const run = getCurrentBonusRunState();
+  const now = performance.now();
+  const isSliding = run && now < Number(run.slideUntil || 0) && Number(run.runnerY || 0) <= 4;
   const runnerLeft = Math.max(70, stageWidth * 0.12);
-  const runnerBottom = 34 + Number(GAME_STATE.bonusRun && GAME_STATE.bonusRun.runnerY || 0);
-  const runnerWidth = 96;
-  const runnerHeight = 104;
+  const runnerBottom = 34 + Number(run && run.runnerY || 0);
+  const runnerWidth = isSliding ? 116 : 96;
+  const runnerHeight = isSliding ? 54 : 104;
   const objLeft = obj.x;
   const objRight = obj.x + obj.width;
   const objBottom = obj.y;
@@ -3972,7 +4005,7 @@ function bonusRunCollides(obj, stageWidth) {
   const runnerRight = runnerLeft + runnerWidth;
   const runnerTop = runnerBottom + runnerHeight;
 
-  return !(objRight < runnerLeft + 10 || objLeft > runnerRight - 14 || objTop < runnerBottom + 12 || objBottom > runnerTop - 8);
+  return !(objRight < runnerLeft + 10 || objLeft > runnerRight - 14 || objTop < runnerBottom + 10 || objBottom > runnerTop - 8);
 }
 
 function bonusRunCollectObject(obj) {
@@ -3999,12 +4032,15 @@ function bonusRunHitHazard(obj) {
   obj.hit = true;
   run.hitCount += 1;
   run.combo = 0;
-  run.stumbleUntil = performance.now() + 420;
+  const now = performance.now();
+  run.stumbleUntil = now + 420;
+  run.invincibleUntil = now + 2200;
   run.counters[obj.key] = Number(run.counters[obj.key] || 0) + 1;
   run.runScore = Math.max(0, run.runScore - Number(obj.penalty || 0));
   GAME_STATE.score = Math.max(0, GAME_STATE.score - Number(obj.penalty || 0));
   GAME_STATE.risk += Number(obj.risk || 1);
-  showPanji(obj.panjiLine || `${obj.label} kena!`, 'sad');
+  run.lastStatus = `${obj.panjiLine || obj.label + ' kena!'} PANJI kebal sebentar, item/rintangan yang lewat tidak dihitung dulu.`;
+  showPanji(run.lastStatus, 'sad');
 
   const stage = root && root.querySelector('#psBonusStage');
   if (stage) popScore(stage, `-${obj.penalty}`, 'bad');
@@ -4050,9 +4086,17 @@ function stepBonusRun(timestamp) {
   run.objects.forEach(obj => {
     obj.x -= speed * dt;
     obj.pulse += dt * 4;
+    const now = performance.now();
+    const invincible = now < Number(run.invincibleUntil || 0);
     if (!obj.hit && bonusRunCollides(obj, stageWidth)) {
-      if (obj.category === 'collectible') bonusRunCollectObject(obj);
-      else bonusRunHitHazard(obj);
+      if (invincible) {
+        run.lastStatus = 'PANJI masih invincible sebentar. Item dan rintangan yang lewat tidak dihitung dulu.';
+        obj.hit = true;
+      } else if (obj.category === 'collectible') {
+        bonusRunCollectObject(obj);
+      } else {
+        bonusRunHitHazard(obj);
+      }
     }
   });
 
@@ -4098,9 +4142,9 @@ function renderBonusRunChallenge(challenge) {
           <div class="ps-bonus-kicker">PANJI Mood Booster • Bonus Santuy</div>
           <h3>Bonus Time! Bantu PANJI cari energi dulu</h3>
           <p>
-            Bonus level ini bukan ujian. PANJI akan lari otomatis ke kanan, dan kamu cukup <b>lompat</b>
-            dengan <b>Spasi</b> atau <b>tap</b>. Ambil kopi, koin, bintang, dokumen aman, dan bonus poin.
-            Hindari deadline, revisi dadakan, ngantuk, berkas numpuk, dan loading lama.
+            Bonus level ini bukan ujian. PANJI akan lari otomatis ke kanan. Kamu bisa <b>single jump</b>, <b>double jump</b>,
+            dan <b>sliding</b> seperti Cookie Run. Ambil kopi, koin, bintang, dokumen aman, dan bonus poin.
+            Kalau kena perangkap, PANJI invincible beberapa detik dan item/rintangan yang lewat tidak dihitung dulu.
           </p>
           <div class="ps-bonus-chip-row">
             <span class="ps-bonus-chip good">⭐/🪙 dari <b>assets/logo-sippbj.png</b></span>
@@ -4112,7 +4156,8 @@ function renderBonusRunChallenge(challenge) {
           </div>
           <div class="ps-bonus-controls-note">
             <div><b>Durasi:</b> ${Number(challenge.timeLimit || 45)} detik</div>
-            <div><b>Kontrol:</b> Spasi / Tap = Lompat</div>
+            <div><b>Kontrol:</b> Spasi/Tap = Lompat, dua kali = Double Jump</div>
+              <div><b>Sliding:</b> Panah Bawah / S / tombol Slide</div>
             <div><b>Game over:</b> Tidak ada, main santai sampai selesai</div>
           </div>
           <div class="ps-buttons">
@@ -4177,7 +4222,10 @@ function renderBonusRunChallenge(challenge) {
           <span class="ps-bonus-runner-leg left"></span>
           <span class="ps-bonus-runner-leg right"></span>
         </button>
-        <button type="button" class="ps-bonus-jump-cta" id="psBonusTapArea">Spasi / Tap untuk Lompat</button>
+        <div class="ps-bonus-control-pad">
+            <button type="button" class="ps-bonus-slide-cta" id="psBonusSlideArea">↓ / S untuk Sliding</button>
+            <button type="button" class="ps-bonus-jump-cta" id="psBonusTapArea">Spasi / Tap untuk Lompat</button>
+          </div>
       </div>
 
       <div class="ps-bonus-bottom-panel">
