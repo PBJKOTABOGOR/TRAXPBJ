@@ -65,6 +65,30 @@
       });
     }
 
+    function ensureXlsxLoaded() {
+      return new Promise((resolve, reject) => {
+        if (window.XLSX) {
+          resolve();
+          return;
+        }
+
+        const existing = document.querySelector('script[data-xlsx-lib="true"]');
+        if (existing) {
+          existing.addEventListener('load', () => resolve(), { once: true });
+          existing.addEventListener('error', () => reject(new Error('Gagal memuat library XLSX.')), { once: true });
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.setAttribute('data-xlsx-lib', 'true');
+
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Gagal memuat library XLSX.'));
+        document.body.appendChild(script);
+      });
+    }
+
     function csvUrlBySheetName(sheetId, sheetName) {
       return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
     }
@@ -147,23 +171,25 @@
         }
       } else if (hasComma) {
         const parts = str.split(',');
+
         if (parts.length > 2) {
           str = parts.join('');
         } else {
-          const decimals = parts[1] || '';
-          if (decimals.length === 3) {
+          const tail = parts[1] || '';
+          if (tail.length === 3) {
             str = parts.join('');
           } else {
-            str = parts[0] + '.' + decimals;
+            str = parts[0] + '.' + tail;
           }
         }
       } else if (hasDot) {
         const parts = str.split('.');
+
         if (parts.length > 2) {
           str = parts.join('');
         } else {
-          const decimals = parts[1] || '';
-          if (decimals.length === 3) {
+          const tail = parts[1] || '';
+          if (tail.length === 3) {
             str = parts.join('');
           }
         }
@@ -393,6 +419,7 @@
       const realRows = normalizeRows(realisasiRows);
 
       groupedRealByKode = groupRealisasi(realRows);
+
       const currentOrder = getCurrentMonthOrder();
 
       return planRows
@@ -572,7 +599,11 @@
       rows.forEach(row => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="bold"><a class="rup-link" href="javascript:void(0)" onclick="openDetailModal('${escapeHtml(row.kode_rup)}')">${escapeHtml(row.kode_rup)}</a></td>
+          <td class="bold">
+            <a class="rup-link" href="javascript:void(0)" onclick="openDetailModal('${escapeHtml(row.kode_rup)}')">
+              ${escapeHtml(row.kode_rup)}
+            </a>
+          </td>
           <td>${escapeHtml(row.nama_paket)}</td>
           <td>${escapeHtml(row.satuan_kerja)}</td>
           <td>${escapeHtml(row.pengadaan)}</td>
@@ -585,7 +616,9 @@
           <td>${buildProgresBadge(row.progres)}</td>
           <td>${buildJadwalBadge(row.posisi_jadwal)}</td>
           <td>${warningCell(row.warning)}</td>
-          <td><button class="detail-btn" onclick="openDetailModal('${escapeHtml(row.kode_rup)}')">Detail</button></td>
+          <td>
+            <button class="detail-btn" onclick="openDetailModal('${escapeHtml(row.kode_rup)}')">Detail</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -598,6 +631,7 @@
         } else {
           if (a.waktu_pemilihan_order !== b.waktu_pemilihan_order) return b.waktu_pemilihan_order - a.waktu_pemilihan_order;
         }
+
         return String(a.satuan_kerja || '').localeCompare(String(b.satuan_kerja || ''), 'id');
       });
     }
@@ -752,7 +786,7 @@
       const row = allRows.find(r => String(r.kode_rup) === String(kodeRup));
       if (!row) return;
 
-      const detailRows = groupedRealByKode[kodeRup]?.rows || [];
+      const detailRows = (groupedRealByKode[kodeRup] && groupedRealByKode[kodeRup].rows) ? groupedRealByKode[kodeRup].rows : [];
       const ds = row.detail_summary || {};
 
       setText('detailTitle', 'Detail Kode RUP ' + row.kode_rup);
@@ -818,80 +852,83 @@
       }
     }
 
-    function buildExportRows(rows) {
-      return rows.map(row => ({
-        kode_rup: row.kode_rup,
-        nama_paket: row.nama_paket,
-        satuan_kerja: row.satuan_kerja,
-        pengadaan: row.pengadaan,
-        jenis: row.jenis,
-        metode: row.metode,
-        waktu_pemilihan: row.waktu_pemilihan_label,
-        pagu: row.pagu,
-        total_realisasi: row.total_realisasi,
-        persentase: Number(row.persentase || 0),
-        recall_paket: row.recall_paket,
-        sisa_pagu: row.sisa_pagu,
-        status: row.status,
-        progres: row.progres,
-        posisi_jadwal: row.posisi_jadwal,
-        warning: row.warning,
-        ket_jadwal: row.ket_jadwal,
-        tindak_lanjut: row.tindak_lanjut
+    function buildExportRows() {
+      const sourceRows = filteredRows && filteredRows.length ? filteredRows : allRows;
+
+      return sourceRows.map((row, index) => ({
+        No: index + 1,
+        'Kode RUP': row.kode_rup,
+        'Nama Paket': row.nama_paket,
+        'Satuan Kerja': row.satuan_kerja,
+        'Pengadaan': row.pengadaan,
+        'Jenis Pengadaan': row.jenis,
+        'Metode': row.metode,
+        'Waktu Pemilihan': row.waktu_pemilihan_label,
+        'Pagu RUP': Number(row.pagu || 0),
+        'Total Realisasi': Number(row.total_realisasi || 0),
+        'Persentase Realisasi': Number(row.persentase || 0),
+        'Recall Paket': Number(row.recall_paket || 0),
+        'Sisa Pagu': Number(row.sisa_pagu || 0),
+        'Status': row.status,
+        'Progres': row.progres,
+        'Posisi Jadwal': row.posisi_jadwal,
+        'Warning': row.warning,
+        'Keterangan Jadwal': row.ket_jadwal,
+        'Tindak Lanjut': row.tindak_lanjut
       }));
     }
 
-    function exportRowsToXlsx(rows, filename) {
-      if (!Array.isArray(rows) || !rows.length) {
-        alert('Tidak ada data yang bisa diexport.');
-        return;
-      }
+    async function exportMonitoringExcel() {
+      try {
+        const rows = buildExportRows();
 
-      if (!window.XLSX) {
-        alert('Library XLSX belum dimuat. Pastikan xlsx.full.min.js sudah ditambahkan di index.html sebelum app.js.');
-        return;
-      }
-
-      const safeFilename = String(filename || 'monitoring-realisasi.xlsx')
-        .replace(/\.csv$/i, '.xlsx')
-        .replace(/\.xls$/i, '.xlsx');
-
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      const workbook = XLSX.utils.book_new();
-
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Monitoring');
-
-      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-      const colWidths = [];
-
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        let maxLength = 10;
-
-        for (let row = range.s.r; row <= range.e.r; row++) {
-          const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-          const cell = worksheet[cellAddress];
-
-          if (cell && cell.v != null) {
-            maxLength = Math.max(maxLength, String(cell.v).length);
-          }
+        if (!rows.length) {
+          alert('Tidak ada data untuk diexport.');
+          return;
         }
 
-        colWidths.push({ wch: Math.min(maxLength + 2, 45) });
+        setText('monitoringStatus', 'Menyiapkan file Excel...');
+        await ensureXlsxLoaded();
+
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Monitoring');
+
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+        const colWidths = [];
+
+        for (let col = range.s.c; col <= range.e.c; col++) {
+          let maxLength = 10;
+
+          for (let row = range.s.r; row <= range.e.r; row++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+            const cell = worksheet[cellAddress];
+
+            if (cell && cell.v != null) {
+              maxLength = Math.max(maxLength, String(cell.v).length);
+            }
+          }
+
+          colWidths.push({ wch: Math.min(maxLength + 2, 45) });
+        }
+
+        worksheet['!cols'] = colWidths;
+
+        const now = new Date();
+        const stamp = [
+          now.getFullYear(),
+          String(now.getMonth() + 1).padStart(2, '0'),
+          String(now.getDate()).padStart(2, '0')
+        ].join('');
+
+        XLSX.writeFile(workbook, `monitoring-perencanaan-${stamp}.xlsx`);
+        setText('monitoringStatus', `${rows.length} data berhasil diexport ke Excel.`);
+      } catch (err) {
+        console.error(err);
+        alert('Gagal export Excel: ' + (err.message || String(err)));
+        setText('monitoringStatus', 'Gagal export Excel.');
       }
-
-      worksheet['!cols'] = colWidths;
-
-      XLSX.writeFile(workbook, safeFilename);
-    }
-
-    function exportMonitoringExcel() {
-      const rows = buildExportRows(filteredRows.length ? filteredRows : allRows);
-      exportRowsToXlsx(rows, 'monitoring-realisasi-filter.xlsx');
-    }
-
-    function exportAllMonitoringExcel() {
-      const rows = buildExportRows(allRows);
-      exportRowsToXlsx(rows, 'monitoring-realisasi-semua.xlsx');
     }
 
     async function loadMonitoringData() {
@@ -922,12 +959,8 @@
       on(qs('btnSortWaktu'), 'click', toggleSortWaktu);
       on(qs('btnRunMonitoring'), 'click', runMonitoring);
       on(qs('btnResetMonitoring'), 'click', resetMonitoring);
-      on(qs('detailModal'), 'click', handleModalBackdrop);
-
       on(qs('btnExportMonitoring'), 'click', exportMonitoringExcel);
-      on(qs('btnExportExcel'), 'click', exportMonitoringExcel);
-      on(qs('btnExportXlsx'), 'click', exportMonitoringExcel);
-      on(qs('btnExportAllMonitoring'), 'click', exportAllMonitoringExcel);
+      on(qs('detailModal'), 'click', handleModalBackdrop);
     }
 
     window.runMonitoring = runMonitoring;
@@ -937,7 +970,6 @@
     window.closeDetailModal = closeDetailModal;
     window.handleModalBackdrop = handleModalBackdrop;
     window.exportMonitoringExcel = exportMonitoringExcel;
-    window.exportAllMonitoringExcel = exportAllMonitoringExcel;
 
     bindMonitoringEvents();
 
@@ -949,7 +981,7 @@
       })
       .catch((err) => {
         console.error(err);
-        setText('monitoringStatus', 'Gagal memuat library PapaParse: ' + (err.message || String(err));
+        setText('monitoringStatus', 'Gagal memuat library PapaParse: ' + (err.message || String(err)));
       });
 
     return function destroy() {
@@ -972,7 +1004,6 @@
       if (window.closeDetailModal === closeDetailModal) window.closeDetailModal = undefined;
       if (window.handleModalBackdrop === handleModalBackdrop) window.handleModalBackdrop = undefined;
       if (window.exportMonitoringExcel === exportMonitoringExcel) window.exportMonitoringExcel = undefined;
-      if (window.exportAllMonitoringExcel === exportAllMonitoringExcel) window.exportAllMonitoringExcel = undefined;
     };
   };
 })();
