@@ -2275,3 +2275,24 @@
     white-space:normal;
   }
 }
+
+
+/* =========================================================
+   LEADERBOARD + PANJI POPUP FIX
+   Tombol close tetap bisa diklik, PANJI bisa tampil saat popup awal.
+   ========================================================= */
+
+.ps-leaderboard-close{
+  z-index:2147483647 !important;
+  pointer-events:auto !important;
+}
+
+.ps-leaderboard-panel,
+.ps-leaderboard-content,
+.ps-leaderboard-content *{
+  pointer-events:auto !important;
+}
+
+.panji-assistant{
+  z-index:2147483647 !important;
+}
