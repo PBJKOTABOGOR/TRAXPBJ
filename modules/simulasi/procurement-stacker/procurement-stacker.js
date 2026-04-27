@@ -22,16 +22,31 @@ const BONUS_RUN_HAZARDS = [
   { key: 'loading', label: 'Loading Lama', icon: '🐌', penalty: 3, risk: 1, yRange: [36, 84], panjiLine: 'Sabar... sistem sedang kontemplasi.' }
 ];
 
+
 const BONUS_RUN_CHALLENGE = {
   type: 'bonusRun',
-  title: 'Level 8 — PANJI Mood Booster',
-  caseTitle: 'Bonus Santuy — Dunia Mimpi PANJI',
-  desc: 'Bonus time! Otak kita sudah kerja keras. Bantu PANJI lari santai, ambil item semangat, hindari jebakan lucu, dan balikin mood sebelum lanjut.',
+  bonusMode: 'mario',
+  title: 'Level 4 — PANJI Power Run',
+  caseTitle: 'Bonus Mario Style — Berantas Monster Korupsi',
+  desc: 'Bonus time! PANJI lari santai seperti game platformer. Ambil koin/super poin, hindari jebakan, dan saat super aktif tembak monster korupsi.',
   budget: 'Bonus Santuy',
-  difficulty: 'Level 8 - Bonus',
-  timeLimit: 45,
-  explanation: 'Bonus level ini bukan ujian tambahan. Tujuannya bikin pemain refresh dulu lewat mini game lari sederhana bersama PANJI.'
+  difficulty: 'Level 4 - Bonus',
+  timeLimit: 35,
+  explanation: 'PANJI Power Run adalah jeda ringan. Fokusnya refreshing: lompat, sliding, ambil poin, dan tembak monster korupsi saat super aktif.'
 };
+
+const BONUS_PLANE_CHALLENGE = {
+  type: 'bonusRun',
+  bonusMode: 'plane',
+  title: 'Level 8 — PANJI Sky Shooter',
+  caseTitle: 'Bonus Pesawat Jadul — Serang Monster Korupsi',
+  desc: 'Bonus time kedua! PANJI terbang seperti game tembak-tembakan pesawat jadul. Gerakkan pesawat, tembak monster korupsi, dan ambil power point.',
+  budget: 'Bonus Shooter',
+  difficulty: 'Level 8 - Bonus',
+  timeLimit: 40,
+  explanation: 'PANJI Sky Shooter adalah bonus level pesawat jadul: tembak monster korupsi, ambil power point, dan lanjut ke level berikutnya dengan mood fresh.'
+};
+
 
 
   let containerRef = null;
@@ -844,7 +859,7 @@ const BONUS_RUN_CHALLENGE = {
     if (!challenge) return `Level ${levelNo}`;
 
     if (challenge.type === 'bonusRun') {
-      return `Level ${levelNo} — PANJI Mood Booster`;
+      return `Level ${levelNo} — ${challenge.bonusMode === 'plane' ? 'PANJI Sky Shooter' : 'PANJI Power Run'}`;
     }
 
     const cleanTitle = stripOldQuestionPrefix(challenge.title || challenge.caseTitle || 'Challenge');
@@ -940,8 +955,10 @@ const BONUS_RUN_CHALLENGE = {
   }
 
   const CHALLENGES = expandChallengeFlow(CHALLENGE_RAW).map(buildChallenge);
-  // Level 8 khusus bonus, level lain tetap bergeser lanjut seperti semula.
-  CHALLENGES.splice(7, 0, buildChallenge(BONUS_RUN_CHALLENGE));
+  // Total 20 level: Level 4 = platformer ringan, Level 8 = shooter pesawat jadul.
+  CHALLENGES.splice(3, 0, buildChallenge(BONUS_RUN_CHALLENGE));
+  CHALLENGES.splice(7, 0, buildChallenge(BONUS_PLANE_CHALLENGE));
+  CHALLENGES.length = 20;
 
   const TENDER_RUSH_METHODS = {
     ekatalog: {
@@ -2426,7 +2443,7 @@ const BONUS_RUN_CHALLENGE = {
 
     if (challenge.type === 'bonusRun') {
       showPanji(
-        'Bonus time! Ini PANJI Mood Booster. Spasi/Tap untuk lompat, bisa double jump, S atau panah bawah untuk sliding. Kalau kena perangkap aku invincible sebentar.',
+        'Bonus time! Level 4 jadi PANJI Power Run, dan Level 8 jadi PANJI Sky Shooter. Ini jeda ringan: lompat/slide atau tembak monster korupsi supaya mood balik lagi.',
         'happy'
       );
       return;
@@ -2654,89 +2671,149 @@ const BONUS_RUN_CHALLENGE = {
     }
   }
 
+
   function createBonusRunState(challenge) {
+    const mode = challenge.bonusMode || 'mario';
+
     return {
+      mode,
       started: false,
       finished: false,
-      timeLeft: Number(challenge.timeLimit || 45),
+      timeLeft: Number(challenge.timeLimit || (mode === 'plane' ? 40 : 35)),
       startedAt: 0,
       lastFrameAt: 0,
-      runnerY: 0,
-      runnerVelocity: 0,
-      onGround: true,
+      playerX: 120,
+      playerY: mode === 'plane' ? 180 : 0,
+      velocityY: 0,
       jumpCount: 0,
-      maxJumps: 2,
       isSliding: false,
       slideUntil: 0,
       invincibleUntil: 0,
-      objects: [],
-      nextSpawnAt: 0.8,
+      powerUntil: 0,
+      nextAutoShotAt: 0,
+      nextSpawnAt: 0.75,
       runScore: 0,
       collectedCount: 0,
       hitCount: 0,
-      combo: 0,
-      comboGlowUntil: 0,
-      stumbleUntil: 0,
-      lastStatus: 'Tekan Spasi/Tap untuk lompat, tekan S/Panah Bawah untuk sliding. Bonus ini santuy, tidak ada game over.',
-      counters: { star: 0, coin: 0, coffee: 0, mie: 0, doc: 0, gift: 0, sleep: 0, berkas: 0, deadline: 0, revisi: 0, loading: 0 }
+      shotCount: 0,
+      objects: [],
+      bullets: [],
+      lastStatus: mode === 'plane'
+        ? 'Gerakkan PANJI, tekan Spasi untuk menembak monster korupsi.'
+        : 'Spasi/Tap untuk lompat, double jump aktif, S/↓ untuk sliding.',
+      counters: {
+        coin: 0,
+        super: 0,
+        coffee: 0,
+        monster: 0,
+        trap: 0,
+        shot: 0
+      }
     };
   }
 
   function getBonusRunState() {
-    const challenge = getCurrentChallenge();
-    if (!challenge || challenge.type !== 'bonusRun') return null;
-    if (!GAME_STATE.bonusRun) GAME_STATE.bonusRun = createBonusRunState(challenge);
+    if (!GAME_STATE.bonusRun) {
+      GAME_STATE.bonusRun = createBonusRunState(getCurrentChallenge() || {});
+    }
+
     return GAME_STATE.bonusRun;
   }
 
+  function clearBonusRunLoop() {
+    if (bonusRunFrame) {
+      cancelAnimationFrame(bonusRunFrame);
+      bonusRunFrame = null;
+    }
+
+    if (bonusRunKeyHandler) {
+      document.removeEventListener('keydown', bonusRunKeyHandler);
+      bonusRunKeyHandler = null;
+    }
+  }
+
   function enableBonusRunKeyboard() {
-    clearBonusRunLoop();
+    if (bonusRunKeyHandler) {
+      document.removeEventListener('keydown', bonusRunKeyHandler);
+      bonusRunKeyHandler = null;
+    }
+
     bonusRunKeyHandler = event => {
-      const activeTag = String(document.activeElement && document.activeElement.tagName || '').toLowerCase();
-      if (['input', 'textarea', 'select'].includes(activeTag)) return;
+      const tag = String(document.activeElement && document.activeElement.tagName || '').toLowerCase();
+      if (['input', 'textarea', 'select'].includes(tag)) return;
+
+      const run = getBonusRunState();
+      if (!run || !run.started || run.finished) return;
 
       if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW' || event.key === ' ') {
         event.preventDefault();
-        handleBonusRunJump();
-        return;
+        if (run.mode === 'plane') {
+          if (event.code === 'ArrowUp' || event.code === 'KeyW') moveBonusPlane(-42);
+          else shootBonusBullet();
+        } else {
+          handleBonusRunJump();
+        }
       }
 
       if (event.code === 'ArrowDown' || event.code === 'KeyS') {
         event.preventDefault();
-        handleBonusRunSlide();
+        if (run.mode === 'plane') moveBonusPlane(42);
+        else handleBonusRunSlide();
+      }
+
+      if (event.code === 'KeyX' || event.code === 'KeyZ') {
+        event.preventDefault();
+        shootBonusBullet();
       }
     };
+
     document.addEventListener('keydown', bonusRunKeyHandler);
   }
 
   function startBonusRun() {
     const challenge = getCurrentChallenge();
     const run = getBonusRunState();
+
     if (!challenge || challenge.type !== 'bonusRun' || !run || run.started || run.finished) return;
 
+    clearBonusRunLoop();
     run.started = true;
     run.finished = false;
     run.startedAt = performance.now();
     run.lastFrameAt = run.startedAt;
-    run.timeLeft = Number(challenge.timeLimit || 45);
-    run.nextSpawnAt = 0.65;
+    run.timeLeft = Number(challenge.timeLimit || (run.mode === 'plane' ? 40 : 35));
+    run.nextSpawnAt = run.mode === 'plane' ? 0.45 : 0.7;
     GAME_STATE.progress = 0;
 
     enableBonusRunKeyboard();
-    showPanji('Bonus time! Bantu aku ngumpulin energi. Spasi/Tap untuk lompat, bisa double jump, dan tekan S/Panah Bawah untuk sliding. Kalau kena perangkap, aku invincible sebentar.', 'happy');
     renderGame();
+
+    showPanji(
+      run.mode === 'plane'
+        ? 'Level 8 bonus! PANJI terbang. Pakai ↑/↓ untuk gerak, Spasi untuk tembak monster korupsi, ambil power point biar skor makin tinggi.'
+        : 'Level 4 bonus! PANJI lari gaya Mario. Spasi/Tap untuk lompat, bisa double jump, S atau ↓ untuk sliding. Ambil Super Point buat nembak monster korupsi.',
+      'happy'
+    );
+
     syncBonusRunUi();
     bonusRunFrame = requestAnimationFrame(stepBonusRun);
   }
 
   function handleBonusRunJump() {
     const run = getBonusRunState();
-    if (!run || !run.started || run.finished || run.isSliding) return;
-    if (run.jumpCount >= run.maxJumps) return;
+    if (!run || !run.started || run.finished) return;
 
-    run.onGround = false;
+    if (run.mode === 'plane') {
+      shootBonusBullet();
+      return;
+    }
+
+    if (run.jumpCount >= 2) return;
+
+    run.velocityY = run.jumpCount === 0 ? 650 : 560;
     run.jumpCount += 1;
-    run.runnerVelocity = run.jumpCount === 1 ? 720 : 620;
+    run.isSliding = false;
+    run.slideUntil = 0;
 
     const runner = root && root.querySelector('#psBonusRunner');
     if (runner) {
@@ -2748,154 +2825,277 @@ const BONUS_RUN_CHALLENGE = {
 
   function handleBonusRunSlide() {
     const run = getBonusRunState();
-    if (!run || !run.started || run.finished || !run.onGround) return;
+    if (!run || !run.started || run.finished) return;
+
+    if (run.mode === 'plane') {
+      moveBonusPlane(48);
+      return;
+    }
+
+    if (run.playerY > 8) return;
 
     run.isSliding = true;
     run.slideUntil = performance.now() + 620;
-    run.lastStatus = 'Wuuush! PANJI sliding menghindari jebakan.';
+    run.lastStatus = 'PANJI sliding! Hindari jebakan rendah.';
+  }
+
+  function moveBonusPlane(delta) {
+    const run = getBonusRunState();
+    if (!run || run.mode !== 'plane') return;
+    run.playerY = Math.max(35, Math.min(285, Number(run.playerY || 160) + delta));
     syncBonusRunUi();
   }
 
-  function pickRandomBonusObject(elapsed) {
-    const hazardChance = elapsed > 30 ? 0.50 : elapsed > 16 ? 0.40 : 0.32;
-    const isHazard = Math.random() < hazardChance;
-    const meta = isHazard
-      ? BONUS_RUN_HAZARDS[Math.floor(Math.random() * BONUS_RUN_HAZARDS.length)]
-      : BONUS_RUN_COLLECTIBLES[Math.floor(Math.random() * BONUS_RUN_COLLECTIBLES.length)];
-    const yRange = Array.isArray(meta.yRange) ? meta.yRange : [40, 120];
+  function shootBonusBullet() {
+    const run = getBonusRunState();
+    if (!run || !run.started || run.finished) return;
 
+    const now = performance.now();
+    if (now - Number(run.lastManualShotAt || 0) < 180) return;
+    run.lastManualShotAt = now;
+    run.shotCount += 1;
+    run.counters.shot += 1;
+
+    run.bullets.push({
+      id: 'bullet-' + now + '-' + Math.random().toString(16).slice(2),
+      x: run.mode === 'plane' ? 178 : 168,
+      y: run.mode === 'plane' ? run.playerY + 16 : 70 + run.playerY,
+      speed: run.mode === 'plane' ? 620 : 520
+    });
+  }
+
+  function spawnBonusObject(elapsed) {
+    const run = getBonusRunState();
+    if (!run) return null;
+
+    if (run.mode === 'plane') {
+      const r = Math.random();
+      if (r < 0.18) return makeBonusObject('power', 'power', '⚡', 10, 0, 930, 50 + Math.random() * 240, 48, 48, 'Power point terambil!');
+      if (r < 0.36) return makeBonusObject('coin', 'coin', '🪙', 5, 0, 930, 45 + Math.random() * 255, 44, 44, 'Koin udara masuk!');
+      return makeBonusObject('monster', 'monster', '👾', 14, 6, 930, 48 + Math.random() * 245, 58, 58, 'Monster korupsi menyerang!');
+    }
+
+    const r = Math.random();
+    if (r < 0.16) return makeBonusObject('super', 'power', '⚡', 12, 0, 930, 88 + Math.random() * 85, 48, 48, 'Super PANJI aktif! Tembak monster korupsi!');
+    if (r < 0.50) return makeBonusObject('coin', 'coin', '🪙', 5, 0, 930, 68 + Math.random() * 130, 42, 42, 'Koin PANJI dapat!');
+    if (r < 0.66) return makeBonusObject('coffee', 'coffee', '☕', 6, 0, 930, 80 + Math.random() * 110, 42, 42, 'Kopi masuk, energi balik!');
+    if (r < 0.83) return makeBonusObject('monster', 'monster', '👾', 14, 6, 930, 38, 54, 54, 'Monster korupsi kena PANJI!');
+    return makeBonusObject('trap', 'trap', ['🔥', '📚', '😵', '🐌'][Math.floor(Math.random() * 4)], 0, 4, 930, 34, 52, 52, 'Aduh, kena perangkap! Invincible sebentar.');
+  }
+
+  function makeBonusObject(key, category, icon, points, penalty, x, y, width, height, line) {
     return {
-      id: `bonus-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      category: isHazard ? 'hazard' : 'collectible',
-      key: meta.key,
-      label: meta.label,
-      icon: meta.icon,
-      points: Number(meta.points || 0),
-      penalty: Number(meta.penalty || 0),
-      risk: Number(meta.risk || 0),
-      panjiLine: meta.panjiLine || '',
-      panjiLines: meta.panjiLines || [],
-      useLogo: Boolean(meta.useLogo),
-      x: 1020,
-      y: yRange[0] + Math.random() * Math.max(0, yRange[1] - yRange[0]),
-      width: isHazard ? 64 : 58,
-      height: isHazard ? 64 : 58,
-      rotate: (Math.random() * 18) - 9,
-      pulse: Math.random() * Math.PI,
-      hit: false
+      id: 'obj-' + Date.now() + '-' + Math.random().toString(16).slice(2),
+      key,
+      category,
+      icon,
+      points,
+      penalty,
+      x,
+      y,
+      width,
+      height,
+      line,
+      hit: false,
+      rot: (Math.random() * 10) - 5
     };
   }
 
-  function renderBonusRunObject(obj) {
-    const classes = ['ps-bonus-item', obj.category === 'collectible' ? 'collectible' : 'hazard', obj.useLogo ? 'logo-item' : '', `item-${obj.key}`].join(' ');
-    return `<div class="${classes}" style="left:${obj.x}px; bottom:${obj.y}px; width:${obj.width}px; height:${obj.height}px; transform:rotate(${obj.rotate}deg) scale(${1 + Math.sin(obj.pulse) * 0.04});"><span>${escapeHtml(obj.icon)}</span></div>`;
+  function isBonusInvincible(run) {
+    return performance.now() < Number(run.invincibleUntil || 0);
   }
 
-  function bonusRunCollides(obj, stageWidth) {
+  function isBonusPowered(run) {
+    return performance.now() < Number(run.powerUntil || 0);
+  }
+
+  function bonusRunCollides(obj) {
     const run = getBonusRunState();
-    if (!run) return false;
-    const runnerLeft = Math.max(70, stageWidth * 0.12);
-    const runnerBottom = 34 + Number(run.runnerY || 0);
-    const runnerWidth = run.isSliding ? 112 : 92;
-    const runnerHeight = run.isSliding ? 52 : 104;
-    const objLeft = obj.x;
-    const objRight = obj.x + obj.width;
-    const objBottom = obj.y;
-    const objTop = obj.y + obj.height;
-    const runnerRight = runnerLeft + runnerWidth;
-    const runnerTop = runnerBottom + runnerHeight;
-    return !(objRight < runnerLeft + 10 || objLeft > runnerRight - 14 || objTop < runnerBottom + 10 || objBottom > runnerTop - 8);
+    if (!run || !obj || obj.hit) return false;
+
+    const playerBox = getBonusPlayerBox(run);
+    const objBox = {
+      left: obj.x,
+      right: obj.x + obj.width,
+      bottom: obj.y,
+      top: obj.y + obj.height
+    };
+
+    return !(objBox.right < playerBox.left || objBox.left > playerBox.right || objBox.top < playerBox.bottom || objBox.bottom > playerBox.top);
   }
 
-  function collectBonusObject(obj) {
+  function getBonusPlayerBox(run) {
+    if (run.mode === 'plane') {
+      return {
+        left: run.playerX,
+        right: run.playerX + 86,
+        bottom: run.playerY,
+        top: run.playerY + 58
+      };
+    }
+
+    const height = run.isSliding ? 48 : 96;
+    const width = run.isSliding ? 98 : 74;
+
+    return {
+      left: run.playerX,
+      right: run.playerX + width,
+      bottom: 34 + run.playerY,
+      top: 34 + run.playerY + height
+    };
+  }
+
+  function bonusBulletCollides(bullet, obj) {
+    if (!bullet || !obj || obj.hit || obj.category !== 'monster') return false;
+
+    const bulletBox = {
+      left: bullet.x,
+      right: bullet.x + 18,
+      bottom: bullet.y,
+      top: bullet.y + 8
+    };
+    const objBox = {
+      left: obj.x,
+      right: obj.x + obj.width,
+      bottom: obj.y,
+      top: obj.y + obj.height
+    };
+
+    return !(objBox.right < bulletBox.left || objBox.left > bulletBox.right || objBox.top < bulletBox.bottom || objBox.bottom > bulletBox.top);
+  }
+
+  function handleBonusCollect(obj) {
     const run = getBonusRunState();
     if (!run || obj.hit) return;
+
     obj.hit = true;
     run.collectedCount += 1;
-    run.combo += 1;
-    run.comboGlowUntil = performance.now() + 300;
-    run.counters[obj.key] = Number(run.counters[obj.key] || 0) + 1;
     run.runScore += Number(obj.points || 0);
     GAME_STATE.score += Number(obj.points || 0);
 
-    const lines = Array.isArray(obj.panjiLines) && obj.panjiLines.length ? obj.panjiLines : [`${obj.label} didapat!`];
-    showPanji(lines[Math.floor(Math.random() * lines.length)], 'happy');
+    if (obj.category === 'power') {
+      run.powerUntil = performance.now() + (run.mode === 'plane' ? 6500 : 7500);
+      run.counters.super += 1;
+      run.lastStatus = obj.line || 'Power aktif!';
+      showPanji(run.mode === 'plane' ? 'Power pesawat aktif! Tembakan makin siap.' : 'Super PANJI aktif! Sekarang bisa nembak monster korupsi.', 'happy');
+    } else {
+      run.counters[obj.key] = Number(run.counters[obj.key] || 0) + 1;
+      run.lastStatus = obj.line || 'Item didapat!';
+    }
+
     const stage = root && root.querySelector('#psBonusStage');
-    if (stage) popScore(stage, `+${obj.points}`, 'ok');
+    if (stage) popScore(stage, '+' + Number(obj.points || 0), 'ok');
   }
 
-  function hitBonusHazard(obj) {
+  function handleBonusHit(obj) {
     const run = getBonusRunState();
     if (!run || obj.hit) return;
-    const now = performance.now();
-    if (now < Number(run.invincibleUntil || 0)) return;
+
+    if (isBonusPowered(run) && obj.category === 'monster') {
+      handleMonsterDestroyed(obj, 'power');
+      return;
+    }
 
     obj.hit = true;
     run.hitCount += 1;
-    run.combo = 0;
-    run.stumbleUntil = now + 460;
-    run.invincibleUntil = now + 2200;
-    run.counters[obj.key] = Number(run.counters[obj.key] || 0) + 1;
-    run.runScore = Math.max(0, run.runScore - Number(obj.penalty || 0));
-    GAME_STATE.score = Math.max(0, GAME_STATE.score - Number(obj.penalty || 0));
-    GAME_STATE.risk += Number(obj.risk || 1);
-    showPanji(`${obj.panjiLine || `${obj.label} kena!`} Aku kebal sebentar, item dan perangkap lewat tidak dihitung dulu.`, 'sad');
+    run.counters[obj.category === 'monster' ? 'monster' : 'trap'] += 1;
+    run.runScore = Math.max(0, Number(run.runScore || 0) - Number(obj.penalty || 0));
+    GAME_STATE.score = Math.max(0, Number(GAME_STATE.score || 0) - Number(obj.penalty || 0));
+    GAME_STATE.risk += obj.category === 'monster' ? 2 : 1;
+    run.invincibleUntil = performance.now() + 2200;
+    run.lastStatus = obj.line || 'PANJI kena perangkap, invincible sebentar.';
+    showPanji('Aduh kena! Tenang, PANJI invincible beberapa detik. Item dan rintangan yang lewat tidak dihitung dulu.', 'sad');
 
     const stage = root && root.querySelector('#psBonusStage');
-    if (stage) popScore(stage, `-${obj.penalty}`, 'bad');
+    if (stage) popScore(stage, '-' + Number(obj.penalty || 0), 'bad');
+  }
+
+  function handleMonsterDestroyed(obj, source) {
+    const run = getBonusRunState();
+    if (!run || obj.hit) return;
+
+    obj.hit = true;
+    run.counters.monster += 1;
+    run.runScore += 8;
+    GAME_STATE.score += 8;
+    run.lastStatus = source === 'bullet' ? 'Dor! Monster korupsi tertembak.' : 'Super PANJI menabrak monster korupsi!';
+
+    const stage = root && root.querySelector('#psBonusStage');
+    if (stage) popScore(stage, '+8', 'ok');
   }
 
   function stepBonusRun(timestamp) {
     const challenge = getCurrentChallenge();
     const run = getBonusRunState();
+
     if (destroyed || !challenge || challenge.type !== 'bonusRun' || !run || !run.started || run.finished) {
       clearBonusRunLoop();
       return;
     }
 
-    const stageEl = root && root.querySelector('#psBonusStage');
-    const stageWidth = Math.max(760, Number(stageEl && stageEl.clientWidth || 980));
-    const dt = Math.min(0.045, Math.max(0.012, (timestamp - Number(run.lastFrameAt || timestamp)) / 1000));
+    const dt = Math.min(0.04, Math.max(0.012, (timestamp - Number(run.lastFrameAt || timestamp)) / 1000));
     run.lastFrameAt = timestamp;
+
     const elapsed = Math.max(0, (timestamp - Number(run.startedAt || timestamp)) / 1000);
-    run.timeLeft = Math.max(0, Number(challenge.timeLimit || 45) - elapsed);
-    GAME_STATE.progress = Math.max(0, Math.min(100, Math.round((elapsed / Math.max(1, Number(challenge.timeLimit || 45))) * 100)));
+    run.timeLeft = Math.max(0, Number(challenge.timeLimit || 35) - elapsed);
+    GAME_STATE.progress = Math.max(0, Math.min(100, Math.round((elapsed / Math.max(1, Number(challenge.timeLimit || 35))) * 100)));
 
-    if (run.isSliding && timestamp > Number(run.slideUntil || 0)) {
-      run.isSliding = false;
-    }
+    if (run.mode === 'mario') {
+      if (performance.now() > Number(run.slideUntil || 0)) run.isSliding = false;
 
-    if (!run.onGround) {
-      run.runnerVelocity -= 1900 * dt;
-      run.runnerY = Math.max(0, Number(run.runnerY || 0) + run.runnerVelocity * dt);
-      if (run.runnerY <= 0) {
-        run.runnerY = 0;
-        run.runnerVelocity = 0;
-        run.onGround = true;
-        run.jumpCount = 0;
+      if (run.playerY > 0 || run.velocityY > 0) {
+        run.velocityY -= 1700 * dt;
+        run.playerY = Math.max(0, run.playerY + run.velocityY * dt);
+        if (run.playerY <= 0) {
+          run.playerY = 0;
+          run.velocityY = 0;
+          run.jumpCount = 0;
+        }
+      }
+
+      if (isBonusPowered(run) && performance.now() >= Number(run.nextAutoShotAt || 0)) {
+        shootBonusBullet();
+        run.nextAutoShotAt = performance.now() + 420;
       }
     }
 
-    const speed = elapsed < 15 ? 305 : elapsed < 30 ? 355 : 400;
     run.nextSpawnAt -= dt;
     if (run.nextSpawnAt <= 0) {
-      run.objects.push(pickRandomBonusObject(elapsed));
-      const minGap = elapsed < 12 ? 0.90 : elapsed < 28 ? 0.74 : 0.58;
-      const maxGap = elapsed < 12 ? 1.22 : elapsed < 28 ? 0.98 : 0.82;
-      run.nextSpawnAt = minGap + Math.random() * Math.max(0.12, maxGap - minGap);
+      run.objects.push(spawnBonusObject(elapsed));
+      run.nextSpawnAt = run.mode === 'plane'
+        ? 0.42 + Math.random() * 0.45
+        : 0.64 + Math.random() * 0.6;
     }
 
-    const invincible = timestamp < Number(run.invincibleUntil || 0);
+    const objectSpeed = run.mode === 'plane' ? 390 : 330;
     run.objects.forEach(obj => {
-      obj.x -= speed * dt;
-      obj.pulse += dt * 4;
-      if (!obj.hit && !invincible && bonusRunCollides(obj, stageWidth)) {
-        if (obj.category === 'collectible') collectBonusObject(obj);
-        else hitBonusHazard(obj);
-      }
+      obj.x -= objectSpeed * dt;
     });
 
-    run.objects = run.objects.filter(obj => obj.x > -140 && !obj.hit);
+    run.bullets.forEach(bullet => {
+      bullet.x += Number(bullet.speed || 560) * dt;
+    });
+
+    run.bullets.forEach(bullet => {
+      run.objects.forEach(obj => {
+        if (bonusBulletCollides(bullet, obj)) {
+          bullet.hit = true;
+          handleMonsterDestroyed(obj, 'bullet');
+        }
+      });
+    });
+
+    if (!isBonusInvincible(run)) {
+      run.objects.forEach(obj => {
+        if (!bonusRunCollides(obj)) return;
+        if (obj.category === 'coin' || obj.category === 'coffee' || obj.category === 'power') handleBonusCollect(obj);
+        else handleBonusHit(obj);
+      });
+    }
+
+    run.objects = run.objects.filter(obj => obj && !obj.hit && obj.x > -100);
+    run.bullets = run.bullets.filter(bullet => bullet && !bullet.hit && bullet.x < 960);
+
     syncBonusRunUi();
 
     if (run.timeLeft <= 0) {
@@ -2919,18 +3119,18 @@ const BONUS_RUN_CHALLENGE = {
     GAME_STATE.score += 20;
     clearBonusRunLoop();
 
-    addLog('ok', 'Mood Booster selesai', `Skor santuy ${run.runScore}. Kopi ${run.counters.coffee || 0}, bintang ${run.counters.star || 0}, bonus poin ${run.counters.gift || 0}.`);
-    showToast('PANJI Mood Booster selesai. Otomatis lanjut...', 'ok');
-    showPanji('Mantap! Mood naik, lanjut beresin paket!', 'happy');
+    addLog('ok', 'Bonus level selesai', `Skor bonus ${run.runScore}. Monster korupsi dihentikan ${run.counters.monster || 0}, power ${run.counters.super || 0}.`);
+    showToast('Bonus level selesai. Otomatis lanjut...', 'ok');
+    showPanji(run.mode === 'plane' ? 'Misi udara selesai! Monster korupsi mundur, sekarang lanjut level berikutnya.' : 'Mantap! PANJI sudah fresh dan kuat lagi. Lanjut level berikutnya!', 'happy');
     renderGame();
     syncBonusRunUi();
-    scheduleAutoNext('Bonus level selesai. Otomatis lanjut ke soal berikutnya...');
+    scheduleAutoNext('Bonus selesai. Otomatis lanjut ke level berikutnya...');
   }
 
   function syncBonusRunUi() {
-    const challenge = getCurrentChallenge();
     const run = getBonusRunState();
-    if (!root || !challenge || challenge.type !== 'bonusRun' || !run) return;
+    const challenge = getCurrentChallenge();
+    if (!root || !run || !challenge || challenge.type !== 'bonusRun') return;
 
     const progress = Math.max(0, Math.min(100, Math.round(Number(GAME_STATE.progress || 0))));
     const timeLeft = Math.max(0, Math.ceil(Number(run.timeLeft || 0)));
@@ -2938,67 +3138,71 @@ const BONUS_RUN_CHALLENGE = {
       const el = root.querySelector(selector);
       if (el) el.textContent = value;
     };
+
     setText('#psBonusTimeValue', timeLeft);
     setText('#psBonusRunScore', run.runScore);
     setText('#psBonusCollectedValue', run.collectedCount);
     setText('#psBonusHitValue', run.hitCount);
-    setText('#psBonusComboValue', `x${run.combo}`);
+    setText('#psBonusPowerValue', isBonusPowered(run) ? 'AKTIF' : '-');
     setText('#psBonusStatusText', run.lastStatus);
     setText('#psLevelTimeText', `${timeLeft}s`);
 
     const timeBar = root.querySelector('#psLevelTimeBar');
-    if (timeBar) timeBar.style.width = `${Math.max(0, Math.min(100, (timeLeft / Math.max(1, Number(challenge.timeLimit || 45))) * 100))}%`;
+    if (timeBar) timeBar.style.width = `${Math.max(0, Math.min(100, (timeLeft / Math.max(1, Number(challenge.timeLimit || 35))) * 100))}%`;
     const mainBar = root.querySelector('.ps-progress-bar');
     if (mainBar) mainBar.style.width = `${progress}%`;
 
-    Object.keys(run.counters).forEach(key => {
-      const el = root.querySelector(`[data-bonus-counter="${key}"]`);
-      if (el) el.textContent = run.counters[key];
-    });
-
     const objectsEl = root.querySelector('#psBonusObjects');
     if (objectsEl) objectsEl.innerHTML = run.objects.map(renderBonusRunObject).join('');
+    const bulletsEl = root.querySelector('#psBonusBullets');
+    if (bulletsEl) bulletsEl.innerHTML = run.bullets.map(renderBonusBullet).join('');
 
-    const runner = root.querySelector('#psBonusRunner');
-    if (runner) {
-      runner.style.bottom = `${34 + Math.max(0, Number(run.runnerY || 0))}px`;
-      runner.classList.toggle('is-hit', performance.now() < Number(run.stumbleUntil || 0));
-      runner.classList.toggle('is-happy', performance.now() < Number(run.comboGlowUntil || 0));
-      runner.classList.toggle('is-sliding', Boolean(run.isSliding));
-      runner.classList.toggle('is-invincible', performance.now() < Number(run.invincibleUntil || 0));
+    const player = root.querySelector('#psBonusRunner');
+    if (player) {
+      if (run.mode === 'plane') {
+        player.style.left = `${run.playerX}px`;
+        player.style.bottom = `${run.playerY}px`;
+      } else {
+        player.style.left = `${run.playerX}px`;
+        player.style.bottom = `${34 + Math.max(0, Number(run.playerY || 0))}px`;
+      }
+      player.classList.toggle('is-sliding', Boolean(run.isSliding));
+      player.classList.toggle('is-invincible', isBonusInvincible(run));
+      player.classList.toggle('is-powered', isBonusPowered(run));
+      player.classList.toggle('is-plane', run.mode === 'plane');
     }
+  }
+
+  function renderBonusRunObject(obj) {
+    const cls = ['ps-bonus-item-lite', 'cat-' + obj.category, 'key-' + obj.key].join(' ');
+    return `
+      <div class="${cls}" style="left:${obj.x}px; bottom:${obj.y}px; width:${obj.width}px; height:${obj.height}px; transform:rotate(${obj.rot || 0}deg);">
+        <span>${escapeHtml(obj.icon)}</span>
+      </div>
+    `;
+  }
+
+  function renderBonusBullet(bullet) {
+    return `<div class="ps-bonus-bullet" style="left:${bullet.x}px; bottom:${bullet.y}px;"></div>`;
   }
 
   function renderBonusRunChallenge(challenge) {
     const run = getBonusRunState() || createBonusRunState(challenge);
+    const isPlane = run.mode === 'plane';
 
     if (!run.started && !run.finished) {
       return `
-        <div class="ps-bonus-shell">
-          <div class="ps-bonus-intro-card">
-            <div class="ps-bonus-kicker">PANJI Mood Booster • Bonus Santuy</div>
-            <h3>Bonus Time! Bantu PANJI cari energi dulu</h3>
-            <p>
-              Bonus level ini bukan ujian. PANJI lari otomatis ke kanan. Tugas kamu cukup lompat dengan <b>Spasi/Tap</b>,
-              bisa <b>double jump</b>, dan bisa <b>sliding</b> dengan <b>S/Panah Bawah</b>. Ambil kopi, koin, bintang, dokumen aman,
-              dan bonus poin. Hindari deadline, revisi dadakan, ngantuk, berkas numpuk, dan loading lama.
-            </p>
-            <div class="ps-bonus-chip-row">
-              <span class="ps-bonus-chip good">⭐/🪙 dari <b>assets/logo-sippbj.png</b></span>
-              <span class="ps-bonus-chip good">☕ Kopi Pagi</span>
-              <span class="ps-bonus-chip good">🍜 Mie Rebus</span>
-              <span class="ps-bonus-chip bad">🔥 Deadline</span>
-              <span class="ps-bonus-chip bad">📚 Berkas Numpuk</span>
-              <span class="ps-bonus-chip bad">🐌 Loading Lama</span>
+        <div class="ps-bonus-lite-shell">
+          <div class="ps-bonus-lite-intro ${isPlane ? 'plane' : 'mario'}">
+            <div class="ps-bonus-kicker">${isPlane ? 'Level 8 Bonus • Sky Shooter' : 'Level 4 Bonus • Power Run'}</div>
+            <h3>${isPlane ? 'PANJI Sky Shooter' : 'PANJI Power Run'}</h3>
+            <p>${escapeHtml(challenge.desc)}</p>
+            <div class="ps-bonus-lite-controls">
+              ${isPlane
+                ? '<span>↑/↓ = gerak</span><span>Spasi/X = tembak</span><span>⚡ = power point</span>'
+                : '<span>Spasi/Tap = lompat</span><span>Double jump aktif</span><span>S/↓ = sliding</span><span>⚡ = Super PANJI</span>'}
             </div>
-            <div class="ps-bonus-controls-note">
-              <div><b>Durasi:</b> ${Number(challenge.timeLimit || 45)} detik</div>
-              <div><b>Kontrol:</b> Spasi/Tap = Lompat, S/↓ = Sliding</div>
-              <div><b>Power:</b> Double jump + invincible setelah kena perangkap</div>
-            </div>
-            <div class="ps-buttons">
-              <button type="button" class="ps-btn ps-btn-primary" id="btnStartBonusRun">Mulai PANJI Mood Booster</button>
-            </div>
+            <button type="button" class="ps-btn ps-btn-primary" id="btnStartBonusRun">Mulai Bonus Level</button>
           </div>
         </div>
       `;
@@ -3006,18 +3210,15 @@ const BONUS_RUN_CHALLENGE = {
 
     if (run.finished) {
       return `
-        <div class="ps-bonus-shell">
-          <div class="ps-bonus-finish-card">
-            <div class="ps-bonus-kicker">Mood Booster Selesai</div>
-            <h3>🌈 Mantap! PANJI sudah fresh lagi</h3>
+        <div class="ps-bonus-lite-shell">
+          <div class="ps-bonus-lite-finish ${isPlane ? 'plane' : 'mario'}">
+            <h3>${isPlane ? '🛩️ Misi Udara Selesai!' : '🏁 Power Run Selesai!'}</h3>
             <p>${escapeHtml(challenge.explanation || '')}</p>
-            <div class="ps-bonus-summary-grid">
-              <div><label>Skor Santuy</label><strong>${run.runScore}</strong></div>
-              <div><label>Item Terkumpul</label><strong>${run.collectedCount}</strong></div>
-              <div><label>Kena Jebakan</label><strong>${run.hitCount}</strong></div>
-              <div><label>Kopi</label><strong>${run.counters.coffee || 0}</strong></div>
-              <div><label>Bintang</label><strong>${run.counters.star || 0}</strong></div>
-              <div><label>Bonus Poin</label><strong>${run.counters.gift || 0}</strong></div>
+            <div class="ps-bonus-lite-stats">
+              <div><label>Skor Bonus</label><b>${run.runScore}</b></div>
+              <div><label>Monster</label><b>${run.counters.monster || 0}</b></div>
+              <div><label>Power</label><b>${run.counters.super || 0}</b></div>
+              <div><label>Kena</label><b>${run.hitCount || 0}</b></div>
             </div>
           </div>
         </div>
@@ -3025,62 +3226,39 @@ const BONUS_RUN_CHALLENGE = {
     }
 
     return `
-      <div class="ps-bonus-shell">
-        <div class="ps-bonus-hud-row">
-          <div class="ps-bonus-mini-card"><label>Waktu</label><strong id="psBonusTimeValue">${Math.ceil(run.timeLeft || challenge.timeLimit || 45)}</strong></div>
-          <div class="ps-bonus-mini-card"><label>Skor Santuy</label><strong id="psBonusRunScore">${run.runScore || 0}</strong></div>
-          <div class="ps-bonus-mini-card"><label>Item</label><strong id="psBonusCollectedValue">${run.collectedCount || 0}</strong></div>
-          <div class="ps-bonus-mini-card"><label>Kena Jebakan</label><strong id="psBonusHitValue">${run.hitCount || 0}</strong></div>
-          <div class="ps-bonus-mini-card combo"><label>Combo</label><strong id="psBonusComboValue">x${run.combo || 0}</strong></div>
+      <div class="ps-bonus-lite-shell">
+        <div class="ps-bonus-lite-hud">
+          <div><label>Waktu</label><b id="psBonusTimeValue">${Math.ceil(run.timeLeft || challenge.timeLimit || 35)}</b></div>
+          <div><label>Skor Bonus</label><b id="psBonusRunScore">${run.runScore || 0}</b></div>
+          <div><label>Item</label><b id="psBonusCollectedValue">${run.collectedCount || 0}</b></div>
+          <div><label>Kena</label><b id="psBonusHitValue">${run.hitCount || 0}</b></div>
+          <div><label>Power</label><b id="psBonusPowerValue">${isBonusPowered(run) ? 'AKTIF' : '-'}</b></div>
         </div>
 
-        <div class="ps-bonus-stage" id="psBonusStage">
-          <div class="ps-bonus-sky-layer layer-1"></div>
-          <div class="ps-bonus-sky-layer layer-2"></div>
-          <div class="ps-bonus-rainbow"></div>
-          <div class="ps-bonus-cloud cloud-a"></div>
-          <div class="ps-bonus-cloud cloud-b"></div>
-          <div class="ps-bonus-cloud cloud-c"></div>
-          <div class="ps-bonus-objects" id="psBonusObjects">${run.objects.map(renderBonusRunObject).join('')}</div>
-          <div class="ps-bonus-track"></div>
-          <button type="button" class="ps-bonus-runner" id="psBonusRunner" aria-label="PANJI pelari">
-            <span class="ps-bonus-runner-glow"></span>
-            <span class="ps-bonus-runner-head"><span class="hat">PANJI</span><span class="eye left"></span><span class="eye right"></span><span class="mouth"></span></span>
-            <span class="ps-bonus-runner-body"><span>PBJ</span></span>
-            <span class="ps-bonus-runner-hand left"></span><span class="ps-bonus-runner-hand right"></span>
-            <span class="ps-bonus-runner-leg left"></span><span class="ps-bonus-runner-leg right"></span>
+        <div class="ps-bonus-lite-stage ${isPlane ? 'plane' : 'mario'}" id="psBonusStage">
+          <div class="ps-bonus-lite-bg"></div>
+          <div class="ps-bonus-lite-objects" id="psBonusObjects">${run.objects.map(renderBonusRunObject).join('')}</div>
+          <div class="ps-bonus-lite-bullets" id="psBonusBullets">${run.bullets.map(renderBonusBullet).join('')}</div>
+          <button type="button" class="ps-bonus-lite-player ${isPlane ? 'is-plane' : ''}" id="psBonusRunner" aria-label="PANJI bonus">
+            <span class="wing left"></span><span class="wing right"></span>
+            <span class="head"><span class="hat">PANJI</span><span class="eye l"></span><span class="eye r"></span><span class="mouth"></span></span>
+            <span class="body">PBJ</span>
+            <span class="leg l"></span><span class="leg r"></span>
           </button>
-          <div class="ps-bonus-touch-controls">
-            <button type="button" class="ps-bonus-jump-cta" id="psBonusTapArea">Lompat / Double Jump</button>
-            <button type="button" class="ps-bonus-slide-cta" id="psBonusSlideBtn">Sliding</button>
+          <div class="ps-bonus-lite-touch">
+            ${isPlane
+              ? '<button type="button" id="psBonusUpBtn">Naik</button><button type="button" id="psBonusTapArea">Tembak</button><button type="button" id="psBonusSlideBtn">Turun</button>'
+              : '<button type="button" id="psBonusTapArea">Lompat / Double Jump</button><button type="button" id="psBonusSlideBtn">Sliding</button>'}
           </div>
         </div>
 
-        <div class="ps-bonus-bottom-panel">
-          <div class="ps-bonus-status-card">
-            <label>Narasi PANJI</label>
-            <strong id="psBonusStatusText">${escapeHtml(run.lastStatus || 'PANJI lari santuy...')}</strong>
-            <p>Bonus level ini ringan, tidak ada game over. Kalau kena perangkap, PANJI invincible beberapa detik dan item/rintangan yang lewat tidak dihitung dulu.</p>
-          </div>
-
-          <div class="ps-bonus-counter-grid">
-            <div class="ps-bonus-counter good logo"><span>⭐</span><b>Bintang</b><strong data-bonus-counter="star">${run.counters.star || 0}</strong></div>
-            <div class="ps-bonus-counter good logo"><span>🪙</span><b>Koin</b><strong data-bonus-counter="coin">${run.counters.coin || 0}</strong></div>
-            <div class="ps-bonus-counter good"><span>☕</span><b>Kopi</b><strong data-bonus-counter="coffee">${run.counters.coffee || 0}</strong></div>
-            <div class="ps-bonus-counter good"><span>🍜</span><b>Mie</b><strong data-bonus-counter="mie">${run.counters.mie || 0}</strong></div>
-            <div class="ps-bonus-counter good"><span>📄</span><b>Dokumen</b><strong data-bonus-counter="doc">${run.counters.doc || 0}</strong></div>
-            <div class="ps-bonus-counter good"><span>🎁</span><b>Bonus</b><strong data-bonus-counter="gift">${run.counters.gift || 0}</strong></div>
-            <div class="ps-bonus-counter bad"><span>🔥</span><b>Deadline</b><strong data-bonus-counter="deadline">${run.counters.deadline || 0}</strong></div>
-            <div class="ps-bonus-counter bad"><span>📚</span><b>Berkas</b><strong data-bonus-counter="berkas">${run.counters.berkas || 0}</strong></div>
-            <div class="ps-bonus-counter bad"><span>😵</span><b>Revisi</b><strong data-bonus-counter="revisi">${run.counters.revisi || 0}</strong></div>
-            <div class="ps-bonus-counter bad"><span>🐌</span><b>Loading</b><strong data-bonus-counter="loading">${run.counters.loading || 0}</strong></div>
-          </div>
+        <div class="ps-bonus-lite-note">
+          <b id="psBonusStatusText">${escapeHtml(run.lastStatus || '')}</b>
+          <span>${isPlane ? 'Game tembak-tembakan pesawat jadul, versi ringan.' : 'Game platformer ringan, gaya Mario Bros.'}</span>
         </div>
       </div>
     `;
   }
-
-
   function renderReadyScreen() {
     if (!root) return;
 
@@ -3095,7 +3273,7 @@ const BONUS_RUN_CHALLENGE = {
 
         <div class="ps-result-note">
           <strong>Alur game:</strong><br>
-          Soal akan bercampur: susun pipeline, pilihan ABCD, Tender Rush, dan bonus level PANJI Mood Booster di Level 8. Tender Rush memakai tombol 1 sampai 5 untuk memilih metode pengadaan dengan cepat.
+          Total 20 level: susun pipeline, pilihan ABCD, Tender Rush, bonus Level 4 PANJI Power Run gaya Mario, dan bonus Level 8 PANJI Sky Shooter gaya pesawat jadul.
         </div>
 
         <div class="ps-buttons">
@@ -3112,6 +3290,14 @@ const BONUS_RUN_CHALLENGE = {
     }
 
     requestAnimationFrame(updatePanjiAutoBottom);
+  }
+
+
+  function getDisplayChallengeTitle(challenge) {
+    const level = getCurrentLevelNumber();
+    const raw = String(challenge && challenge.title ? challenge.title : 'Level');
+    const cleaned = raw.replace(/^Soal\s*\d+\s*—\s*/, '').replace(/^Level\s*\d+\s*—\s*/, '');
+    return 'Level ' + level + ' — ' + cleaned;
   }
 
   function renderGame() {
@@ -3833,6 +4019,13 @@ const BONUS_RUN_CHALLENGE = {
     if (bonusSlideBtn) {
       bonusSlideBtn.addEventListener('click', () => {
         handleBonusRunSlide();
+      });
+    }
+
+    const bonusUpBtn = root.querySelector('#psBonusUpBtn');
+    if (bonusUpBtn) {
+      bonusUpBtn.addEventListener('click', () => {
+        moveBonusPlane(-48);
       });
     }
 
