@@ -33,10 +33,6 @@
   let tenderRushNextTimer = null;
   let tenderRushKeyHandler = null;
 
-  let jumpRunnerAnimationFrame = null;
-  let jumpRunnerKeyHandler = null;
-  let jumpRunnerLastFrameAt = 0;
-
   const CARD_LIBRARY = {
     rup: {
       id: 'rup',
@@ -467,6 +463,16 @@
       explanation: 'Tender Rush melatih refleks membaca jenis paket, pagu, ketersediaan katalog, dan kondisi pelaksanaan sebelum memilih metode.'
     },
     {
+      type: 'bonusOpenWorld',
+      title: 'Level 4 Bonus — PANJI Konsolidasi Quest',
+      caseTitle: 'PPK Terjebak di Dunia Konsolidasi 3D',
+      desc: 'Bonus level berbasis pilihan naratif. Kamu menjadi PPK yang terjebak di dunia 3D dan harus menyelesaikan quest konsolidasi untuk membuka portal pulang.',
+      budget: 'Bonus Analisis PBJ',
+      difficulty: 'Level 4 - Bonus Open World',
+      hint: 'Dengarkan PANJI, jangan cuma pilih yang cepat atau murah. Tim, data, pasar, dan evaluasi saling memengaruhi ending.',
+      explanation: 'Bonus ini menilai cara berpikir analisis pengadaan: memilih tim, membaca barang sejenis, melakukan market sounding, dan mengambil keputusan evaluasi berbasis data.'
+    },
+    {
       type: 'quiz',
       title: 'Soal 4 — Tujuan PBJ',
       caseTitle: 'Laptop TKDN + BMP 42%',
@@ -849,34 +855,17 @@
     };
   }
 
-
-  function createJumpRunnerBonus(levelNo) {
-    return {
-      type: 'jumpRunner',
-      title: `Bonus Level ${levelNo} — Lompat Ambil Poin PBJ`,
-      caseTitle: 'Mini Game PBJ Runner',
-      desc: 'Bantu karakter mini PBJ berlari sambil melompat, ambil poin kuning, dan hindari trap merah. Tidak ada timer, jadi mainnya santai saja.',
-      difficulty: `Bonus Level ${levelNo} - Santai`,
-      targetScore: 14,
-      maxLives: 3,
-      explanation: 'Mini game ini cuma selingan biar otak tidak tegang. Ambil poin, hindari trap, lalu lanjut ke level berikutnya.'
-    };
-  }
-
   function expandChallengeFlow(rawList) {
     const rushTemplate = rawList.find(item => item.type === 'tenderRush');
     const baseList = rawList.filter(item => item.type !== 'tenderRush');
     const rushLevels = new Set([3, 6, 9, 12, 15]);
-    const bonusLevels = new Set([4]);
     const expanded = [];
     let baseIndex = 0;
     let rushIndex = 0;
     let levelNo = 1;
 
-    while (baseIndex < baseList.length || (rushTemplate && rushLevels.has(levelNo)) || bonusLevels.has(levelNo)) {
-      if (bonusLevels.has(levelNo)) {
-        expanded.push(createJumpRunnerBonus(levelNo));
-      } else if (rushTemplate && rushLevels.has(levelNo)) {
+    while (baseIndex < baseList.length || (rushTemplate && rushLevels.has(levelNo))) {
+      if (rushTemplate && rushLevels.has(levelNo)) {
         expanded.push(cloneTenderRushChallenge(rushTemplate, levelNo, rushIndex));
         rushIndex += 1;
       } else if (baseIndex < baseList.length) {
@@ -886,14 +875,14 @@
 
       levelNo += 1;
 
-      if (levelNo > baseList.length + rushLevels.size + bonusLevels.size + 8) break;
+      if (levelNo > baseList.length + rushLevels.size + 8) break;
     }
 
     return expanded;
   }
 
   function buildChallenge(raw) {
-    if (raw.type === 'quiz' || raw.type === 'tenderRush' || raw.type === 'jumpRunner') {
+    if (raw.type === 'quiz' || raw.type === 'tenderRush' || raw.type === 'bonusOpenWorld') {
       return raw;
     }
 
@@ -978,7 +967,7 @@
     gameStartedAt: 0,
     scoreSubmitted: false,
     tenderRush: null,
-    jumpRunner: null,
+    bonusOpenWorld: null,
     levelTimeLeft: 0,
     levelTimeLimit: 0,
     stoppedReason: '',
@@ -1702,347 +1691,8 @@
   }
 
 
-
-  function clearJumpRunnerLoop() {
-    if (jumpRunnerAnimationFrame) {
-      cancelAnimationFrame(jumpRunnerAnimationFrame);
-      jumpRunnerAnimationFrame = null;
-    }
-
-    jumpRunnerLastFrameAt = 0;
-  }
-
-  function enableJumpRunnerKeyboard() {
-    disableJumpRunnerKeyboard();
-
-    jumpRunnerKeyHandler = event => {
-      const activeTag = String(document.activeElement && document.activeElement.tagName || '').toLowerCase();
-      if (['input', 'textarea', 'select'].includes(activeTag)) return;
-
-      const challenge = getCurrentChallenge();
-      if (!challenge || challenge.type !== 'jumpRunner') return;
-
-      if (event.code === 'Space' || event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
-        event.preventDefault();
-        jumpRunnerJump();
-      }
-    };
-
-    document.addEventListener('keydown', jumpRunnerKeyHandler);
-  }
-
-  function disableJumpRunnerKeyboard() {
-    if (!jumpRunnerKeyHandler) return;
-
-    document.removeEventListener('keydown', jumpRunnerKeyHandler);
-    jumpRunnerKeyHandler = null;
-  }
-
-  function createJumpRunnerState(challenge) {
-    return {
-      started: false,
-      running: false,
-      finished: false,
-      success: false,
-      playerY: 0,
-      velocityY: 0,
-      gravity: 0.56,
-      jumpForce: 11.4,
-      speed: 2.85,
-      score: 0,
-      targetScore: Number(challenge.targetScore || 12),
-      lives: Number(challenge.maxLives || 3),
-      maxLives: Number(challenge.maxLives || 3),
-      collectibles: [],
-      obstacles: [],
-      invincibleUntil: 0,
-      nextCollectibleAt: 360,
-      nextObstacleAt: 1850,
-      jumpCount: 0,
-      maxJumps: 2,
-      funCombo: 0,
-      elapsed: 0,
-      nextId: 1,
-      statusText: 'Klik mulai, lalu bantu PANJI kecil ngumpulin mood booster PBJ.',
-      overlayTitle: '',
-      overlayText: ''
-    };
-  }
-
-  function syncJumpRunnerUi() {
-    const challenge = getCurrentChallenge();
-    const runner = GAME_STATE.jumpRunner;
-    if (!root || !challenge || challenge.type !== 'jumpRunner' || !runner) return;
-
-    const scoreEl = root.querySelector('#psJumpHudScore');
-    const livesEl = root.querySelector('#psJumpHudLives');
-    const targetEl = root.querySelector('#psJumpHudTarget');
-    const stageEl = root.querySelector('#psJumpHudStage');
-    const statusEl = root.querySelector('#psJumpStatus');
-    const progressEl = root.querySelector('#psJumpProgressFill');
-    const playerEl = root.querySelector('#psJumpPlayer');
-    const objectLayer = root.querySelector('#psJumpObjectLayer');
-
-    if (scoreEl) scoreEl.textContent = String(runner.score);
-    if (livesEl) livesEl.textContent = '❤'.repeat(Math.max(0, runner.lives)) + '♡'.repeat(Math.max(0, runner.maxLives - runner.lives));
-    if (targetEl) targetEl.textContent = String(runner.targetScore);
-    if (stageEl) stageEl.textContent = runner.running ? 'Berjalan' : (runner.finished ? 'Selesai' : 'Siap');
-    if (statusEl) statusEl.textContent = runner.statusText || '';
-    if (progressEl) progressEl.style.width = Math.max(0, Math.min(100, (runner.score / Math.max(1, runner.targetScore)) * 100)) + '%';
-
-    if (playerEl) {
-      playerEl.style.bottom = (48 + Math.max(0, runner.playerY)) + 'px';
-      playerEl.classList.toggle('hit', Date.now() < Number(runner.invincibleUntil || 0));
-    }
-
-    if (objectLayer) {
-      objectLayer.innerHTML = `
-        ${runner.collectibles.map(item => `
-          <div class="ps-jump-token ${escapeHtml(item.kind || '')}" style="left:${item.x}px; bottom:${48 + item.y}px;">
-            <span class="ps-jump-token-emoji">${escapeHtml(item.emoji || '⭐')}</span>
-            <span class="ps-jump-token-label">${escapeHtml(item.label || 'Poin')}</span>
-          </div>
-        `).join('')}
-        ${runner.obstacles.map(item => `
-          <div class="ps-jump-obstacle ${escapeHtml(item.kind || '')}" style="left:${item.x}px; bottom:48px; height:${item.h}px; width:${item.w}px;">
-            <span class="ps-jump-obstacle-emoji">${escapeHtml(item.emoji || '⚠️')}</span>
-            <span class="ps-jump-obstacle-label">${escapeHtml(item.label || 'Trap')}</span>
-          </div>
-        `).join('')}
-      `;
-    }
-  }
-
-  function rectOverlap(a, b) {
-    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-  }
-
-  function finishJumpRunner(success) {
-    const challenge = getCurrentChallenge();
-    const runner = GAME_STATE.jumpRunner;
-    if (!challenge || challenge.type !== 'jumpRunner' || !runner || runner.finished) return;
-
-    runner.running = false;
-    runner.finished = true;
-    runner.success = Boolean(success);
-    clearJumpRunnerLoop();
-    disableJumpRunnerKeyboard();
-    GAME_STATE.progress = 100;
-
-    if (success) {
-      GAME_STATE.correct += 1;
-      GAME_STATE.score += 15;
-      runner.overlayTitle = 'Bonus level beres!';
-      runner.overlayText = 'Mantap, poin target sudah terkumpul. Kamu berhasil bantu karakter mini PBJ melewati rintangan.';
-      runner.statusText = 'Sip! Target poin terpenuhi. Kita lanjut ke soal berikutnya ya.';
-      addLog('ok', 'Bonus lompat selesai', challenge.explanation);
-      showToast('Bonus level selesai. Skor tambahan +15.', 'ok');
-      showPanji('Asik! Bonus level 4 kelar. Kamu lincah juga, poin PBJ-nya kekumpul semua.', 'happy');
-      spawnConfetti();
-      renderGame();
-      scheduleAutoNext('Bonus level selesai. Otomatis lanjut...', 1800);
-      return;
-    }
-
-    GAME_STATE.wrong += 1;
-    GAME_STATE.risk += 6;
-    runner.overlayTitle = 'Nyawa habis';
-    runner.overlayText = 'Belum apa-apa, ini cuma bonus level. Kamu tetap lanjut, nanti bisa main ulang dari awal kalau mau.';
-    runner.statusText = 'Nyawa habis. Santai, bonus level ini tetap lanjut ke soal berikutnya.';
-    addLog('bad', 'Bonus lompat selesai', 'Nyawa habis sebelum target poin tercapai. Tantangan bonus tetap dianggap selesai agar permainan lanjut.');
-    showToast('Nyawa habis. Tetap lanjut ya.', 'bad');
-    showPanji('Tidak apa-apa, bonus level ini cuma selingan. Kita lanjut lagi ke soal berikutnya.', 'thinking');
-    renderGame();
-    scheduleAutoNext('Bonus level selesai. Otomatis lanjut...', 2200);
-  }
-
-  function updateJumpRunnerFrame(deltaMs) {
-    const challenge = getCurrentChallenge();
-    const runner = GAME_STATE.jumpRunner;
-    if (!challenge || challenge.type !== 'jumpRunner' || !runner || !runner.running || runner.finished) return;
-
-    const factor = Math.max(0.75, Math.min(2, Number(deltaMs || 16.67) / 16.67));
-    runner.elapsed += deltaMs;
-
-    runner.playerY += runner.velocityY * factor;
-    runner.velocityY -= runner.gravity * factor;
-
-    if (runner.playerY <= 0) {
-      runner.playerY = 0;
-      runner.velocityY = 0;
-      runner.jumpCount = 0;
-    }
-
-    runner.collectibles.forEach(item => { item.x -= runner.speed * factor; });
-    runner.obstacles.forEach(item => { item.x -= (runner.speed + 0.18) * factor; });
-    runner.collectibles = runner.collectibles.filter(item => item.x > -60);
-    runner.obstacles = runner.obstacles.filter(item => item.x > -70);
-
-    runner.nextCollectibleAt -= deltaMs;
-    if (runner.nextCollectibleAt <= 0) {
-      const yOptions = [18, 24, 34, 52, 72, 94, 116];
-      const funItems = [
-        { label: 'Kopi', emoji: '☕', kind: 'coffee', value: 2, message: 'Kopi aman! Mood PANJI naik lagi.' },
-        { label: 'Bintang', emoji: '⭐', kind: 'star', value: 1, message: 'Bintang semangat masuk kantong.' },
-        { label: 'Mie', emoji: '🍜', kind: 'noodle', value: 2, message: 'Mie lembur didapat. Energi balik!' },
-        { label: 'Dokumen', emoji: '📄', kind: 'doc', value: 1, message: 'Dokumen aman. Administrasi tersenyum.' },
-        { label: 'Koin', emoji: '🪙', kind: 'coin', value: 1, message: 'Koin PANJI masuk.' }
-      ];
-      const picked = funItems[Math.floor(Math.random() * funItems.length)];
-      runner.collectibles.push({
-        id: runner.nextId++,
-        x: Math.max(760, Math.round((root && root.getBoundingClientRect ? root.getBoundingClientRect().width : 760) - 80)),
-        y: yOptions[Math.floor(Math.random() * yOptions.length)],
-        w: 34,
-        h: 34,
-        ...picked
-      });
-      runner.nextCollectibleAt = 740 + Math.random() * 1200;
-    }
-
-    runner.nextObstacleAt -= deltaMs;
-    if (runner.nextObstacleAt <= 0) {
-      const traps = [
-        { label: 'Revisi', emoji: '📝', kind: 'revisi', message: 'Aduh, revisi dadakan nyerempet!' },
-        { label: 'Deadline', emoji: '🔥', kind: 'deadline', message: 'Deadline menyerang. Lompat yang tinggi!' },
-        { label: 'Berkas', emoji: '📚', kind: 'berkas', message: 'Ketiban berkas numpuk. Tetap gas!' },
-        { label: 'Loading', emoji: '🐌', kind: 'loading', message: 'Loading lama menghadang.' },
-        { label: 'Ngantuk', emoji: '💤', kind: 'sleepy', message: 'Ngantuk menyerang PANJI kecil.' }
-      ];
-      const picked = traps[Math.floor(Math.random() * traps.length)];
-      const w = 32 + Math.round(Math.random() * 10);
-      const h = 30 + Math.round(Math.random() * 10);
-      runner.obstacles.push({
-        id: runner.nextId++,
-        x: Math.max(760, Math.round((root && root.getBoundingClientRect ? root.getBoundingClientRect().width : 760) - 80)),
-        y: 0,
-        w,
-        h,
-        ...picked
-      });
-      runner.nextObstacleAt = 2100 + Math.random() * 1650;
-    }
-
-    const playerRect = { x: 54, y: runner.playerY, w: 42, h: 50 };
-    const remainingCollectibles = [];
-
-    runner.collectibles.forEach(item => {
-      const hit = rectOverlap(playerRect, { x: item.x, y: item.y, w: item.w, h: item.h });
-      if (hit) {
-        const itemValue = Math.max(1, Number(item.value || 1));
-        runner.score += itemValue;
-        runner.funCombo += 1;
-        GAME_STATE.score += itemValue * 5;
-        runner.statusText = `${item.message || 'Poin PBJ berhasil diambil.'} Combo x${runner.funCombo}.`;
-        showToast(`${item.emoji || '⭐'} ${item.label || 'Poin'} +${itemValue}`, 'ok');
-
-        if (runner.funCombo > 0 && runner.funCombo % 4 === 0) {
-          GAME_STATE.score += 5;
-          runner.statusText = `Combo lucu x${runner.funCombo}! Bonus skor +5. PANJI makin semangat.`;
-          showPanji('Wih combo-nya jalan! Ambil terus kopi, bintang, dan dokumen aman.', 'happy');
-        }
-      } else {
-        remainingCollectibles.push(item);
-      }
-    });
-
-    runner.collectibles = remainingCollectibles;
-    const invincible = Date.now() < Number(runner.invincibleUntil || 0);
-
-    if (!invincible) {
-      for (const item of runner.obstacles) {
-        const hit = rectOverlap(playerRect, { x: item.x, y: item.y, w: item.w, h: item.h });
-        if (hit) {
-          runner.lives = Math.max(0, runner.lives - 1);
-          runner.funCombo = 0;
-          runner.invincibleUntil = Date.now() + 1500;
-          GAME_STATE.score = Math.max(0, GAME_STATE.score - 2);
-          GAME_STATE.risk += 3;
-          runner.statusText = runner.lives > 0
-            ? (item.message || 'Aduh kena trap. Lompat lagi, masih bisa lanjut.')
-            : 'Waduh, nyawa habis.';
-          showToast(runner.lives > 0 ? `${item.emoji || '⚠️'} ${item.label || 'Trap'}!` : 'Nyawa habis.', 'bad');
-          showPanji(runner.lives > 0 ? `${item.message || 'Kena trap.'} Tenang, PANJI kebal sebentar. Lanjut ambil poin lagi.` : 'Tidak apa-apa, bonus level ini selesai dulu ya.', runner.lives > 0 ? 'thinking' : 'sad');
-          break;
-        }
-      }
-    }
-
-    GAME_STATE.progress = Math.max(0, Math.min(100, Math.round((runner.score / Math.max(1, runner.targetScore)) * 100)));
-    syncJumpRunnerUi();
-
-    if (runner.score >= runner.targetScore) {
-      finishJumpRunner(true);
-      return;
-    }
-
-    if (runner.lives <= 0) {
-      finishJumpRunner(false);
-    }
-  }
-
-  function startJumpRunnerLoop() {
-    clearJumpRunnerLoop();
-    jumpRunnerLastFrameAt = 0;
-
-    const step = now => {
-      if (destroyed) return;
-
-      const challenge = getCurrentChallenge();
-      const runner = GAME_STATE.jumpRunner;
-      if (!challenge || challenge.type !== 'jumpRunner' || !runner || !runner.running || runner.finished) return;
-
-      if (!jumpRunnerLastFrameAt) jumpRunnerLastFrameAt = now;
-      const delta = now - jumpRunnerLastFrameAt;
-      jumpRunnerLastFrameAt = now;
-      updateJumpRunnerFrame(delta || 16.67);
-
-      if (runner.running && !runner.finished) {
-        jumpRunnerAnimationFrame = requestAnimationFrame(step);
-      }
-    };
-
-    jumpRunnerAnimationFrame = requestAnimationFrame(step);
-  }
-
-  function startJumpRunner() {
-    const challenge = getCurrentChallenge();
-    if (!challenge || challenge.type !== 'jumpRunner') return;
-
-    clearPanjiIntroTimers();
-    clearLevelTimer();
-    clearJumpRunnerLoop();
-    disableJumpRunnerKeyboard();
-
-    const runner = createJumpRunnerState(challenge);
-    runner.started = true;
-    runner.running = true;
-    runner.statusText = 'Gas! Tekan Spasi, tombol Lompat, atau panah atas buat melompat.';
-    GAME_STATE.jumpRunner = runner;
-    GAME_STATE.progress = 0;
-
-    renderGame();
-    enableJumpRunnerKeyboard();
-    syncJumpRunnerUi();
-    startJumpRunnerLoop();
-    showPanji('Bonus level 4 dimulai. Ini santai aja: ambil kopi, mie, bintang, koin, dokumen aman. Kalau kena revisi atau deadline, PANJI jatuh lucu lalu kebal sebentar.', 'happy');
-  }
-
-  function jumpRunnerJump() {
-    const challenge = getCurrentChallenge();
-    const runner = GAME_STATE.jumpRunner;
-    if (!challenge || challenge.type !== 'jumpRunner' || !runner || !runner.running || runner.finished) return;
-
-    if (runner.jumpCount < runner.maxJumps) {
-      runner.velocityY = runner.jumpCount === 0 ? runner.jumpForce : runner.jumpForce * 0.84;
-      runner.jumpCount += 1;
-      runner.statusText = runner.jumpCount === 1 ? 'Hop! Kejar poin mood booster.' : 'Double jump! PANJI kecil lagi gaya.';
-      syncJumpRunnerUi();
-    }
-  }
-
   function getDefaultLevelTime(challenge) {
-    if (!challenge || challenge.type === 'tenderRush' || challenge.type === 'jumpRunner') return 0;
+    if (!challenge || challenge.type === 'tenderRush') return 0;
 
     const levelNo = getCurrentLevelNumber();
     const base = challenge.type === 'quiz'
@@ -2083,7 +1733,7 @@
       if (destroyed || GAME_STATE.finished) return;
 
       const activeChallenge = getCurrentChallenge();
-      if (!activeChallenge || activeChallenge.type === 'tenderRush' || activeChallenge.type === 'jumpRunner') return;
+      if (!activeChallenge || activeChallenge.type === 'tenderRush') return;
 
       GAME_STATE.levelTimeLeft = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0) - 1);
       updateLevelTimerUi();
@@ -2098,20 +1748,9 @@
     const text = root && root.querySelector('#psLevelTimeText');
     const bar = root && root.querySelector('#psLevelTimeBar');
     const wrap = root && root.querySelector('.ps-level-time-card');
-    const challenge = getCurrentChallenge();
     const left = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0));
     const limit = Math.max(1, Number(GAME_STATE.levelTimeLimit || 1));
     const percent = Math.max(0, Math.min(100, (left / limit) * 100));
-
-    if (challenge && challenge.type === 'jumpRunner') {
-      if (text) text.textContent = 'Tanpa Timer';
-      if (bar) bar.style.width = '100%';
-      if (wrap) {
-        wrap.classList.remove('danger');
-        wrap.classList.remove('warning');
-      }
-      return;
-    }
 
     if (text) text.textContent = left ? `${left}s` : '-';
     if (bar) bar.style.width = percent + '%';
@@ -2125,7 +1764,7 @@
   function applyLevelTimePenalty(seconds, reasonText = 'Kesalahan') {
     const challenge = getCurrentChallenge();
 
-    if (!challenge || challenge.type === 'tenderRush' || challenge.type === 'jumpRunner') return;
+    if (!challenge || challenge.type === 'tenderRush') return;
     if (!GAME_STATE.levelTimeLimit || GAME_STATE.stage === 'result' || GAME_STATE.finished) return;
 
     const penalty = Math.max(1, Number(seconds || 0));
@@ -2164,8 +1803,6 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
-    clearJumpRunnerLoop();
-    disableJumpRunnerKeyboard();
     clearPanjiIntroTimers();
 
     GAME_STATE.finished = true;
@@ -2677,8 +2314,10 @@
       return 'Hint PANJI: di Tender Rush, lihat 4 kata kunci dulu: pagu, jenis pekerjaan, apakah tersedia katalog, dan apakah pekerjaannya bisa diswakelolakan. Shortcut-nya: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan.';
     }
 
-    if (challenge.type === 'jumpRunner') {
-      return 'Hint PANJI: ambil poin kuningnya, hindari trap merahnya. Kamu cukup lompat dengan Spasi, panah atas, atau klik tombol Lompat. Karena tidak ada timer, mainnya santai saja.';
+    if (challenge.type === 'bonusOpenWorld') {
+      const bonus = GAME_STATE.bonusOpenWorld;
+      if (bonus) return getBonusPanjiHint(bonus);
+      return 'Hint PANJI: di bonus ini jangan buru-buru. Tim yang kamu pilih akan memengaruhi analisa data, pasar, dan evaluasi.';
     }
 
     if (challenge.hint) {
@@ -2737,9 +2376,9 @@
       return;
     }
 
-    if (challenge.type === 'jumpRunner') {
+    if (challenge.type === 'bonusOpenWorld') {
       showPanji(
-        'Ini bonus level 4 versi santai. Karakter mini PBJ tinggal lompat buat ambil poin dan menghindari trap. Tidak ada timer, jadi main pelan juga tidak masalah.',
+        'Bonus level dimulai. Kamu jadi PPK yang terjebak di dunia 3D. Aku akan muncul di dalam panel quest juga, jadi penjelasanku tidak ketutup popup.',
         'thinking'
       );
       return;
@@ -2755,8 +2394,6 @@
     clearAutoNextTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
-    clearJumpRunnerLoop();
-    disableJumpRunnerKeyboard();
     clearPanjiIntroTimers();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
@@ -2775,7 +2412,6 @@
     GAME_STATE.stoppedReason = '';
     GAME_STATE.stoppedLevel = 0;
     GAME_STATE.pipelineCombo = 0;
-    GAME_STATE.jumpRunner = null;
 
     resetPanjiVisualState();
     panjiUserMinimized = false;
@@ -2795,8 +2431,6 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
-    clearJumpRunnerLoop();
-    disableJumpRunnerKeyboard();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
 
@@ -2816,7 +2450,7 @@
       GAME_STATE.placed = Array(challenge.idealIds.length).fill(null);
       GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
       GAME_STATE.tenderRush = null;
-      GAME_STATE.jumpRunner = null;
+      GAME_STATE.bonusOpenWorld = null;
       GAME_STATE.progress = 0;
       GAME_STATE.pipelineCombo = 0;
 
@@ -2830,7 +2464,7 @@
       GAME_STATE.placed = [];
       GAME_STATE.shuffledCards = [];
       GAME_STATE.progress = 0;
-      GAME_STATE.jumpRunner = null;
+      GAME_STATE.bonusOpenWorld = null;
       GAME_STATE.tenderRush = {
         started: false,
         currentIndex: 0,
@@ -2847,25 +2481,25 @@
         'Challenge Tender Rush dimulai',
         'Baca tutorial PANJI dulu, lalu pilih jalur metode dengan tombol 1 sampai 5.'
       );
-    } else if (challenge.type === 'jumpRunner') {
-      GAME_STATE.stage = 'jumpRunner';
+    } else if (challenge.type === 'bonusOpenWorld') {
+      GAME_STATE.stage = 'bonusOpenWorld';
       GAME_STATE.placed = [];
       GAME_STATE.shuffledCards = [];
       GAME_STATE.tenderRush = null;
-      GAME_STATE.jumpRunner = createJumpRunnerState(challenge);
+      GAME_STATE.bonusOpenWorld = createBonusOpenWorldRuntime();
       GAME_STATE.progress = 0;
 
       addLog(
         'info',
-        'Bonus level lompat siap',
-        'Klik mulai lalu bantu karakter mini PBJ melompat untuk mengambil poin.'
+        'Bonus level dimulai',
+        'PPK terjebak di dunia 3D. Pilihanmu menentukan good ending atau bad ending.'
       );
     } else {
       GAME_STATE.stage = 'quiz';
       GAME_STATE.placed = [];
       GAME_STATE.shuffledCards = [];
       GAME_STATE.tenderRush = null;
-      GAME_STATE.jumpRunner = null;
+      GAME_STATE.bonusOpenWorld = null;
       GAME_STATE.progress = 100;
       prepareQuizRuntimeOptions(challenge);
 
@@ -2878,7 +2512,7 @@
 
     renderGame();
 
-    if (challenge.type !== 'tenderRush' && challenge.type !== 'jumpRunner') {
+    if (challenge.type !== 'tenderRush' && challenge.type !== 'bonusOpenWorld') {
       startLevelTimer(challenge);
     }
 
@@ -2894,8 +2528,6 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
-    clearJumpRunnerLoop();
-    disableJumpRunnerKeyboard();
     clearPanjiIntroTimers();
 
     GAME_STATE.finished = true;
@@ -2917,8 +2549,6 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
-    clearJumpRunnerLoop();
-    disableJumpRunnerKeyboard();
 
     if (GAME_STATE.index < GAME_STATE.order.length - 1) {
       GAME_STATE.index += 1;
@@ -2935,28 +2565,28 @@
     if (!challenge) return false;
     if (challenge.type === 'pipeline') return GAME_STATE.progress === 100;
     if (challenge.type === 'tenderRush') return GAME_STATE.progress === 100;
-    if (challenge.type === 'jumpRunner') return GAME_STATE.progress === 100;
+    if (challenge.type === 'bonusOpenWorld') return GAME_STATE.progress === 100;
     return GAME_STATE.answered;
   }
 
   function getChallengeTypeLabel(type) {
     if (type === 'pipeline') return 'Pipeline';
     if (type === 'tenderRush') return 'Tender Rush';
-    if (type === 'jumpRunner') return 'Bonus';
+    if (type === 'bonusOpenWorld') return 'Bonus Level';
     return 'ABCD';
   }
 
   function getChallengeTypeName(type) {
     if (type === 'pipeline') return 'Susun Pipeline';
     if (type === 'tenderRush') return 'Arcade Metode';
-    if (type === 'jumpRunner') return 'Mini Game Lompat';
+    if (type === 'bonusOpenWorld') return 'Open World Quest';
     return 'Pilihan ABCD';
   }
 
   function renderChallengeBody(challenge) {
     if (challenge.type === 'pipeline') return renderPipelineChallenge(challenge);
     if (challenge.type === 'tenderRush') return renderTenderRushChallenge(challenge);
-    if (challenge.type === 'jumpRunner') return renderJumpRunnerChallenge(challenge);
+    if (challenge.type === 'bonusOpenWorld') return renderBonusOpenWorldChallenge(challenge);
     return renderQuizChallenge(challenge);
   }
 
@@ -2975,7 +2605,7 @@
 
         <div class="ps-result-note">
           <strong>Alur game:</strong><br>
-          Soal akan bercampur: susun pipeline, pilihan ABCD, Tender Rush, dan bonus level lompat ambil poin. Bonus level tidak memakai timer, jadi lebih santai.
+          Soal akan bercampur: susun pipeline, pilihan ABCD, dan Tender Rush. Tender Rush memakai tombol 1 sampai 5 untuk memilih metode pengadaan dengan cepat.
         </div>
 
         <div class="ps-buttons">
@@ -3015,7 +2645,7 @@
           </div>
 
           <div class="ps-pill-row">
-            <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : challenge.type === 'tenderRush' ? 'rush' : challenge.type === 'jumpRunner' ? 'bonus' : ''}">
+            <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : challenge.type === 'tenderRush' ? 'rush' : ''}">
               ${getChallengeTypeLabel(challenge.type)}
             </div>
             <div class="ps-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
@@ -3064,9 +2694,9 @@
             <label>Salah</label>
             <strong>${GAME_STATE.wrong}</strong>
           </div>
-          <div class="ps-score-card ps-level-time-card ${challenge.type === 'jumpRunner' ? 'bonus-mode' : ''}">
-            <label>${challenge.type === 'jumpRunner' ? 'Mode Bonus' : 'Waktu Level'}</label>
-            <strong id="psLevelTimeText">${challenge.type === 'tenderRush' ? '-' : challenge.type === 'jumpRunner' ? 'Tanpa Timer' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
+          <div class="ps-score-card ps-level-time-card">
+            <label>Waktu Level</label>
+            <strong id="psLevelTimeText">${challenge.type === 'tenderRush' ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
             <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
           </div>
         </div>
@@ -3091,7 +2721,7 @@
         <div class="ps-buttons">
           <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Mulai Ulang dari Soal 1</button>
           ${
-            challenge.type === 'pipeline' || challenge.type === 'tenderRush' || challenge.type === 'jumpRunner'
+            challenge.type === 'pipeline' || challenge.type === 'tenderRush'
               ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
               : ''
           }
@@ -3103,9 +2733,6 @@
     `;
 
     bindGameEvents();
-    if (challenge.type === 'jumpRunner' && GAME_STATE.jumpRunner && GAME_STATE.jumpRunner.started) {
-      requestAnimationFrame(syncJumpRunnerUi);
-    }
     requestAnimationFrame(updatePanjiAutoBottom);
   }
 
@@ -3181,114 +2808,6 @@
         <div class="ps-card-icon">${item.icon}</div>
         <strong>${escapeHtml(item.label)}</strong>
         <span>${escapeHtml(item.note)}</span>
-      </div>
-    `;
-  }
-
-
-  function renderJumpRunnerChallenge(challenge) {
-    const runner = GAME_STATE.jumpRunner || createJumpRunnerState(challenge);
-    const progress = Math.max(0, Math.min(100, Math.round((runner.score / Math.max(1, runner.targetScore)) * 100)));
-
-    if (!runner.started) {
-      return `
-        <div class="ps-jump-card">
-          <div class="ps-jump-intro">
-            <div class="ps-jump-intro-main">
-              <div class="ps-jump-kicker">Bonus level 4 • santai</div>
-              <h3>Lompat Ambil Poin PBJ</h3>
-              <p>
-                Ini mini game selingan biar nggak tegang. PANJI kecil lari seperti dino koneksi putus, tapi versi PBJ lucu.
-                Tugasmu cukup <b>lompat</b>, ambil <b>kopi, mie, koin, bintang, dan dokumen aman</b>, lalu hindari trap kocak.
-              </p>
-              <div class="ps-jump-stats">
-                <div class="ps-jump-stat"><label>Target Poin</label><strong>${runner.targetScore}</strong></div>
-                <div class="ps-jump-stat"><label>Nyawa</label><strong>${'❤'.repeat(runner.maxLives)}</strong></div>
-                <div class="ps-jump-stat"><label>Timer</label><strong>Tidak ada</strong></div>
-              </div>
-            </div>
-            <div class="ps-jump-intro-side">
-              <h4>Cara main</h4>
-              <ul>
-                <li>Tekan <b>Spasi</b> / <b>↑</b> atau klik tombol <b>Lompat</b>.</li>
-                <li>Kopi dan mie dapat poin lebih besar. Combo juga bisa kasih bonus skor.</li>
-                <li>Kalau kena trap, PANJI jatuh lucu dan kebal sebentar. Tapi santai, ini bonus level.</li>
-                <li>Begitu target poin terpenuhi, game lanjut otomatis ke soal berikutnya.</li>
-              </ul>
-              <div class="ps-buttons" style="margin-top:14px">
-                <button type="button" class="ps-btn ps-btn-primary" id="btnStartJumpRunner">Mulai Bonus Level</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="ps-jump-card">
-        <div class="ps-jump-world night" id="psJumpWorld">
-          <div class="ps-jump-city">
-            <div class="ps-jump-moon"></div>
-            <div class="ps-jump-cloud" style="left:70px"></div>
-            <div class="ps-jump-cloud" style="left:250px;top:78px;width:76px"></div>
-            <div class="ps-jump-building" style="left:18px;height:78px">
-              <span class="win" style="left:14px;top:14px"></span><span class="win" style="left:34px;top:14px"></span>
-              <span class="win" style="left:14px;top:36px"></span><span class="win" style="left:34px;top:36px"></span>
-            </div>
-            <div class="ps-jump-building" style="left:98px;height:118px;width:74px">
-              <span class="win" style="left:15px;top:16px"></span><span class="win" style="left:36px;top:16px"></span><span class="win" style="left:56px;top:16px"></span>
-              <span class="win" style="left:15px;top:42px"></span><span class="win" style="left:36px;top:42px"></span><span class="win" style="left:56px;top:42px"></span>
-              <span class="win" style="left:15px;top:68px"></span><span class="win" style="left:36px;top:68px"></span><span class="win" style="left:56px;top:68px"></span>
-            </div>
-            <div class="ps-jump-building" style="left:204px;height:96px;width:68px">
-              <span class="win" style="left:14px;top:14px"></span><span class="win" style="left:34px;top:14px"></span>
-              <span class="win" style="left:14px;top:38px"></span><span class="win" style="left:34px;top:38px"></span>
-              <span class="win" style="left:14px;top:62px"></span><span class="win" style="left:34px;top:62px"></span>
-            </div>
-            <div class="ps-jump-building" style="right:176px;height:132px;width:84px">
-              <span class="win" style="left:18px;top:16px"></span><span class="win" style="left:40px;top:16px"></span><span class="win" style="left:62px;top:16px"></span>
-              <span class="win" style="left:18px;top:42px"></span><span class="win" style="left:40px;top:42px"></span><span class="win" style="left:62px;top:42px"></span>
-              <span class="win" style="left:18px;top:68px"></span><span class="win" style="left:40px;top:68px"></span><span class="win" style="left:62px;top:68px"></span>
-            </div>
-            <div class="ps-jump-building" style="right:82px;height:88px;width:62px">
-              <span class="win" style="left:12px;top:14px"></span><span class="win" style="left:32px;top:14px"></span>
-              <span class="win" style="left:12px;top:38px"></span><span class="win" style="left:32px;top:38px"></span>
-            </div>
-          </div>
-          <div class="ps-jump-hud">
-            <div class="ps-jump-hud-card"><label>Poin</label><strong id="psJumpHudScore">${runner.score}</strong></div>
-            <div class="ps-jump-hud-card"><label>Target</label><strong id="psJumpHudTarget">${runner.targetScore}</strong></div>
-            <div class="ps-jump-hud-card"><label>Nyawa</label><strong class="ps-jump-hearts" id="psJumpHudLives">${'❤'.repeat(Math.max(0, runner.lives)) + '♡'.repeat(Math.max(0, runner.maxLives - runner.lives))}</strong></div>
-            <div class="ps-jump-hud-card"><label>Status</label><strong id="psJumpHudStage">${runner.running ? 'Berjalan' : (runner.finished ? 'Selesai' : 'Siap')}</strong>
-              <div class="ps-jump-progress"><span id="psJumpProgressFill" style="width:${progress}%"></span></div>
-            </div>
-          </div>
-          <div class="ps-jump-status" id="psJumpStatus">${escapeHtml(runner.statusText || '')}</div>
-          <div class="ps-jump-objects" id="psJumpObjectLayer"></div>
-          <div class="ps-jump-player" id="psJumpPlayer" style="bottom:${48 + Math.max(0, runner.playerY)}px;">
-            <span class="ps-jump-player-head"><span class="ps-jump-player-eye left"></span><span class="ps-jump-player-eye right"></span><span class="ps-jump-player-mouth"></span></span>
-            <span class="ps-jump-player-body"><span class="ps-jump-player-tag">PBJ</span></span>
-            <span class="ps-jump-player-arm"></span><span class="ps-jump-player-arm2"></span>
-            <span class="ps-jump-player-leg"></span><span class="ps-jump-player-leg2"></span>
-          </div>
-          <div class="ps-jump-road-edge"></div>
-          <div class="ps-jump-road-line"></div>
-          <div class="ps-jump-ground"></div>
-          ${runner.finished ? `
-            <div class="ps-jump-overlay">
-              <div class="ps-jump-overlay-card">
-                <h4>${escapeHtml(runner.overlayTitle || 'Bonus selesai')}</h4>
-                <p>${escapeHtml(runner.overlayText || '')}</p>
-              </div>
-            </div>
-          ` : ''}
-        </div>
-        <div class="ps-jump-controlbar">
-          <div class="ps-jump-tip">Kontrol: <b>Spasi</b>, <b>↑</b>, atau klik <b>Lompat</b>. Bisa double jump. Tidak ada batas waktu.</div>
-          <div class="ps-buttons" style="margin:0">
-            <button type="button" class="ps-btn ps-btn-primary" id="btnJumpRunnerJump" ${runner.running && !runner.finished ? '' : 'disabled'}>Lompat</button>
-          </div>
-        </div>
       </div>
     `;
   }
@@ -3395,6 +2914,338 @@
               <strong>${escapeHtml(method.label)}</strong>
             </button>
           `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+
+  const BONUS_TEAM_CANDIDATES = [
+    { id:'data', name:'Bu Data', role:'Analis Data', icon:'📊', good:true, tag:'data', why:'Bagus buat samakan nama barang, cek volume, dan baca item sejenis.' },
+    { id:'katalog', name:'Mas Katalog', role:'Spesialis Katalog V6', icon:'🛒', good:true, tag:'market', why:'Paham akun katalog, stok, ongkir, dan produk mirip tapi beda spek.' },
+    { id:'evaluasi', name:'Mbak Evaluasi', role:'Evaluator', icon:'🧠', good:true, tag:'eval', why:'Kuat untuk memilih penyedia berdasarkan data, bukan karena langganan.' },
+    { id:'monitoring', name:'Kang Monitoring', role:'Monitoring ITKP', icon:'📈', good:true, tag:'monitor', why:'Membantu baca dampak keputusan sampai akhir game.' },
+    { id:'murah', name:'Si Asal Murah', role:'Pemburu Harga', icon:'💸', good:false, tag:'risk', why:'Menjebak. Dia cuma lihat harga murah, sering lupa cek katalog, stok, dan distribusi.' },
+    { id:'cepat', name:'Si Pokoknya Cepat', role:'Lompat Tahap', icon:'⏩', good:false, tag:'risk', why:'Menjebak. Dia bikin proses cepat, tapi rawan loncat perencanaan.' },
+    { id:'langganan', name:'Om Langganan', role:'Bias Penyedia', icon:'🤝', good:false, tag:'risk', why:'Menjebak. Bisa mengarahkan keputusan ke penyedia tertentu tanpa dasar kuat.' },
+    { id:'admin', name:'Mbak Admin OPD', role:'Pengumpul Data OPD', icon:'🗂️', good:true, tag:'data', why:'Membantu mengumpulkan data kebutuhan dari banyak OPD.' }
+  ];
+
+  const BONUS_SAME_ITEM_ROUNDS = [
+    {
+      title:'Kelompok HVS A4 70 gsm',
+      target:'Pilih item yang masih satu keluarga dengan HVS A4 70 gsm.',
+      items:[
+        ['HVS A4 70 gsm', true], ['Kertas A4 70 gram', true], ['A4 70 gsm putih', true], ['HVS F4 70 gsm', false], ['HVS A4 80 gsm', false], ['Tinta Epson 003', false], ['Kertas copy A4 70', true], ['Map Snelhecter', false]
+      ]
+    },
+    {
+      title:'Kelompok Ballpoint Gel',
+      target:'Pilih item yang layak disatukan dengan Ballpoint Gel.',
+      items:[
+        ['Ballpoint Gel', true], ['Pulpen Gel Hitam', true], ['Bolpoin Gel Biru', true], ['Balliner', false], ['Ballpoint Standar', false], ['Spidol Whiteboard', false], ['Gel Pen 0.5', true], ['Pensil 2B', false]
+      ]
+    }
+  ];
+
+  const BONUS_CONVEYOR_ITEMS = [
+    {name:'HVS F4 75 gsm', cat:'Kertas', icon:'📄'},
+    {name:'Kertas A4 70 gr', cat:'Kertas', icon:'📄'},
+    {name:'HVS A4 80 gsm', cat:'Kertas', icon:'📄'},
+    {name:'Tinta Epson 003 Black', cat:'Tinta', icon:'🖨️'},
+    {name:'Tinta Epson 664 Colour', cat:'Tinta', icon:'🖨️'},
+    {name:'Toner LaserJet', cat:'Lainnya', icon:'🧰'},
+    {name:'Ballpoint Gel', cat:'Ballpoint', icon:'🖊️'},
+    {name:'Bolpoin Standar', cat:'Ballpoint', icon:'🖊️'},
+    {name:'Pulpen Gel Biru', cat:'Ballpoint', icon:'🖊️'},
+    {name:'Spidol Whiteboard', cat:'Lainnya', icon:'🧷'},
+    {name:'Map Snelhecter', cat:'Lainnya', icon:'🗂️'},
+    {name:'Staples Besar', cat:'Lainnya', icon:'📎'}
+  ];
+
+  const BONUS_STORES = [
+    {id:'a', name:'Toko A — Gudang HVS', price:63000, v6:true, stock:'Tinggi', dist:'Siap semua OPD', tkdn:'Ada PDN', good:true, trap:'Harga tidak paling murah, tapi paling siap secara proses.'},
+    {id:'b', name:'Toko B — Murah Meriah', price:59000, v6:false, stock:'Sedang', dist:'Belum jelas', tkdn:'Belum jelas', good:false, trap:'Harga paling murah, tapi belum punya akun Katalog V6 dan distribusinya kabur.'},
+    {id:'c', name:'Toko C — Printer Mart', price:65000, v6:true, stock:'Tinggi', dist:'Siap semua OPD', tkdn:'Ada eco/PDN', good:true, trap:'Aman untuk tinta dan distribusi, walau bukan termurah.'},
+    {id:'d', name:'Toko D — Stok Tipis', price:61000, v6:true, stock:'Rendah', dist:'Siap sebagian', tkdn:'Ada PDN', good:false, trap:'Sudah katalog, tapi stok tipis untuk konsolidasi banyak OPD.'}
+  ];
+
+  function createBonusOpenWorldRuntime() {
+    return {
+      stage:'intro',
+      visited:{intro:true},
+      checklist:{},
+      teamSelected:[],
+      teamQuality:'belum',
+      teamTags:{data:0, market:0, eval:0, monitor:0, risk:0},
+      sameRound:0,
+      sameResults:[],
+      conveyorDone:false,
+      conveyorCorrect:0,
+      storeVisited:{},
+      shortlistedStore:'',
+      evalIndex:0,
+      evalCorrect:0,
+      bonusScore:0,
+      ending:''
+    };
+  }
+
+  function getBonusStageLabel(stage) {
+    const labels = {
+      intro:'Opening', team:'Recruit Team', same:'Samakan Nama Barang', conveyor:'Data Cleaning Conveyor', market:'Pasar Penyedia', evaluator:'Evaluator Battle', result:'Ending Bonus'
+    };
+    return labels[stage] || 'Bonus Quest';
+  }
+
+  function getBonusProgress(bonus) {
+    const done = ['intro','team','same','conveyor','market','evaluator','result'].filter(key => bonus.visited[key]).length;
+    return Math.min(100, Math.round((done / 7) * 100));
+  }
+
+  function setBonusStage(stage, markVisited = true) {
+    const bonus = GAME_STATE.bonusOpenWorld;
+    if (!bonus) return;
+    bonus.stage = stage;
+    if (markVisited) bonus.visited[stage] = true;
+    GAME_STATE.progress = getBonusProgress(bonus);
+    renderGame();
+  }
+
+  function updateBonusScore(points, riskDelta, good, note) {
+    const bonus = GAME_STATE.bonusOpenWorld;
+    if (!bonus) return;
+    bonus.bonusScore += points;
+    GAME_STATE.score = Math.max(0, GAME_STATE.score + points);
+    if (riskDelta) GAME_STATE.risk = Math.max(0, GAME_STATE.risk + riskDelta);
+    if (good) GAME_STATE.correct += 1;
+    else GAME_STATE.wrong += 1;
+    if (note) addLog(good ? 'ok' : 'bad', good ? 'Analisa bonus baik' : 'Analisa bonus rawan', note);
+  }
+
+  function finishBonusOpenWorld(goodEnding) {
+    const bonus = GAME_STATE.bonusOpenWorld;
+    if (!bonus) return;
+    bonus.ending = goodEnding ? 'good' : 'bad';
+    bonus.visited.result = true;
+    GAME_STATE.progress = 100;
+    GAME_STATE.correct += goodEnding ? 1 : 0;
+    if (goodEnding) {
+      GAME_STATE.score += 50;
+      addLog('ok', 'Good ending bonus', 'PPK berhasil membuka portal pulang karena keputusan analisisnya cukup aman. Nilai bonus masuk ke skor akhir.');
+      showPanji('Good ending! Kamu berhasil pulang dari dunia konsolidasi. Nilai bonus ini masuk ke skor akhir sebagai bukti analisa pengadaanmu cukup sehat.', 'happy');
+      showToast('Bonus level selesai: Good Ending. Skor +50.', 'ok');
+      spawnConfetti();
+    } else {
+      GAME_STATE.risk += 12;
+      addLog('bad', 'Bad ending bonus', 'Portal pulang belum stabil karena terlalu banyak keputusan rawan. Nilai bonus tetap masuk sebagai catatan analisis.');
+      showPanji('Bad ending. Portal pulang belum stabil. Ini bukan gagal total, tapi sinyal bahwa analisa pengadaanmu masih perlu dilatih.', 'sad');
+      showToast('Bonus level selesai: Bad Ending. Risiko naik.', 'bad');
+    }
+    setBonusStage('result');
+  }
+
+  function getBonusPanjiHint(bonus) {
+    if (!bonus) return 'Hint PANJI: di bonus level ini, pilihanmu memengaruhi ending.';
+    if (bonus.stage === 'team') return 'Hint PANJI: pilih orang data, katalog, evaluasi, dan monitoring. Hati-hati dengan kandidat yang cuma mengejar murah atau cepat.';
+    if (bonus.stage === 'same') return 'Hint PANJI: barang sejenis boleh digabung, tapi perhatikan ukuran, jenis, gramasi, dan fungsi. Jangan paksa item beda menjadi satu kelompok.';
+    if (bonus.stage === 'conveyor') return 'Hint PANJI: drag item ke rak Kertas, Tinta, Ballpoint, atau Lainnya. Spidol, map, toner laser, staples bukan kelompok utama konsolidasi ini.';
+    if (bonus.stage === 'market') return 'Hint PANJI: cari harga murah boleh, tapi cek juga akun Katalog V6, stok, distribusi, dan PDN/TKDN.';
+    if (bonus.stage === 'evaluator') return 'Hint PANJI: keputusan evaluasi harus kembali ke data. Jangan tutup mata soal katalog atau pilih toko langganan tanpa dasar.';
+    return 'Hint PANJI: selesaikan quest dari kiri ke kanan. Map yang sudah dikunjungi akan berubah jadi ceklis.';
+  }
+
+  function renderBonusMap(bonus) {
+    const nodes = [
+      ['intro','Opening'], ['team','Recruit'], ['same','Nama Barang'], ['conveyor','Conveyor'], ['market','Pasar'], ['evaluator','Evaluasi'], ['result','Ending']
+    ];
+    return `
+      <div class="ps-bonus-map">
+        ${nodes.map(([key,label]) => `
+          <button type="button" class="ps-bonus-node ${bonus.stage === key ? 'active' : ''} ${bonus.visited[key] ? 'visited' : ''}" data-bonus-goto="${key}" ${bonus.visited[key] || key === bonus.stage ? '' : 'disabled'}>
+            <span>${bonus.visited[key] ? '✓' : '•'}</span>${escapeHtml(label)}
+          </button>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderBonusPanji(bonus, text) {
+    return `
+      <div class="ps-bonus-panji-card">
+        <div class="ps-bonus-panji-avatar"><span>PANJI</span></div>
+        <div>
+          <strong>PANJI • Ahli Pengadaan</strong>
+          <p>${escapeHtml(text || getBonusPanjiHint(bonus))}</p>
+          <button type="button" class="ps-btn ps-btn-soft" data-bonus-panji> Tanya PANJI </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderBonusOpenWorldChallenge(challenge) {
+    const bonus = GAME_STATE.bonusOpenWorld || createBonusOpenWorldRuntime();
+    const progress = getBonusProgress(bonus);
+    return `
+      <div class="ps-bonus-world">
+        ${renderBonusMap(bonus)}
+        <div class="ps-bonus-layout">
+          <div class="ps-bonus-scene">
+            <div class="ps-bonus-scene-title">
+              <span>Bonus Level 4</span>
+              <h3>${escapeHtml(getBonusStageLabel(bonus.stage))}</h3>
+              <p>PPK terjebak di dunia 3D. Selesaikan quest untuk membuka portal pulang. Pilihanmu bercabang ke good ending atau bad ending.</p>
+            </div>
+            <div class="ps-bonus-progress"><i style="width:${progress}%"></i></div>
+            ${renderBonusStageContent(bonus, challenge)}
+          </div>
+          ${renderBonusPanji(bonus, getBonusPanjiHint(bonus))}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderBonusStageContent(bonus) {
+    if (bonus.stage === 'intro') return renderBonusIntro(bonus);
+    if (bonus.stage === 'team') return renderBonusTeam(bonus);
+    if (bonus.stage === 'same') return renderBonusSameName(bonus);
+    if (bonus.stage === 'conveyor') return renderBonusConveyor(bonus);
+    if (bonus.stage === 'market') return renderBonusMarket(bonus);
+    if (bonus.stage === 'evaluator') return renderBonusEvaluator(bonus);
+    return renderBonusResult(bonus);
+  }
+
+  function renderBonusIntro() {
+    return `
+      <div class="ps-bonus-story-card">
+        <h3>Portal Pulang Terkunci</h3>
+        <p>Kamu, seorang PPK, tersedot ke Dunia Konsolidasi 3D. PANJI bilang: portal pulang cuma bisa dibuka kalau proses konsolidasi berjalan sehat.</p>
+        <p>Di level ini, pilihanmu tidak cuma benar/salah. Tim yang kamu pilih, cara kamu membaca data, hasil market sounding, dan keputusan evaluasi akan mengarahkan ending.</p>
+        <div class="ps-buttons"><button type="button" class="ps-btn ps-btn-primary" data-bonus-start>Mulai Recruit Team</button></div>
+      </div>
+    `;
+  }
+
+  function renderBonusTeam(bonus) {
+    const chosen = new Set(bonus.teamSelected);
+    return `
+      <div class="ps-bonus-story-card">
+        <h3>Recruit Team</h3>
+        <p>Pilih maksimal 4 orang. PANJI kasih analisa, tapi kamu yang mutusin. Jangan one click selesai; pilih dulu lalu tekan <b>Selesai Memilih</b>.</p>
+      </div>
+      <div class="ps-bonus-grid">
+        ${shuffleArray(BONUS_TEAM_CANDIDATES.slice()).map(c => `
+          <button type="button" class="ps-bonus-card ${chosen.has(c.id) ? 'selected' : ''} ${c.good ? 'safe' : 'trap'}" data-bonus-team="${c.id}">
+            <div class="ps-bonus-icon">${c.icon}</div>
+            <h4>${escapeHtml(c.name)}</h4>
+            <b>${escapeHtml(c.role)}</b>
+            <p>${escapeHtml(c.why)}</p>
+          </button>
+        `).join('')}
+      </div>
+      <div class="ps-bonus-actionbar">
+        <button type="button" class="ps-btn ps-btn-primary" data-bonus-finish-team>Selesai Memilih</button>
+        <button type="button" class="ps-btn ps-btn-soft" data-bonus-reset-team>Reset Pilihan</button>
+        <span>${bonus.teamSelected.length}/4 dipilih</span>
+      </div>
+    `;
+  }
+
+  function renderBonusSameName(bonus) {
+    const round = BONUS_SAME_ITEM_ROUNDS[Math.min(bonus.sameRound, BONUS_SAME_ITEM_ROUNDS.length - 1)];
+    const teamAssist = bonus.teamQuality === 'kuat' ? 'Tim datamu memberi glow pada item yang kemungkinan benar. Tapi keputusan tetap di kamu.' : 'PANJI memberi arahan, tapi tidak memaksa. Baca itemnya pelan-pelan.';
+    return `
+      <div class="ps-bonus-story-card">
+        <h3>${escapeHtml(round.title)}</h3>
+        <p>${escapeHtml(round.target)}</p>
+        <p><b>Catatan:</b> ${escapeHtml(teamAssist)}</p>
+      </div>
+      <div class="ps-bonus-grid">
+        ${shuffleArray(round.items.map((it, idx) => ({idx, text:it[0], ok:it[1]}))).map(item => `
+          <button type="button" class="ps-bonus-card ${bonus.teamQuality === 'kuat' && item.ok ? 'assist' : ''}" data-bonus-same="${item.idx}">
+            <div class="ps-bonus-icon">${item.ok ? '🧩' : '❔'}</div>
+            <h4>${escapeHtml(item.text)}</h4>
+            <p>${item.ok ? 'Mungkin satu kelompok.' : 'Bisa jadi jebakan. Cek ukuran/jenisnya.'}</p>
+          </button>
+        `).join('')}
+      </div>
+      <div class="ps-bonus-actionbar"><button type="button" class="ps-btn ps-btn-primary" data-bonus-check-same>Cek Jawaban</button><span>Round ${bonus.sameRound + 1}/${BONUS_SAME_ITEM_ROUNDS.length}</span></div>
+    `;
+  }
+
+  function renderBonusConveyor() {
+    return `
+      <div class="ps-bonus-story-card">
+        <h3>Data Cleaning Conveyor</h3>
+        <p>Drag item ke rak yang benar. Ini sengaja banyak jebakan supaya pemain paham: konsolidasi bukan asal menggabungkan semua ATK.</p>
+      </div>
+      <div class="ps-bonus-dnd">
+        <div class="ps-bonus-pool">
+          ${shuffleArray(BONUS_CONVEYOR_ITEMS.slice()).map((it, idx) => `<div class="ps-bonus-drag" draggable="true" data-bonus-drag="${idx}" data-cat="${it.cat}">${it.icon} ${escapeHtml(it.name)}</div>`).join('')}
+        </div>
+        <div class="ps-bonus-zones">
+          ${['Kertas','Tinta','Ballpoint','Lainnya'].map(cat => `<div class="ps-bonus-drop" data-bonus-drop="${cat}"><h4>Rak ${cat}</h4><div></div></div>`).join('')}
+        </div>
+      </div>
+      <div class="ps-bonus-actionbar"><span id="bonusConveyorInfo">Tarik semua item ke rak.</span></div>
+    `;
+  }
+
+  function renderBonusMarket(bonus) {
+    const allVisited = BONUS_STORES.every(s => bonus.storeVisited[s.id]);
+    return `
+      <div class="ps-bonus-story-card">
+        <h3>Pasar Penyedia</h3>
+        <p>Kamu pindah map ke pasar. Kunjungi toko-toko, cari harga, cek akun Katalog V6, stok, distribusi, dan catatan penting.</p>
+      </div>
+      <div class="ps-bonus-grid">
+        ${shuffleArray(BONUS_STORES.slice()).map(s => {
+          const visited = bonus.storeVisited[s.id];
+          return `<button type="button" class="ps-bonus-card store ${visited ? 'visited' : ''}" data-bonus-store="${s.id}">
+            <div class="ps-bonus-icon">🏪</div>
+            <h4>${escapeHtml(s.name)}</h4>
+            <p>${visited ? `Harga: Rp${s.price.toLocaleString('id-ID')}<br>Katalog V6: ${s.v6 ? 'Sudah' : 'Belum'}<br>Stok: ${s.stock}<br>Distribusi: ${s.dist}<br>${s.trap}` : 'Klik untuk market sounding ke toko ini.'}</p>
+          </button>`;
+        }).join('')}
+      </div>
+      <div class="ps-bonus-actionbar">
+        ${allVisited ? `<select id="bonusStorePick" class="ps-bonus-select">${BONUS_STORES.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')}</select><button type="button" class="ps-btn ps-btn-primary" data-bonus-finish-market>Shortlist & Kembali ke Aula</button>` : `<span>Kunjungi semua toko dulu. Sudah ${Object.keys(bonus.storeVisited).length}/${BONUS_STORES.length}</span>`}
+      </div>
+    `;
+  }
+
+  function renderBonusEvaluator(bonus) {
+    const questions = [
+      { q:'Ada toko paling murah, tapi belum punya akun Katalog V6.', good:'Jangan langsung pilih; catat sebagai risiko dan prioritaskan toko yang siap katalog.', traps:['Pilih karena murah', 'Tutup mata soal akun katalog', 'Pilih karena tokonya ramai'] },
+      { q:'Stok toko rendah untuk volume banyak OPD.', good:'Minta bukti kapasitas pasok atau cari penyedia lain yang lebih siap.', traps:['Tetap pilih karena cepat', 'Abaikan stok', 'Pilih toko langganan'] },
+      { q:'Ada dorongan pilih toko langganan.', good:'Kembali ke data: harga, katalog, stok, distribusi, dan alasan yang bisa dijelaskan.', traps:['Ikuti saja biar aman secara sosial', 'Pilih tanpa pembanding', 'Langsung umumkan'] },
+      { q:'Harga barang murah, tapi distribusi ke OPD belum jelas.', good:'Hitung total biaya dan cek mekanisme distribusi dulu.', traps:['Lihat harga barang saja', 'Abaikan ongkir/distribusi', 'Yang penting murah'] }
+    ];
+    const q = questions[Math.min(bonus.evalIndex, questions.length - 1)];
+    const opts = shuffleArray([q.good, ...q.traps].map(text => ({ text, good:text === q.good })));
+    return `
+      <div class="ps-bonus-story-card">
+        <h3>Evaluator Battle</h3>
+        <p>${escapeHtml(q.q)}</p>
+        <p><b>Dampak tim awal:</b> ${bonus.teamQuality === 'kuat' ? 'Timmu memberi analisa tajam. Jangan sia-siakan.' : bonus.teamQuality === 'campur' ? 'Timmu membantu sebagian, tapi masih ada noise.' : 'Timmu kurang kuat, jebakan terasa lebih banyak.'}</p>
+      </div>
+      <div class="ps-bonus-options">
+        ${opts.map((o, idx) => `<button type="button" class="ps-bonus-option" data-bonus-eval="${idx}" data-good="${o.good ? '1' : '0'}">${escapeHtml(o.text)}</button>`).join('')}
+      </div>
+      <div class="ps-bonus-actionbar"><span>Masalah ${bonus.evalIndex + 1}/4</span></div>
+    `;
+  }
+
+  function renderBonusResult(bonus) {
+    const goodEnding = bonus.ending === 'good';
+    return `
+      <div class="ps-bonus-ending ${goodEnding ? 'good' : 'bad'}">
+        <h3>${goodEnding ? 'GOOD ENDING — Portal Pulang Terbuka' : 'BAD ENDING — Portal Belum Stabil'}</h3>
+        <p>${goodEnding ? 'PPK berhasil pulang karena keputusan analisisnya cukup sehat. Nilai bonus dimasukkan ke skor akhir game.' : 'PPK belum bisa pulang sempurna. Terlalu banyak keputusan rawan, tapi nilai bonus tetap menjadi catatan analisis.'}</p>
+        <div class="ps-bonus-summary">
+          <div><label>Bonus Score</label><strong>${bonus.bonusScore}</strong></div>
+          <div><label>Team</label><strong>${escapeHtml(bonus.teamQuality)}</strong></div>
+          <div><label>Evaluator</label><strong>${bonus.evalCorrect}/4</strong></div>
         </div>
       </div>
     `;
@@ -3743,6 +3594,240 @@
     scheduleAutoNext('Tender Rush selesai. Otomatis lanjut ke soal berikutnya...');
   }
 
+
+  function bindBonusOpenWorldEvents() {
+    const challenge = getCurrentChallenge();
+    const bonus = GAME_STATE.bonusOpenWorld;
+    if (!challenge || challenge.type !== 'bonusOpenWorld' || !bonus) return;
+
+    root.querySelectorAll('[data-bonus-panji]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        showPanji(getBonusPanjiHint(bonus), 'thinking');
+        showToast('PANJI kasih masukan. Skor tidak dikurangi di bonus level.', 'info');
+      });
+    });
+
+    root.querySelectorAll('[data-bonus-goto]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.bonusGoto;
+        if (!bonus.visited[target] && bonus.stage !== target) return;
+        bonus.stage = target;
+        renderGame();
+      });
+    });
+
+    const btnStart = root.querySelector('[data-bonus-start]');
+    if (btnStart) {
+      btnStart.addEventListener('click', () => {
+        setBonusStage('team');
+        showPanji('Kita mulai dari tim. Pilih orang yang bikin proses kuat, bukan yang cuma kelihatan cepat.', 'thinking');
+      });
+    }
+
+    root.querySelectorAll('[data-bonus-team]').forEach(cardEl => {
+      cardEl.addEventListener('click', () => {
+        const id = cardEl.dataset.bonusTeam;
+        const selected = new Set(bonus.teamSelected);
+        const candidate = BONUS_TEAM_CANDIDATES.find(item => item.id === id);
+
+        if (selected.has(id)) selected.delete(id);
+        else {
+          if (selected.size >= 4) {
+            showPanji('Tim maksimal 4 orang. Kalau mau ganti, batalin salah satu dulu.', 'sad');
+            showToast('Maksimal 4 anggota tim.', 'info');
+            return;
+          }
+          selected.add(id);
+        }
+
+        bonus.teamSelected = Array.from(selected);
+        showPanji(candidate ? `Analisa PANJI: ${candidate.name}. ${candidate.why}` : 'Pilih pelan-pelan ya.', candidate && candidate.good ? 'thinking' : 'sad');
+        renderGame();
+      });
+    });
+
+    const resetTeam = root.querySelector('[data-bonus-reset-team]');
+    if (resetTeam) {
+      resetTeam.addEventListener('click', () => {
+        bonus.teamSelected = [];
+        showPanji('Oke, pilihan tim direset. Coba pilih lagi dengan lebih teliti.', 'thinking');
+        renderGame();
+      });
+    }
+
+    const finishTeam = root.querySelector('[data-bonus-finish-team]');
+    if (finishTeam) {
+      finishTeam.addEventListener('click', () => {
+        if (bonus.teamSelected.length !== 4) {
+          showPanji('Pilih tepat 4 orang dulu. Tim yang lengkap bikin perjalanan berikutnya lebih kebaca.', 'sad');
+          showToast('Pilih 4 anggota tim dulu.', 'bad');
+          return;
+        }
+
+        bonus.teamTags = { data:0, market:0, eval:0, monitor:0, risk:0 };
+        bonus.teamSelected.forEach(id => {
+          const c = BONUS_TEAM_CANDIDATES.find(item => item.id === id);
+          if (!c) return;
+          if (c.tag === 'data') bonus.teamTags.data += 1;
+          if (c.tag === 'market') bonus.teamTags.market += 1;
+          if (c.tag === 'eval') bonus.teamTags.eval += 1;
+          if (c.tag === 'monitor') bonus.teamTags.monitor += 1;
+          if (c.tag === 'risk') bonus.teamTags.risk += 1;
+        });
+
+        const riskCount = bonus.teamTags.risk;
+        bonus.teamQuality = riskCount === 0 ? 'kuat' : riskCount === 1 ? 'campur' : 'rawan';
+        const good = riskCount <= 1;
+        updateBonusScore(good ? 180 : 70, good ? -2 : 7, good, good ? 'Tim cukup kuat untuk lanjut.' : 'Tim mengandung aktor rawan. Efeknya terasa di chapter berikutnya.');
+        bonus.visited.team = true;
+        bonus.stage = 'same';
+        GAME_STATE.progress = getBonusProgress(bonus);
+        showPanji(good ? 'Tim ini cukup aman. Mereka akan bantu analisa barang dan pasar.' : 'Timmu rawan. Nanti pilihan berikutnya lebih banyak jebakan, jadi dengarkan PANJI.', good ? 'happy' : 'sad');
+        renderGame();
+      });
+    }
+
+    const sameSelected = new Set();
+    root.querySelectorAll('[data-bonus-same]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.bonusSame);
+        if (sameSelected.has(idx)) sameSelected.delete(idx);
+        else sameSelected.add(idx);
+        btn.classList.toggle('selected', sameSelected.has(idx));
+      });
+    });
+
+    const checkSame = root.querySelector('[data-bonus-check-same]');
+    if (checkSame) {
+      checkSame.addEventListener('click', () => {
+        const round = BONUS_SAME_ITEM_ROUNDS[Math.min(bonus.sameRound, BONUS_SAME_ITEM_ROUNDS.length - 1)];
+        const correct = round.items.map((item, index) => item[1] ? index : null).filter(value => value !== null).sort((a,b) => a-b);
+        const chosen = Array.from(sameSelected).sort((a,b) => a-b);
+        const ok = JSON.stringify(correct) === JSON.stringify(chosen);
+
+        if (ok) {
+          bonus.sameResults.push(true);
+          updateBonusScore(140, -2, true, `Kelompok ${round.title} berhasil dibaca.`);
+          showPanji('Bagus. Item sejenis kebaca. Konsolidasi yang baik dimulai dari data yang masuk akal.', 'happy');
+        } else {
+          bonus.sameResults.push(false);
+          updateBonusScore(30, 6, false, `Kelompok ${round.title} masih keliru.`);
+          showPanji('Belum pas. Cek ukuran, gramasi, jenis barang, dan fungsinya. Jangan semua ATK dipaksa satu kelompok.', 'sad');
+        }
+
+        if (bonus.sameRound < BONUS_SAME_ITEM_ROUNDS.length - 1) {
+          bonus.sameRound += 1;
+        } else {
+          bonus.visited.same = true;
+          bonus.stage = 'conveyor';
+        }
+
+        GAME_STATE.progress = getBonusProgress(bonus);
+        renderGame();
+      });
+    }
+
+    let draggedBonusItem = null;
+    root.querySelectorAll('[data-bonus-drag]').forEach(itemEl => {
+      itemEl.addEventListener('dragstart', event => {
+        draggedBonusItem = itemEl;
+        event.dataTransfer.setData('text/plain', itemEl.dataset.bonusDrag || '');
+        itemEl.classList.add('dragging');
+      });
+      itemEl.addEventListener('dragend', () => itemEl.classList.remove('dragging'));
+    });
+
+    root.querySelectorAll('[data-bonus-drop]').forEach(zone => {
+      zone.addEventListener('dragover', event => event.preventDefault());
+      zone.addEventListener('drop', event => {
+        event.preventDefault();
+        if (!draggedBonusItem) return;
+        const expected = draggedBonusItem.dataset.cat;
+        const actual = zone.dataset.bonusDrop;
+        const ok = expected === actual;
+        const label = draggedBonusItem.textContent.trim();
+
+        zone.querySelector('div').insertAdjacentHTML('beforeend', `<span class="ps-bonus-pill">${escapeHtml(label)}</span>`);
+        draggedBonusItem.remove();
+        draggedBonusItem = null;
+
+        if (ok) {
+          bonus.conveyorCorrect += 1;
+          updateBonusScore(45, 0, true, `${label} masuk rak yang benar.`);
+          showPanji('Pas. Raknya benar.', 'happy');
+        } else {
+          updateBonusScore(0, 4, false, `${label} salah rak.`);
+          showPanji('Nah itu jebakan. Item itu bukan kelompok yang kamu pilih.', 'sad');
+        }
+
+        const remaining = root.querySelectorAll('[data-bonus-drag]').length;
+        const info = root.querySelector('#bonusConveyorInfo');
+        if (info) info.textContent = `Sisa item: ${remaining}. Benar: ${bonus.conveyorCorrect}.`;
+
+        if (remaining === 0) {
+          bonus.conveyorDone = true;
+          bonus.visited.conveyor = true;
+          bonus.stage = 'market';
+          GAME_STATE.progress = getBonusProgress(bonus);
+          showToast('Conveyor selesai. Map Pasar Penyedia terbuka.', 'ok');
+          renderGame();
+        }
+      });
+    });
+
+    root.querySelectorAll('[data-bonus-store]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.bonusStore;
+        const store = BONUS_STORES.find(item => item.id === id);
+        bonus.storeVisited[id] = true;
+        updateBonusScore(store && store.good ? 35 : 10, store && store.good ? 0 : 2, !!(store && store.good), store ? `Market sounding ke ${store.name}.` : 'Market sounding toko.');
+        showPanji(store ? `${store.name}: harga Rp${store.price.toLocaleString('id-ID')}, Katalog V6 ${store.v6 ? 'sudah' : 'belum'}, stok ${store.stock}, distribusi ${store.dist}. ${store.trap}` : 'Data toko dicatat.', store && store.good ? 'thinking' : 'sad');
+        renderGame();
+      });
+    });
+
+    const finishMarket = root.querySelector('[data-bonus-finish-market]');
+    if (finishMarket) {
+      finishMarket.addEventListener('click', () => {
+        const pick = root.querySelector('#bonusStorePick');
+        const id = pick ? pick.value : '';
+        const store = BONUS_STORES.find(item => item.id === id);
+        bonus.shortlistedStore = id;
+        bonus.visited.market = true;
+        const good = !!(store && store.good);
+        updateBonusScore(good ? 150 : 40, good ? -2 : 8, good, store ? `Shortlist ${store.name}.` : 'Shortlist toko.');
+        bonus.stage = 'evaluator';
+        GAME_STATE.progress = getBonusProgress(bonus);
+        showPanji(good ? 'Shortlist masuk akal. Kita balik ke aula dan lanjut evaluasi.' : 'Shortlist rawan. Ini akan bikin evaluator battle lebih berat.', good ? 'happy' : 'sad');
+        renderGame();
+      });
+    }
+
+    root.querySelectorAll('[data-bonus-eval]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ok = btn.dataset.good === '1';
+        if (ok) {
+          bonus.evalCorrect += 1;
+          updateBonusScore(130, -3, true, 'Keputusan evaluasi berbasis data.');
+          showPanji('Ini keputusan aman. Kamu kembali ke data dan alasan yang bisa dijelaskan.', 'happy');
+        } else {
+          updateBonusScore(20, bonus.teamQuality === 'rawan' ? 10 : 6, false, 'Keputusan evaluasi rawan.');
+          showPanji('Ini jebakan. Evaluasi penyedia jangan cuma karena murah, cepat, atau langganan.', 'sad');
+        }
+
+        if (bonus.evalIndex < 3) {
+          bonus.evalIndex += 1;
+          renderGame();
+          return;
+        }
+
+        bonus.visited.evaluator = true;
+        const goodEnding = bonus.evalCorrect >= 3 && bonus.teamQuality !== 'rawan' && GAME_STATE.risk <= 55;
+        finishBonusOpenWorld(goodEnding);
+      });
+    });
+  }
+
   function bindGameEvents() {
     root.querySelectorAll('.ps-action-card[draggable="true"]').forEach(cardEl => {
       cardEl.addEventListener('dragstart', event => {
@@ -3806,19 +3891,7 @@
       });
     }
 
-    const btnStartJumpRunner = root.querySelector('#btnStartJumpRunner');
-    if (btnStartJumpRunner) {
-      btnStartJumpRunner.addEventListener('click', () => {
-        startJumpRunner();
-      });
-    }
-
-    const btnJumpRunnerJump = root.querySelector('#btnJumpRunnerJump');
-    if (btnJumpRunnerJump) {
-      btnJumpRunnerJump.addEventListener('click', () => {
-        jumpRunnerJump();
-      });
-    }
+    bindBonusOpenWorldEvents();
 
     const btnNext = root.querySelector('#btnNextChallenge');
     const btnRestart = root.querySelector('#btnRestartGame');
@@ -3845,8 +3918,6 @@
         clearAutoNextTimer();
         clearTenderRushTimers();
         disableTenderRushKeyboard();
-        clearJumpRunnerLoop();
-        disableJumpRunnerKeyboard();
         loadChallenge();
       });
     }
@@ -4324,8 +4395,6 @@
       clearLevelTimer();
       clearTenderRushTimers();
       disableTenderRushKeyboard();
-      clearJumpRunnerLoop();
-      disableJumpRunnerKeyboard();
       clearPanjiIntroTimers();
       clearPanjiTalkTimer();
 
