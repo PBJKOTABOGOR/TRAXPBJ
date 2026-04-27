@@ -20,6 +20,7 @@
   let panjiMiniBtn = null;
   let panjiCharacterBtn = null;
   let panjiCloseBtn = null;
+  let panjiUserMinimized = false;
 
   let leaderboardModalEl = null;
   let leaderboardRefreshTimer = null;
@@ -1188,8 +1189,20 @@
 
       if (typeof showPanji === 'function') {
         if (GAME_STATE.stage === 'result' || GAME_STATE.finished) {
-          const result = getCurrentResultSummary();
-          showPanji(getLeaderboardPanjiNarrative(result), getLeaderboardPanjiMood(result));
+          const reaction = getPanjiFinalReaction();
+          panjiUserMinimized = false;
+
+          if (panjiEl) {
+            panjiEl.classList.remove('panji-hidden', 'panji-minimized');
+          }
+
+          showPanji(reaction.text, reaction.mood);
+
+          if (panjiEl) {
+            panjiEl.classList.remove('panji-celebrate', 'panji-cry');
+            void panjiEl.offsetWidth;
+            panjiEl.classList.add(reaction.anim);
+          }
         } else {
           showPanji(
             'Halo! PANJI di sini. Isi dulu nama dan instansi kamu ya. Setelah selesai main, skor otomatis masuk leaderboard.',
@@ -1273,13 +1286,6 @@
           <div><span>Risiko</span><b>${result.risiko}</b></div>
           <div><span>Level Dicapai</span><b>${result.levelDicapai}/${result.totalSoal}</b></div>
           <div><span>Durasi</span><b>${formatDuration(result.durasiDetik)}</b></div>
-        </div>
-        <div class="ps-lb-panji-note ${getLeaderboardPanjiMood(result)}">
-          <div class="ps-lb-panji-face">${getLeaderboardPanjiMood(result) === 'happy' ? '😄' : getLeaderboardPanjiMood(result) === 'sad' ? '😭' : '🤔'}</div>
-          <div>
-            <strong>PANJI bilang:</strong><br>
-            ${escapeHtml(getLeaderboardPanjiNarrative(result))}
-          </div>
         </div>
       ` : ''}
 
@@ -1432,6 +1438,110 @@
 
   function getPlacedCount() {
     return GAME_STATE.placed.filter(Boolean).length;
+  }
+
+
+  function getActiveTenderRushPackage(challenge) {
+    const rush = GAME_STATE.tenderRush;
+    const list = rush && Array.isArray(rush.packages)
+      ? rush.packages
+      : Array.isArray(challenge && challenge.packages)
+        ? challenge.packages
+        : [];
+
+    return list[(rush && Number(rush.currentIndex || 0)) || 0] || null;
+  }
+
+  function prepareTenderRushRandomPackages(challenge) {
+    const allPackages = Array.isArray(challenge && challenge.packages) ? challenge.packages : [];
+    if (!allPackages.length) return [];
+
+    const count = Math.min(Number(challenge.packageCount || allPackages.length || 5), allPackages.length);
+    let randomized = shuffleArray(allPackages).slice(0, count);
+
+    /* Hindari pola jawaban terasa berurutan 1-2-3-4-5 jika hasil shuffle kebetulan terlalu rapi. */
+    const methodOrder = ['ekatalog', 'pengadaanLangsung', 'tenderSeleksi', 'swakelola', 'dikecualikan'];
+    const isSequential = randomized.every((item, index) => item.correct === methodOrder[index % methodOrder.length]);
+    const isReverseSequential = randomized.every((item, index) => item.correct === methodOrder[(methodOrder.length - 1 - index) % methodOrder.length]);
+
+    if ((isSequential || isReverseSequential) && randomized.length > 2) {
+      randomized = [randomized[2], randomized[0], randomized[4] || randomized[1], randomized[1], randomized[3]].filter(Boolean);
+    }
+
+    return randomized.map((item, index) => ({
+      ...item,
+      rushId: `rush-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`
+    }));
+  }
+
+  function getPanjiCurrentGuideMessage() {
+    const challenge = getCurrentChallenge();
+
+    if (!challenge) {
+      return 'Hi.. aku balik lagi. Isi dulu nama pemain dan instansi atau OPD kamu, lalu kita mulai latihan PBJ bareng-bareng.';
+    }
+
+    if (challenge.type === 'pipeline') {
+      const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
+
+      if (nextEmpty < 0) {
+        return 'Hi.. aku balik lagi. Pipeline soal ini sudah selesai. Kamu tinggal klik lanjut untuk masuk ke soal berikutnya.';
+      }
+
+      const expectedId = challenge.idealIds?.[nextEmpty];
+      const expectedCard = challenge.cards?.find(item => item.id === expectedId);
+
+      if (expectedCard) {
+        return `Hi.. aku balik lagi. Sekarang kamu ada di soal Pipeline. Fokus isi slot nomor ${nextEmpty + 1}. Cari kartu "${expectedCard.label}", lalu susun dari kiri ke kanan. Jangan pilih kartu jebakan.`;
+      }
+
+      return 'Hi.. aku balik lagi. Sekarang kamu ada di soal Pipeline. Susun tahapan PBJ dari kiri ke kanan secara tertib.';
+    }
+
+    if (challenge.type === 'quiz') {
+      return `Hi.. aku balik lagi. Sekarang kamu ada di soal ABCD. Baca kasus "${challenge.caseTitle}" pelan-pelan, lalu pilih jawaban yang paling sesuai prinsip PBJ.`;
+    }
+
+    if (challenge.type === 'tenderRush') {
+      const pkg = getActiveTenderRushPackage(challenge);
+      if (pkg) {
+        const correctMethod = TENDER_RUSH_METHODS[pkg.correct];
+        return `Hi.. aku balik lagi. Ini Tender Rush. Paket aktifnya "${pkg.title}". Perhatikan petunjuknya: ${pkg.clue} Kalau butuh arahan, jalur yang paling aman adalah ${correctMethod ? correctMethod.key + ' - ' + correctMethod.label : 'metode yang sesuai kondisi paket'}.`;
+      }
+
+      return 'Hi.. aku balik lagi. Sekarang kamu ada di Tender Rush. Baca paket yang jatuh, lalu tekan 1 untuk e-Katalog, 2 untuk Pengadaan Langsung, 3 untuk Tender/Seleksi, 4 untuk Swakelola, atau 5 untuk Dikecualikan.';
+    }
+
+    return 'Hi.. aku balik lagi. Lanjutkan permainan dengan membaca kasus dan memilih langkah PBJ yang paling aman.';
+  }
+
+  function getPanjiFinalReaction() {
+    const result = getCurrentResultSummary();
+    const percent = result.maxScore > 0 ? Math.round((result.skor / result.maxScore) * 100) : 0;
+    const levelDicapai = Math.max(1, Number(result.levelDicapai || GAME_STATE.index + 1 || 1));
+    const totalLevel = CHALLENGES.length;
+
+    if (percent >= 80 && GAME_STATE.risk <= 35) {
+      return {
+        mood: 'happy',
+        anim: 'panji-celebrate',
+        text: `Yeay! Mantap banget. Kamu mencapai level ${levelDicapai}/${totalLevel} dengan skor ${result.skor}. Alur PBJ kamu sudah rapi dan risikonya cukup terkendali. Kalau mau ngejar ranking lebih tinggi, klik tombol "Main Lagi dari Soal 1".`
+      };
+    }
+
+    if (percent >= 55) {
+      return {
+        mood: 'thinking',
+        anim: 'panji-celebrate',
+        text: `Lumayan! Kamu mencapai level ${levelDicapai}/${totalLevel} dengan skor ${result.skor}. Tapi masih ada beberapa bagian yang perlu dirapikan. Coba ulangi lagi, perhatikan urutan pipeline, batas metode, dan jangan buru-buru saat Tender Rush. Klik "Main Lagi dari Soal 1" untuk coba lagi.`
+      };
+    }
+
+    return {
+      mood: 'sad',
+      anim: 'panji-cry',
+      text: `Aduh, PANJI sedih nih. Kamu baru mencapai level ${levelDicapai}/${totalLevel} dengan skor ${result.skor}. Tidak apa-apa, ini latihan. Coba main lagi dari awal, baca kasus lebih pelan, dan jangan asal pilih metode. Klik "Main Lagi dari Soal 1" ya.`
+    };
   }
 
   function clearTenderRushTimers() {
@@ -1830,6 +1940,7 @@
 
     if (panjiMiniBtn) {
       panjiMiniBtn.addEventListener('click', () => {
+        panjiUserMinimized = true;
         panjiEl.classList.add('panji-minimized');
       });
     }
@@ -1838,17 +1949,21 @@
       panjiCharacterBtn.addEventListener('click', () => {
         panjiEl.classList.remove('panji-hidden');
 
-        if (panjiEl.classList.contains('panji-minimized')) {
+        if (panjiUserMinimized || panjiEl.classList.contains('panji-minimized')) {
+          panjiUserMinimized = false;
           panjiEl.classList.remove('panji-minimized');
-          showPanji('Aku balik lagi. Kalau bingung, klik tombol "Tanya PANJI". Tapi ingat, minta hint mengurangi skor ya.', 'thinking');
-        } else {
-          panjiEl.classList.add('panji-minimized');
+          showPanji(getPanjiCurrentGuideMessage(), 'thinking');
+          return;
         }
+
+        panjiUserMinimized = true;
+        panjiEl.classList.add('panji-minimized');
       });
     }
 
     if (panjiCloseBtn) {
       panjiCloseBtn.addEventListener('click', () => {
+        panjiUserMinimized = true;
         panjiEl.classList.add('panji-hidden');
       });
     }
@@ -1944,7 +2059,7 @@
   function showPanji(message, mood = 'thinking') {
     if (!panjiEl || !panjiTextEl) return;
 
-    if (panjiEl.classList.contains('panji-minimized')) {
+    if (panjiUserMinimized || panjiEl.classList.contains('panji-minimized')) {
       return;
     }
 
@@ -1959,7 +2074,9 @@
       'panji-sad',
       'panji-thinking',
       'panji-intro',
-      'panji-talking'
+      'panji-talking',
+      'panji-celebrate',
+      'panji-cry'
     );
 
     void panjiEl.offsetWidth;
@@ -2067,6 +2184,13 @@
     }
 
     if (challenge.type === 'tenderRush') {
+      const pkg = getActiveTenderRushPackage(challenge);
+
+      if (pkg) {
+        const correctMethod = TENDER_RUSH_METHODS[pkg.correct];
+        return `Hint PANJI: paket aktif adalah "${pkg.title}". Petunjuknya: ${pkg.clue} Jadi jalur paling aman adalah ${correctMethod ? correctMethod.key + ' - ' + correctMethod.label : 'metode yang sesuai'}. Alasannya: ${pkg.explanation}`;
+      }
+
       return 'Hint PANJI: di Tender Rush, lihat 4 kata kunci dulu: pagu, jenis pekerjaan, apakah tersedia katalog, dan apakah pekerjaannya bisa diswakelolakan. Shortcut-nya: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan.';
     }
 
@@ -2201,7 +2325,8 @@
         locked: false,
         lastResult: null,
         correctCount: 0,
-        wrongCount: 0
+        wrongCount: 0,
+        packages: prepareTenderRushRandomPackages(challenge)
       };
 
       addLog(
@@ -2531,8 +2656,14 @@
       wrongCount: 0
     };
 
-    const total = (challenge.packages || []).length;
-    const currentPackage = challenge.packages && challenge.packages[rush.currentIndex];
+    const rushPackages = Array.isArray(rush.packages) && rush.packages.length ? rush.packages : (challenge.packages || []);
+    const total = rushPackages.length;
+    const currentPackage = rushPackages[rush.currentIndex];
+
+    if (!currentPackage && rush.started && GAME_STATE.progress < 100) {
+      GAME_STATE.progress = 100;
+    }
+
     const percentTime = Math.max(0, Math.min(100, (Number(rush.timeLeft || 0) / Number(challenge.timeLimit || 8)) * 100));
 
     if (!rush.started) {
@@ -2802,7 +2933,8 @@
       locked: false,
       lastResult: null,
       correctCount: 0,
-      wrongCount: 0
+      wrongCount: 0,
+      packages: prepareTenderRushRandomPackages(challenge)
     };
 
     enableTenderRushKeyboard();
@@ -2818,7 +2950,9 @@
 
     clearTenderRushTimers();
 
-    if (rush.currentIndex >= (challenge.packages || []).length) {
+    const rushPackages = Array.isArray(rush.packages) && rush.packages.length ? rush.packages : (challenge.packages || []);
+
+    if (rush.currentIndex >= rushPackages.length) {
       finishTenderRush();
       return;
     }
@@ -2826,7 +2960,7 @@
     rush.timeLeft = Number(challenge.timeLimit || 8);
     rush.locked = false;
     rush.lastResult = null;
-    GAME_STATE.progress = Math.round((rush.currentIndex / challenge.packages.length) * 100);
+    GAME_STATE.progress = Math.round((rush.currentIndex / Math.max(1, rushPackages.length)) * 100);
 
     renderGame();
 
@@ -2867,7 +3001,8 @@
 
     if (!challenge || challenge.type !== 'tenderRush' || !rush || !rush.started || rush.locked) return;
 
-    const pkg = challenge.packages[rush.currentIndex];
+    const rushPackages = Array.isArray(rush.packages) && rush.packages.length ? rush.packages : (challenge.packages || []);
+    const pkg = rushPackages[rush.currentIndex];
     if (!pkg) return;
 
     clearTenderRushTimers();
@@ -2907,7 +3042,7 @@
       rush.lastResult = { correct: false, message };
     }
 
-    GAME_STATE.progress = Math.round(((rush.currentIndex + 1) / challenge.packages.length) * 100);
+    GAME_STATE.progress = Math.round(((rush.currentIndex + 1) / Math.max(1, rushPackages.length)) * 100);
     renderGame();
 
     if (rush.wrongCount >= getTenderRushFailLimitByLevel(getCurrentLevelNumber())) {
@@ -2921,7 +3056,7 @@
       if (destroyed) return;
       rush.currentIndex += 1;
 
-      if (rush.currentIndex >= challenge.packages.length) {
+      if (rush.currentIndex >= rushPackages.length) {
         finishTenderRush();
         return;
       }
@@ -2940,7 +3075,8 @@
     disableTenderRushKeyboard();
 
     rush.started = true;
-    rush.currentIndex = (challenge.packages || []).length;
+    const rushPackages = Array.isArray(rush.packages) && rush.packages.length ? rush.packages : (challenge.packages || []);
+    rush.currentIndex = rushPackages.length;
     rush.locked = true;
     rush.lastResult = null;
     GAME_STATE.progress = 100;
