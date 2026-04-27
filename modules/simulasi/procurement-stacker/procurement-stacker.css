@@ -3993,3 +3993,111 @@
   .ps-jump-world{min-height:300px}
   .ps-jump-player{left:36px;transform:scale(.92);transform-origin:left bottom}
 }
+
+
+/* ===== Bonus level 4 dibuat lebih santai dan lucu ===== */
+.ps-jump-world{
+  min-height:330px;
+}
+.ps-jump-cloud{
+  background:rgba(255,255,255,.62);
+  animation:psJumpCloudFloat 6s ease-in-out infinite;
+}
+.ps-jump-ground{
+  background:
+    linear-gradient(180deg,#64748b 0%,#334155 100%);
+}
+.ps-jump-road-line{
+  animation:psJumpRoadSlow 1.9s linear infinite;
+}
+.ps-jump-token{
+  width:34px;
+  height:34px;
+  background:linear-gradient(180deg,#fff7ed,#fed7aa);
+  animation:psJumpTokenBob 1.05s ease-in-out infinite;
+}
+.ps-jump-token:before{
+  display:none;
+}
+.ps-jump-token-emoji{
+  font-size:19px;
+  filter:drop-shadow(0 2px 2px rgba(15,23,42,.18));
+}
+.ps-jump-token.coffee{background:linear-gradient(180deg,#ffedd5,#fdba74)}
+.ps-jump-token.noodle{background:linear-gradient(180deg,#fef3c7,#facc15)}
+.ps-jump-token.star{background:linear-gradient(180deg,#fef9c3,#fbbf24)}
+.ps-jump-token.doc{background:linear-gradient(180deg,#eff6ff,#93c5fd)}
+.ps-jump-token.coin{background:linear-gradient(180deg,#fef08a,#eab308)}
+.ps-jump-token-label{
+  top:-20px;
+  color:#0f172a;
+  background:rgba(255,255,255,.86);
+  padding:2px 6px;
+  border-radius:999px;
+  text-shadow:none;
+  border:1px solid rgba(15,23,42,.08);
+}
+.ps-jump-obstacle{
+  width:38px !important;
+  min-height:34px;
+  border-radius:12px 12px 8px 8px;
+  background:linear-gradient(180deg,#fecaca,#ef4444);
+  border:2px solid rgba(255,255,255,.75);
+  animation:psTrapWiggle 1.2s ease-in-out infinite;
+}
+.ps-jump-obstacle:before{
+  display:none;
+}
+.ps-jump-obstacle-emoji{
+  font-size:19px;
+}
+.ps-jump-obstacle.revisi{background:linear-gradient(180deg,#fecaca,#fb7185)}
+.ps-jump-obstacle.deadline{background:linear-gradient(180deg,#fed7aa,#f97316)}
+.ps-jump-obstacle.berkas{background:linear-gradient(180deg,#ddd6fe,#8b5cf6)}
+.ps-jump-obstacle.loading{background:linear-gradient(180deg,#bbf7d0,#22c55e)}
+.ps-jump-obstacle.sleepy{background:linear-gradient(180deg,#bfdbfe,#3b82f6)}
+.ps-jump-obstacle-label{
+  top:-20px;
+  color:#0f172a;
+  background:rgba(255,255,255,.88);
+  padding:2px 6px;
+  border-radius:999px;
+  text-shadow:none;
+  border:1px solid rgba(15,23,42,.08);
+}
+.ps-jump-player.hit{
+  animation:psRunnerHit .25s linear 3, psPanjiInvincible .18s linear infinite;
+}
+.ps-jump-player-head{
+  background:linear-gradient(180deg,#dbeafe,#60a5fa);
+}
+.ps-jump-player-body{
+  background:linear-gradient(180deg,#1d4ed8,#0f766e);
+}
+.ps-jump-status{
+  font-weight:900;
+  background:rgba(15,23,42,.14);
+  margin:0 16px;
+  border-radius:14px;
+}
+
+@keyframes psJumpRoadSlow{
+  from{background-position-x:0}
+  to{background-position-x:-72px}
+}
+@keyframes psJumpTokenBob{
+  0%,100%{transform:translateY(0) rotate(-3deg)}
+  50%{transform:translateY(-7px) rotate(4deg)}
+}
+@keyframes psTrapWiggle{
+  0%,100%{transform:rotate(-2deg)}
+  50%{transform:rotate(2deg)}
+}
+@keyframes psJumpCloudFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+@keyframes psPanjiInvincible{
+  0%,100%{opacity:1}
+  50%{opacity:.42}
+}
