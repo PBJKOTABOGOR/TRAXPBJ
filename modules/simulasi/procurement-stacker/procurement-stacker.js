@@ -2546,7 +2546,62 @@
   }
 
 
-  function renderReadyScreen() {
+  
+function renderPlayerForm() {
+  return `
+    <form class="ps-player-form ps-ready-player-form" id="psReadyPlayerForm">
+      <label>
+        <span>Nama Pemain</span>
+        <input type="text" name="nama" value="${escapeHtml(PLAYER_STATE.nama)}" placeholder="Contoh: Benni Ramadhan" autocomplete="name" required>
+      </label>
+      <label>
+        <span>Instansi / OPD</span>
+        <input type="text" name="instansi" value="${escapeHtml(PLAYER_STATE.instansi)}" placeholder="Contoh: UKPBJ Kota Bogor" required>
+      </label>
+      <button type="submit" class="ps-btn ps-btn-soft">Simpan Data Pemain</button>
+    </form>
+  `;
+}
+
+function saveReadyPlayerProfileFromForm() {
+  if (!root) return hasPlayerProfile();
+
+  const form = root.querySelector('#psReadyPlayerForm');
+  if (!form) return hasPlayerProfile();
+
+  const nama = String(form.querySelector('[name="nama"]')?.value || '').trim();
+  const instansi = String(form.querySelector('[name="instansi"]')?.value || '').trim();
+
+  if (!nama || !instansi) {
+    PLAYER_STATE.lastSaveMessage = 'Nama dan instansi/OPD wajib diisi sebelum mulai.';
+    showToast('Isi nama dan instansi/OPD dulu.', 'bad');
+    showPanji('Isi dulu nama pemain dan instansi atau OPD kamu ya, supaya skor akhirnya bisa masuk leaderboard.', 'thinking');
+    if (!nama) form.querySelector('[name="nama"]')?.focus();
+    else form.querySelector('[name="instansi"]')?.focus();
+    return false;
+  }
+
+  savePlayerProfile(nama, instansi);
+  PLAYER_STATE.lastSaveMessage = 'Data pemain tersimpan. Silakan mulai main.';
+  showToast('Data pemain tersimpan.', 'ok');
+  return true;
+}
+
+function bindPlayerFormEvents() {
+  if (!root) return;
+
+  const form = root.querySelector('#psReadyPlayerForm');
+  if (!form) return;
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (saveReadyPlayerProfileFromForm()) {
+      showPanji('Sip, data pemain sudah tersimpan. Klik Mulai Main kalau sudah siap.', 'happy');
+    }
+  });
+}
+
+function renderReadyScreen() {
     if (!root) return;
 
     root.innerHTML = `
@@ -4351,7 +4406,9 @@ function renderReadyScreen() {
 
   bindPlayerFormEvents();
   const startBtn = root.querySelector('#btnStartGame');
-  if (startBtn) startBtn.addEventListener('click', startGame);
+  if (startBtn) startBtn.addEventListener('click', () => {
+    if (saveReadyPlayerProfileFromForm()) startGame();
+  });
   requestAnimationFrame(updatePanjiAutoBottom);
 }
 
