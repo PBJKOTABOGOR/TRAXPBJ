@@ -3587,3 +3587,20 @@
 @keyframes psRunnerHit{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-4px)}}
 @media (max-width: 860px){.ps-jump-intro{grid-template-columns:1fr}.ps-jump-hud{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width: 560px){.ps-jump-stats,.ps-jump-hud{grid-template-columns:1fr 1fr}.ps-jump-world{min-height:250px}.ps-jump-player{left:28px;transform:scale(.92)}}
+
+
+/* FIX READY SCREEN - inline start form */
+.ps-ready-player-form{
+  margin-top:18px;
+  display:grid;
+  gap:12px;
+}
+.ps-ready-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.ps-ready-player-form input{
+  width:100%;
+}
