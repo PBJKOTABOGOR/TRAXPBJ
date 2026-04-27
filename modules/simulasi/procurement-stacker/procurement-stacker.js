@@ -24,6 +24,9 @@
   let leaderboardModalEl = null;
   let leaderboardRefreshTimer = null;
 
+  let levelTimer = null;
+  let levelTimerStartedAt = 0;
+
   let tenderRushTimer = null;
   let tenderRushNextTimer = null;
   let tenderRushKeyHandler = null;
@@ -773,6 +776,80 @@
     }
   ];
 
+
+  function cloneTenderRushChallenge(template, levelNo, variantIndex) {
+    const variants = [
+      {
+        title: `Level ${levelNo} — Tender Rush: Pilih Jalur Metode`,
+        caseTitle: 'Arcade Metode Pengadaan',
+        difficulty: `Level ${levelNo} - Arcade`,
+        packages: template.packages
+      },
+      {
+        title: `Level ${levelNo} — Tender Rush: Paket Makin Cepat`,
+        caseTitle: 'Arcade Pagu dan Metode',
+        difficulty: `Level ${levelNo} - Arcade+`,
+        packages: [
+          { title: 'Belanja Kendaraan Operasional Katalog', type: 'Barang', pagu: 650000000, clue: 'Barang pabrikan dan tersedia di katalog elektronik.', correct: 'ekatalog', explanation: 'Jika kendaraan tersedia dan sesuai di katalog, e-Purchasing lebih tepat daripada memaksa metode manual.' },
+          { title: 'Konsumsi Rapat Koordinasi Kecil', type: 'Jasa Lainnya', pagu: 12000000, clue: 'Nilai kecil, sederhana, dan tidak kompleks.', correct: 'pengadaanLangsung', explanation: 'Konsumsi bernilai kecil dapat menggunakan Pengadaan Langsung sepanjang sesuai batas nilai dan administrasi tertib.' },
+          { title: 'Jasa Konsultan DED Gedung', type: 'Jasa Konsultansi', pagu: 420000000, clue: 'Membutuhkan keahlian profesional dan evaluasi teknis.', correct: 'tenderSeleksi', explanation: 'Jasa konsultansi dengan nilai dan kompleksitas tertentu lebih tepat melalui Seleksi, bukan Pengadaan Langsung.' },
+          { title: 'Pelatihan Internal oleh Tim OPD', type: 'Jasa Lainnya', pagu: 90000000, clue: 'Dikerjakan sendiri dengan tim pelaksana dan pengawas.', correct: 'swakelola', explanation: 'Kegiatan yang dilaksanakan sendiri dapat menggunakan Swakelola jika tim, rencana, dan pertanggungjawabannya jelas.' },
+          { title: 'Pembayaran Air dan Listrik Kantor', type: 'Jasa Lainnya', pagu: 240000000, clue: 'Layanan utilitas rutin/tertentu.', correct: 'dikecualikan', explanation: 'Utilitas tertentu dapat dikecualikan sesuai dasar ketentuan, tetapi tetap wajib tertib bukti dan pencatatan.' }
+        ]
+      },
+      {
+        title: `Level ${levelNo} — Tender Rush: Risiko Akhir Tahun`,
+        caseTitle: 'Arcade Risiko Metode',
+        difficulty: `Level ${levelNo} - Sulit`,
+        packages: [
+          { title: 'Laptop Pelayanan Publik TKDN Tersedia', type: 'Barang', pagu: 480000000, clue: 'Ada produk katalog dan perlu afirmasi PDN/TKDN.', correct: 'ekatalog', explanation: 'Katalog yang tersedia dan sesuai mendukung e-Purchasing serta afirmasi PDN/TKDN.' },
+          { title: 'Souvenir Kegiatan Sosialisasi', type: 'Barang', pagu: 35000000, clue: 'Nilai kecil, sederhana, tidak dipecah dari kebutuhan besar.', correct: 'pengadaanLangsung', explanation: 'Nilai kecil dan sederhana dapat masuk Pengadaan Langsung jika tidak digunakan untuk memecah paket.' },
+          { title: 'Pemeliharaan Jalan Lingkungan', type: 'Pekerjaan Konstruksi', pagu: 900000000, clue: 'Konstruksi nilai besar, perlu proses formal.', correct: 'tenderSeleksi', explanation: 'Konstruksi bernilai besar tidak cocok dipaksa ke Pengadaan Langsung. Jalur formal lebih aman.' },
+          { title: 'Kajian Data oleh Perguruan Tinggi Negeri', type: 'Jasa Konsultansi', pagu: 250000000, clue: 'Dilaksanakan bersama instansi/perguruan tinggi.', correct: 'swakelola', explanation: 'Kolaborasi dengan instansi/perguruan tinggi dapat masuk Swakelola jika memenuhi ketentuan dan struktur tim jelas.' },
+          { title: 'Layanan Pos/Pengiriman Dokumen Resmi', type: 'Jasa Lainnya', pagu: 70000000, clue: 'Layanan tertentu yang memiliki karakter khusus.', correct: 'dikecualikan', explanation: 'Layanan tertentu bisa dikecualikan, namun dasar dan pencatatan tetap wajib rapi.' }
+        ]
+      }
+    ];
+
+    const selected = variants[variantIndex % variants.length];
+
+    return {
+      ...template,
+      ...selected,
+      type: 'tenderRush',
+      desc: 'Paket akan muncul satu per satu. Masukkan paket ke jalur metode yang paling tepat sebelum waktu habis. Jika gagal 3 kali, permainan langsung berhenti dan skor akhir muncul.',
+      budget: 'Simulasi cepat',
+      timeLimit: Math.max(7, Number(template.timeLimit || 10) - Math.floor(variantIndex / 2)),
+      explanation: 'Tender Rush melatih refleks membaca jenis paket, pagu, ketersediaan katalog, dan kondisi pelaksanaan sebelum memilih metode.'
+    };
+  }
+
+  function expandChallengeFlow(rawList) {
+    const rushTemplate = rawList.find(item => item.type === 'tenderRush');
+    const baseList = rawList.filter(item => item.type !== 'tenderRush');
+    const rushLevels = new Set([3, 6, 9, 12, 15]);
+    const expanded = [];
+    let baseIndex = 0;
+    let rushIndex = 0;
+    let levelNo = 1;
+
+    while (baseIndex < baseList.length || (rushTemplate && rushLevels.has(levelNo))) {
+      if (rushTemplate && rushLevels.has(levelNo)) {
+        expanded.push(cloneTenderRushChallenge(rushTemplate, levelNo, rushIndex));
+        rushIndex += 1;
+      } else if (baseIndex < baseList.length) {
+        expanded.push(baseList[baseIndex]);
+        baseIndex += 1;
+      }
+
+      levelNo += 1;
+
+      if (levelNo > baseList.length + rushLevels.size + 8) break;
+    }
+
+    return expanded;
+  }
+
   function buildChallenge(raw) {
     if (raw.type === 'quiz' || raw.type === 'tenderRush') {
       return raw;
@@ -788,7 +865,7 @@
     };
   }
 
-  const CHALLENGES = CHALLENGE_RAW.map(buildChallenge);
+  const CHALLENGES = expandChallengeFlow(CHALLENGE_RAW).map(buildChallenge);
 
   const TENDER_RUSH_METHODS = {
     ekatalog: {
@@ -858,7 +935,11 @@
     runId: '',
     gameStartedAt: 0,
     scoreSubmitted: false,
-    tenderRush: null
+    tenderRush: null,
+    levelTimeLeft: 0,
+    levelTimeLimit: 0,
+    stoppedReason: '',
+    stoppedLevel: 0
   };
 
   const PLAYER_STATE = {
@@ -1322,6 +1403,97 @@
     tenderRushKeyHandler = null;
   }
 
+
+  function getDefaultLevelTime(challenge) {
+    if (!challenge || challenge.type === 'tenderRush') return 0;
+    if (challenge.type === 'quiz') return Number(challenge.timeLimit || 45);
+    return Number(challenge.timeLimit || 90);
+  }
+
+  function clearLevelTimer() {
+    if (levelTimer) {
+      clearInterval(levelTimer);
+      levelTimer = null;
+    }
+  }
+
+  function startLevelTimer(challenge) {
+    clearLevelTimer();
+
+    const limit = getDefaultLevelTime(challenge);
+    GAME_STATE.levelTimeLimit = limit;
+    GAME_STATE.levelTimeLeft = limit;
+    levelTimerStartedAt = Date.now();
+
+    if (!limit || GAME_STATE.stage === 'ready' || GAME_STATE.stage === 'result') {
+      updateLevelTimerUi();
+      return;
+    }
+
+    updateLevelTimerUi();
+
+    levelTimer = setInterval(() => {
+      if (destroyed || GAME_STATE.finished) return;
+
+      const activeChallenge = getCurrentChallenge();
+      if (!activeChallenge || activeChallenge.type === 'tenderRush') return;
+
+      GAME_STATE.levelTimeLeft = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0) - 1);
+      updateLevelTimerUi();
+
+      if (GAME_STATE.levelTimeLeft <= 0) {
+        stopGameEarly('time');
+      }
+    }, 1000);
+  }
+
+  function updateLevelTimerUi() {
+    const text = root && root.querySelector('#psLevelTimeText');
+    const bar = root && root.querySelector('#psLevelTimeBar');
+    const wrap = root && root.querySelector('.ps-level-time-card');
+    const left = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0));
+    const limit = Math.max(1, Number(GAME_STATE.levelTimeLimit || 1));
+    const percent = Math.max(0, Math.min(100, (left / limit) * 100));
+
+    if (text) text.textContent = left ? `${left}s` : '-';
+    if (bar) bar.style.width = percent + '%';
+
+    if (wrap) {
+      wrap.classList.toggle('danger', left > 0 && left <= 10);
+      wrap.classList.toggle('warning', left > 10 && left <= 25);
+    }
+  }
+
+  function stopGameEarly(reason = 'time') {
+    if (GAME_STATE.finished || GAME_STATE.stage === 'result') return;
+
+    clearAutoNextTimer();
+    clearLevelTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+    clearPanjiIntroTimers();
+
+    GAME_STATE.finished = true;
+    GAME_STATE.stage = 'result';
+    GAME_STATE.stoppedReason = reason;
+    GAME_STATE.stoppedLevel = GAME_STATE.index + 1;
+    GAME_STATE.progress = 100;
+
+    if (reason === 'rushFailed') {
+      addLog('bad', 'Tender Rush gagal 3 kali', 'Permainan berhenti karena salah atau timeout sebanyak 3 kali pada Tender Rush.');
+      showToast('Tender Rush gagal 3 kali. Skor akhir ditampilkan.', 'bad');
+      showPanji('Tender Rush gagal 3 kali. Game berhenti dulu ya. Skor akhir dan level terakhir sudah muncul. Coba ulangi dan baca petunjuk paket lebih cepat.', 'sad');
+    } else {
+      addLog('bad', 'Waktu level habis', `Permainan berhenti di level ${GAME_STATE.stoppedLevel}.`);
+      showToast('Waktu habis. Skor akhir ditampilkan.', 'bad');
+      showPanji(`Waktu level habis. Kamu berhenti di level ${GAME_STATE.stoppedLevel} dengan skor ${GAME_STATE.score}.`, 'sad');
+    }
+
+    renderGame();
+    openLeaderboardModal(hasPlayerProfile() ? 'leaderboard' : 'player', true);
+    submitFinalScoreToLeaderboard();
+  }
+
   function clearAutoNextTimer() {
     if (autoNextTimer) {
       clearTimeout(autoNextTimer);
@@ -1668,6 +1840,10 @@
   function showPanji(message, mood = 'thinking') {
     if (!panjiEl || !panjiTextEl) return;
 
+    if (panjiEl.classList.contains('panji-minimized')) {
+      return;
+    }
+
     forceShowPanji();
     clearPanjiTalkTimer();
 
@@ -1869,6 +2045,10 @@
     GAME_STATE.gameStartedAt = Date.now();
     GAME_STATE.scoreSubmitted = false;
     GAME_STATE.hasSeenIntro = false;
+    GAME_STATE.levelTimeLeft = 0;
+    GAME_STATE.levelTimeLimit = 0;
+    GAME_STATE.stoppedReason = '';
+    GAME_STATE.stoppedLevel = 0;
 
     showPanjiIntro();
     loadChallenge();
@@ -1876,6 +2056,9 @@
 
   function loadChallenge() {
     clearAutoNextTimer();
+    clearLevelTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
 
@@ -1938,6 +2121,10 @@
 
     renderGame();
 
+    if (challenge.type !== 'tenderRush') {
+      startLevelTimer(challenge);
+    }
+
     if (GAME_STATE.index === 0 && !GAME_STATE.hasSeenIntro) {
       GAME_STATE.hasSeenIntro = true;
     } else {
@@ -1947,6 +2134,9 @@
 
   function finishGame() {
     clearAutoNextTimer();
+    clearLevelTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
     clearPanjiIntroTimers();
 
     GAME_STATE.finished = true;
@@ -1964,6 +2154,9 @@
 
   function nextChallenge() {
     clearAutoNextTimer();
+    clearLevelTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
 
     if (GAME_STATE.index < GAME_STATE.order.length - 1) {
       GAME_STATE.index += 1;
@@ -2104,6 +2297,11 @@
           <div class="ps-score-card">
             <label>Salah</label>
             <strong>${GAME_STATE.wrong}</strong>
+          </div>
+          <div class="ps-score-card ps-level-time-card">
+            <label>Waktu Level</label>
+            <strong id="psLevelTimeText">${challenge.type === 'tenderRush' ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
+            <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
           </div>
         </div>
 
@@ -2392,6 +2590,11 @@
       : GAME_STATE.risk <= 60
         ? 'Sedang'
         : 'Tinggi';
+    const stopTitle = GAME_STATE.stoppedReason === 'rushFailed'
+      ? 'Game berhenti karena Tender Rush gagal 3 kali.'
+      : GAME_STATE.stoppedReason === 'time'
+        ? 'Game berhenti karena waktu level habis.'
+        : '';
 
     return `
       <section class="ps-card">
@@ -2421,6 +2624,13 @@
             <strong>${GAME_STATE.wrong}</strong>
           </div>
         </div>
+
+        ${stopTitle ? `
+          <div class="ps-result-note ps-result-stop-note">
+            <strong>${escapeHtml(stopTitle)}</strong><br>
+            Kamu mencapai <strong>Level ${GAME_STATE.stoppedLevel || (GAME_STATE.index + 1)}</strong> dengan skor <strong>${GAME_STATE.score}</strong> dan risiko <strong>${GAME_STATE.risk}</strong>.
+          </div>
+        ` : ''}
 
         <div class="ps-result-note">
           <strong>Ringkasan:</strong><br>
@@ -2471,6 +2681,7 @@
     if (!challenge || challenge.type !== 'tenderRush') return;
 
     clearPanjiIntroTimers();
+    clearLevelTimer();
     clearTenderRushTimers();
 
     GAME_STATE.tenderRush = {
@@ -2587,6 +2798,13 @@
 
     GAME_STATE.progress = Math.round(((rush.currentIndex + 1) / challenge.packages.length) * 100);
     renderGame();
+
+    if (rush.wrongCount >= 3) {
+      tenderRushNextTimer = setTimeout(() => {
+        if (!destroyed) stopGameEarly('rushFailed');
+      }, 900);
+      return;
+    }
 
     tenderRushNextTimer = setTimeout(() => {
       if (destroyed) return;
@@ -2801,6 +3019,7 @@
     pulseSlot(slotIndex);
 
     if (completed) {
+      clearLevelTimer();
       GAME_STATE.score += 20;
       GAME_STATE.correct += 1;
       addLog('ok', 'Pipeline selesai', challenge.explanation);
@@ -2862,6 +3081,7 @@
 
   function answerQuiz(selectedIndex, buttonEl) {
     clearPanjiIntroTimers();
+    clearLevelTimer();
 
     const challenge = getCurrentChallenge();
 
@@ -3149,20 +3369,16 @@
     fetchLeaderboard();
     initPanji(container);
 
-    if (hasPlayerProfile()) {
-      startGame();
-    } else {
-      GAME_STATE.stage = 'ready';
-      GAME_STATE.current = null;
-      renderReadyScreen();
-      showPanji('Halo, perkenalkan. Aku PANJI, Pengadaan Jitu. Sebelum main, isi dulu nama pemain dan instansi atau OPD kamu ya.', 'happy');
+    GAME_STATE.stage = 'ready';
+    GAME_STATE.current = null;
+    renderReadyScreen();
+    showPanji('Halo, perkenalkan. Aku PANJI, Pengadaan Jitu. Sebelum main, isi dulu nama pemain dan instansi atau OPD kamu ya.', 'happy');
 
-      setTimeout(() => {
-        if (!destroyed) {
-          openLeaderboardModal('player', true);
-        }
-      }, 650);
-    }
+    setTimeout(() => {
+      if (!destroyed) {
+        openLeaderboardModal('player', true);
+      }
+    }, 650);
 
     leaderboardRefreshTimer = setInterval(() => {
       if (!destroyed && leaderboardModalEl && !leaderboardModalEl.classList.contains('ps-hidden')) {
@@ -3174,6 +3390,7 @@
       destroyed = true;
 
       clearAutoNextTimer();
+      clearLevelTimer();
       clearTenderRushTimers();
       disableTenderRushKeyboard();
       clearPanjiIntroTimers();
