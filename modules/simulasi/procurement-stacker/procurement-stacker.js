@@ -33,6 +33,10 @@
   let tenderRushNextTimer = null;
   let tenderRushKeyHandler = null;
 
+  let jumpRunnerAnimationFrame = null;
+  let jumpRunnerKeyHandler = null;
+  let jumpRunnerLastFrameAt = 0;
+
   const CARD_LIBRARY = {
     rup: {
       id: 'rup',
@@ -851,11 +855,11 @@
       type: 'jumpRunner',
       title: `Bonus Level ${levelNo} — Lompat Ambil Poin PBJ`,
       caseTitle: 'Mini Game PBJ Runner',
-      desc: 'Bantu karakter mini PBJ berlari sambil melompat, ambil poin, dan hindari jebakan pengadaan. Tidak ada timer, main santai saja.',
+      desc: 'Bantu karakter mini PBJ berlari sambil melompat, ambil poin kuning, dan hindari trap merah. Tidak ada timer, jadi mainnya santai saja.',
       difficulty: `Bonus Level ${levelNo} - Santai`,
       targetScore: 12,
       maxLives: 3,
-      explanation: 'Mini game ini melatih fokus dan refleks. Ambil poin PBJ sebanyak mungkin, hindari jebakan, dan main santai tanpa batas waktu.'
+      explanation: 'Mini game ini cuma selingan biar otak tidak tegang. Ambil poin, hindari trap, lalu lanjut ke level berikutnya.'
     };
   }
 
@@ -1704,6 +1708,7 @@
       cancelAnimationFrame(jumpRunnerAnimationFrame);
       jumpRunnerAnimationFrame = null;
     }
+
     jumpRunnerLastFrameAt = 0;
   }
 
@@ -1713,6 +1718,7 @@
     jumpRunnerKeyHandler = event => {
       const activeTag = String(document.activeElement && document.activeElement.tagName || '').toLowerCase();
       if (['input', 'textarea', 'select'].includes(activeTag)) return;
+
       const challenge = getCurrentChallenge();
       if (!challenge || challenge.type !== 'jumpRunner') return;
 
@@ -1727,6 +1733,7 @@
 
   function disableJumpRunnerKeyboard() {
     if (!jumpRunnerKeyHandler) return;
+
     document.removeEventListener('keydown', jumpRunnerKeyHandler);
     jumpRunnerKeyHandler = null;
   }
@@ -1739,9 +1746,9 @@
       success: false,
       playerY: 0,
       velocityY: 0,
-      gravity: 0.62,
-      jumpForce: 11.8,
-      speed: 4.6,
+      gravity: 0.64,
+      jumpForce: 12.2,
+      speed: 4.7,
       score: 0,
       targetScore: Number(challenge.targetScore || 12),
       lives: Number(challenge.maxLives || 3),
@@ -1749,8 +1756,8 @@
       collectibles: [],
       obstacles: [],
       invincibleUntil: 0,
-      nextCollectibleAt: 650,
-      nextObstacleAt: 1200,
+      nextCollectibleAt: 520,
+      nextObstacleAt: 1350,
       elapsed: 0,
       nextId: 1,
       statusText: 'Klik mulai, lalu lompat untuk ambil poin PBJ.',
@@ -1839,7 +1846,7 @@
     runner.statusText = 'Nyawa habis. Santai, bonus level ini tetap lanjut ke soal berikutnya.';
     addLog('bad', 'Bonus lompat selesai', 'Nyawa habis sebelum target poin tercapai. Tantangan bonus tetap dianggap selesai agar permainan lanjut.');
     showToast('Nyawa habis. Tetap lanjut ya.', 'bad');
-    showPanji('Tidak apa-apa, bonus level ini memang buat selingan. Kita lanjut lagi ke soal berikutnya.', 'thinking');
+    showPanji('Tidak apa-apa, bonus level ini cuma selingan. Kita lanjut lagi ke soal berikutnya.', 'thinking');
     renderGame();
     scheduleAutoNext('Bonus level selesai. Otomatis lanjut...', 2200);
   }
@@ -1854,35 +1861,47 @@
 
     runner.playerY += runner.velocityY * factor;
     runner.velocityY -= runner.gravity * factor;
+
     if (runner.playerY <= 0) {
       runner.playerY = 0;
       runner.velocityY = 0;
     }
 
     runner.collectibles.forEach(item => { item.x -= runner.speed * factor; });
-    runner.obstacles.forEach(item => { item.x -= (runner.speed + 0.6) * factor; });
-    runner.collectibles = runner.collectibles.filter(item => item.x > -50);
-    runner.obstacles = runner.obstacles.filter(item => item.x > -60);
+    runner.obstacles.forEach(item => { item.x -= (runner.speed + 0.55) * factor; });
+    runner.collectibles = runner.collectibles.filter(item => item.x > -60);
+    runner.obstacles = runner.obstacles.filter(item => item.x > -70);
 
     runner.nextCollectibleAt -= deltaMs;
     if (runner.nextCollectibleAt <= 0) {
-      const y_options = [18, 22, 28, 48, 72, 96, 118];
-      const y = y_options[Math.floor(Math.random() * y_options.length)];
-      runner.collectibles.push({ id: runner.nextId++, x: 760, y: y, w: 28, h: 28 });
-      runner.nextCollectibleAt = 650 + Math.random() * 850;
+      const yOptions = [18, 24, 36, 56, 78, 102, 126];
+      runner.collectibles.push({
+        id: runner.nextId++,
+        x: Math.max(760, Math.round((root && root.getBoundingClientRect ? root.getBoundingClientRect().width : 760) - 80)),
+        y: yOptions[Math.floor(Math.random() * yOptions.length)],
+        w: 30,
+        h: 30
+      });
+      runner.nextCollectibleAt = 520 + Math.random() * 780;
     }
 
     runner.nextObstacleAt -= deltaMs;
     if (runner.nextObstacleAt <= 0) {
-      const w = 22 + Math.round(Math.random() * 10);
-      const h = 26 + Math.round(Math.random() * 12);
-      runner.obstacles.push({ id: runner.nextId++, x: 760, y: 0, w: w, h: h });
-      runner.nextObstacleAt = 1100 + Math.random() * 1100;
+      const w = 24 + Math.round(Math.random() * 10);
+      const h = 30 + Math.round(Math.random() * 12);
+      runner.obstacles.push({
+        id: runner.nextId++,
+        x: Math.max(760, Math.round((root && root.getBoundingClientRect ? root.getBoundingClientRect().width : 760) - 80)),
+        y: 0,
+        w,
+        h
+      });
+      runner.nextObstacleAt = 1050 + Math.random() * 1050;
     }
 
-    const playerRect = { x: 46, y: runner.playerY, w: 38, h: 48 };
-
+    const playerRect = { x: 54, y: runner.playerY, w: 42, h: 50 };
     const remainingCollectibles = [];
+
     runner.collectibles.forEach(item => {
       const hit = rectOverlap(playerRect, { x: item.x, y: item.y, w: item.w, h: item.h });
       if (hit) {
@@ -1894,9 +1913,10 @@
         remainingCollectibles.push(item);
       }
     });
-    runner.collectibles = remainingCollectibles;
 
+    runner.collectibles = remainingCollectibles;
     const invincible = Date.now() < Number(runner.invincibleUntil || 0);
+
     if (!invincible) {
       for (const item of runner.obstacles) {
         const hit = rectOverlap(playerRect, { x: item.x, y: item.y, w: item.w, h: item.h });
@@ -1934,6 +1954,7 @@
 
     const step = now => {
       if (destroyed) return;
+
       const challenge = getCurrentChallenge();
       const runner = GAME_STATE.jumpRunner;
       if (!challenge || challenge.type !== 'jumpRunner' || !runner || !runner.running || runner.finished) return;
@@ -1942,6 +1963,7 @@
       const delta = now - jumpRunnerLastFrameAt;
       jumpRunnerLastFrameAt = now;
       updateJumpRunnerFrame(delta || 16.67);
+
       if (runner.running && !runner.finished) {
         jumpRunnerAnimationFrame = requestAnimationFrame(step);
       }
@@ -1965,6 +1987,7 @@
     runner.statusText = 'Gas! Tekan Spasi, tombol Lompat, atau panah atas buat melompat.';
     GAME_STATE.jumpRunner = runner;
     GAME_STATE.progress = 0;
+
     renderGame();
     enableJumpRunnerKeyboard();
     syncJumpRunnerUi();
@@ -2621,7 +2644,7 @@
     }
 
     if (challenge.type === 'jumpRunner') {
-      return 'Hint PANJI: ambil poin kuningnya, hindari trap merahnya. Kamu cukup lompat dengan tombol Spasi, panah atas, atau klik tombol Lompat. Karena tidak ada timer, mainnya santai saja.';
+      return 'Hint PANJI: ambil poin kuningnya, hindari trap merahnya. Kamu cukup lompat dengan Spasi, panah atas, atau klik tombol Lompat. Karena tidak ada timer, mainnya santai saja.';
     }
 
     if (challenge.hint) {
@@ -2698,6 +2721,8 @@
     clearAutoNextTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearJumpRunnerLoop();
+    disableJumpRunnerKeyboard();
     clearPanjiIntroTimers();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
@@ -2716,6 +2741,7 @@
     GAME_STATE.stoppedReason = '';
     GAME_STATE.stoppedLevel = 0;
     GAME_STATE.pipelineCombo = 0;
+    GAME_STATE.jumpRunner = null;
 
     resetPanjiVisualState();
     panjiUserMinimized = false;
@@ -2770,6 +2796,7 @@
       GAME_STATE.placed = [];
       GAME_STATE.shuffledCards = [];
       GAME_STATE.progress = 0;
+      GAME_STATE.jumpRunner = null;
       GAME_STATE.tenderRush = {
         started: false,
         currentIndex: 0,
@@ -2780,8 +2807,6 @@
         wrongCount: 0,
         packages: prepareTenderRushRandomPackages(challenge)
       };
-
-      GAME_STATE.jumpRunner = null;
 
       addLog(
         'info',
@@ -2858,6 +2883,8 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearJumpRunnerLoop();
+    disableJumpRunnerKeyboard();
 
     if (GAME_STATE.index < GAME_STATE.order.length - 1) {
       GAME_STATE.index += 1;
@@ -2908,63 +2935,26 @@
         <div class="ps-result-hero">
           <h2>🎮 Procurement Stacker</h2>
           <p>
-            Sebelum mulai, isi dulu nama pemain dan instansi/OPD. Setelah itu langsung klik <b>Mulai Main</b>.
-            Jadi tidak nunggu popup lagi.
+            Sebelum mulai, PANJI akan kenalan dulu dan minta data pemain. Isi nama serta instansi/OPD agar skor akhir bisa masuk leaderboard.
           </p>
         </div>
 
         <div class="ps-result-note">
           <strong>Alur game:</strong><br>
-          Soal akan bercampur: susun pipeline, pilihan ABCD, Tender Rush, dan bonus level lompat ambil poin.
-          Bonus level tidak memakai timer, jadi lebih santai.
+          Soal akan bercampur: susun pipeline, pilihan ABCD, Tender Rush, dan bonus level lompat ambil poin. Bonus level tidak memakai timer, jadi lebih santai.
         </div>
 
-        <form class="ps-player-form ps-ready-player-form" id="psReadyPlayerForm">
-          <label>
-            <span>Nama Pemain</span>
-            <input type="text" name="nama" value="${escapeHtml(PLAYER_STATE.nama || '')}" placeholder="Contoh: Benni Ramadhan" autocomplete="name" required>
-          </label>
-          <label>
-            <span>Instansi / OPD</span>
-            <input type="text" name="instansi" value="${escapeHtml(PLAYER_STATE.instansi || '')}" placeholder="Contoh: UKPBJ Kota Bogor" required>
-          </label>
-          <div class="ps-ready-actions">
-            <button type="submit" class="ps-btn ps-btn-primary">
-              Simpan & Mulai Main
-            </button>
-            <button type="button" class="ps-btn ps-btn-soft" id="btnOpenPlayerModal">
-              Lihat Leaderboard
-            </button>
-          </div>
-        </form>
+        <div class="ps-buttons">
+          <button type="button" class="ps-btn ps-btn-primary" id="btnOpenPlayerModal">
+            Isi Nama & Instansi
+          </button>
+        </div>
       </section>
     `;
 
-    const form = root.querySelector('#psReadyPlayerForm');
-    if (form) {
-      form.addEventListener('submit', event => {
-        event.preventDefault();
-
-        const nama = form.querySelector('[name="nama"]')?.value || '';
-        const instansi = form.querySelector('[name="instansi"]')?.value || '';
-
-        if (!String(nama).trim() || !String(instansi).trim()) {
-          showToast('Nama dan instansi wajib diisi dulu.', 'bad');
-          showPanji('Isi nama dan instansi dulu ya, baru kita mulai mainnya.', 'thinking');
-          return;
-        }
-
-        savePlayerProfile(nama, instansi);
-        PLAYER_STATE.lastSaveMessage = 'Data pemain tersimpan. Game dimulai.';
-        showToast('Data pemain tersimpan. Mulai main!', 'ok');
-        showPanji('Siap! Data pemain sudah masuk. Kita mulai dari soal pertama ya.', 'happy');
-        startGame();
-      });
-    }
-
     const btn = root.querySelector('#btnOpenPlayerModal');
     if (btn) {
-      btn.addEventListener('click', () => openLeaderboardModal('leaderboard', false));
+      btn.addEventListener('click', () => openLeaderboardModal('player', true));
     }
 
     requestAnimationFrame(updatePanjiAutoBottom);
@@ -3040,8 +3030,8 @@
             <label>Salah</label>
             <strong>${GAME_STATE.wrong}</strong>
           </div>
-          <div class="ps-score-card ps-level-time-card">
-            <label>Waktu Level</label>
+          <div class="ps-score-card ps-level-time-card ${challenge.type === 'jumpRunner' ? 'bonus-mode' : ''}">
+            <label>${challenge.type === 'jumpRunner' ? 'Mode Bonus' : 'Waktu Level'}</label>
             <strong id="psLevelTimeText">${challenge.type === 'tenderRush' ? '-' : challenge.type === 'jumpRunner' ? 'Tanpa Timer' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
             <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
           </div>
@@ -3184,7 +3174,7 @@
               </div>
             </div>
             <div class="ps-jump-intro-side">
-              <h4 style="margin:0 0 10px">Cara main</h4>
+              <h4>Cara main</h4>
               <ul>
                 <li>Tekan <b>Spasi</b> / <b>↑</b> atau klik tombol <b>Lompat</b>.</li>
                 <li>Setiap poin yang diambil menambah skor game utama.</li>
@@ -3202,31 +3192,31 @@
 
     return `
       <div class="ps-jump-card">
-        <div class="ps-jump-world night">
+        <div class="ps-jump-world night" id="psJumpWorld">
           <div class="ps-jump-city">
             <div class="ps-jump-moon"></div>
             <div class="ps-jump-cloud" style="left:70px"></div>
-            <div class="ps-jump-cloud" style="left:220px;top:74px;width:72px"></div>
+            <div class="ps-jump-cloud" style="left:250px;top:78px;width:76px"></div>
             <div class="ps-jump-building" style="left:18px;height:78px">
               <span class="win" style="left:14px;top:14px"></span><span class="win" style="left:34px;top:14px"></span>
-              <span class="win" style="left:14px;top:34px"></span><span class="win" style="left:34px;top:34px"></span>
+              <span class="win" style="left:14px;top:36px"></span><span class="win" style="left:34px;top:36px"></span>
             </div>
-            <div class="ps-jump-building" style="left:98px;height:118px;width:72px">
-              <span class="win" style="left:15px;top:16px"></span><span class="win" style="left:35px;top:16px"></span><span class="win" style="left:55px;top:16px"></span>
-              <span class="win" style="left:15px;top:40px"></span><span class="win" style="left:35px;top:40px"></span><span class="win" style="left:55px;top:40px"></span>
-              <span class="win" style="left:15px;top:64px"></span><span class="win" style="left:35px;top:64px"></span><span class="win" style="left:55px;top:64px"></span>
+            <div class="ps-jump-building" style="left:98px;height:118px;width:74px">
+              <span class="win" style="left:15px;top:16px"></span><span class="win" style="left:36px;top:16px"></span><span class="win" style="left:56px;top:16px"></span>
+              <span class="win" style="left:15px;top:42px"></span><span class="win" style="left:36px;top:42px"></span><span class="win" style="left:56px;top:42px"></span>
+              <span class="win" style="left:15px;top:68px"></span><span class="win" style="left:36px;top:68px"></span><span class="win" style="left:56px;top:68px"></span>
             </div>
-            <div class="ps-jump-building" style="left:194px;height:96px;width:66px">
-              <span class="win" style="left:13px;top:14px"></span><span class="win" style="left:33px;top:14px"></span>
-              <span class="win" style="left:13px;top:38px"></span><span class="win" style="left:33px;top:38px"></span>
-              <span class="win" style="left:13px;top:62px"></span><span class="win" style="left:33px;top:62px"></span>
+            <div class="ps-jump-building" style="left:204px;height:96px;width:68px">
+              <span class="win" style="left:14px;top:14px"></span><span class="win" style="left:34px;top:14px"></span>
+              <span class="win" style="left:14px;top:38px"></span><span class="win" style="left:34px;top:38px"></span>
+              <span class="win" style="left:14px;top:62px"></span><span class="win" style="left:34px;top:62px"></span>
             </div>
-            <div class="ps-jump-building" style="right:176px;height:132px;width:82px">
-              <span class="win" style="left:18px;top:16px"></span><span class="win" style="left:40px;top:16px"></span><span class="win" style="left:60px;top:16px"></span>
-              <span class="win" style="left:18px;top:42px"></span><span class="win" style="left:40px;top:42px"></span><span class="win" style="left:60px;top:42px"></span>
-              <span class="win" style="left:18px;top:68px"></span><span class="win" style="left:40px;top:68px"></span><span class="win" style="left:60px;top:68px"></span>
+            <div class="ps-jump-building" style="right:176px;height:132px;width:84px">
+              <span class="win" style="left:18px;top:16px"></span><span class="win" style="left:40px;top:16px"></span><span class="win" style="left:62px;top:16px"></span>
+              <span class="win" style="left:18px;top:42px"></span><span class="win" style="left:40px;top:42px"></span><span class="win" style="left:62px;top:42px"></span>
+              <span class="win" style="left:18px;top:68px"></span><span class="win" style="left:40px;top:68px"></span><span class="win" style="left:62px;top:68px"></span>
             </div>
-            <div class="ps-jump-building" style="right:82px;height:88px;width:60px">
+            <div class="ps-jump-building" style="right:82px;height:88px;width:62px">
               <span class="win" style="left:12px;top:14px"></span><span class="win" style="left:32px;top:14px"></span>
               <span class="win" style="left:12px;top:38px"></span><span class="win" style="left:32px;top:38px"></span>
             </div>
@@ -4280,6 +4270,12 @@
     GAME_STATE.current = null;
     renderReadyScreen();
     showPanji('Halo, perkenalkan. Aku PANJI, Pengadaan Jitu. Sebelum main, isi dulu nama pemain dan instansi atau OPD kamu ya.', 'happy');
+
+    setTimeout(() => {
+      if (!destroyed) {
+        openLeaderboardModal('player', true);
+      }
+    }, 650);
 
     leaderboardRefreshTimer = setInterval(() => {
       if (!destroyed && leaderboardModalEl && !leaderboardModalEl.classList.contains('ps-hidden')) {
