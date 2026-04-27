@@ -2917,3 +2917,43 @@
     to{ top:230px; }
   }
 }
+
+
+/* =========================================================
+   REVISI UX/UI TENDER RUSH + PANJI COMPACT
+   ========================================================= */
+
+.ps-score-grid{ grid-template-columns:repeat(5,minmax(0,1fr)); }
+.ps-level-time-card{ background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%); }
+.ps-level-time-card.warning{ background:#fffbeb; border-color:#fde68a; }
+.ps-level-time-card.danger{ background:#fff1f2; border-color:#fecaca; animation:psTimerPulse .72s ease-in-out infinite; }
+.ps-mini-time-track{ height:6px; margin-top:10px; border-radius:999px; overflow:hidden; background:#e5edf5; }
+.ps-mini-time-bar{ height:100%; width:100%; border-radius:999px; background:linear-gradient(90deg,#16a34a,#f59e0b,#dc2626); transition:width .25s linear; }
+@keyframes psTimerPulse{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-2px); box-shadow:0 0 0 5px rgba(220,38,38,.08); } }
+.ps-result-stop-note{ border-color:#fed7aa !important; background:linear-gradient(135deg,#fff7ed,#ffffff) !important; }
+.panji-bubble{ width:250px !important; min-height:92px !important; max-height:185px !important; padding:12px !important; border-radius:18px !important; }
+.panji-text{ font-size:12px !important; line-height:1.5 !important; font-weight:760 !important; }
+.panji-name{ min-height:22px !important; padding:0 8px !important; font-size:9px !important; }
+.panji-emote{ width:26px !important; height:26px !important; font-size:14px !important; }
+.panji-actions{ margin-top:8px !important; }
+.panji-actions button{ min-height:28px !important; padding:0 8px !important; font-size:10px !important; border-radius:9px !important; }
+.panji-close{ width:24px !important; height:24px !important; font-size:15px !important; }
+.panji-character{ width:78px !important; height:104px !important; }
+.panji-assistant{ right:18px !important; gap:9px !important; }
+.panji-assistant.panji-minimized .panji-character{ filter:drop-shadow(0 12px 18px rgba(37,99,235,.24)); }
+.ps-rush-arena{ padding:20px !important; background:radial-gradient(circle at 16% 10%, rgba(34,211,238,.20), transparent 24%), radial-gradient(circle at 90% 30%, rgba(245,158,11,.14), transparent 28%), linear-gradient(180deg,#f8fbff 0%,#ffffff 100%) !important; }
+.ps-rush-arena::before{ content:""; position:absolute; inset:-2px; pointer-events:none; background:linear-gradient(120deg, transparent 0%, rgba(37,99,235,.10) 45%, rgba(34,211,238,.15) 50%, transparent 58%); animation:psRushShine 3.4s ease-in-out infinite; }
+@keyframes psRushShine{ 0%,100%{ transform:translateX(-45%); opacity:.45; } 50%{ transform:translateX(45%); opacity:.9; } }
+.ps-rush-hud,.ps-rush-time-track,.ps-rush-fall-lane,.ps-rush-result,.ps-rush-drop-grid{ position:relative; z-index:2; }
+.ps-rush-hud{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+.ps-rush-fall-lane{ min-height:390px !important; margin-bottom:20px !important; border:1px solid #93c5fd !important; box-shadow:inset 0 0 0 1px rgba(255,255,255,.75), 0 14px 30px rgba(37,99,235,.08); }
+.ps-rush-fall-lane::after{ bottom:18px !important; font-size:11px !important; }
+.ps-rush-package{ width:min(500px, calc(100% - 42px)) !important; padding:20px !important; animation:psRushDrop var(--rush-duration, 10s) linear forwards !important; }
+.ps-rush-package.correct,.ps-rush-package.wrong{ animation:none !important; }
+@keyframes psRushDrop{ from{ top:18px; transform:translateX(-50%) scale(.98); } 40%{ transform:translateX(-50%) scale(1); } to{ top:252px; transform:translateX(-50%) scale(1); } }
+.ps-rush-package h3{ font-size:26px !important; }
+.ps-rush-drop{ min-height:96px !important; border-width:1px !important; }
+.ps-rush-drop:hover:not(:disabled){ transform:translateY(-5px) scale(1.015) !important; }
+.ps-rush-drop:active:not(:disabled){ transform:translateY(-1px) scale(.98) !important; }
+@media (max-width:1280px){ .ps-score-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } .ps-rush-fall-lane{ min-height:350px !important; } }
+@media (max-width:900px){ .ps-score-grid{ grid-template-columns:1fr 1fr; } .panji-bubble{ width:220px !important; } .panji-character{ width:66px !important; height:90px !important; } .ps-rush-fall-lane{ min-height:310px !important; } }
