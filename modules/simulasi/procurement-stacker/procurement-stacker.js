@@ -1,6 +1,8 @@
 (() => {
   const AUTO_NEXT_DELAY_MS = 1800;
   const HINT_PENALTY = 3;
+  const LEADERBOARD_API_URL = 'https://script.google.com/macros/s/AKfycbzE0c_eBIooXcKLmiMGm6o6cqtjfRsfIewmD6Hx5BCdmEYZmljquJiDOA0PJh6e9P_mOg/exec';
+  const PLAYER_STORAGE_KEY = 'procstack_player_profile_v1';
 
   let containerRef = null;
   let root = null;
@@ -18,6 +20,9 @@
   let panjiMiniBtn = null;
   let panjiCharacterBtn = null;
   let panjiCloseBtn = null;
+
+  let leaderboardModalEl = null;
+  let leaderboardRefreshTimer = null;
 
   const CARD_LIBRARY = {
     rup: {
@@ -753,11 +758,24 @@
     score: 0,
     risk: 0,
     wrong: 0,
+    correct: 0,
     progress: 0,
     logs: [],
     finished: false,
     hintUsed: false,
-    hasSeenIntro: false
+    hasSeenIntro: false,
+    runId: '',
+    gameStartedAt: 0,
+    scoreSubmitted: false
+  };
+
+  const PLAYER_STATE = {
+    nama: '',
+    instansi: '',
+    leaderboard: [],
+    loadingLeaderboard: false,
+    savingScore: false,
+    lastSaveMessage: ''
   };
 
   function escapeHtml(value) {
@@ -767,6 +785,336 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function readStoredPlayer() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY) || '{}');
+      PLAYER_STATE.nama = String(saved.nama || '').trim();
+      PLAYER_STATE.instansi = String(saved.instansi || '').trim();
+    } catch (error) {
+      PLAYER_STATE.nama = '';
+      PLAYER_STATE.instansi = '';
+    }
+  }
+
+  function hasPlayerProfile() {
+    return Boolean(String(PLAYER_STATE.nama || '').trim() && String(PLAYER_STATE.instansi || '').trim());
+  }
+
+  function savePlayerProfile(nama, instansi) {
+    PLAYER_STATE.nama = String(nama || '').trim();
+    PLAYER_STATE.instansi = String(instansi || '').trim();
+
+    localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify({
+      nama: PLAYER_STATE.nama,
+      instansi: PLAYER_STATE.instansi,
+      updatedAt: new Date().toISOString()
+    }));
+  }
+
+  function getCurrentResultSummary() {
+    const maxScore = calculateMaxScore();
+    const percent = maxScore > 0 ? Math.round((GAME_STATE.score / maxScore) * 100) : 0;
+    const totalSoal = CHALLENGES.length;
+    const benar = Math.max(0, Math.min(totalSoal, Number(GAME_STATE.correct || 0)));
+    const salah = Math.max(0, Number(GAME_STATE.wrong || 0));
+    const durasiDetik = GAME_STATE.gameStartedAt
+      ? Math.max(0, Math.round((Date.now() - GAME_STATE.gameStartedAt) / 1000))
+      : 0;
+
+    return {
+      maxScore,
+      percent,
+      totalSoal,
+      benar,
+      salah,
+      durasiDetik,
+      skor: GAME_STATE.score,
+      risiko: GAME_STATE.risk
+    };
+  }
+
+  function formatDuration(seconds) {
+    const total = Math.max(0, Number(seconds || 0));
+    const minutes = Math.floor(total / 60);
+    const rest = total % 60;
+
+    if (minutes <= 0) return `${rest} detik`;
+    return `${minutes} menit ${String(rest).padStart(2, '0')} detik`;
+  }
+
+  async function fetchLeaderboard() {
+    if (!LEADERBOARD_API_URL) return [];
+
+    PLAYER_STATE.loadingLeaderboard = true;
+    renderLeaderboardModalContent();
+
+    try {
+      const response = await fetch(`${LEADERBOARD_API_URL}?action=leaderboard&v=${Date.now()}`, {
+        method: 'GET',
+        cache: 'no-store'
+      });
+
+      const json = await response.json();
+      const rows = Array.isArray(json) ? json : Array.isArray(json.leaderboard) ? json.leaderboard : [];
+      PLAYER_STATE.leaderboard = rows;
+      return rows;
+    } catch (error) {
+      PLAYER_STATE.lastSaveMessage = `Leaderboard belum bisa dimuat: ${error.message || error}`;
+      return [];
+    } finally {
+      PLAYER_STATE.loadingLeaderboard = false;
+      renderLeaderboardModalContent();
+    }
+  }
+
+  async function submitFinalScoreToLeaderboard() {
+    if (GAME_STATE.scoreSubmitted || PLAYER_STATE.savingScore) return;
+
+    if (!hasPlayerProfile()) {
+      PLAYER_STATE.lastSaveMessage = 'Isi nama dan instansi dulu agar skor bisa masuk leaderboard.';
+      openLeaderboardModal('player', true);
+      return;
+    }
+
+    PLAYER_STATE.savingScore = true;
+    PLAYER_STATE.lastSaveMessage = 'Menyimpan skor ke leaderboard...';
+    renderLeaderboardModalContent();
+
+    const result = getCurrentResultSummary();
+    const payload = {
+      nama: PLAYER_STATE.nama,
+      instansi: PLAYER_STATE.instansi,
+      skor: result.skor,
+      benar: result.benar,
+      salah: result.salah,
+      risiko: result.risiko,
+      total_soal: result.totalSoal,
+      durasi_detik: result.durasiDetik
+    };
+
+    try {
+      const response = await fetch(LEADERBOARD_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const json = await response.json();
+
+      if (!json.ok) {
+        throw new Error(json.message || 'Skor gagal disimpan.');
+      }
+
+      GAME_STATE.scoreSubmitted = true;
+      PLAYER_STATE.lastSaveMessage = 'Skor berhasil disimpan ke leaderboard.';
+      PLAYER_STATE.leaderboard = Array.isArray(json.leaderboard) ? json.leaderboard : PLAYER_STATE.leaderboard;
+
+      if (!PLAYER_STATE.leaderboard.length) {
+        await fetchLeaderboard();
+      }
+    } catch (error) {
+      PLAYER_STATE.lastSaveMessage = `Skor belum tersimpan: ${error.message || error}`;
+    } finally {
+      PLAYER_STATE.savingScore = false;
+      renderLeaderboardModalContent();
+    }
+  }
+
+  function ensureLeaderboardModal() {
+    if (leaderboardModalEl && document.body.contains(leaderboardModalEl)) return leaderboardModalEl;
+
+    leaderboardModalEl = document.createElement('div');
+    leaderboardModalEl.id = 'procstackLeaderboardModal';
+    leaderboardModalEl.className = 'ps-leaderboard-modal ps-hidden';
+    leaderboardModalEl.innerHTML = `
+      <div class="ps-leaderboard-backdrop" data-leaderboard-close></div>
+      <div class="ps-leaderboard-panel">
+        <button type="button" class="ps-leaderboard-close" data-leaderboard-close aria-label="Tutup">×</button>
+        <div class="ps-leaderboard-content" id="psLeaderboardContent"></div>
+      </div>
+    `;
+
+    document.body.appendChild(leaderboardModalEl);
+
+    leaderboardModalEl.querySelectorAll('[data-leaderboard-close]').forEach(button => {
+      button.addEventListener('click', () => {
+        if (!hasPlayerProfile()) {
+          showToast('Isi nama dan instansi dulu untuk masuk leaderboard.', 'info');
+          return;
+        }
+
+        closeLeaderboardModal();
+      });
+    });
+
+    return leaderboardModalEl;
+  }
+
+  function openLeaderboardModal(tab = 'player', force = false) {
+    ensureLeaderboardModal();
+    leaderboardModalEl.dataset.activeTab = tab;
+    leaderboardModalEl.dataset.force = force ? 'true' : 'false';
+    leaderboardModalEl.classList.remove('ps-hidden');
+    renderLeaderboardModalContent();
+
+    if (tab === 'leaderboard' || !PLAYER_STATE.leaderboard.length) {
+      fetchLeaderboard();
+    }
+  }
+
+  function closeLeaderboardModal() {
+    if (!leaderboardModalEl) return;
+    leaderboardModalEl.classList.add('ps-hidden');
+  }
+
+  function renderLeaderboardModalContent() {
+    if (!leaderboardModalEl || leaderboardModalEl.classList.contains('ps-hidden')) return;
+
+    const content = leaderboardModalEl.querySelector('#psLeaderboardContent');
+    if (!content) return;
+
+    const activeTab = leaderboardModalEl.dataset.activeTab || 'player';
+    const result = getCurrentResultSummary();
+    const isResult = GAME_STATE.stage === 'result' || GAME_STATE.finished;
+
+    content.innerHTML = `
+      <div class="ps-lb-hero">
+        <div>
+          <div class="ps-lb-kicker">Procurement Mini Game</div>
+          <h3>${isResult ? 'Nilai Akhir & Leaderboard' : 'Masuk Pemain'}</h3>
+          <p>${isResult ? 'Skor selesai main otomatis dikirim ke Google Sheet dan ditampilkan di leaderboard.' : 'Isi nama dan instansi dulu. Setelah selesai main, skor otomatis masuk leaderboard.'}</p>
+        </div>
+        ${isResult ? `<div class="ps-lb-score"><span>Nilai</span><b>${result.percent}%</b></div>` : ''}
+      </div>
+
+      <div class="ps-lb-tabs">
+        <button type="button" class="${activeTab === 'player' ? 'active' : ''}" data-lb-tab="player">Masuk Pemain</button>
+        <button type="button" class="${activeTab === 'leaderboard' ? 'active' : ''}" data-lb-tab="leaderboard">Leaderboard</button>
+      </div>
+
+      ${isResult ? `
+        <div class="ps-lb-summary">
+          <div><span>Pemain</span><b>${escapeHtml(PLAYER_STATE.nama || '-')}</b></div>
+          <div><span>Instansi</span><b>${escapeHtml(PLAYER_STATE.instansi || '-')}</b></div>
+          <div><span>Skor</span><b>${result.skor}/${result.maxScore}</b></div>
+          <div><span>Benar</span><b>${result.benar}/${result.totalSoal}</b></div>
+          <div><span>Salah</span><b>${result.salah}</b></div>
+          <div><span>Risiko</span><b>${result.risiko}</b></div>
+          <div><span>Durasi</span><b>${formatDuration(result.durasiDetik)}</b></div>
+        </div>
+      ` : ''}
+
+      <div class="ps-lb-message ${PLAYER_STATE.lastSaveMessage ? '' : 'empty'}">
+        ${escapeHtml(PLAYER_STATE.lastSaveMessage || 'Data pemain disimpan di browser ini dan skor akhir disimpan ke Google Sheet.')}
+      </div>
+
+      ${activeTab === 'player' ? renderPlayerTab() : renderLeaderboardTab()}
+    `;
+
+    content.querySelectorAll('[data-lb-tab]').forEach(button => {
+      button.addEventListener('click', () => {
+        leaderboardModalEl.dataset.activeTab = button.dataset.lbTab;
+        renderLeaderboardModalContent();
+
+        if (button.dataset.lbTab === 'leaderboard') {
+          fetchLeaderboard();
+        }
+      });
+    });
+
+    const form = content.querySelector('#psPlayerForm');
+    if (form) {
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const nama = form.querySelector('[name="nama"]')?.value || '';
+        const instansi = form.querySelector('[name="instansi"]')?.value || '';
+
+        if (!String(nama).trim() || !String(instansi).trim()) {
+          PLAYER_STATE.lastSaveMessage = 'Nama dan instansi wajib diisi.';
+          renderLeaderboardModalContent();
+          return;
+        }
+
+        savePlayerProfile(nama, instansi);
+        PLAYER_STATE.lastSaveMessage = 'Data pemain tersimpan. Silakan lanjut main.';
+
+        if (GAME_STATE.stage === 'result' || GAME_STATE.finished) {
+          leaderboardModalEl.dataset.activeTab = 'leaderboard';
+          submitFinalScoreToLeaderboard();
+        } else {
+          closeLeaderboardModal();
+        }
+
+        renderLeaderboardModalContent();
+      });
+    }
+
+    const refreshBtn = content.querySelector('#psRefreshLeaderboard');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => fetchLeaderboard());
+    }
+  }
+
+  function renderPlayerTab() {
+    return `
+      <form class="ps-player-form" id="psPlayerForm">
+        <label>
+          <span>Nama Pemain</span>
+          <input type="text" name="nama" value="${escapeHtml(PLAYER_STATE.nama)}" placeholder="Contoh: Benni Ramadhan" autocomplete="name" required>
+        </label>
+        <label>
+          <span>Instansi / OPD</span>
+          <input type="text" name="instansi" value="${escapeHtml(PLAYER_STATE.instansi)}" placeholder="Contoh: UKPBJ Kota Bogor" required>
+        </label>
+        <button type="submit" class="ps-btn ps-btn-primary">Simpan & Mulai</button>
+      </form>
+    `;
+  }
+
+  function renderLeaderboardTab() {
+    const rows = PLAYER_STATE.leaderboard || [];
+
+    return `
+      <div class="ps-lb-toolbar">
+        <strong>Top Leaderboard</strong>
+        <button type="button" class="ps-btn ps-btn-soft" id="psRefreshLeaderboard" ${PLAYER_STATE.loadingLeaderboard ? 'disabled' : ''}>
+          ${PLAYER_STATE.loadingLeaderboard ? 'Memuat...' : 'Refresh'}
+        </button>
+      </div>
+
+      <div class="ps-lb-list">
+        ${rows.length ? rows.map(renderLeaderboardRow).join('') : `
+          <div class="ps-lb-empty">
+            ${PLAYER_STATE.loadingLeaderboard ? 'Memuat leaderboard...' : 'Belum ada skor tersimpan.'}
+          </div>
+        `}
+      </div>
+    `;
+  }
+
+  function renderLeaderboardRow(row) {
+    const rank = Number(row.rank || 0);
+    const isMine = hasPlayerProfile()
+      && String(row.nama || '').trim().toLowerCase() === PLAYER_STATE.nama.toLowerCase()
+      && String(row.instansi || '').trim().toLowerCase() === PLAYER_STATE.instansi.toLowerCase();
+
+    return `
+      <div class="ps-lb-row ${isMine ? 'mine' : ''}">
+        <div class="ps-lb-rank">${rank || '-'}</div>
+        <div class="ps-lb-main">
+          <b>${escapeHtml(row.nama || '-')}</b>
+          <span>${escapeHtml(row.instansi || '-')}</span>
+        </div>
+        <div class="ps-lb-meta">
+          <b>${Number(row.skor || 0).toLocaleString('id-ID')}</b>
+          <span>${Number(row.benar || 0)}/${Number(row.total_soal || 0)} benar · Risiko ${Number(row.risiko || 0)}</span>
+        </div>
+      </div>
+    `;
   }
 
   function shuffleArray(items) {
@@ -1310,7 +1658,11 @@
     GAME_STATE.score = 0;
     GAME_STATE.risk = 0;
     GAME_STATE.wrong = 0;
+    GAME_STATE.correct = 0;
     GAME_STATE.finished = false;
+    GAME_STATE.runId = 'run-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+    GAME_STATE.gameStartedAt = Date.now();
+    GAME_STATE.scoreSubmitted = false;
     GAME_STATE.hasSeenIntro = false;
 
     showPanjiIntro();
@@ -1377,6 +1729,8 @@
     spawnConfetti();
     showPanji('Selesai! Hasil akhir kamu sudah keluar. Kalau mau nilai lebih bagus, coba ulangi lagi dan kurangi risiko. PANJI bangga kalau kamu paham alurnya, bukan cuma ngejar cepat.', 'happy');
     showToast('Semua soal selesai. Hasil akhir ditampilkan.', 'ok');
+    openLeaderboardModal(hasPlayerProfile() ? 'leaderboard' : 'player', true);
+    submitFinalScoreToLeaderboard();
   }
 
   function nextChallenge() {
@@ -1704,6 +2058,9 @@
           <button type="button" class="ps-btn ps-btn-primary" id="btnPlayAgain">
             Main Lagi dari Soal 1
           </button>
+          <button type="button" class="ps-btn ps-btn-soft" id="btnOpenLeaderboard">
+            Lihat Leaderboard
+          </button>
         </div>
       </section>
     `;
@@ -1711,11 +2068,18 @@
 
   function bindResultEvents() {
     const btnPlayAgain = root.querySelector('#btnPlayAgain');
+    const btnOpenLeaderboard = root.querySelector('#btnOpenLeaderboard');
 
     if (btnPlayAgain) {
       btnPlayAgain.addEventListener('click', () => {
         clearAutoNextTimer();
         startGame();
+      });
+    }
+
+    if (btnOpenLeaderboard) {
+      btnOpenLeaderboard.addEventListener('click', () => {
+        openLeaderboardModal('leaderboard', true);
       });
     }
   }
@@ -1881,6 +2245,7 @@
 
     if (completed) {
       GAME_STATE.score += 20;
+      GAME_STATE.correct += 1;
       addLog('ok', 'Pipeline selesai', challenge.explanation);
       showPanji('Mantap! Pipeline ini selesai dengan benar. Kamu sudah menyusun alur PBJ secara tertib. Kita lanjut ke soal berikutnya ya.', 'happy');
       showToast('Pipeline benar 100%. Otomatis lanjut...', 'ok');
@@ -1951,6 +2316,7 @@
 
     if (selectedIndex === challenge.answer) {
       GAME_STATE.score += 20;
+      GAME_STATE.correct += 1;
 
       addLog('ok', 'Jawaban benar', challenge.explanation);
 
@@ -2221,8 +2587,23 @@
       root = container.querySelector('#procstackRoot');
     }
 
+    readStoredPlayer();
+    ensureLeaderboardModal();
+    fetchLeaderboard();
     initPanji(container);
     startGame();
+
+    setTimeout(() => {
+      if (!destroyed) {
+        openLeaderboardModal(hasPlayerProfile() ? 'leaderboard' : 'player', !hasPlayerProfile());
+      }
+    }, 450);
+
+    leaderboardRefreshTimer = setInterval(() => {
+      if (!destroyed && leaderboardModalEl && !leaderboardModalEl.classList.contains('ps-hidden')) {
+        fetchLeaderboard();
+      }
+    }, 60000);
 
     return function destroy() {
       destroyed = true;
@@ -2230,6 +2611,16 @@
       clearAutoNextTimer();
       clearPanjiIntroTimers();
       clearPanjiTalkTimer();
+
+      if (leaderboardRefreshTimer) {
+        clearInterval(leaderboardRefreshTimer);
+        leaderboardRefreshTimer = null;
+      }
+
+      if (leaderboardModalEl) {
+        leaderboardModalEl.remove();
+        leaderboardModalEl = null;
+      }
 
       if (toastEl) {
         toastEl.remove();
