@@ -777,6 +777,25 @@
   ];
 
 
+  function getTenderRushTimeLimitByLevel(levelNo) {
+    if (levelNo <= 3) return 10;
+    if (levelNo <= 6) return 8;
+    if (levelNo <= 9) return 7;
+    if (levelNo <= 12) return 6;
+    return 5;
+  }
+
+  function getTenderRushFailLimitByLevel(levelNo) {
+    if (levelNo <= 3) return 5;
+    if (levelNo <= 6) return 3;
+    if (levelNo <= 9) return 2;
+    return 1;
+  }
+
+  function getCurrentLevelNumber() {
+    return Math.max(1, Number(GAME_STATE.index || 0) + 1);
+  }
+
   function cloneTenderRushChallenge(template, levelNo, variantIndex) {
     const variants = [
       {
@@ -817,9 +836,9 @@
       ...template,
       ...selected,
       type: 'tenderRush',
-      desc: 'Paket akan muncul satu per satu. Masukkan paket ke jalur metode yang paling tepat sebelum waktu habis. Jika gagal 3 kali, permainan langsung berhenti dan skor akhir muncul.',
+      desc: 'Paket akan muncul satu per satu. Masukkan paket ke jalur metode yang paling tepat sebelum waktu habis. Batas salah makin ketat di level tinggi.',
       budget: 'Simulasi cepat',
-      timeLimit: Math.max(7, Number(template.timeLimit || 10) - Math.floor(variantIndex / 2)),
+      timeLimit: getTenderRushTimeLimitByLevel(levelNo),
       explanation: 'Tender Rush melatih refleks membaca jenis paket, pagu, ketersediaan katalog, dan kondisi pelaksanaan sebelum memilih metode.'
     };
   }
@@ -996,6 +1015,9 @@
       ? Math.max(0, Math.round((Date.now() - GAME_STATE.gameStartedAt) / 1000))
       : 0;
 
+    const levelDicapai = GAME_STATE.stoppedLevel || Math.min(CHALLENGES.length, GAME_STATE.index + 1);
+    const levelSelesai = GAME_STATE.stoppedReason ? Math.max(0, levelDicapai - 1) : (GAME_STATE.finished ? CHALLENGES.length : Math.max(0, levelDicapai - 1));
+
     return {
       maxScore,
       percent,
@@ -1004,7 +1026,9 @@
       salah,
       durasiDetik,
       skor: GAME_STATE.score,
-      risiko: GAME_STATE.risk
+      risiko: GAME_STATE.risk,
+      levelDicapai,
+      levelSelesai
     };
   }
 
@@ -1031,8 +1055,8 @@
 
       const json = await response.json();
       const rows = Array.isArray(json) ? json : Array.isArray(json.leaderboard) ? json.leaderboard : [];
-      PLAYER_STATE.leaderboard = rows;
-      return rows;
+      PLAYER_STATE.leaderboard = sortLeaderboardRows(rows);
+      return PLAYER_STATE.leaderboard;
     } catch (error) {
       PLAYER_STATE.lastSaveMessage = `Leaderboard belum bisa dimuat: ${error.message || error}`;
       return [];
@@ -1064,6 +1088,8 @@
       salah: result.salah,
       risiko: result.risiko,
       total_soal: result.totalSoal,
+      level_dicapai: result.levelDicapai,
+      level_selesai: result.levelSelesai,
       durasi_detik: result.durasiDetik
     };
 
@@ -1161,10 +1187,15 @@
       attachPanjiToLeaderboardModal();
 
       if (typeof showPanji === 'function') {
-        showPanji(
-          'Halo! PANJI di sini. Isi dulu nama dan instansi kamu ya. Setelah selesai main, skor otomatis masuk leaderboard.',
-          'happy'
-        );
+        if (GAME_STATE.stage === 'result' || GAME_STATE.finished) {
+          const result = getCurrentResultSummary();
+          showPanji(getLeaderboardPanjiNarrative(result), getLeaderboardPanjiMood(result));
+        } else {
+          showPanji(
+            'Halo! PANJI di sini. Isi dulu nama dan instansi kamu ya. Setelah selesai main, skor otomatis masuk leaderboard.',
+            'happy'
+          );
+        }
 
         setTimeout(attachPanjiToLeaderboardModal, 80);
         setTimeout(attachPanjiToLeaderboardModal, 250);
@@ -1181,6 +1212,30 @@
     if (!leaderboardModalEl) return;
     leaderboardModalEl.classList.add('ps-hidden');
     detachPanjiFromLeaderboardModal();
+  }
+
+  function getLeaderboardPanjiMood(result) {
+    const score = Number(result && result.percent || 0);
+    const risk = Number(result && result.risiko || 0);
+
+    if (score >= 75 && risk <= 45) return 'happy';
+    if (score < 55 || risk >= 80) return 'sad';
+    return 'thinking';
+  }
+
+  function getLeaderboardPanjiNarrative(result) {
+    const mood = getLeaderboardPanjiMood(result);
+    const levelText = 'Level ' + result.levelDicapai + '/' + result.totalSoal;
+
+    if (mood === 'happy') {
+      return 'Mantap! Kamu mencapai ' + levelText + ' dengan skor ' + result.skor + '. Alur PBJ kamu sudah makin rapi. Kalau mau kejar ranking lebih tinggi, klik tombol “Main Lagi dari Soal 1” dan coba kurangi kesalahan.';
+    }
+
+    if (mood === 'sad') {
+      return 'Yah, hasilnya masih perlu latihan. Kamu mencapai ' + levelText + ' dengan skor ' + result.skor + '. Coba ulangi lagi dari tombol “Main Lagi dari Soal 1”, baca kasus lebih pelan, dan jangan buru-buru pilih metode.';
+    }
+
+    return 'Lumayan! Kamu mencapai ' + levelText + ' dengan skor ' + result.skor + '. Masih ada ruang perbaikan. Klik “Main Lagi dari Soal 1” kalau mau coba naik leaderboard.';
   }
 
   function renderLeaderboardModalContent() {
@@ -1216,7 +1271,15 @@
           <div><span>Benar</span><b>${result.benar}/${result.totalSoal}</b></div>
           <div><span>Salah</span><b>${result.salah}</b></div>
           <div><span>Risiko</span><b>${result.risiko}</b></div>
+          <div><span>Level Dicapai</span><b>${result.levelDicapai}/${result.totalSoal}</b></div>
           <div><span>Durasi</span><b>${formatDuration(result.durasiDetik)}</b></div>
+        </div>
+        <div class="ps-lb-panji-note ${getLeaderboardPanjiMood(result)}">
+          <div class="ps-lb-panji-face">${getLeaderboardPanjiMood(result) === 'happy' ? '😄' : getLeaderboardPanjiMood(result) === 'sad' ? '😭' : '🤔'}</div>
+          <div>
+            <strong>PANJI bilang:</strong><br>
+            ${escapeHtml(getLeaderboardPanjiNarrative(result))}
+          </div>
         </div>
       ` : ''}
 
@@ -1317,6 +1380,20 @@
     `;
   }
 
+  function getRowLevelValue(row) {
+    return Number(row.level_dicapai || row.level || row.level_tercapai || row.levelReached || row.total_level || row.total_soal || row.benar || 0);
+  }
+
+  function sortLeaderboardRows(rows) {
+    return [...(rows || [])].sort((a, b) => {
+      const scoreDiff = Number(b.skor || 0) - Number(a.skor || 0);
+      if (scoreDiff !== 0) return scoreDiff;
+      const levelDiff = getRowLevelValue(b) - getRowLevelValue(a);
+      if (levelDiff !== 0) return levelDiff;
+      return Number(a.risiko || 0) - Number(b.risiko || 0);
+    }).map((row, index) => ({ ...row, rank: index + 1 }));
+  }
+
   function renderLeaderboardRow(row) {
     const rank = Number(row.rank || 0);
     const isMine = hasPlayerProfile()
@@ -1332,7 +1409,7 @@
         </div>
         <div class="ps-lb-meta">
           <b>${Number(row.skor || 0).toLocaleString('id-ID')}</b>
-          <span>${Number(row.benar || 0)}/${Number(row.total_soal || 0)} benar · Risiko ${Number(row.risiko || 0)}</span>
+          <span>Level ${getRowLevelValue(row) || '-'} · ${Number(row.benar || 0)}/${Number(row.total_soal || 0)} benar · Risiko ${Number(row.risiko || 0)}</span>
         </div>
       </div>
     `;
@@ -1406,8 +1483,18 @@
 
   function getDefaultLevelTime(challenge) {
     if (!challenge || challenge.type === 'tenderRush') return 0;
-    if (challenge.type === 'quiz') return Number(challenge.timeLimit || 45);
-    return Number(challenge.timeLimit || 90);
+
+    const levelNo = getCurrentLevelNumber();
+    const base = challenge.type === 'quiz'
+      ? Number(challenge.timeLimit || 45)
+      : Number(challenge.timeLimit || 90);
+
+    if (levelNo <= 3) return base;
+
+    const reduction = (levelNo - 3) * (challenge.type === 'quiz' ? 3 : 5);
+    const minimum = challenge.type === 'quiz' ? 20 : 45;
+
+    return Math.max(minimum, base - reduction);
   }
 
   function clearLevelTimer() {
@@ -1464,6 +1551,23 @@
     }
   }
 
+  function applyLevelTimePenalty(seconds, reasonText = 'Kesalahan') {
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || challenge.type === 'tenderRush') return;
+    if (!GAME_STATE.levelTimeLimit || GAME_STATE.stage === 'result' || GAME_STATE.finished) return;
+
+    const penalty = Math.max(1, Number(seconds || 0));
+    GAME_STATE.levelTimeLeft = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0) - penalty);
+    addLog('bad', reasonText + ': waktu berkurang', 'Waktu level berkurang ' + penalty + ' detik karena pilihan belum tepat.');
+    showToast('Waktu -' + penalty + ' detik', 'bad');
+    updateLevelTimerUi();
+
+    if (GAME_STATE.levelTimeLeft <= 0) {
+      stopGameEarly('time');
+    }
+  }
+
   function stopGameEarly(reason = 'time') {
     if (GAME_STATE.finished || GAME_STATE.stage === 'result') return;
 
@@ -1480,9 +1584,9 @@
     GAME_STATE.progress = 100;
 
     if (reason === 'rushFailed') {
-      addLog('bad', 'Tender Rush gagal 3 kali', 'Permainan berhenti karena salah atau timeout sebanyak 3 kali pada Tender Rush.');
-      showToast('Tender Rush gagal 3 kali. Skor akhir ditampilkan.', 'bad');
-      showPanji('Tender Rush gagal 3 kali. Game berhenti dulu ya. Skor akhir dan level terakhir sudah muncul. Coba ulangi dan baca petunjuk paket lebih cepat.', 'sad');
+      addLog('bad', 'Tender Rush gagal melewati batas', 'Permainan berhenti karena jumlah salah/timeout sudah melewati batas level Tender Rush ini.');
+      showToast('Tender Rush gagal melewati batas. Skor akhir ditampilkan.', 'bad');
+      showPanji('Tender Rush gagal melewati batas level ini. Game berhenti dulu ya. Skor akhir dan level terakhir sudah muncul. Coba ulangi dan baca petunjuk paket lebih cepat.', 'sad');
     } else {
       addLog('bad', 'Waktu level habis', `Permainan berhenti di level ${GAME_STATE.stoppedLevel}.`);
       showToast('Waktu habis. Skor akhir ditampilkan.', 'bad');
@@ -2146,7 +2250,8 @@
 
     renderGame();
     spawnConfetti();
-    showPanji('Selesai! Hasil akhir kamu sudah keluar. Kalau mau nilai lebih bagus, coba ulangi lagi dan kurangi risiko. PANJI bangga kalau kamu paham alurnya, bukan cuma ngejar cepat.', 'happy');
+    const finalResult = getCurrentResultSummary();
+    showPanji(getLeaderboardPanjiNarrative(finalResult), getLeaderboardPanjiMood(finalResult));
     showToast('Semua soal selesai. Hasil akhir ditampilkan.', 'ok');
     openLeaderboardModal(hasPlayerProfile() ? 'leaderboard' : 'player', true);
     submitFinalScoreToLeaderboard();
@@ -2439,6 +2544,7 @@
             <p>
               Di soal ini paket akan muncul satu per satu seperti arcade. Tugas kamu memilih jalur metode yang paling tepat
               sebelum waktu habis. Baca <b>pagu</b>, <b>jenis paket</b>, <b>ketersediaan katalog</b>, dan <b>kondisi pelaksanaan</b>.
+              Di level ini batas salah/miss adalah <b>${getTenderRushFailLimitByLevel(getCurrentLevelNumber())} kali</b>; kalau melewati batas, game langsung berhenti.
             </p>
           </div>
           <div class="ps-rush-method-grid">
@@ -2478,7 +2584,7 @@
           <div><label>Paket</label><strong>${Math.min(rush.currentIndex + 1, total)} / ${total}</strong></div>
           <div><label>Waktu</label><strong id="psRushTimeText">${rush.timeLeft}</strong></div>
           <div><label>Benar</label><strong>${rush.correctCount || 0}</strong></div>
-          <div><label>Salah</label><strong>${rush.wrongCount || 0}</strong></div>
+          <div><label>Salah</label><strong>${rush.wrongCount || 0} / ${getTenderRushFailLimitByLevel(getCurrentLevelNumber())}</strong></div>
         </div>
 
         <div class="ps-rush-time-track">
@@ -2591,7 +2697,7 @@
         ? 'Sedang'
         : 'Tinggi';
     const stopTitle = GAME_STATE.stoppedReason === 'rushFailed'
-      ? 'Game berhenti karena Tender Rush gagal 3 kali.'
+      ? 'Game berhenti karena Tender Rush gagal melewati batas level.'
       : GAME_STATE.stoppedReason === 'time'
         ? 'Game berhenti karena waktu level habis.'
         : '';
@@ -2622,6 +2728,11 @@
           <div class="ps-result-card">
             <label>Salah</label>
             <strong>${GAME_STATE.wrong}</strong>
+          </div>
+
+          <div class="ps-result-card">
+            <label>Level Dicapai</label>
+            <strong>${getCurrentResultSummary().levelDicapai}/${totalQuestions}</strong>
           </div>
         </div>
 
@@ -2696,7 +2807,7 @@
 
     enableTenderRushKeyboard();
     beginTenderRushRound();
-    showPanji('Mulai! Paket pertama turun. Ingat: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan.', 'happy');
+    showPanji(`Mulai! Paket pertama turun. Ingat: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan. Batas salah level ini ${getTenderRushFailLimitByLevel(getCurrentLevelNumber())} kali.`, 'happy');
   }
 
   function beginTenderRushRound() {
@@ -2799,7 +2910,7 @@
     GAME_STATE.progress = Math.round(((rush.currentIndex + 1) / challenge.packages.length) * 100);
     renderGame();
 
-    if (rush.wrongCount >= 3) {
+    if (rush.wrongCount >= getTenderRushFailLimitByLevel(getCurrentLevelNumber())) {
       tenderRushNextTimer = setTimeout(() => {
         if (!destroyed) stopGameEarly('rushFailed');
       }, 900);
@@ -3074,6 +3185,9 @@
     showToast('Belum tepat. Risiko naik.', 'bad');
     showPanji(getPanjiWrongMessage(cardId, message), 'sad');
     flashScreen('bad');
+    applyLevelTimePenalty(8, 'Pipeline salah');
+
+    if (GAME_STATE.stage === 'result') return;
 
     renderGame();
     shakeCard(cardId);
@@ -3116,6 +3230,9 @@
       showPanji(`Yah, belum tepat. Cek pembahasan ini ya: ${challenge.explanation}`, 'sad');
       flashScreen('bad');
       popScore(buttonEl || document.body, '+8 Risiko', 'bad');
+      applyLevelTimePenalty(10, 'ABCD salah');
+
+      if (GAME_STATE.stage === 'result') return;
 
       renderGame();
       scheduleAutoNext('Pembahasan terbuka. Otomatis lanjut ke soal berikutnya...', 2500);
