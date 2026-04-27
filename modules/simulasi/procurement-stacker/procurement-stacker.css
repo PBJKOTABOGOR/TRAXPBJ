@@ -2957,3 +2957,193 @@
 .ps-rush-drop:active:not(:disabled){ transform:translateY(-1px) scale(.98) !important; }
 @media (max-width:1280px){ .ps-score-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } .ps-rush-fall-lane{ min-height:350px !important; } }
 @media (max-width:900px){ .ps-score-grid{ grid-template-columns:1fr 1fr; } .panji-bubble{ width:220px !important; } .panji-character{ width:66px !important; height:90px !important; } .ps-rush-fall-lane{ min-height:310px !important; } }
+
+/* =========================================================
+   REVISI 3 — TENDER RUSH LEBIH PANJANG + LEADERBOARD PANJI
+   ========================================================= */
+
+.ps-result-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+}
+
+.ps-lb-panji-note{
+  display:grid;
+  grid-template-columns:46px 1fr;
+  gap:12px;
+  align-items:start;
+  margin:12px 0 12px;
+  padding:13px 14px;
+  border-radius:18px;
+  border:1px solid #dbeafe;
+  background:linear-gradient(135deg,#eff6ff,#ffffff);
+  color:#334155;
+  font-size:13px;
+  line-height:1.6;
+  box-shadow:0 10px 22px rgba(15,23,42,.055);
+}
+
+.ps-lb-panji-note.happy{
+  border-color:#86efac;
+  background:linear-gradient(135deg,#ecfdf5,#ffffff);
+}
+
+.ps-lb-panji-note.sad{
+  border-color:#fecaca;
+  background:linear-gradient(135deg,#fff1f2,#ffffff);
+}
+
+.ps-lb-panji-face{
+  width:46px;
+  height:46px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  font-size:25px;
+  box-shadow:0 10px 20px rgba(15,23,42,.08);
+  animation:psPanjiFacePop 1.6s ease-in-out infinite;
+}
+
+@keyframes psPanjiFacePop{
+  0%,100%{ transform:translateY(0) scale(1); }
+  50%{ transform:translateY(-3px) scale(1.05); }
+}
+
+.ps-rush-arena{
+  padding:22px !important;
+  border-radius:28px !important;
+  background:
+    radial-gradient(circle at 16% 10%, rgba(34,211,238,.22), transparent 24%),
+    radial-gradient(circle at 86% 24%, rgba(245,158,11,.16), transparent 28%),
+    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%) !important;
+  box-shadow:inset 0 0 0 1px rgba(147,197,253,.65), 0 16px 34px rgba(37,99,235,.08) !important;
+}
+
+.ps-rush-fall-lane{
+  min-height:560px !important;
+  margin-bottom:24px !important;
+  border-radius:26px !important;
+  overflow:hidden !important;
+  background:
+    linear-gradient(90deg, rgba(37,99,235,.055) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(37,99,235,.055) 1px, transparent 1px),
+    radial-gradient(circle at top, rgba(34,211,238,.12), transparent 36%),
+    linear-gradient(180deg,#f8fbff,#edf6ff) !important;
+  background-size:42px 42px,42px 42px,100% 100%,100% 100% !important;
+}
+
+.ps-rush-fall-lane::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:0;
+  bottom:0;
+  width:2px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, transparent, rgba(37,99,235,.28), transparent);
+  opacity:.7;
+}
+
+.ps-rush-fall-lane::after{
+  bottom:28px !important;
+  padding:7px 14px !important;
+  border-radius:999px !important;
+  background:#ffffff !important;
+  box-shadow:0 10px 24px rgba(15,23,42,.08) !important;
+}
+
+.ps-rush-package{
+  width:min(560px, calc(100% - 52px)) !important;
+  padding:22px !important;
+  border-radius:24px !important;
+  animation:psRushDropLong var(--rush-duration, 10s) linear forwards !important;
+  box-shadow:0 24px 45px rgba(15,23,42,.16), 0 0 0 6px rgba(37,99,235,.06) !important;
+}
+
+.ps-rush-package.correct,
+.ps-rush-package.wrong{
+  animation:none !important;
+}
+
+@keyframes psRushDropLong{
+  0%{
+    top:20px;
+    transform:translateX(-50%) scale(.96) rotate(-.6deg);
+  }
+  18%{
+    transform:translateX(-50%) scale(1) rotate(.4deg);
+  }
+  70%{
+    transform:translateX(-50%) scale(1) rotate(0deg);
+  }
+  100%{
+    top:405px;
+    transform:translateX(-50%) scale(1) rotate(.4deg);
+  }
+}
+
+.ps-rush-package h3{
+  font-size:28px !important;
+  letter-spacing:-.035em !important;
+}
+
+.ps-rush-package p{
+  font-size:15px !important;
+}
+
+.ps-rush-drop-grid{
+  gap:12px !important;
+}
+
+.ps-rush-drop{
+  min-height:108px !important;
+  border-radius:22px !important;
+  background:linear-gradient(180deg,#ffffff,#f8fbff) !important;
+  box-shadow:0 12px 24px rgba(15,23,42,.06) !important;
+}
+
+.ps-rush-drop:hover:not(:disabled){
+  transform:translateY(-6px) scale(1.018) !important;
+  border-color:#2563eb !important;
+  box-shadow:0 18px 36px rgba(37,99,235,.16) !important;
+}
+
+.ps-rush-key{
+  box-shadow:0 8px 16px rgba(37,99,235,.20) !important;
+}
+
+.ps-rush-time-bar{
+  background:linear-gradient(90deg,#16a34a 0%,#22c55e 38%,#f59e0b 70%,#dc2626 100%) !important;
+  box-shadow:0 0 18px rgba(245,158,11,.25) !important;
+}
+
+.ps-rush-hud > div{
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+
+.ps-rush-hud > div:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 24px rgba(15,23,42,.07);
+}
+
+@media (max-width:1280px){
+  .ps-result-grid{ grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+  .ps-rush-fall-lane{ min-height:500px !important; }
+  @keyframes psRushDropLong{
+    0%{ top:18px; transform:translateX(-50%) scale(.96); }
+    100%{ top:355px; transform:translateX(-50%) scale(1); }
+  }
+}
+
+@media (max-width:900px){
+  .ps-result-grid{ grid-template-columns:1fr 1fr !important; }
+  .ps-lb-panji-note{ grid-template-columns:38px 1fr; font-size:12px; }
+  .ps-lb-panji-face{ width:38px; height:38px; font-size:21px; }
+  .ps-rush-fall-lane{ min-height:430px !important; }
+  .ps-rush-package h3{ font-size:20px !important; }
+  @keyframes psRushDropLong{
+    0%{ top:14px; transform:translateX(-50%) scale(.96); }
+    100%{ top:285px; transform:translateX(-50%) scale(1); }
+  }
+}
