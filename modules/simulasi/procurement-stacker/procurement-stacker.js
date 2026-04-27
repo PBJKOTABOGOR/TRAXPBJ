@@ -23,7 +23,10 @@
 
   let leaderboardModalEl = null;
   let leaderboardRefreshTimer = null;
-  let leaderboardPanjiTimers = [];
+
+  let tenderRushTimer = null;
+  let tenderRushNextTimer = null;
+  let tenderRushKeyHandler = null;
 
   const CARD_LIBRARY = {
     rup: {
@@ -403,15 +406,56 @@
       explanation: 'PBJ Pemerintah adalah proses dari identifikasi kebutuhan sampai dengan serah terima hasil pekerjaan.'
     },
     {
-      type: 'pipeline',
-      title: 'Soal 3 — Susun Pipeline e-Purchasing',
-      caseTitle: 'Pengadaan Laptop Pelayanan Publik',
-      desc: 'OPD membutuhkan laptop untuk layanan publik. Barang tersedia di e-Katalog dan nilai paket Rp350 juta.',
-      budget: 'Rp350.000.000',
-      difficulty: 'Level 2 - Pemula+',
-      ideal: ['rup', 'kak', 'hps', 'cekPdn', 'cekUmkk', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
-      traps: ['metodePl', 'tender', 'abaikanKatalog', 'kontrakAwal', 'abaikanPdn'],
-      explanation: 'Untuk barang tersedia di katalog, alur aman adalah cek RUP, siapkan KAK/HPS, perhatikan PDN/TKDN dan UMK/Koperasi, cek katalog, lakukan e-Purchasing, klarifikasi/negosiasi, kontrak, BAST, realisasi.'
+      type: 'tenderRush',
+      title: 'Soal 3 — Tender Rush: Pilih Jalur Metode',
+      caseTitle: 'Arcade Metode Pengadaan',
+      desc: 'Paket akan muncul satu per satu. Masukkan paket ke jalur metode yang paling tepat sebelum waktu habis.',
+      budget: 'Simulasi cepat',
+      difficulty: 'Level 2 - Arcade',
+      timeLimit: 8,
+      packages: [
+        {
+          title: 'Belanja Laptop Pelayanan Publik',
+          type: 'Barang',
+          pagu: 350000000,
+          clue: 'Barang tersedia di e-Katalog dan perlu memperhatikan PDN/TKDN.',
+          correct: 'ekatalog',
+          explanation: 'Laptop yang tersedia dan sesuai di e-Katalog lebih aman diarahkan ke e-Purchasing. Jangan asal masuk Pengadaan Langsung karena nilainya besar dan kanal katalog tersedia.'
+        },
+        {
+          title: 'Belanja ATK Kegiatan Kantor',
+          type: 'Barang',
+          pagu: 45000000,
+          clue: 'Nilai kecil, kebutuhan sederhana, dan tidak kompleks.',
+          correct: 'pengadaanLangsung',
+          explanation: 'Paket kecil dan sederhana dapat menggunakan Pengadaan Langsung sepanjang sesuai batas nilai, tidak dipecah, dan administrasinya tertib.'
+        },
+        {
+          title: 'Rehabilitasi Gedung Pelayanan',
+          type: 'Pekerjaan Konstruksi',
+          pagu: 760000000,
+          clue: 'Pekerjaan konstruksi bernilai besar dan butuh proses formal.',
+          correct: 'tenderSeleksi',
+          explanation: 'Pekerjaan konstruksi bernilai besar tidak tepat dipaksa menjadi Pengadaan Langsung. Gunakan Tender/Seleksi atau mekanisme yang sesuai.'
+        },
+        {
+          title: 'Pelatihan Internal Pegawai oleh Tim OPD',
+          type: 'Jasa Lainnya',
+          pagu: 95000000,
+          clue: 'Kegiatan dilaksanakan sendiri dengan tim persiapan, pelaksana, dan pengawas.',
+          correct: 'swakelola',
+          explanation: 'Jika kegiatan memenuhi kriteria dan dilaksanakan sendiri/bersama pihak yang sesuai, Swakelola bisa dipilih dengan tim dan pertanggungjawaban yang jelas.'
+        },
+        {
+          title: 'Pembayaran Listrik Kantor',
+          type: 'Jasa Lainnya',
+          pagu: 300000000,
+          clue: 'Layanan utilitas rutin/tertentu.',
+          correct: 'dikecualikan',
+          explanation: 'Pembayaran utilitas tertentu dapat masuk kategori dikecualikan, tetapi tetap perlu dasar, bukti, dan pencatatan yang tertib.'
+        }
+      ],
+      explanation: 'Tender Rush melatih refleks membaca jenis paket, pagu, ketersediaan katalog, dan kondisi pelaksanaan sebelum memilih metode.'
     },
     {
       type: 'quiz',
@@ -730,7 +774,7 @@
   ];
 
   function buildChallenge(raw) {
-    if (raw.type === 'quiz') {
+    if (raw.type === 'quiz' || raw.type === 'tenderRush') {
       return raw;
     }
 
@@ -745,6 +789,52 @@
   }
 
   const CHALLENGES = CHALLENGE_RAW.map(buildChallenge);
+
+  const TENDER_RUSH_METHODS = {
+    ekatalog: {
+      key: '1',
+      label: 'e-Katalog',
+      short: 'Katalog',
+      icon: '🛒',
+      hint: 'Tekan 1 untuk barang/jasa yang tersedia dan sesuai di katalog elektronik.'
+    },
+    pengadaanLangsung: {
+      key: '2',
+      label: 'Pengadaan Langsung',
+      short: 'PL',
+      icon: '🛠️',
+      hint: 'Tekan 2 untuk paket kecil/sederhana yang memenuhi batas nilai dan tidak dipecah.'
+    },
+    tenderSeleksi: {
+      key: '3',
+      label: 'Tender/Seleksi',
+      short: 'Tender',
+      icon: '🏗️',
+      hint: 'Tekan 3 untuk paket besar/kompleks atau jasa konsultansi yang perlu proses formal.'
+    },
+    swakelola: {
+      key: '4',
+      label: 'Swakelola',
+      short: 'Swakelola',
+      icon: '🤲',
+      hint: 'Tekan 4 untuk pekerjaan yang dilaksanakan sendiri/bersama sesuai kriteria swakelola.'
+    },
+    dikecualikan: {
+      key: '5',
+      label: 'Dikecualikan',
+      short: 'Dikecualikan',
+      icon: '⚖️',
+      hint: 'Tekan 5 untuk pengadaan yang punya dasar pengecualian, tetap tertib dan tercatat.'
+    }
+  };
+
+  function formatCurrency(value) {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0
+    }).format(Number(value || 0));
+  }
 
   const GAME_STATE = {
     order: [],
@@ -767,7 +857,8 @@
     hasSeenIntro: false,
     runId: '',
     gameStartedAt: 0,
-    scoreSubmitted: false
+    scoreSubmitted: false,
+    tenderRush: null
   };
 
   const PLAYER_STATE = {
@@ -978,66 +1069,6 @@
     panji.style.removeProperty('--panji-lb-bottom');
   }
 
-  function clearLeaderboardPanjiTimers() {
-    leaderboardPanjiTimers.forEach((timer) => clearTimeout(timer));
-    leaderboardPanjiTimers = [];
-  }
-
-  function scheduleLeaderboardPanjiIntro() {
-    clearLeaderboardPanjiTimers();
-
-    leaderboardPanjiTimers.push(setTimeout(() => {
-      attachPanjiToLeaderboardModal();
-
-      if (typeof showPanji === 'function') {
-        showPanji(
-          'Halo, perkenalkan. Aku PANJI, singkatan dari Pengadaan Jitu. Aku asisten kecil yang akan menemani kamu belajar alur Pengadaan Barang/Jasa lewat mini game ini.',
-          'happy'
-        );
-      }
-
-      setTimeout(attachPanjiToLeaderboardModal, 120);
-      setTimeout(attachPanjiToLeaderboardModal, 400);
-    }, 250));
-
-    leaderboardPanjiTimers.push(setTimeout(() => {
-      attachPanjiToLeaderboardModal();
-
-      if (typeof showPanji === 'function') {
-        showPanji(
-          'Sebelum mulai, isi dulu nama pemain dan instansi atau OPD kamu. Nanti setelah kamu selesai bermain, skor akhirnya otomatis masuk ke leaderboard.',
-          'thinking'
-        );
-      }
-
-      setTimeout(attachPanjiToLeaderboardModal, 120);
-      setTimeout(attachPanjiToLeaderboardModal, 400);
-    }, 7800));
-  }
-
-  function showPanjiHowToPlayAfterPlayerSaved() {
-    clearLeaderboardPanjiTimers();
-    detachPanjiFromLeaderboardModal();
-
-    leaderboardPanjiTimers.push(setTimeout(() => {
-      if (typeof showPanji === 'function') {
-        showPanji(
-          'Oke, data pemain sudah tersimpan. Cara mainnya begini: baca kasus di atas, lalu susun kartu proses pengadaan ke slot yang benar dari kiri ke kanan.',
-          'happy'
-        );
-      }
-    }, 450));
-
-    leaderboardPanjiTimers.push(setTimeout(() => {
-      if (typeof showPanji === 'function') {
-        showPanji(
-          'Kalau muncul soal pilihan, pilih jawaban paling aman sesuai aturan PBJ. Hindari kartu jebakan seperti Kontrak Dulu, Lewati RUP, atau Bayar Dulu, karena itu menambah risiko dan mengurangi nilai.',
-          'thinking'
-        );
-      }
-    }, 8200));
-  }
-
   function openLeaderboardModal(tab = 'player', force = false) {
     ensureLeaderboardModal();
     leaderboardModalEl.dataset.activeTab = tab;
@@ -1045,20 +1076,20 @@
     leaderboardModalEl.classList.remove('ps-hidden');
     renderLeaderboardModalContent();
 
-    if (!(GAME_STATE.stage === 'result' || GAME_STATE.finished)) {
-      scheduleLeaderboardPanjiIntro();
-    } else {
-      setTimeout(() => {
-        attachPanjiToLeaderboardModal();
+    setTimeout(() => {
+      attachPanjiToLeaderboardModal();
 
-        if (typeof showPanji === 'function') {
-          showPanji(
-            'Ini hasil akhir kamu. Cek nilai dan ranking leaderboard-nya. Semakin tinggi skor, semakin rapi alur PBJ yang kamu susun.',
-            'happy'
-          );
-        }
-      }, 180);
-    }
+      if (typeof showPanji === 'function') {
+        showPanji(
+          'Halo! PANJI di sini. Isi dulu nama dan instansi kamu ya. Setelah selesai main, skor otomatis masuk leaderboard.',
+          'happy'
+        );
+
+        setTimeout(attachPanjiToLeaderboardModal, 80);
+        setTimeout(attachPanjiToLeaderboardModal, 250);
+        setTimeout(attachPanjiToLeaderboardModal, 600);
+      }
+    }, 120);
 
     if (tab === 'leaderboard' || !PLAYER_STATE.leaderboard.length) {
       fetchLeaderboard();
@@ -1068,7 +1099,6 @@
   function closeLeaderboardModal() {
     if (!leaderboardModalEl) return;
     leaderboardModalEl.classList.add('ps-hidden');
-    clearLeaderboardPanjiTimers();
     detachPanjiFromLeaderboardModal();
   }
 
@@ -1148,7 +1178,6 @@
           submitFinalScoreToLeaderboard();
         } else {
           closeLeaderboardModal();
-          showPanjiHowToPlayAfterPlayerSaved();
         }
 
         renderLeaderboardModalContent();
@@ -1238,6 +1267,52 @@
     return GAME_STATE.placed.filter(Boolean).length;
   }
 
+  function clearTenderRushTimers() {
+    if (tenderRushTimer) {
+      clearInterval(tenderRushTimer);
+      tenderRushTimer = null;
+    }
+
+    if (tenderRushNextTimer) {
+      clearTimeout(tenderRushNextTimer);
+      tenderRushNextTimer = null;
+    }
+  }
+
+  function enableTenderRushKeyboard() {
+    disableTenderRushKeyboard();
+
+    tenderRushKeyHandler = event => {
+      const activeTag = String(document.activeElement && document.activeElement.tagName || '').toLowerCase();
+      if (['input', 'textarea', 'select'].includes(activeTag)) return;
+
+      const map = {
+        1: 'ekatalog',
+        2: 'pengadaanLangsung',
+        3: 'tenderSeleksi',
+        4: 'swakelola',
+        5: 'dikecualikan'
+      };
+
+      const method = map[event.key];
+      if (!method) return;
+
+      const challenge = getCurrentChallenge();
+      if (!challenge || challenge.type !== 'tenderRush') return;
+
+      event.preventDefault();
+      answerTenderRush(method);
+    };
+
+    document.addEventListener('keydown', tenderRushKeyHandler);
+  }
+
+  function disableTenderRushKeyboard() {
+    if (!tenderRushKeyHandler) return;
+    document.removeEventListener('keydown', tenderRushKeyHandler);
+    tenderRushKeyHandler = null;
+  }
+
   function clearAutoNextTimer() {
     if (autoNextTimer) {
       clearTimeout(autoNextTimer);
@@ -1277,6 +1352,10 @@
     return CHALLENGES.reduce((total, challenge) => {
       if (challenge.type === 'pipeline') {
         return total + (challenge.idealIds.length * 10) + 20;
+      }
+
+      if (challenge.type === 'tenderRush') {
+        return total + ((challenge.packages || []).length * 10) + 20;
       }
 
       return total + 20;
@@ -1617,8 +1696,8 @@
     }
 
     const talkDuration = Math.min(
-      12000,
-      Math.max(2600, String(message || '').length * 58)
+      6200,
+      Math.max(1300, String(message || '').length * 34)
     );
 
     panjiTalkTimer = setTimeout(() => {
@@ -1698,6 +1777,10 @@
       return `Hint PANJI: fokus cari kartu "${expectedCard.label}" untuk posisi ${nextEmpty + 1}.`;
     }
 
+    if (challenge.type === 'tenderRush') {
+      return 'Hint PANJI: di Tender Rush, lihat 4 kata kunci dulu: pagu, jenis pekerjaan, apakah tersedia katalog, dan apakah pekerjaannya bisa diswakelolakan. Shortcut-nya: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan.';
+    }
+
     if (challenge.hint) {
       return `Hint PANJI: ${challenge.hint}`;
     }
@@ -1743,16 +1826,27 @@
         'Ini soal pipeline. Susun kartu dari kiri ke kanan secara tertib. Aku akan jelasin setiap langkah benar supaya kamu paham, bukan cuma hafal.',
         'thinking'
       );
-    } else {
+      return;
+    }
+
+    if (challenge.type === 'tenderRush') {
       showPanji(
-        'Ini soal ABCD. Baca kata kuncinya pelan-pelan. Pilih jawaban yang paling sesuai prinsip dan tahapan PBJ, bukan yang sekadar paling cepat.',
+        'Ini Tender Rush. Sebelum paket turun, baca petanya dulu: tekan 1 untuk e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, dan 5 Dikecualikan. Paket baru turun setelah kamu klik Mulai Tender Rush.',
         'thinking'
       );
+      return;
     }
+
+    showPanji(
+      'Ini soal ABCD. Baca kata kuncinya pelan-pelan. Pilih jawaban yang paling sesuai prinsip dan tahapan PBJ, bukan yang sekadar paling cepat.',
+      'thinking'
+    );
   }
 
   function startGame() {
     clearAutoNextTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
     clearPanjiIntroTimers();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
@@ -1773,6 +1867,8 @@
 
   function loadChallenge() {
     clearAutoNextTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
 
     const challengeIndex = GAME_STATE.order[GAME_STATE.index];
     const challenge = CHALLENGES[challengeIndex];
@@ -1789,6 +1885,7 @@
       GAME_STATE.stage = 'pipeline';
       GAME_STATE.placed = Array(challenge.idealIds.length).fill(null);
       GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
+      GAME_STATE.tenderRush = null;
       GAME_STATE.progress = 0;
 
       addLog(
@@ -1796,10 +1893,31 @@
         'Challenge pipeline dimulai',
         'Susun kartu dari kiri ke kanan. Kartu jebakan akan menaikkan risiko.'
       );
+    } else if (challenge.type === 'tenderRush') {
+      GAME_STATE.stage = 'tenderRush';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.progress = 0;
+      GAME_STATE.tenderRush = {
+        started: false,
+        currentIndex: 0,
+        timeLeft: Number(challenge.timeLimit || 8),
+        locked: false,
+        lastResult: null,
+        correctCount: 0,
+        wrongCount: 0
+      };
+
+      addLog(
+        'info',
+        'Challenge Tender Rush dimulai',
+        'Baca tutorial PANJI dulu, lalu pilih jalur metode dengan tombol 1 sampai 5.'
+      );
     } else {
       GAME_STATE.stage = 'quiz';
       GAME_STATE.placed = [];
       GAME_STATE.shuffledCards = [];
+      GAME_STATE.tenderRush = null;
       GAME_STATE.progress = 100;
 
       addLog(
@@ -1852,7 +1970,26 @@
 
     if (!challenge) return false;
     if (challenge.type === 'pipeline') return GAME_STATE.progress === 100;
+    if (challenge.type === 'tenderRush') return GAME_STATE.progress === 100;
     return GAME_STATE.answered;
+  }
+
+  function getChallengeTypeLabel(type) {
+    if (type === 'pipeline') return 'Pipeline';
+    if (type === 'tenderRush') return 'Tender Rush';
+    return 'ABCD';
+  }
+
+  function getChallengeTypeName(type) {
+    if (type === 'pipeline') return 'Susun Pipeline';
+    if (type === 'tenderRush') return 'Arcade Metode';
+    return 'Pilihan ABCD';
+  }
+
+  function renderChallengeBody(challenge) {
+    if (challenge.type === 'pipeline') return renderPipelineChallenge(challenge);
+    if (challenge.type === 'tenderRush') return renderTenderRushChallenge(challenge);
+    return renderQuizChallenge(challenge);
   }
 
   function renderGame() {
@@ -1876,8 +2013,8 @@
           </div>
 
           <div class="ps-pill-row">
-            <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : ''}">
-              ${challenge.type === 'pipeline' ? 'Pipeline' : 'ABCD'}
+            <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : challenge.type === 'tenderRush' ? 'rush' : ''}">
+              ${getChallengeTypeLabel(challenge.type)}
             </div>
             <div class="ps-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
             ${GAME_STATE.selectedCardId ? '<div class="ps-pill warn">Kartu dipilih</div>' : ''}
@@ -1894,7 +2031,7 @@
 
           <div class="ps-case-box">
             <label>Jenis Soal</label>
-            <strong>${challenge.type === 'pipeline' ? 'Susun Pipeline' : 'Pilihan ABCD'}</strong>
+            <strong>${getChallengeTypeName(challenge.type)}</strong>
           </div>
 
           <div class="ps-case-box">
@@ -1940,14 +2077,14 @@
           </button>
         </div>
 
-        ${challenge.type === 'pipeline' ? renderPipelineChallenge(challenge) : renderQuizChallenge(challenge)}
+        ${renderChallengeBody(challenge)}
 
         ${renderLogs()}
 
         <div class="ps-buttons">
           <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Mulai Ulang dari Soal 1</button>
           ${
-            challenge.type === 'pipeline'
+            challenge.type === 'pipeline' || challenge.type === 'tenderRush'
               ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
               : ''
           }
@@ -2034,6 +2171,106 @@
         <div class="ps-card-icon">${item.icon}</div>
         <strong>${escapeHtml(item.label)}</strong>
         <span>${escapeHtml(item.note)}</span>
+      </div>
+    `;
+  }
+
+  function renderTenderRushChallenge(challenge) {
+    const rush = GAME_STATE.tenderRush || {
+      started: false,
+      currentIndex: 0,
+      timeLeft: Number(challenge.timeLimit || 8),
+      lastResult: null,
+      correctCount: 0,
+      wrongCount: 0
+    };
+
+    const total = (challenge.packages || []).length;
+    const currentPackage = challenge.packages && challenge.packages[rush.currentIndex];
+    const percentTime = Math.max(0, Math.min(100, (Number(rush.timeLeft || 0) / Number(challenge.timeLimit || 8)) * 100));
+
+    if (!rush.started) {
+      return `
+        <div class="ps-rush-tutorial">
+          <div class="ps-rush-tutorial-main">
+            <div class="ps-rush-kicker">Tutorial PANJI dulu</div>
+            <h3>Jalur Metode Tender Rush</h3>
+            <p>
+              Di soal ini paket akan muncul satu per satu seperti arcade. Tugas kamu memilih jalur metode yang paling tepat
+              sebelum waktu habis. Baca <b>pagu</b>, <b>jenis paket</b>, <b>ketersediaan katalog</b>, dan <b>kondisi pelaksanaan</b>.
+            </p>
+          </div>
+          <div class="ps-rush-method-grid">
+            ${Object.values(TENDER_RUSH_METHODS).map(method => `
+              <div class="ps-rush-method-card">
+                <div class="ps-rush-method-key">${method.key}</div>
+                <div class="ps-rush-method-icon">${method.icon}</div>
+                <strong>${escapeHtml(method.label)}</strong>
+                <span>${escapeHtml(method.hint)}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="ps-buttons">
+            <button type="button" class="ps-btn ps-btn-primary" id="btnStartTenderRush">Saya Paham, Mulai Tender Rush</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!currentPackage && GAME_STATE.progress === 100) {
+      return `
+        <div class="ps-rush-finished">
+          <h3>🏁 Tender Rush selesai</h3>
+          <p>${escapeHtml(challenge.explanation)}</p>
+          <div class="ps-rush-summary">
+            <div><label>Benar</label><strong>${rush.correctCount || 0}</strong></div>
+            <div><label>Salah/Miss</label><strong>${rush.wrongCount || 0}</strong></div>
+            <div><label>Total Paket</label><strong>${total}</strong></div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="ps-rush-arena">
+        <div class="ps-rush-hud">
+          <div><label>Paket</label><strong>${Math.min(rush.currentIndex + 1, total)} / ${total}</strong></div>
+          <div><label>Waktu</label><strong id="psRushTimeText">${rush.timeLeft}</strong></div>
+          <div><label>Benar</label><strong>${rush.correctCount || 0}</strong></div>
+          <div><label>Salah</label><strong>${rush.wrongCount || 0}</strong></div>
+        </div>
+
+        <div class="ps-rush-time-track">
+          <div class="ps-rush-time-bar" id="psRushTimeBar" style="width:${percentTime}%"></div>
+        </div>
+
+        <div class="ps-rush-fall-lane">
+          <div class="ps-rush-package ${rush.lastResult ? (rush.lastResult.correct ? 'correct' : 'wrong') : ''}">
+            <div class="ps-rush-package-top">
+              <span>${escapeHtml(currentPackage.type)}</span>
+              <b>${formatCurrency(currentPackage.pagu)}</b>
+            </div>
+            <h3>${escapeHtml(currentPackage.title)}</h3>
+            <p>${escapeHtml(currentPackage.clue)}</p>
+          </div>
+        </div>
+
+        ${rush.lastResult ? `
+          <div class="ps-rush-result ${rush.lastResult.correct ? 'ok' : 'bad'}">
+            <strong>${rush.lastResult.correct ? 'Benar!' : 'Belum tepat.'}</strong>
+            ${escapeHtml(rush.lastResult.message)}
+          </div>
+        ` : ''}
+
+        <div class="ps-rush-drop-grid">
+          ${Object.entries(TENDER_RUSH_METHODS).map(([id, method]) => `
+            <button type="button" class="ps-rush-drop" data-rush-method="${id}" ${rush.locked ? 'disabled' : ''}>
+              <span class="ps-rush-key">${method.key}</span>
+              <span class="ps-rush-icon">${method.icon}</span>
+              <strong>${escapeHtml(method.label)}</strong>
+            </button>
+          `).join('')}
+        </div>
       </div>
     `;
   }
@@ -2186,6 +2423,166 @@
     }
   }
 
+  function startTenderRush() {
+    const challenge = getCurrentChallenge();
+    if (!challenge || challenge.type !== 'tenderRush') return;
+
+    clearPanjiIntroTimers();
+    clearTenderRushTimers();
+
+    GAME_STATE.tenderRush = {
+      started: true,
+      currentIndex: 0,
+      timeLeft: Number(challenge.timeLimit || 8),
+      locked: false,
+      lastResult: null,
+      correctCount: 0,
+      wrongCount: 0
+    };
+
+    enableTenderRushKeyboard();
+    beginTenderRushRound();
+    showPanji('Mulai! Paket pertama turun. Ingat: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan.', 'happy');
+  }
+
+  function beginTenderRushRound() {
+    const challenge = getCurrentChallenge();
+    const rush = GAME_STATE.tenderRush;
+
+    if (!challenge || challenge.type !== 'tenderRush' || !rush) return;
+
+    clearTenderRushTimers();
+
+    if (rush.currentIndex >= (challenge.packages || []).length) {
+      finishTenderRush();
+      return;
+    }
+
+    rush.timeLeft = Number(challenge.timeLimit || 8);
+    rush.locked = false;
+    rush.lastResult = null;
+    GAME_STATE.progress = Math.round((rush.currentIndex / challenge.packages.length) * 100);
+
+    renderGame();
+
+    tenderRushTimer = setInterval(() => {
+      if (destroyed) return;
+
+      const activeChallenge = getCurrentChallenge();
+      const activeRush = GAME_STATE.tenderRush;
+
+      if (!activeChallenge || activeChallenge.type !== 'tenderRush' || !activeRush || activeRush.locked) return;
+
+      activeRush.timeLeft -= 1;
+      updateTenderRushClock();
+
+      if (activeRush.timeLeft <= 0) {
+        answerTenderRush(null);
+      }
+    }, 1000);
+  }
+
+  function updateTenderRushClock() {
+    const challenge = getCurrentChallenge();
+    const rush = GAME_STATE.tenderRush;
+
+    if (!challenge || !rush) return;
+
+    const text = root && root.querySelector('#psRushTimeText');
+    const bar = root && root.querySelector('#psRushTimeBar');
+    const percent = Math.max(0, Math.min(100, (Number(rush.timeLeft || 0) / Number(challenge.timeLimit || 8)) * 100));
+
+    if (text) text.textContent = String(Math.max(0, rush.timeLeft));
+    if (bar) bar.style.width = percent + '%';
+  }
+
+  function answerTenderRush(methodId) {
+    const challenge = getCurrentChallenge();
+    const rush = GAME_STATE.tenderRush;
+
+    if (!challenge || challenge.type !== 'tenderRush' || !rush || !rush.started || rush.locked) return;
+
+    const pkg = challenge.packages[rush.currentIndex];
+    if (!pkg) return;
+
+    clearTenderRushTimers();
+    rush.locked = true;
+
+    const isTimeout = !methodId;
+    const isCorrect = methodId === pkg.correct;
+    const correctMethod = TENDER_RUSH_METHODS[pkg.correct];
+    const chosenMethod = methodId ? TENDER_RUSH_METHODS[methodId] : null;
+
+    if (isCorrect) {
+      GAME_STATE.score += 10;
+      rush.correctCount += 1;
+      addLog('ok', `Tender Rush benar: ${pkg.title}`, pkg.explanation);
+      showToast('Jalur benar. +10 skor.', 'ok');
+      showPanji(`Betul! ${pkg.explanation}`, 'happy');
+      flashScreen('ok');
+      spawnConfetti();
+      rush.lastResult = {
+        correct: true,
+        message: `${pkg.title} tepat masuk ${correctMethod.label}. ${pkg.explanation}`
+      };
+    } else {
+      GAME_STATE.risk += isTimeout ? 10 : 8;
+      GAME_STATE.wrong += 1;
+      GAME_STATE.score = Math.max(0, GAME_STATE.score - 4);
+      rush.wrongCount += 1;
+
+      const message = isTimeout
+        ? `Waktu habis. Seharusnya masuk ${correctMethod.label}. ${pkg.explanation}`
+        : `Kamu memilih ${chosenMethod ? chosenMethod.label : 'jalur lain'}, padahal yang lebih tepat ${correctMethod.label}. ${pkg.explanation}`;
+
+      addLog('bad', `Tender Rush belum tepat: ${pkg.title}`, message);
+      showToast(isTimeout ? 'Waktu habis. Risiko naik.' : 'Jalur belum tepat. Risiko naik.', 'bad');
+      showPanji(message, 'sad');
+      flashScreen('bad');
+      rush.lastResult = { correct: false, message };
+    }
+
+    GAME_STATE.progress = Math.round(((rush.currentIndex + 1) / challenge.packages.length) * 100);
+    renderGame();
+
+    tenderRushNextTimer = setTimeout(() => {
+      if (destroyed) return;
+      rush.currentIndex += 1;
+
+      if (rush.currentIndex >= challenge.packages.length) {
+        finishTenderRush();
+        return;
+      }
+
+      beginTenderRushRound();
+    }, 1650);
+  }
+
+  function finishTenderRush() {
+    const challenge = getCurrentChallenge();
+    const rush = GAME_STATE.tenderRush;
+
+    if (!challenge || challenge.type !== 'tenderRush' || !rush) return;
+
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+
+    rush.started = true;
+    rush.currentIndex = (challenge.packages || []).length;
+    rush.locked = true;
+    rush.lastResult = null;
+    GAME_STATE.progress = 100;
+    GAME_STATE.correct += 1;
+    GAME_STATE.score += 20;
+
+    addLog('ok', 'Tender Rush selesai', challenge.explanation);
+    renderGame();
+    showToast('Tender Rush selesai. Otomatis lanjut...', 'ok');
+    showPanji('Mantap! Tender Rush selesai. Ini melatih refleks membaca pagu, jenis paket, katalog, dan kondisi pelaksanaan sebelum memilih metode.', 'happy');
+    spawnConfetti();
+    scheduleAutoNext('Tender Rush selesai. Otomatis lanjut ke soal berikutnya...');
+  }
+
   function bindGameEvents() {
     root.querySelectorAll('.ps-action-card[draggable="true"]').forEach(cardEl => {
       cardEl.addEventListener('dragstart', event => {
@@ -2236,6 +2633,19 @@
       });
     });
 
+    root.querySelectorAll('[data-rush-method]').forEach(button => {
+      button.addEventListener('click', () => {
+        answerTenderRush(button.dataset.rushMethod);
+      });
+    });
+
+    const btnStartTenderRush = root.querySelector('#btnStartTenderRush');
+    if (btnStartTenderRush) {
+      btnStartTenderRush.addEventListener('click', () => {
+        startTenderRush();
+      });
+    }
+
     const btnNext = root.querySelector('#btnNextChallenge');
     const btnRestart = root.querySelector('#btnRestartGame');
     const btnReset = root.querySelector('#btnResetChallenge');
@@ -2259,6 +2669,8 @@
     if (btnReset) {
       btnReset.addEventListener('click', () => {
         clearAutoNextTimer();
+        clearTenderRushTimers();
+        disableTenderRushKeyboard();
         loadChallenge();
       });
     }
@@ -2711,6 +3123,8 @@
       destroyed = true;
 
       clearAutoNextTimer();
+      clearTenderRushTimers();
+      disableTenderRushKeyboard();
       clearPanjiIntroTimers();
       clearPanjiTalkTimer();
 
