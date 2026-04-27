@@ -4,6 +4,36 @@
   const LEADERBOARD_API_URL = 'https://script.google.com/macros/s/AKfycbzE0c_eBIooXcKLmiMGm6o6cqtjfRsfIewmD6Hx5BCdmEYZmljquJiDOA0PJh6e9P_mOg/exec';
   const PLAYER_STORAGE_KEY = 'procstack_player_profile_v1';
 
+
+const BONUS_RUN_COLLECTIBLES = [
+  { key: 'star', label: 'Bintang Semangat', icon: '⭐', points: 4, yRange: [118, 215], useLogo: true, panjiLines: ['Bintang semangat masuk!', 'Mantap, semangat naik lagi!'] },
+  { key: 'coin', label: 'Koin PANJI', icon: '🪙', points: 4, yRange: [84, 180], useLogo: true, panjiLines: ['Koin PANJI aman!', 'Sip, koin semangat dapat lagi!'] },
+  { key: 'coffee', label: 'Kopi Pagi', icon: '☕', points: 5, yRange: [42, 112], panjiLines: ['Wah, nyawa balik lagi!', 'Kopi masuk, fokus balik!'] },
+  { key: 'mie', label: 'Mie Rebus Lembur', icon: '🍜', points: 5, yRange: [42, 110], panjiLines: ['Mode lembur aktif!', 'Mie rebus siap, gas terus!'] },
+  { key: 'doc', label: 'Dokumen Aman', icon: '📄', points: 4, yRange: [88, 176], panjiLines: ['Dokumen aman, hati tenang!', 'Arsip rapi, mood happy!'] },
+  { key: 'gift', label: 'Bonus Poin', icon: '🎁', points: 6, yRange: [110, 198], panjiLines: ['Yeay, bonus poin!', 'Hadiah masuk, lanjut lari!'] }
+];
+
+const BONUS_RUN_HAZARDS = [
+  { key: 'sleep', label: 'Ngantuk', icon: '💤', penalty: 3, risk: 1, yRange: [36, 82], panjiLine: 'Aduh, ngantuk menyerang!' },
+  { key: 'berkas', label: 'Berkas Numpuk', icon: '📚', penalty: 4, risk: 1, yRange: [36, 86], panjiLine: 'Aduh, ketiban administrasi!' },
+  { key: 'deadline', label: 'Deadline', icon: '🔥', penalty: 5, risk: 2, yRange: [36, 88], panjiLine: 'Deadline menyerang!' },
+  { key: 'revisi', label: 'Revisi Dadakan', icon: '😵', penalty: 4, risk: 1, yRange: [36, 88], panjiLine: 'Yah, revisi dadakan datang lagi!' },
+  { key: 'loading', label: 'Loading Lama', icon: '🐌', penalty: 3, risk: 1, yRange: [36, 84], panjiLine: 'Sabar... sistem sedang kontemplasi.' }
+];
+
+const BONUS_RUN_CHALLENGE = {
+  type: 'bonusRun',
+  title: 'Level 8 — PANJI Mood Booster',
+  caseTitle: 'Bonus Santuy — Dunia Mimpi PANJI',
+  desc: 'Bonus time! Otak kita sudah kerja keras. Bantu PANJI lari santai, ambil item semangat, hindari jebakan lucu, dan balikin mood sebelum lanjut.',
+  budget: 'Bonus Santuy',
+  difficulty: 'Level 8 - Bonus',
+  timeLimit: 45,
+  explanation: 'Bonus level ini bukan ujian tambahan. Tujuannya bikin pemain refresh dulu lewat mini game lari sederhana bersama PANJI.'
+};
+
+
   let containerRef = null;
   let root = null;
   let destroyed = false;
@@ -32,6 +62,9 @@
   let tenderRushTimer = null;
   let tenderRushNextTimer = null;
   let tenderRushKeyHandler = null;
+
+  let bonusRunFrame = null;
+  let bonusRunKeyHandler = null;
 
   const CARD_LIBRARY = {
     rup: {
@@ -798,6 +831,26 @@
     return Math.max(1, Number(GAME_STATE.index || 0) + 1);
   }
 
+
+  function stripOldQuestionPrefix(title) {
+    return String(title || '')
+      .replace(/^\s*(Soal|Level)\s*\d+\s*[—-]\s*/i, '')
+      .trim();
+  }
+
+  function getRenderedChallengeTitle(challenge) {
+    const levelNo = getCurrentLevelNumber();
+
+    if (!challenge) return `Level ${levelNo}`;
+
+    if (challenge.type === 'bonusRun') {
+      return `Level ${levelNo} — PANJI Mood Booster`;
+    }
+
+    const cleanTitle = stripOldQuestionPrefix(challenge.title || challenge.caseTitle || 'Challenge');
+    return `Level ${levelNo} — ${cleanTitle}`;
+  }
+
   function cloneTenderRushChallenge(template, levelNo, variantIndex) {
     const variants = [
       {
@@ -872,7 +925,7 @@
   }
 
   function buildChallenge(raw) {
-    if (raw.type === 'quiz' || raw.type === 'tenderRush') {
+    if (raw.type === 'quiz' || raw.type === 'tenderRush' || raw.type === 'bonusRun') {
       return raw;
     }
 
@@ -887,6 +940,8 @@
   }
 
   const CHALLENGES = expandChallengeFlow(CHALLENGE_RAW).map(buildChallenge);
+  // Level 8 khusus bonus, level lain tetap bergeser lanjut seperti semula.
+  CHALLENGES.splice(7, 0, buildChallenge(BONUS_RUN_CHALLENGE));
 
   const TENDER_RUSH_METHODS = {
     ekatalog: {
@@ -957,6 +1012,7 @@
     gameStartedAt: 0,
     scoreSubmitted: false,
     tenderRush: null,
+    bonusRun: null,
     levelTimeLeft: 0,
     levelTimeLimit: 0,
     stoppedReason: '',
@@ -1681,7 +1737,7 @@
 
 
   function getDefaultLevelTime(challenge) {
-    if (!challenge || challenge.type === 'tenderRush') return 0;
+    if (!challenge || challenge.type === 'tenderRush' || challenge.type === 'bonusRun') return 0;
 
     const levelNo = getCurrentLevelNumber();
     const base = challenge.type === 'quiz'
@@ -1792,6 +1848,7 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearBonusRunLoop();
     clearPanjiIntroTimers();
 
     GAME_STATE.finished = true;
@@ -1858,6 +1915,10 @@
 
       if (challenge.type === 'tenderRush') {
         return total + ((challenge.packages || []).length * 10) + 20;
+      }
+
+      if (challenge.type === 'bonusRun') {
+        return total + 100;
       }
 
       return total + 20;
@@ -2292,6 +2353,10 @@
       return `Hint PANJI: fokus cari kartu "${expectedCard.label}" untuk posisi ${nextEmpty + 1}.`;
     }
 
+    if (challenge.type === 'bonusRun') {
+      return 'Hint PANJI: bonus level ini santai. Spasi/Tap untuk lompat, tekan lagi saat di udara untuk double jump, dan S/Panah Bawah untuk sliding. Kalau kena perangkap, PANJI invincible beberapa detik sehingga item dan perangkap yang lewat tidak dihitung dulu.';
+    }
+
     if (challenge.type === 'tenderRush') {
       const pkg = getActiveTenderRushPackage(challenge);
 
@@ -2359,6 +2424,14 @@
       return;
     }
 
+    if (challenge.type === 'bonusRun') {
+      showPanji(
+        'Bonus time! Ini PANJI Mood Booster. Spasi/Tap untuk lompat, bisa double jump, S atau panah bawah untuk sliding. Kalau kena perangkap aku invincible sebentar.',
+        'happy'
+      );
+      return;
+    }
+
     showPanji(
       'Ini soal ABCD. Baca kata kuncinya pelan-pelan. Pilih jawaban yang paling sesuai prinsip dan tahapan PBJ, bukan yang sekadar paling cepat.',
       'thinking'
@@ -2369,6 +2442,7 @@
     clearAutoNextTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearBonusRunLoop();
     clearPanjiIntroTimers();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
@@ -2384,6 +2458,7 @@
     GAME_STATE.hasSeenIntro = false;
     GAME_STATE.levelTimeLeft = 0;
     GAME_STATE.levelTimeLimit = 0;
+    GAME_STATE.bonusRun = null;
     GAME_STATE.stoppedReason = '';
     GAME_STATE.stoppedLevel = 0;
     GAME_STATE.pipelineCombo = 0;
@@ -2406,8 +2481,7 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
-    clearTenderRushTimers();
-    disableTenderRushKeyboard();
+    clearBonusRunLoop();
 
     const challengeIndex = GAME_STATE.order[GAME_STATE.index];
     const challenge = CHALLENGES[challengeIndex];
@@ -2425,6 +2499,7 @@
       GAME_STATE.placed = Array(challenge.idealIds.length).fill(null);
       GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
       GAME_STATE.tenderRush = null;
+      GAME_STATE.bonusRun = null;
       GAME_STATE.progress = 0;
       GAME_STATE.pipelineCombo = 0;
 
@@ -2438,6 +2513,7 @@
       GAME_STATE.placed = [];
       GAME_STATE.shuffledCards = [];
       GAME_STATE.progress = 0;
+      GAME_STATE.bonusRun = null;
       GAME_STATE.tenderRush = {
         started: false,
         currentIndex: 0,
@@ -2454,11 +2530,25 @@
         'Challenge Tender Rush dimulai',
         'Baca tutorial PANJI dulu, lalu pilih jalur metode dengan tombol 1 sampai 5.'
       );
+    } else if (challenge.type === 'bonusRun') {
+      GAME_STATE.stage = 'bonusRun';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.tenderRush = null;
+      GAME_STATE.bonusRun = createBonusRunState(challenge);
+      GAME_STATE.progress = 0;
+
+      addLog(
+        'info',
+        'Bonus level dimulai',
+        'Bantu PANJI lari santai, kumpulkan item semangat, double jump, sliding, dan hindari jebakan lucu sampai waktu habis.'
+      );
     } else {
       GAME_STATE.stage = 'quiz';
       GAME_STATE.placed = [];
       GAME_STATE.shuffledCards = [];
       GAME_STATE.tenderRush = null;
+      GAME_STATE.bonusRun = null;
       GAME_STATE.progress = 100;
       prepareQuizRuntimeOptions(challenge);
 
@@ -2471,7 +2561,7 @@
 
     renderGame();
 
-    if (challenge.type !== 'tenderRush') {
+    if (challenge.type !== 'tenderRush' && challenge.type !== 'bonusRun') {
       startLevelTimer(challenge);
     }
 
@@ -2508,6 +2598,7 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearBonusRunLoop();
 
     if (GAME_STATE.index < GAME_STATE.order.length - 1) {
       GAME_STATE.index += 1;
@@ -2524,25 +2615,469 @@
     if (!challenge) return false;
     if (challenge.type === 'pipeline') return GAME_STATE.progress === 100;
     if (challenge.type === 'tenderRush') return GAME_STATE.progress === 100;
+    if (challenge.type === 'bonusRun') return GAME_STATE.progress === 100;
     return GAME_STATE.answered;
   }
 
   function getChallengeTypeLabel(type) {
     if (type === 'pipeline') return 'Pipeline';
     if (type === 'tenderRush') return 'Tender Rush';
+    if (type === 'bonusRun') return 'Bonus';
     return 'ABCD';
   }
 
   function getChallengeTypeName(type) {
     if (type === 'pipeline') return 'Susun Pipeline';
     if (type === 'tenderRush') return 'Arcade Metode';
+    if (type === 'bonusRun') return 'Mini Game Santuy';
     return 'Pilihan ABCD';
   }
 
   function renderChallengeBody(challenge) {
     if (challenge.type === 'pipeline') return renderPipelineChallenge(challenge);
     if (challenge.type === 'tenderRush') return renderTenderRushChallenge(challenge);
+    if (challenge.type === 'bonusRun') return renderBonusRunChallenge(challenge);
     return renderQuizChallenge(challenge);
+  }
+
+
+
+  function clearBonusRunLoop() {
+    if (bonusRunFrame) {
+      cancelAnimationFrame(bonusRunFrame);
+      bonusRunFrame = null;
+    }
+
+    if (bonusRunKeyHandler) {
+      document.removeEventListener('keydown', bonusRunKeyHandler);
+      bonusRunKeyHandler = null;
+    }
+  }
+
+  function createBonusRunState(challenge) {
+    return {
+      started: false,
+      finished: false,
+      timeLeft: Number(challenge.timeLimit || 45),
+      startedAt: 0,
+      lastFrameAt: 0,
+      runnerY: 0,
+      runnerVelocity: 0,
+      onGround: true,
+      jumpCount: 0,
+      maxJumps: 2,
+      isSliding: false,
+      slideUntil: 0,
+      invincibleUntil: 0,
+      objects: [],
+      nextSpawnAt: 0.8,
+      runScore: 0,
+      collectedCount: 0,
+      hitCount: 0,
+      combo: 0,
+      comboGlowUntil: 0,
+      stumbleUntil: 0,
+      lastStatus: 'Tekan Spasi/Tap untuk lompat, tekan S/Panah Bawah untuk sliding. Bonus ini santuy, tidak ada game over.',
+      counters: { star: 0, coin: 0, coffee: 0, mie: 0, doc: 0, gift: 0, sleep: 0, berkas: 0, deadline: 0, revisi: 0, loading: 0 }
+    };
+  }
+
+  function getBonusRunState() {
+    const challenge = getCurrentChallenge();
+    if (!challenge || challenge.type !== 'bonusRun') return null;
+    if (!GAME_STATE.bonusRun) GAME_STATE.bonusRun = createBonusRunState(challenge);
+    return GAME_STATE.bonusRun;
+  }
+
+  function enableBonusRunKeyboard() {
+    clearBonusRunLoop();
+    bonusRunKeyHandler = event => {
+      const activeTag = String(document.activeElement && document.activeElement.tagName || '').toLowerCase();
+      if (['input', 'textarea', 'select'].includes(activeTag)) return;
+
+      if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW' || event.key === ' ') {
+        event.preventDefault();
+        handleBonusRunJump();
+        return;
+      }
+
+      if (event.code === 'ArrowDown' || event.code === 'KeyS') {
+        event.preventDefault();
+        handleBonusRunSlide();
+      }
+    };
+    document.addEventListener('keydown', bonusRunKeyHandler);
+  }
+
+  function startBonusRun() {
+    const challenge = getCurrentChallenge();
+    const run = getBonusRunState();
+    if (!challenge || challenge.type !== 'bonusRun' || !run || run.started || run.finished) return;
+
+    run.started = true;
+    run.finished = false;
+    run.startedAt = performance.now();
+    run.lastFrameAt = run.startedAt;
+    run.timeLeft = Number(challenge.timeLimit || 45);
+    run.nextSpawnAt = 0.65;
+    GAME_STATE.progress = 0;
+
+    enableBonusRunKeyboard();
+    showPanji('Bonus time! Bantu aku ngumpulin energi. Spasi/Tap untuk lompat, bisa double jump, dan tekan S/Panah Bawah untuk sliding. Kalau kena perangkap, aku invincible sebentar.', 'happy');
+    renderGame();
+    syncBonusRunUi();
+    bonusRunFrame = requestAnimationFrame(stepBonusRun);
+  }
+
+  function handleBonusRunJump() {
+    const run = getBonusRunState();
+    if (!run || !run.started || run.finished || run.isSliding) return;
+    if (run.jumpCount >= run.maxJumps) return;
+
+    run.onGround = false;
+    run.jumpCount += 1;
+    run.runnerVelocity = run.jumpCount === 1 ? 720 : 620;
+
+    const runner = root && root.querySelector('#psBonusRunner');
+    if (runner) {
+      runner.classList.remove('is-jumping');
+      void runner.offsetWidth;
+      runner.classList.add('is-jumping');
+    }
+  }
+
+  function handleBonusRunSlide() {
+    const run = getBonusRunState();
+    if (!run || !run.started || run.finished || !run.onGround) return;
+
+    run.isSliding = true;
+    run.slideUntil = performance.now() + 620;
+    run.lastStatus = 'Wuuush! PANJI sliding menghindari jebakan.';
+    syncBonusRunUi();
+  }
+
+  function pickRandomBonusObject(elapsed) {
+    const hazardChance = elapsed > 30 ? 0.50 : elapsed > 16 ? 0.40 : 0.32;
+    const isHazard = Math.random() < hazardChance;
+    const meta = isHazard
+      ? BONUS_RUN_HAZARDS[Math.floor(Math.random() * BONUS_RUN_HAZARDS.length)]
+      : BONUS_RUN_COLLECTIBLES[Math.floor(Math.random() * BONUS_RUN_COLLECTIBLES.length)];
+    const yRange = Array.isArray(meta.yRange) ? meta.yRange : [40, 120];
+
+    return {
+      id: `bonus-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      category: isHazard ? 'hazard' : 'collectible',
+      key: meta.key,
+      label: meta.label,
+      icon: meta.icon,
+      points: Number(meta.points || 0),
+      penalty: Number(meta.penalty || 0),
+      risk: Number(meta.risk || 0),
+      panjiLine: meta.panjiLine || '',
+      panjiLines: meta.panjiLines || [],
+      useLogo: Boolean(meta.useLogo),
+      x: 1020,
+      y: yRange[0] + Math.random() * Math.max(0, yRange[1] - yRange[0]),
+      width: isHazard ? 64 : 58,
+      height: isHazard ? 64 : 58,
+      rotate: (Math.random() * 18) - 9,
+      pulse: Math.random() * Math.PI,
+      hit: false
+    };
+  }
+
+  function renderBonusRunObject(obj) {
+    const classes = ['ps-bonus-item', obj.category === 'collectible' ? 'collectible' : 'hazard', obj.useLogo ? 'logo-item' : '', `item-${obj.key}`].join(' ');
+    return `<div class="${classes}" style="left:${obj.x}px; bottom:${obj.y}px; width:${obj.width}px; height:${obj.height}px; transform:rotate(${obj.rotate}deg) scale(${1 + Math.sin(obj.pulse) * 0.04});"><span>${escapeHtml(obj.icon)}</span></div>`;
+  }
+
+  function bonusRunCollides(obj, stageWidth) {
+    const run = getBonusRunState();
+    if (!run) return false;
+    const runnerLeft = Math.max(70, stageWidth * 0.12);
+    const runnerBottom = 34 + Number(run.runnerY || 0);
+    const runnerWidth = run.isSliding ? 112 : 92;
+    const runnerHeight = run.isSliding ? 52 : 104;
+    const objLeft = obj.x;
+    const objRight = obj.x + obj.width;
+    const objBottom = obj.y;
+    const objTop = obj.y + obj.height;
+    const runnerRight = runnerLeft + runnerWidth;
+    const runnerTop = runnerBottom + runnerHeight;
+    return !(objRight < runnerLeft + 10 || objLeft > runnerRight - 14 || objTop < runnerBottom + 10 || objBottom > runnerTop - 8);
+  }
+
+  function collectBonusObject(obj) {
+    const run = getBonusRunState();
+    if (!run || obj.hit) return;
+    obj.hit = true;
+    run.collectedCount += 1;
+    run.combo += 1;
+    run.comboGlowUntil = performance.now() + 300;
+    run.counters[obj.key] = Number(run.counters[obj.key] || 0) + 1;
+    run.runScore += Number(obj.points || 0);
+    GAME_STATE.score += Number(obj.points || 0);
+
+    const lines = Array.isArray(obj.panjiLines) && obj.panjiLines.length ? obj.panjiLines : [`${obj.label} didapat!`];
+    showPanji(lines[Math.floor(Math.random() * lines.length)], 'happy');
+    const stage = root && root.querySelector('#psBonusStage');
+    if (stage) popScore(stage, `+${obj.points}`, 'ok');
+  }
+
+  function hitBonusHazard(obj) {
+    const run = getBonusRunState();
+    if (!run || obj.hit) return;
+    const now = performance.now();
+    if (now < Number(run.invincibleUntil || 0)) return;
+
+    obj.hit = true;
+    run.hitCount += 1;
+    run.combo = 0;
+    run.stumbleUntil = now + 460;
+    run.invincibleUntil = now + 2200;
+    run.counters[obj.key] = Number(run.counters[obj.key] || 0) + 1;
+    run.runScore = Math.max(0, run.runScore - Number(obj.penalty || 0));
+    GAME_STATE.score = Math.max(0, GAME_STATE.score - Number(obj.penalty || 0));
+    GAME_STATE.risk += Number(obj.risk || 1);
+    showPanji(`${obj.panjiLine || `${obj.label} kena!`} Aku kebal sebentar, item dan perangkap lewat tidak dihitung dulu.`, 'sad');
+
+    const stage = root && root.querySelector('#psBonusStage');
+    if (stage) popScore(stage, `-${obj.penalty}`, 'bad');
+  }
+
+  function stepBonusRun(timestamp) {
+    const challenge = getCurrentChallenge();
+    const run = getBonusRunState();
+    if (destroyed || !challenge || challenge.type !== 'bonusRun' || !run || !run.started || run.finished) {
+      clearBonusRunLoop();
+      return;
+    }
+
+    const stageEl = root && root.querySelector('#psBonusStage');
+    const stageWidth = Math.max(760, Number(stageEl && stageEl.clientWidth || 980));
+    const dt = Math.min(0.045, Math.max(0.012, (timestamp - Number(run.lastFrameAt || timestamp)) / 1000));
+    run.lastFrameAt = timestamp;
+    const elapsed = Math.max(0, (timestamp - Number(run.startedAt || timestamp)) / 1000);
+    run.timeLeft = Math.max(0, Number(challenge.timeLimit || 45) - elapsed);
+    GAME_STATE.progress = Math.max(0, Math.min(100, Math.round((elapsed / Math.max(1, Number(challenge.timeLimit || 45))) * 100)));
+
+    if (run.isSliding && timestamp > Number(run.slideUntil || 0)) {
+      run.isSliding = false;
+    }
+
+    if (!run.onGround) {
+      run.runnerVelocity -= 1900 * dt;
+      run.runnerY = Math.max(0, Number(run.runnerY || 0) + run.runnerVelocity * dt);
+      if (run.runnerY <= 0) {
+        run.runnerY = 0;
+        run.runnerVelocity = 0;
+        run.onGround = true;
+        run.jumpCount = 0;
+      }
+    }
+
+    const speed = elapsed < 15 ? 305 : elapsed < 30 ? 355 : 400;
+    run.nextSpawnAt -= dt;
+    if (run.nextSpawnAt <= 0) {
+      run.objects.push(pickRandomBonusObject(elapsed));
+      const minGap = elapsed < 12 ? 0.90 : elapsed < 28 ? 0.74 : 0.58;
+      const maxGap = elapsed < 12 ? 1.22 : elapsed < 28 ? 0.98 : 0.82;
+      run.nextSpawnAt = minGap + Math.random() * Math.max(0.12, maxGap - minGap);
+    }
+
+    const invincible = timestamp < Number(run.invincibleUntil || 0);
+    run.objects.forEach(obj => {
+      obj.x -= speed * dt;
+      obj.pulse += dt * 4;
+      if (!obj.hit && !invincible && bonusRunCollides(obj, stageWidth)) {
+        if (obj.category === 'collectible') collectBonusObject(obj);
+        else hitBonusHazard(obj);
+      }
+    });
+
+    run.objects = run.objects.filter(obj => obj.x > -140 && !obj.hit);
+    syncBonusRunUi();
+
+    if (run.timeLeft <= 0) {
+      finishBonusRun();
+      return;
+    }
+
+    bonusRunFrame = requestAnimationFrame(stepBonusRun);
+  }
+
+  function finishBonusRun() {
+    const challenge = getCurrentChallenge();
+    const run = getBonusRunState();
+    if (!challenge || challenge.type !== 'bonusRun' || !run || run.finished) return;
+
+    run.finished = true;
+    run.started = false;
+    run.timeLeft = 0;
+    GAME_STATE.progress = 100;
+    GAME_STATE.correct += 1;
+    GAME_STATE.score += 20;
+    clearBonusRunLoop();
+
+    addLog('ok', 'Mood Booster selesai', `Skor santuy ${run.runScore}. Kopi ${run.counters.coffee || 0}, bintang ${run.counters.star || 0}, bonus poin ${run.counters.gift || 0}.`);
+    showToast('PANJI Mood Booster selesai. Otomatis lanjut...', 'ok');
+    showPanji('Mantap! Mood naik, lanjut beresin paket!', 'happy');
+    renderGame();
+    syncBonusRunUi();
+    scheduleAutoNext('Bonus level selesai. Otomatis lanjut ke soal berikutnya...');
+  }
+
+  function syncBonusRunUi() {
+    const challenge = getCurrentChallenge();
+    const run = getBonusRunState();
+    if (!root || !challenge || challenge.type !== 'bonusRun' || !run) return;
+
+    const progress = Math.max(0, Math.min(100, Math.round(Number(GAME_STATE.progress || 0))));
+    const timeLeft = Math.max(0, Math.ceil(Number(run.timeLeft || 0)));
+    const setText = (selector, value) => {
+      const el = root.querySelector(selector);
+      if (el) el.textContent = value;
+    };
+    setText('#psBonusTimeValue', timeLeft);
+    setText('#psBonusRunScore', run.runScore);
+    setText('#psBonusCollectedValue', run.collectedCount);
+    setText('#psBonusHitValue', run.hitCount);
+    setText('#psBonusComboValue', `x${run.combo}`);
+    setText('#psBonusStatusText', run.lastStatus);
+    setText('#psLevelTimeText', `${timeLeft}s`);
+
+    const timeBar = root.querySelector('#psLevelTimeBar');
+    if (timeBar) timeBar.style.width = `${Math.max(0, Math.min(100, (timeLeft / Math.max(1, Number(challenge.timeLimit || 45))) * 100))}%`;
+    const mainBar = root.querySelector('.ps-progress-bar');
+    if (mainBar) mainBar.style.width = `${progress}%`;
+
+    Object.keys(run.counters).forEach(key => {
+      const el = root.querySelector(`[data-bonus-counter="${key}"]`);
+      if (el) el.textContent = run.counters[key];
+    });
+
+    const objectsEl = root.querySelector('#psBonusObjects');
+    if (objectsEl) objectsEl.innerHTML = run.objects.map(renderBonusRunObject).join('');
+
+    const runner = root.querySelector('#psBonusRunner');
+    if (runner) {
+      runner.style.bottom = `${34 + Math.max(0, Number(run.runnerY || 0))}px`;
+      runner.classList.toggle('is-hit', performance.now() < Number(run.stumbleUntil || 0));
+      runner.classList.toggle('is-happy', performance.now() < Number(run.comboGlowUntil || 0));
+      runner.classList.toggle('is-sliding', Boolean(run.isSliding));
+      runner.classList.toggle('is-invincible', performance.now() < Number(run.invincibleUntil || 0));
+    }
+  }
+
+  function renderBonusRunChallenge(challenge) {
+    const run = getBonusRunState() || createBonusRunState(challenge);
+
+    if (!run.started && !run.finished) {
+      return `
+        <div class="ps-bonus-shell">
+          <div class="ps-bonus-intro-card">
+            <div class="ps-bonus-kicker">PANJI Mood Booster • Bonus Santuy</div>
+            <h3>Bonus Time! Bantu PANJI cari energi dulu</h3>
+            <p>
+              Bonus level ini bukan ujian. PANJI lari otomatis ke kanan. Tugas kamu cukup lompat dengan <b>Spasi/Tap</b>,
+              bisa <b>double jump</b>, dan bisa <b>sliding</b> dengan <b>S/Panah Bawah</b>. Ambil kopi, koin, bintang, dokumen aman,
+              dan bonus poin. Hindari deadline, revisi dadakan, ngantuk, berkas numpuk, dan loading lama.
+            </p>
+            <div class="ps-bonus-chip-row">
+              <span class="ps-bonus-chip good">⭐/🪙 dari <b>assets/logo-sippbj.png</b></span>
+              <span class="ps-bonus-chip good">☕ Kopi Pagi</span>
+              <span class="ps-bonus-chip good">🍜 Mie Rebus</span>
+              <span class="ps-bonus-chip bad">🔥 Deadline</span>
+              <span class="ps-bonus-chip bad">📚 Berkas Numpuk</span>
+              <span class="ps-bonus-chip bad">🐌 Loading Lama</span>
+            </div>
+            <div class="ps-bonus-controls-note">
+              <div><b>Durasi:</b> ${Number(challenge.timeLimit || 45)} detik</div>
+              <div><b>Kontrol:</b> Spasi/Tap = Lompat, S/↓ = Sliding</div>
+              <div><b>Power:</b> Double jump + invincible setelah kena perangkap</div>
+            </div>
+            <div class="ps-buttons">
+              <button type="button" class="ps-btn ps-btn-primary" id="btnStartBonusRun">Mulai PANJI Mood Booster</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (run.finished) {
+      return `
+        <div class="ps-bonus-shell">
+          <div class="ps-bonus-finish-card">
+            <div class="ps-bonus-kicker">Mood Booster Selesai</div>
+            <h3>🌈 Mantap! PANJI sudah fresh lagi</h3>
+            <p>${escapeHtml(challenge.explanation || '')}</p>
+            <div class="ps-bonus-summary-grid">
+              <div><label>Skor Santuy</label><strong>${run.runScore}</strong></div>
+              <div><label>Item Terkumpul</label><strong>${run.collectedCount}</strong></div>
+              <div><label>Kena Jebakan</label><strong>${run.hitCount}</strong></div>
+              <div><label>Kopi</label><strong>${run.counters.coffee || 0}</strong></div>
+              <div><label>Bintang</label><strong>${run.counters.star || 0}</strong></div>
+              <div><label>Bonus Poin</label><strong>${run.counters.gift || 0}</strong></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="ps-bonus-shell">
+        <div class="ps-bonus-hud-row">
+          <div class="ps-bonus-mini-card"><label>Waktu</label><strong id="psBonusTimeValue">${Math.ceil(run.timeLeft || challenge.timeLimit || 45)}</strong></div>
+          <div class="ps-bonus-mini-card"><label>Skor Santuy</label><strong id="psBonusRunScore">${run.runScore || 0}</strong></div>
+          <div class="ps-bonus-mini-card"><label>Item</label><strong id="psBonusCollectedValue">${run.collectedCount || 0}</strong></div>
+          <div class="ps-bonus-mini-card"><label>Kena Jebakan</label><strong id="psBonusHitValue">${run.hitCount || 0}</strong></div>
+          <div class="ps-bonus-mini-card combo"><label>Combo</label><strong id="psBonusComboValue">x${run.combo || 0}</strong></div>
+        </div>
+
+        <div class="ps-bonus-stage" id="psBonusStage">
+          <div class="ps-bonus-sky-layer layer-1"></div>
+          <div class="ps-bonus-sky-layer layer-2"></div>
+          <div class="ps-bonus-rainbow"></div>
+          <div class="ps-bonus-cloud cloud-a"></div>
+          <div class="ps-bonus-cloud cloud-b"></div>
+          <div class="ps-bonus-cloud cloud-c"></div>
+          <div class="ps-bonus-objects" id="psBonusObjects">${run.objects.map(renderBonusRunObject).join('')}</div>
+          <div class="ps-bonus-track"></div>
+          <button type="button" class="ps-bonus-runner" id="psBonusRunner" aria-label="PANJI pelari">
+            <span class="ps-bonus-runner-glow"></span>
+            <span class="ps-bonus-runner-head"><span class="hat">PANJI</span><span class="eye left"></span><span class="eye right"></span><span class="mouth"></span></span>
+            <span class="ps-bonus-runner-body"><span>PBJ</span></span>
+            <span class="ps-bonus-runner-hand left"></span><span class="ps-bonus-runner-hand right"></span>
+            <span class="ps-bonus-runner-leg left"></span><span class="ps-bonus-runner-leg right"></span>
+          </button>
+          <div class="ps-bonus-touch-controls">
+            <button type="button" class="ps-bonus-jump-cta" id="psBonusTapArea">Lompat / Double Jump</button>
+            <button type="button" class="ps-bonus-slide-cta" id="psBonusSlideBtn">Sliding</button>
+          </div>
+        </div>
+
+        <div class="ps-bonus-bottom-panel">
+          <div class="ps-bonus-status-card">
+            <label>Narasi PANJI</label>
+            <strong id="psBonusStatusText">${escapeHtml(run.lastStatus || 'PANJI lari santuy...')}</strong>
+            <p>Bonus level ini ringan, tidak ada game over. Kalau kena perangkap, PANJI invincible beberapa detik dan item/rintangan yang lewat tidak dihitung dulu.</p>
+          </div>
+
+          <div class="ps-bonus-counter-grid">
+            <div class="ps-bonus-counter good logo"><span>⭐</span><b>Bintang</b><strong data-bonus-counter="star">${run.counters.star || 0}</strong></div>
+            <div class="ps-bonus-counter good logo"><span>🪙</span><b>Koin</b><strong data-bonus-counter="coin">${run.counters.coin || 0}</strong></div>
+            <div class="ps-bonus-counter good"><span>☕</span><b>Kopi</b><strong data-bonus-counter="coffee">${run.counters.coffee || 0}</strong></div>
+            <div class="ps-bonus-counter good"><span>🍜</span><b>Mie</b><strong data-bonus-counter="mie">${run.counters.mie || 0}</strong></div>
+            <div class="ps-bonus-counter good"><span>📄</span><b>Dokumen</b><strong data-bonus-counter="doc">${run.counters.doc || 0}</strong></div>
+            <div class="ps-bonus-counter good"><span>🎁</span><b>Bonus</b><strong data-bonus-counter="gift">${run.counters.gift || 0}</strong></div>
+            <div class="ps-bonus-counter bad"><span>🔥</span><b>Deadline</b><strong data-bonus-counter="deadline">${run.counters.deadline || 0}</strong></div>
+            <div class="ps-bonus-counter bad"><span>📚</span><b>Berkas</b><strong data-bonus-counter="berkas">${run.counters.berkas || 0}</strong></div>
+            <div class="ps-bonus-counter bad"><span>😵</span><b>Revisi</b><strong data-bonus-counter="revisi">${run.counters.revisi || 0}</strong></div>
+            <div class="ps-bonus-counter bad"><span>🐌</span><b>Loading</b><strong data-bonus-counter="loading">${run.counters.loading || 0}</strong></div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
 
@@ -2560,7 +3095,7 @@
 
         <div class="ps-result-note">
           <strong>Alur game:</strong><br>
-          Soal akan bercampur: susun pipeline, pilihan ABCD, dan Tender Rush. Tender Rush memakai tombol 1 sampai 5 untuk memilih metode pengadaan dengan cepat.
+          Soal akan bercampur: susun pipeline, pilihan ABCD, Tender Rush, dan bonus level PANJI Mood Booster di Level 8. Tender Rush memakai tombol 1 sampai 5 untuk memilih metode pengadaan dengan cepat.
         </div>
 
         <div class="ps-buttons">
@@ -2595,12 +3130,12 @@
       <section class="ps-card">
         <div class="ps-card-head">
           <div>
-            <h3>${escapeHtml(challenge.title)}</h3>
+            <h3>${escapeHtml(getRenderedChallengeTitle(challenge))}</h3>
             <p>${escapeHtml(challenge.desc)}</p>
           </div>
 
           <div class="ps-pill-row">
-            <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : challenge.type === 'tenderRush' ? 'rush' : ''}">
+            <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : challenge.type === 'tenderRush' ? 'rush' : challenge.type === 'bonusRun' ? 'bonus' : ''}">
               ${getChallengeTypeLabel(challenge.type)}
             </div>
             <div class="ps-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
@@ -2650,8 +3185,8 @@
             <strong>${GAME_STATE.wrong}</strong>
           </div>
           <div class="ps-score-card ps-level-time-card">
-            <label>Waktu Level</label>
-            <strong id="psLevelTimeText">${challenge.type === 'tenderRush' ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
+            <label>${challenge.type === 'bonusRun' ? 'Waktu Bonus' : 'Waktu Level'}</label>
+            <strong id="psLevelTimeText">${challenge.type === 'tenderRush' ? '-' : challenge.type === 'bonusRun' ? `${Number(GAME_STATE.bonusRun?.timeLeft || challenge.timeLimit || 45)}s` : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
             <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
           </div>
         </div>
@@ -2676,7 +3211,7 @@
         <div class="ps-buttons">
           <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Mulai Ulang dari Soal 1</button>
           ${
-            challenge.type === 'pipeline' || challenge.type === 'tenderRush'
+            challenge.type === 'pipeline' || challenge.type === 'tenderRush' || challenge.type === 'bonusRun'
               ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
               : ''
           }
@@ -3280,6 +3815,34 @@
       });
     }
 
+    const btnStartBonusRun = root.querySelector('#btnStartBonusRun');
+    if (btnStartBonusRun) {
+      btnStartBonusRun.addEventListener('click', () => {
+        startBonusRun();
+      });
+    }
+
+    const bonusTapArea = root.querySelector('#psBonusTapArea');
+    if (bonusTapArea) {
+      bonusTapArea.addEventListener('click', () => {
+        handleBonusRunJump();
+      });
+    }
+
+    const bonusSlideBtn = root.querySelector('#psBonusSlideBtn');
+    if (bonusSlideBtn) {
+      bonusSlideBtn.addEventListener('click', () => {
+        handleBonusRunSlide();
+      });
+    }
+
+    const bonusRunner = root.querySelector('#psBonusRunner');
+    if (bonusRunner) {
+      bonusRunner.addEventListener('click', () => {
+        handleBonusRunJump();
+      });
+    }
+
     const btnNext = root.querySelector('#btnNextChallenge');
     const btnRestart = root.querySelector('#btnRestartGame');
     const btnReset = root.querySelector('#btnResetChallenge');
@@ -3305,6 +3868,7 @@
         clearAutoNextTimer();
         clearTenderRushTimers();
         disableTenderRushKeyboard();
+        clearBonusRunLoop();
         loadChallenge();
       });
     }
@@ -3782,6 +4346,7 @@
       clearLevelTimer();
       clearTenderRushTimers();
       disableTenderRushKeyboard();
+      clearBonusRunLoop();
       clearPanjiIntroTimers();
       clearPanjiTalkTimer();
 
