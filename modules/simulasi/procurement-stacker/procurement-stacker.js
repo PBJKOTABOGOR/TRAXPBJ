@@ -412,7 +412,7 @@
       desc: 'Paket akan muncul satu per satu. Masukkan paket ke jalur metode yang paling tepat sebelum waktu habis.',
       budget: 'Simulasi cepat',
       difficulty: 'Level 2 - Arcade',
-      timeLimit: 8,
+      timeLimit: 10,
       packages: [
         {
           title: 'Belanja Laptop Pelayanan Publik',
@@ -1178,6 +1178,15 @@
           submitFinalScoreToLeaderboard();
         } else {
           closeLeaderboardModal();
+
+          if (!GAME_STATE.current || GAME_STATE.stage === 'ready') {
+            showPanji('Data pemain sudah tersimpan. Sekarang PANJI mulai perkenalan dulu, lalu kita masuk ke soal pertama.', 'happy');
+            setTimeout(() => {
+              if (!destroyed) startGame();
+            }, 650);
+          } else {
+            showPanjiHowToPlayAfterPlayerSaved();
+          }
         }
 
         renderLeaderboardModalContent();
@@ -1831,7 +1840,7 @@
 
     if (challenge.type === 'tenderRush') {
       showPanji(
-        'Ini Tender Rush. Sebelum paket turun, baca petanya dulu: tekan 1 untuk e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, dan 5 Dikecualikan. Paket baru turun setelah kamu klik Mulai Tender Rush.',
+        'Ini Tender Rush. Kontrolnya: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan. Paket baru turun setelah klik Mulai.',
         'thinking'
       );
       return;
@@ -1990,6 +1999,40 @@
     if (challenge.type === 'pipeline') return renderPipelineChallenge(challenge);
     if (challenge.type === 'tenderRush') return renderTenderRushChallenge(challenge);
     return renderQuizChallenge(challenge);
+  }
+
+
+  function renderReadyScreen() {
+    if (!root) return;
+
+    root.innerHTML = `
+      <section class="ps-card ps-ready-card">
+        <div class="ps-result-hero">
+          <h2>🎮 Procurement Stacker</h2>
+          <p>
+            Sebelum mulai, PANJI akan kenalan dulu dan minta data pemain. Isi nama serta instansi/OPD agar skor akhir bisa masuk leaderboard.
+          </p>
+        </div>
+
+        <div class="ps-result-note">
+          <strong>Alur game:</strong><br>
+          Soal akan bercampur: susun pipeline, pilihan ABCD, dan Tender Rush. Tender Rush memakai tombol 1 sampai 5 untuk memilih metode pengadaan dengan cepat.
+        </div>
+
+        <div class="ps-buttons">
+          <button type="button" class="ps-btn ps-btn-primary" id="btnOpenPlayerModal">
+            Isi Nama & Instansi
+          </button>
+        </div>
+      </section>
+    `;
+
+    const btn = root.querySelector('#btnOpenPlayerModal');
+    if (btn) {
+      btn.addEventListener('click', () => openLeaderboardModal('player', true));
+    }
+
+    requestAnimationFrame(updatePanjiAutoBottom);
   }
 
   function renderGame() {
@@ -2245,7 +2288,7 @@
         </div>
 
         <div class="ps-rush-fall-lane">
-          <div class="ps-rush-package ${rush.lastResult ? (rush.lastResult.correct ? 'correct' : 'wrong') : ''}">
+          <div class="ps-rush-package ${rush.lastResult ? (rush.lastResult.correct ? 'correct' : 'wrong') : ''}" style="--rush-duration:${Number(challenge.timeLimit || 8)}s">
             <div class="ps-rush-package-top">
               <span>${escapeHtml(currentPackage.type)}</span>
               <b>${formatCurrency(currentPackage.pagu)}</b>
@@ -3105,13 +3148,21 @@
     ensureLeaderboardModal();
     fetchLeaderboard();
     initPanji(container);
-    startGame();
 
-    setTimeout(() => {
-      if (!destroyed) {
-        openLeaderboardModal(hasPlayerProfile() ? 'leaderboard' : 'player', !hasPlayerProfile());
-      }
-    }, 450);
+    if (hasPlayerProfile()) {
+      startGame();
+    } else {
+      GAME_STATE.stage = 'ready';
+      GAME_STATE.current = null;
+      renderReadyScreen();
+      showPanji('Halo, perkenalkan. Aku PANJI, Pengadaan Jitu. Sebelum main, isi dulu nama pemain dan instansi atau OPD kamu ya.', 'happy');
+
+      setTimeout(() => {
+        if (!destroyed) {
+          openLeaderboardModal('player', true);
+        }
+      }, 650);
+    }
 
     leaderboardRefreshTimer = setInterval(() => {
       if (!destroyed && leaderboardModalEl && !leaderboardModalEl.classList.contains('ps-hidden')) {
