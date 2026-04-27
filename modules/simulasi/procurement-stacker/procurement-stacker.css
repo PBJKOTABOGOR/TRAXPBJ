@@ -4153,3 +4153,91 @@
   .ps-bonus-runner-leg.left{ left:24px; }
   .ps-bonus-runner-leg.right{ right:24px; }
 }
+
+/* ===== BONUS CONTROL UPDATE: INVINCIBLE + DOUBLE JUMP + SLIDING ===== */
+.ps-bonus-control-pad{
+  position:absolute;
+  right:18px;
+  bottom:18px;
+  z-index:5;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+.ps-bonus-control-pad .ps-bonus-jump-cta,
+.ps-bonus-control-pad .ps-bonus-slide-cta{
+  position:static;
+  min-height:44px;
+  border:none;
+  border-radius:999px;
+  padding:0 16px;
+  font-size:13px;
+  font-weight:900;
+  color:#fff;
+  cursor:pointer;
+  box-shadow:0 12px 24px rgba(53,88,170,.22);
+}
+
+.ps-bonus-control-pad .ps-bonus-jump-cta{
+  background:linear-gradient(135deg,#2569ff,#7d5cff);
+}
+
+.ps-bonus-control-pad .ps-bonus-slide-cta{
+  background:linear-gradient(135deg,#0f766e,#14b8a6);
+}
+
+.ps-bonus-runner.is-invincible{
+  animation:bonusInvincibleBlink .28s linear infinite;
+  filter:drop-shadow(0 0 14px rgba(56,189,248,.72));
+}
+
+.ps-bonus-runner.is-invincible .ps-bonus-runner-glow{
+  opacity:.95;
+  background:radial-gradient(circle, rgba(125,211,252,.98), rgba(255,255,255,.2), transparent 72%);
+}
+
+.ps-bonus-runner.is-sliding{
+  transform:translateY(36px) scaleX(1.18) scaleY(.62) !important;
+  transform-origin:bottom center;
+  animation:none !important;
+}
+
+.ps-bonus-runner.is-sliding .ps-bonus-runner-head{
+  transform:translateY(10px) rotate(-8deg);
+}
+
+.ps-bonus-runner.is-sliding .ps-bonus-runner-hand.left{
+  transform:rotate(78deg);
+}
+
+.ps-bonus-runner.is-sliding .ps-bonus-runner-hand.right{
+  transform:rotate(-78deg);
+}
+
+.ps-bonus-runner.is-sliding .ps-bonus-runner-leg.left,
+.ps-bonus-runner.is-sliding .ps-bonus-runner-leg.right{
+  animation:none !important;
+  transform:rotate(86deg);
+}
+
+@keyframes bonusInvincibleBlink{
+  0%,100%{ opacity:1; }
+  50%{ opacity:.52; }
+}
+
+@media (max-width:720px){
+  .ps-bonus-control-pad{
+    left:12px;
+    right:12px;
+    bottom:12px;
+  }
+
+  .ps-bonus-control-pad .ps-bonus-jump-cta,
+  .ps-bonus-control-pad .ps-bonus-slide-cta{
+    flex:1 1 145px;
+    padding:0 10px;
+    font-size:12px;
+  }
+}
