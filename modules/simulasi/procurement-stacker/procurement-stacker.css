@@ -2276,11 +2276,21 @@
   }
 }
 
-
 /* =========================================================
-   LEADERBOARD + PANJI POPUP FIX
-   Tombol close tetap bisa diklik, PANJI bisa tampil saat popup awal.
+   PANJI NEMPEL KE POPUP LEADERBOARD
    ========================================================= */
+
+.panji-assistant.panji-leaderboard-mode{
+  right:var(--panji-lb-right, 24px) !important;
+  bottom:var(--panji-lb-bottom, 24px) !important;
+  z-index:2147483646 !important;
+  transform:scale(.86) !important;
+  transform-origin:right bottom !important;
+}
+
+.panji-assistant.panji-leaderboard-mode .panji-bubble{
+  width:320px !important;
+}
 
 .ps-leaderboard-close{
   z-index:2147483647 !important;
@@ -2293,6 +2303,14 @@
   pointer-events:auto !important;
 }
 
-.panji-assistant{
-  z-index:2147483647 !important;
+@media (max-width:900px){
+  .panji-assistant.panji-leaderboard-mode{
+    right:var(--panji-lb-right, 12px) !important;
+    bottom:var(--panji-lb-bottom, 12px) !important;
+    transform:scale(.72) !important;
+  }
+
+  .panji-assistant.panji-leaderboard-mode .panji-bubble{
+    width:270px !important;
+  }
 }
