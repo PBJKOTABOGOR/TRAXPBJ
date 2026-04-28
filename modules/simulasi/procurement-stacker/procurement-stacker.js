@@ -488,7 +488,7 @@
       desc: 'Beberapa bidang mengusulkan komputer dengan kebutuhan sejenis. Total nilai Rp650 juta.',
       budget: 'Rp650.000.000',
       difficulty: 'Level 3 - Menengah',
-      ideal: ['rup', 'identifikasi', 'konsolidasi', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'kontrak', 'bast', 'realisasi'],
+      ideal: ['rup', 'identifikasi', 'konsolidasi', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
       traps: ['pecahPaket', 'metodePl', 'metodeAsalCepat', 'kontrakAwal'],
       explanation: 'Kebutuhan sejenis perlu diidentifikasi dan dapat dikonsolidasikan agar tidak terjadi pemecahan paket yang tidak wajar.'
     },
@@ -923,8 +923,8 @@
       BONUS_LEVEL_8_SNAKE,
       CHALLENGE_RAW[6],
       CHALLENGE_RAW[7],
-      CHALLENGE_RAW[8],
-      CHALLENGE_RAW[9]
+      CHALLENGE_RAW[20],
+      CHALLENGE_RAW[21]
     ].filter(Boolean);
 
     return list.slice(0, 12);
@@ -1348,7 +1348,7 @@
         </div>
       ` : ''}
 
-      ${isResult ? renderResultFeedbackBox() : ''}
+      ${isResult && activeTab === 'player' ? renderResultFeedbackBox() : ''}
 
       <div class="ps-lb-message ${PLAYER_STATE.lastSaveMessage ? '' : 'empty'}">
         ${escapeHtml(PLAYER_STATE.lastSaveMessage || 'Data pemain disimpan di browser ini dan skor akhir disimpan ke Google Sheet.')}
@@ -1426,9 +1426,10 @@
           return;
         }
 
-        leaderboardModalEl.dataset.activeTab = 'leaderboard';
         PLAYER_STATE.lastSaveMessage = 'Pengalaman main disimpan. Skor sedang dikirim ke leaderboard...';
         submitFinalScoreToLeaderboard();
+        closeLeaderboardModal();
+        showToast('Pengalaman tersimpan. Makasih!', 'ok');
       });
     }
 
@@ -1917,7 +1918,7 @@
     }
 
     renderGame();
-    openLeaderboardModal(hasPlayerProfile() ? 'leaderboard' : 'player', true);
+    openLeaderboardModal('player', true);
   }
 
   function clearAutoNextTimer() {
@@ -2670,7 +2671,7 @@
     const finalResult = getCurrentResultSummary();
     showPanji(getLeaderboardPanjiNarrative(finalResult), getLeaderboardPanjiMood(finalResult));
     showToast('Semua soal selesai. Hasil akhir ditampilkan.', 'ok');
-    openLeaderboardModal(hasPlayerProfile() ? 'leaderboard' : 'player', true);
+    openLeaderboardModal('player', true);
   }
 
   function nextChallenge() {
@@ -2758,6 +2759,15 @@
     requestAnimationFrame(updatePanjiAutoBottom);
   }
 
+  function getDisplayChallengeTitle(challenge) {
+    const levelNo = GAME_STATE.index + 1;
+    const rawTitle = String(challenge && challenge.title ? challenge.title : 'Challenge');
+    if (/^(Soal|Level)\s*\d+/i.test(rawTitle)) {
+      return rawTitle.replace(/^(Soal|Level)\s*\d+\s*[—-]?\s*/i, 'Level ' + levelNo + ' — ');
+    }
+    return 'Level ' + levelNo + ' — ' + rawTitle;
+  }
+
   function renderGame() {
     if (!root) return;
 
@@ -2774,7 +2784,7 @@
       <section class="ps-card">
         <div class="ps-card-head">
           <div>
-            <h3>${escapeHtml(challenge.title)}</h3>
+            <h3>${escapeHtml(getDisplayChallengeTitle(challenge))}</h3>
             <p>${escapeHtml(challenge.desc)}</p>
           </div>
 
@@ -3164,8 +3174,8 @@
           <div class="ps-bonus3d-mountain m2"></div>
           <div class="ps-bonus3d-road"></div>
           <div class="ps-bonus3d-portal ${GAME_STATE.progress >= 100 ? 'open' : ''}">PORTAL</div>
-          <div class="ps-bonus3d-player"><span>PPK</span></div>
-          <div class="ps-bonus3d-companion"><span>PANJI</span></div>
+          <div class="ps-bonus3d-player" style="--player-step:${activeIndex}"><span>PPK</span></div>
+          <div class="ps-bonus3d-companion" style="--player-step:${activeIndex}"><span>PANJI</span></div>
           <div class="ps-bonus3d-map openworld-map">
             ${bonus.nodes.map((node, index) => {
               const isDone = Boolean(bonus.completed[node.id]);
@@ -3257,7 +3267,8 @@
       GAME_STATE.progress = 100;
       GAME_STATE.score += 20;
       addLog('ok', 'Bonus level 4 selesai', 'Poin analisa dari bonus open world sudah masuk nilai akhir.');
-      showPanji('Bonus level 4 selesai. Aku sudah catat gaya analisamu buat penilaian akhir.', 'happy');
+      showPanji('Evaluator Battle selesai. Bonus poin kamu: ' + bonus.bonusScore + '. Konsolidasi berhasil cukup baik, portal keluar dari dunia 3D terbuka. Poin ini masuk nilai akhir.', 'happy');
+      showToast('Portal 3D terbuka. Bonus +' + bonus.bonusScore, 'ok');
     }
 
     renderGame();
@@ -3267,15 +3278,18 @@
     return {
       running: false,
       finished: false,
+      briefed: false,
       score: 0,
       target: 12,
-      grid: 16,
-      snake: [{x:7,y:8},{x:6,y:8},{x:5,y:8}],
+      hearts: 5,
+      grid: 18,
+      snake: [{x:8,y:9},{x:7,y:9},{x:6,y:9}],
       dir: {x:1,y:0},
       nextDir: {x:1,y:0},
-      star: {x:11,y:8},
-      obstacles: [{x:3,y:3},{x:12,y:4},{x:6,y:12},{x:13,y:12}],
-      ticks: 0
+      star: {x:13,y:9},
+      obstacles: [{x:3,y:3},{x:14,y:4},{x:6,y:14},{x:15,y:14},{x:10,y:6}],
+      ticks: 0,
+      activeTip: 'Kisi-kisi: di PBJ jangan cuma kejar cepat. Cek dulu RUP, kebutuhan, harga, katalog, dan bukti proses.'
     };
   }
 
@@ -3294,12 +3308,21 @@
           <p>Ambil bintang sebanyak mungkin. Hindari tembok, badan sendiri, dan jebakan revisi. Pakai tap HP / klik mouse di area game buat belokin ular. Keyboard WASD/arrow tetap bisa. Bonus ini boleh diulang, atau dilewati kalau mau lanjut level berikutnya.</p>
           <div class="ps-snake-score-row">
             <div><label>Bintang</label><b>${snake.score}/${snake.target}</b></div>
-            <div><label>Status</label><b>${snake.finished ? 'Selesai' : snake.running ? 'Berjalan' : 'Siap'}</b></div>
+            <div><label>Hati</label><b>${'❤️'.repeat(Math.max(0, snake.hearts || 0)) || '0'}</b></div>
             <div><label>Bonus</label><b>${Math.min(120, snake.score * 10)}</b></div>
           </div>
           <div class="ps-bonus3d-panji">
-            <b>PANJI:</b> Ini level santai. Fokus ambil ⭐ Bintang Semangat, jangan rakus, dan hindari 🧾 Revisi. Kalau nabrak, kamu boleh ulang lagi.
+            <b>PANJI:</b> Ini level santai. Fokus ambil ⭐ Bintang Semangat, jangan rakus, dan hindari 🧾 Revisi. Kamu punya 5 hati. Kalau hati habis, level selesai dan langsung bisa lanjut.
           </div>
+          <div class="ps-snake-pbj-pop">
+            <b>Popup kisi-kisi PBJ:</b> ${escapeHtml(snake.activeTip || 'Jangan asal ambil keputusan. Cek data, harga, katalog, dan bukti proses.')}
+          </div>
+          ${!snake.briefed && !snake.running && !snake.finished ? `
+            <div class="ps-snake-brief-modal">
+              <b>Sebelum mulai, baca cepat:</b> ambil bintang sambil tetap baca kisi-kisi PBJ. Ini melatih multitasking: mata lihat arena, otak tetap ingat prinsip PBJ. Jangan rakus, jangan tabrak revisi.
+              <button type="button" class="ps-btn ps-btn-primary" id="btnSnakeBriefStart">Paham, mulai Snake</button>
+            </div>
+          ` : ''}
           <div class="ps-buttons">
             <button type="button" class="ps-btn ps-btn-primary" id="btnStartSnake" ${snake.running ? 'disabled' : ''}>${snake.finished ? 'Main Lagi Snake' : 'Mulai Snake'}</button>
             <button type="button" class="ps-btn ps-btn-soft" id="btnResetSnake">Ulangi Level Bonus</button>
@@ -3307,7 +3330,7 @@
           </div>
         </div>
         <div class="ps-snake-stage ps-snake-stage-big">
-          <canvas id="psSnakeCanvas" width="620" height="620" aria-label="PANJI Star Snake"></canvas>
+          <canvas id="psSnakeCanvas" width="760" height="760" aria-label="PANJI Star Snake"></canvas>
           <div class="ps-snake-caption">⭐ Bintang = poin · 🧾 Revisi = jebakan · Tap/Klik = belok · WASD/Arrow juga bisa</div>
         </div>
       </div>
@@ -3461,14 +3484,7 @@
           pemilihan metode yang sesuai, serta dokumentasi saat terjadi perubahan kondisi seperti katalog tidak tersedia
           atau kontrak perlu diadendum.
         </div>
-
-        <div class="ps-result-note ps-feedback-box">
-          <strong>Masukan / pengalaman main:</strong><br>
-          <textarea id="psFinalFeedback" rows="4" placeholder="Tulis masukan, bagian yang seru, atau yang masih membingungkan.">${escapeHtml(PLAYER_STATE.feedback || '')}</textarea>
-          <button type="button" class="ps-btn ps-btn-soft" id="btnSaveFeedback">Simpan Masukan</button>
-        </div>
-
-        <div class="ps-buttons">
+<div class="ps-buttons">
           <button type="button" class="ps-btn ps-btn-primary" id="btnPlayAgain">
             Main Lagi dari Soal 1
           </button>
@@ -3565,6 +3581,12 @@
     c.fillStyle = g;
     c.fillRect(0, 0, size, size);
 
+    c.fillStyle = 'rgba(255,255,255,.92)';
+    c.font = 'bold 22px Arial';
+    c.fillText('❤️'.repeat(Math.max(0, snake.hearts || 0)), 18, 34);
+    c.font = 'bold 18px Arial';
+    c.fillText('⭐ ' + snake.score + '/' + snake.target, size - 120, 34);
+
     for (let x = 0; x < snake.grid; x += 1) {
       for (let y = 0; y < snake.grid; y += 1) {
         if ((x + y) % 2 === 0) {
@@ -3632,7 +3654,7 @@
     };
     document.addEventListener('keydown', bonusSnakeKeyHandler);
 
-    bonusSnakeTimer = setInterval(tickBonusSnake, 150);
+    bonusSnakeTimer = setInterval(tickBonusSnake, 230);
     drawBonusSnake();
   }
 
@@ -3659,6 +3681,18 @@
     renderGame();
   }
 
+  function getSnakePbjTip(score) {
+    const tips = [
+      'Kisi-kisi: market sounding itu cari info pasar, bukan langsung milih pemenang.',
+      'Kisi-kisi: e-Purchasing tetap perlu cek spek, stok, ongkir, dan total harga.',
+      'Kisi-kisi: kalau pakai e-Purchasing, jangan lupa negosiasi/klarifikasi kalau diperlukan.',
+      'Kisi-kisi: mini kompetisi dipakai untuk menjaga persaingan sehat saat kondisi mengharuskan.',
+      'Kisi-kisi: BAST jangan asal tanda tangan. Barang atau pekerjaan harus dicek dulu.',
+      'Kisi-kisi: risiko naik kalau kamu lompat tahap atau memilih karena kebiasaan, bukan data.'
+    ];
+    return tips[Math.abs(Number(score || 0)) % tips.length];
+  }
+
   function tickBonusSnake() {
     const snake = getBonusSnakeState();
     if (!snake.running || snake.finished) return;
@@ -3670,7 +3704,18 @@
     const hitSelf = snake.snake.some(p => p.x === next.x && p.y === next.y);
     const hitObs = snake.obstacles.some(o => o.x === next.x && o.y === next.y);
     if (hitWall || hitSelf || hitObs) {
-      finishBonusSnake('Aduh, PANJI nabrak jebakan revisi.', true);
+      snake.hearts = Math.max(0, Number(snake.hearts || 0) - 1);
+      addLog('bad', 'Snake kena jebakan', 'PANJI nabrak revisi. Hati tersisa ' + snake.hearts + '.');
+      showToast('Aduh nabrak! Hati -1', 'bad');
+      showPanji(snake.hearts > 0 ? 'Aduh, kena revisi. Masih ada hati. Kita lanjut pelan-pelan ya.' : 'Hati habis. Tidak apa-apa, level bonus selesai dan kita lanjut.', snake.hearts > 0 ? 'thinking' : 'sad');
+      if (snake.hearts <= 0) {
+        finishBonusSnake('Hati PANJI habis karena terlalu sering nabrak revisi.', true);
+        return;
+      }
+      snake.snake = [{x:8,y:9},{x:7,y:9},{x:6,y:9}];
+      snake.dir = {x:1,y:0};
+      snake.nextDir = {x:1,y:0};
+      drawBonusSnake();
       return;
     }
 
@@ -3678,6 +3723,7 @@
     if (next.x === snake.star.x && next.y === snake.star.y) {
       snake.score += 1;
       snake.star = randomSnakeCell(snake);
+      snake.activeTip = getSnakePbjTip(snake.score);
       showToast('Bintang semangat +1', 'ok');
       if (snake.score >= snake.target) {
         finishBonusSnake('Mantap! Semua bintang semangat terkumpul. Mood naik, lanjut analisa PBJ.', false);
@@ -3996,9 +4042,27 @@
       });
     });
 
+    const btnSnakeBriefStart = root.querySelector('#btnSnakeBriefStart');
+    if (btnSnakeBriefStart) {
+      btnSnakeBriefStart.addEventListener('click', () => {
+        const snake = getBonusSnakeState();
+        snake.briefed = true;
+        startBonusSnakeGame();
+      });
+    }
+
     const btnStartSnake = root.querySelector('#btnStartSnake');
     if (btnStartSnake) {
-      btnStartSnake.addEventListener('click', () => startBonusSnakeGame());
+      btnStartSnake.addEventListener('click', () => {
+        const snake = getBonusSnakeState();
+        if (!snake.briefed) {
+          snake.briefed = true;
+          renderGame();
+          showPanji('Baca popup kisi-kisi dulu ya. Kalau sudah paham, mulai Snake. Ini melatih fokus sambil tetap ingat prinsip PBJ.', 'thinking');
+          return;
+        }
+        startBonusSnakeGame();
+      });
       setTimeout(drawBonusSnake, 0);
     }
 
