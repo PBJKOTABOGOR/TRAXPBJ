@@ -4282,3 +4282,60 @@
   .ps-bonus3d-scene{min-height:520px}
   .ps-bonus3d-story-panel{max-height:none}
 }
+
+
+/* PATCH V7 - requested revisions */
+.ps-bonus3d-player{
+  left:calc(13% + (var(--player-step,0) * 17%)) !important;
+  bottom:calc(132px + (var(--player-step,0) % 2) * 26px) !important;
+  transition:left .55s ease,bottom .55s ease,transform .35s ease !important;
+}
+.ps-bonus3d-companion{
+  left:calc(22% + (var(--player-step,0) * 17%)) !important;
+  bottom:calc(118px + (var(--player-step,0) % 2) * 26px) !important;
+  transition:left .55s ease,bottom .55s ease,transform .35s ease !important;
+}
+.ps-bonus3d-player::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-18px;
+  width:74px;
+  height:20px;
+  transform:translateX(-50%);
+  border-radius:999px;
+  background:rgba(15,23,42,.22);
+  filter:blur(1px);
+}
+.ps-snake-brief-modal{
+  margin-top:12px;
+  padding:14px;
+  border-radius:18px;
+  background:#eff6ff;
+  border:1px solid #bfdbfe;
+  color:#123a72;
+  line-height:1.55;
+  font-weight:800;
+}
+.ps-snake-brief-modal .ps-btn{margin-top:10px}
+.ps-snake-pbj-pop{
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  line-height:1.55;
+  font-size:13px;
+  font-weight:800;
+  animation:psTipPop 1.2s ease-in-out infinite alternate;
+}
+@keyframes psTipPop{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+.ps-snake-stage-big #psSnakeCanvas{
+  width:min(82vh,860px) !important;
+  height:min(82vh,860px) !important;
+}
+.ps-snake-wrap-big{
+  grid-template-columns:.62fr 1.38fr !important;
+}
+.ps-lb-tabs button[data-lb-tab="player"]:only-child{display:none}
