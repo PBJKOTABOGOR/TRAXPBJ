@@ -4563,3 +4563,122 @@
   .ps-snake-stage-big #psSnakeCanvas{width:min(92vw,760px) !important;height:min(92vw,760px) !important}
   .ps-review-bubble-pop.ps-review-bubble-float{right:18px !important;bottom:calc(150px + (var(--review-i,0) * 62px)) !important}
 }
+
+/* =========================================================
+   FIX V10 - bubble review pisah, karakter bonus turun, snake full arena
+   ========================================================= */
+/* Review bubble: jangan numpuk. Disebar ke kiri/kanan/atas dengan animasi melayang. */
+.ps-review-bubble-pop.ps-review-bubble-float{
+  width:min(330px, calc(100vw - 32px)) !important;
+  bottom:auto !important;
+  right:auto !important;
+  left:auto !important;
+  top:auto !important;
+  z-index:2147483646 !important;
+  animation:psReviewFloatSeparate 4.6s ease-in-out infinite var(--review-delay,0s), psReviewBubbleIn .32s ease !important;
+}
+.ps-review-bubble-pop.review-pos-0{left:24px !important;top:84px !important}
+.ps-review-bubble-pop.review-pos-1{right:28px !important;top:96px !important}
+.ps-review-bubble-pop.review-pos-2{left:42px !important;bottom:92px !important}
+.ps-review-bubble-pop.review-pos-3{right:44px !important;bottom:96px !important}
+.ps-review-bubble-pop.review-pos-4{left:50% !important;top:64px !important;transform:translateX(-50%) !important}
+.ps-review-bubble-pop.review-pos-5{left:50% !important;bottom:86px !important;transform:translateX(-50%) !important}
+.ps-review-bubble-pop.review-pos-0::after,
+.ps-review-bubble-pop.review-pos-2::after{right:auto !important;left:26px !important;transform:rotate(45deg) !important}
+.ps-review-bubble-pop.review-pos-1::after,
+.ps-review-bubble-pop.review-pos-3::after{right:26px !important}
+.ps-review-bubble-pop.review-pos-4::after,
+.ps-review-bubble-pop.review-pos-5::after{left:50% !important;right:auto !important;transform:translateX(-50%) rotate(45deg) !important}
+@keyframes psReviewFloatSeparate{
+  0%,100%{translate:0 0;rotate:-.5deg}
+  35%{translate:10px -12px;rotate:.8deg}
+  70%{translate:-8px -5px;rotate:-.2deg}
+}
+@media(max-width:900px){
+  .ps-review-bubble-pop.review-pos-0,
+  .ps-review-bubble-pop.review-pos-1,
+  .ps-review-bubble-pop.review-pos-2,
+  .ps-review-bubble-pop.review-pos-3,
+  .ps-review-bubble-pop.review-pos-4,
+  .ps-review-bubble-pop.review-pos-5{
+    left:14px !important;
+    right:14px !important;
+    top:auto !important;
+    bottom:calc(88px + (var(--review-i,0) * 118px)) !important;
+    width:auto !important;
+    transform:none !important;
+  }
+}
+
+/* Bonus level 4: PPK & PANJI benar-benar turun ke ground, bukan di awan */
+.ps-bonus3d-scene > .ps-bonus3d-player{
+  top:auto !important;
+  bottom:4px !important;
+  left:calc(10% + (var(--player-step,0) * 18%)) !important;
+  transform:translateY(0) scale(.78) !important;
+  animation:psWorldBobLow 2.1s ease-in-out infinite !important;
+  z-index:8 !important;
+}
+.ps-bonus3d-scene > .ps-bonus3d-companion{
+  top:auto !important;
+  bottom:0 !important;
+  left:calc(18% + (var(--player-step,0) * 18%)) !important;
+  transform:translateY(0) scale(.76) !important;
+  animation:psWorldBobLow 2.1s ease-in-out infinite .3s !important;
+  z-index:9 !important;
+}
+.ps-bonus3d-scene > .ps-bonus3d-player::after,
+.ps-bonus3d-scene > .ps-bonus3d-companion::after{
+  bottom:-10px !important;
+}
+.ps-bonus3d-road{
+  bottom:0 !important;
+  height:60px !important;
+  opacity:.95 !important;
+}
+.ps-bonus3d-fullscreen .ps-bonus3d-map{
+  top:245px !important;
+  bottom:145px !important;
+}
+@keyframes psWorldBobLow{0%,100%{translate:0 0}50%{translate:0 -4px}}
+
+/* Snake: jangan kecil di tengah. Canvas dipaksa memenuhi area stage. */
+.ps-snake-wrap-big{
+  grid-template-columns:360px minmax(760px,1fr) !important;
+  align-items:stretch !important;
+  gap:16px !important;
+}
+.ps-snake-stage-big{
+  min-height:760px !important;
+  height:calc(100vh - 160px) !important;
+  padding:0 !important;
+  border-radius:30px !important;
+  overflow:hidden !important;
+  display:grid !important;
+  grid-template-rows:1fr auto !important;
+  align-items:stretch !important;
+  justify-items:stretch !important;
+}
+.ps-snake-stage-big #psSnakeCanvas{
+  width:100% !important;
+  height:100% !important;
+  min-height:0 !important;
+  max-width:none !important;
+  max-height:none !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  display:block !important;
+  background:#071a2e !important;
+}
+.ps-snake-stage-big .ps-snake-caption{
+  margin:0 !important;
+  padding:12px 14px !important;
+  background:rgba(6,17,31,.88) !important;
+  color:#fff !important;
+  text-align:center !important;
+}
+@media(max-width:1200px){
+  .ps-snake-wrap-big{grid-template-columns:1fr !important}
+  .ps-snake-stage-big{height:72vh !important;min-height:620px !important}
+}
