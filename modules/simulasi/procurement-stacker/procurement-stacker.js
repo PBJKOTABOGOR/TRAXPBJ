@@ -1139,40 +1139,53 @@
   }
 
   async function showReviewBubbleOnMenuOpen() {
-    if (destroyed || reviewBubbleEl || sessionStorage.getItem('procstack_review_bubble_seen_v1') === '1') return;
+    if (destroyed || sessionStorage.getItem('procstack_review_bubble_seen_v2') === '1') return;
     const rows = await fetchReviewRowsForBubble();
-    if (destroyed || reviewBubbleEl || !rows.length) return;
+    if (destroyed || !rows.length) return;
 
-    sessionStorage.setItem('procstack_review_bubble_seen_v1', '1');
-    const picked = rows[Math.floor(Math.random() * rows.length)];
-    const more = rows.slice(0, 3);
-    reviewBubbleEl = document.createElement('div');
-    reviewBubbleEl.className = 'ps-review-bubble-pop';
-    reviewBubbleEl.innerHTML = `
-      <button type="button" class="ps-review-bubble-close" aria-label="Tutup">×</button>
-      <div class="ps-review-bubble-head">
-        <span>💬 Review Pemain</span>
-        <b>PANJI bilang...</b>
-      </div>
-      <div class="ps-review-main">
-        “${escapeHtml(getRowReview(picked))}”
-        <small>${escapeHtml(picked.nama || 'Pemain')} · ${escapeHtml(picked.instansi || 'Instansi')}</small>
-      </div>
-      <div class="ps-review-mini-list">
-        ${more.map(row => `<div><b>${escapeHtml(row.nama || 'Pemain')}:</b> ${escapeHtml(getRowReview(row))}</div>`).join('')}
-      </div>
-    `;
-    document.body.appendChild(reviewBubbleEl);
-    const close = () => {
-      if (!reviewBubbleEl) return;
-      reviewBubbleEl.classList.add('closing');
-      setTimeout(() => {
-        if (reviewBubbleEl) reviewBubbleEl.remove();
-        reviewBubbleEl = null;
-      }, 220);
-    };
-    reviewBubbleEl.querySelector('.ps-review-bubble-close')?.addEventListener('click', close);
-    reviewBubbleTimer = setTimeout(close, 8500);
+    sessionStorage.setItem('procstack_review_bubble_seen_v2', '1');
+    const emojis = ['😄','🔥','⭐','💬','🚀','🧠','🎮','🙌','😂','✨'];
+    const pickedRows = rows.slice(0, Math.min(5, rows.length));
+    const created = [];
+
+    pickedRows.forEach((row, index) => {
+      const bubble = document.createElement('div');
+      bubble.className = 'ps-review-bubble-pop ps-review-bubble-float';
+      bubble.style.setProperty('--review-i', String(index));
+      bubble.style.setProperty('--review-delay', `${index * 0.18}s`);
+      bubble.innerHTML = `
+        <button type="button" class="ps-review-bubble-close" aria-label="Tutup">×</button>
+        <div class="ps-review-bubble-head">
+          <span>${emojis[index % emojis.length]} Review Pemain</span>
+          <b>PANJI baca...</b>
+        </div>
+        <div class="ps-review-main">
+          “${escapeHtml(getRowReview(row))}” ${emojis[(index + 3) % emojis.length]}
+          <small>${escapeHtml(row.nama || 'Pemain')} · ${escapeHtml(row.instansi || 'Instansi')}</small>
+        </div>
+      `;
+      document.body.appendChild(bubble);
+      created.push(bubble);
+
+      const closeOne = () => {
+        bubble.classList.add('closing');
+        setTimeout(() => bubble.remove(), 240);
+      };
+      bubble.querySelector('.ps-review-bubble-close')?.addEventListener('click', closeOne);
+      setTimeout(closeOne, 9000 + (index * 900));
+    });
+
+    reviewBubbleEl = created[0] || null;
+    showPanji('Ini review dari pemain lain. Aku munculin kayak bubble biar suasananya hidup. Baca sebentar, siapa tahu ada pengalaman yang nyambung sama kamu 😄', 'happy');
+    reviewBubbleTimer = setTimeout(() => {
+      created.forEach(bubble => {
+        if (bubble && bubble.parentNode) {
+          bubble.classList.add('closing');
+          setTimeout(() => bubble.remove(), 240);
+        }
+      });
+      reviewBubbleEl = null;
+    }, 12000);
   }
 
   async function submitFinalScoreToLeaderboard() {
@@ -3430,7 +3443,7 @@
           </div>
         </div>
         <div class="ps-snake-stage ps-snake-stage-big">
-          <canvas id="psSnakeCanvas" width="760" height="760" aria-label="PANJI Star Snake"></canvas>
+          <canvas id="psSnakeCanvas" width="960" height="960" aria-label="PANJI Star Snake"></canvas>
           <div class="ps-snake-caption">⭐ Bintang = poin · 🧾 Revisi = jebakan · Tap/Klik = belok · WASD/Arrow juga bisa</div>
         </div>
       </div>
@@ -3626,6 +3639,16 @@
   }
 
 
+  function maybeStartSnakeFromAnyInput(event) {
+    const challenge = getCurrentChallenge && getCurrentChallenge();
+    if (!challenge || challenge.type !== 'bonusSnake') return;
+    const snake = getBonusSnakeState();
+    if (!snake || snake.running || snake.finished) return;
+    if (!snake.briefed) snake.briefed = true;
+    startBonusSnakeGame();
+    if (event) event.preventDefault && event.preventDefault();
+  }
+
   function clearBonusSnakeTimers() {
     if (bonusSnakeTimer) {
       clearInterval(bonusSnakeTimer);
@@ -3770,7 +3793,11 @@
       GAME_STATE.risk += 6;
       GAME_STATE.wrong += 1;
       addLog('bad', 'Snake selesai karena tabrakan', message + ' Bonus tetap dihitung dari bintang yang sempat kamu ambil.');
-      showPanji(message + ' Tenang, bonus tetap masuk sesuai bintang yang kamu ambil.', 'sad');
+      showPanji(message + ' Hati habis, tapi santai. Ini bonus, jadi aku langsung bantu lanjut ke level berikutnya.', 'sad');
+      setTimeout(() => {
+        const current = getCurrentChallenge && getCurrentChallenge();
+        if (current && current.type === 'bonusSnake' && GAME_STATE.progress === 100) nextChallenge();
+      }, 2400);
     } else {
       GAME_STATE.correct += 1;
       addLog('ok', 'Snake selesai', message);
@@ -3827,6 +3854,7 @@
       snake.star = randomSnakeCell(snake);
       snake.activeTip = getSnakePbjTip(snake.score);
       showToast('Bintang semangat +1', 'ok');
+      showPanji(snake.activeTip.replace('Kisi-kisi:', 'Kisi-kisi PBJ:'), 'talking');
       if (snake.score >= snake.target) {
         finishBonusSnake('Mantap! Semua bintang semangat terkumpul. Mood naik, lanjut analisa PBJ.', false);
         return;
@@ -4149,35 +4177,54 @@
       btnSnakeBriefStart.addEventListener('click', () => {
         const snake = getBonusSnakeState();
         snake.briefed = true;
+        showPanji('Kisi-kisi PBJ aku bacain juga ya: jangan cuma kejar cepat. Tetap cek RUP, kebutuhan, harga, katalog, negosiasi, dan bukti proses. Oke, Snake mulai!', 'talking');
         startBonusSnakeGame();
       });
     }
 
     const btnStartSnake = root.querySelector('#btnStartSnake');
     if (btnStartSnake) {
-      btnStartSnake.addEventListener('click', () => {
+      btnStartSnake.addEventListener('click', event => {
         const snake = getBonusSnakeState();
-        if (!snake.briefed) {
-          snake.briefed = true;
-          renderGame();
-          showPanji('Baca popup kisi-kisi dulu ya. Kalau sudah paham, mulai Snake. Ini melatih fokus sambil tetap ingat prinsip PBJ.', 'thinking');
-          return;
-        }
+        snake.briefed = true;
         startBonusSnakeGame();
+        event.preventDefault();
       });
       setTimeout(drawBonusSnake, 0);
+      const snake = getBonusSnakeState();
+      if (!snake.running && !snake.finished && !snake._panjiTipShown) {
+        snake._panjiTipShown = true;
+        setTimeout(() => showPanji('Sebelum mulai Snake, aku kasih kisi-kisi PBJ ya: jangan cuma kejar cepat. Cek RUP, kebutuhan, katalog, harga, negosiasi, dan bukti proses. Klik atau tekan tombol apa saja kalau sudah siap.', 'talking'), 350);
+      }
     }
 
+    const snakePageKeyStarter = event => {
+      const current = getCurrentChallenge && getCurrentChallenge();
+      if (!current || current.type !== 'bonusSnake') return;
+      const key = String(event.key || '').toLowerCase();
+      if (!['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)) return;
+      maybeStartSnakeFromAnyInput(event);
+    };
+    document.removeEventListener('keydown', snakePageKeyStarter);
+    document.addEventListener('keydown', snakePageKeyStarter, {once:true});
+
     const snakeCanvas = root.querySelector('#psSnakeCanvas');
+    const snakeStage = root.querySelector('.ps-snake-stage');
+    const snakeInputStarter = event => {
+      const snake = getBonusSnakeState();
+      if (!snake.running && !snake.finished) {
+        maybeStartSnakeFromAnyInput(event);
+        setTimeout(() => steerSnakeFromPointer(event), 20);
+        return;
+      }
+      steerSnakeFromPointer(event);
+    };
     if (snakeCanvas) {
-      snakeCanvas.addEventListener('pointerdown', event => {
-        event.preventDefault();
-        steerSnakeFromPointer(event);
-      });
-      snakeCanvas.addEventListener('touchstart', event => {
-        event.preventDefault();
-        steerSnakeFromPointer(event);
-      }, {passive:false});
+      snakeCanvas.addEventListener('pointerdown', snakeInputStarter);
+      snakeCanvas.addEventListener('touchstart', snakeInputStarter, {passive:false});
+    }
+    if (snakeStage) {
+      snakeStage.addEventListener('pointerdown', snakeInputStarter);
     }
 
     const btnResetSnake = root.querySelector('#btnResetSnake');
