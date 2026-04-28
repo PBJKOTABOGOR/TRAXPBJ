@@ -1902,6 +1902,7 @@
     GAME_STATE.levelTimeLimit = limit;
     GAME_STATE.levelTimeLeft = limit;
     levelTimerStartedAt = Date.now();
+    GAME_STATE.countdownWarned = {};
 
     if (!limit || GAME_STATE.stage === 'ready' || GAME_STATE.stage === 'result') {
       updateLevelTimerUi();
@@ -1918,6 +1919,12 @@
 
       GAME_STATE.levelTimeLeft = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0) - 1);
       updateLevelTimerUi();
+
+      if ((GAME_STATE.levelTimeLeft === 10 || GAME_STATE.levelTimeLeft === 5) && !GAME_STATE.countdownWarned[GAME_STATE.levelTimeLeft]) {
+        GAME_STATE.countdownWarned[GAME_STATE.levelTimeLeft] = true;
+        showPanji('Waktu tinggal ' + GAME_STATE.levelTimeLeft + ' detik. Jangan panik, baca soal yang dekat dengan jawaban, lalu pilih yang paling aman.', 'alert');
+        showToast('Waktu tinggal ' + GAME_STATE.levelTimeLeft + ' detik!', 'bad');
+      }
 
       if (GAME_STATE.levelTimeLeft <= 0) {
         stopGameEarly('time');
@@ -2817,12 +2824,6 @@
 
     root.innerHTML = `
       <section class="ps-card ps-ready-card">
-        <div class="ps-result-hero">
-          <h2>🎮 Procurement Stacker</h2>
-          <p>
-            Sebelum mulai, PANJI akan kenalan dulu dan minta data pemain. Isi nama serta instansi/OPD agar skor akhir bisa masuk leaderboard.
-          </p>
-        </div>
 
         <div class="ps-result-note">
           <strong>Alur game:</strong><br>
@@ -2884,29 +2885,6 @@
           </div>
         </div>
 
-        <div class="ps-case-panel">
-          <div class="ps-case-box">
-            <label>Kasus / Topik</label>
-            <strong>${escapeHtml(challenge.caseTitle)}</strong>
-            <span>${escapeHtml(challenge.desc)}</span>
-          </div>
-
-          <div class="ps-case-box">
-            <label>Jenis Soal</label>
-            <strong>${getChallengeTypeName(challenge.type)}</strong>
-          </div>
-
-          <div class="ps-case-box">
-            <label>Skor</label>
-            <strong>${GAME_STATE.score}</strong>
-          </div>
-
-          <div class="ps-case-box">
-            <label>Risiko</label>
-            <strong>${GAME_STATE.risk}</strong>
-          </div>
-        </div>
-
         <div class="ps-score-grid">
           <div class="ps-score-card">
             <label>Progress</label>
@@ -2924,24 +2902,26 @@
             <label>Salah</label>
             <strong>${GAME_STATE.wrong}</strong>
           </div>
-          <div class="ps-score-card ps-level-time-card">
-            <label>Waktu Level</label>
-            <strong id="psLevelTimeText">${(challenge.type === 'tenderRush' || challenge.type === 'bonusOpenWorld' || challenge.type === 'bonusSnake') ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
-            <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
-          </div>
         </div>
 
         <div class="ps-progress-track">
           <div class="ps-progress-bar" style="width:${GAME_STATE.progress}%"></div>
         </div>
 
-        <div class="ps-helper-row">
+        <div class="ps-helper-row ps-helper-row-compact">
           <div class="ps-helper-note">
-            <b>PANJI siap bantu.</b> Kalau klik <b>Tanya PANJI</b>, kamu dapat hint tetapi skor berkurang <b>${HINT_PENALTY}</b>.
+            <b>PANJI siap bantu.</b> Kalau bingung, tanya PANJI. Hint mengurangi skor <b>${HINT_PENALTY}</b> poin.
           </div>
-          <button type="button" class="ps-btn ps-btn-soft" id="btnPanjiHint">
-            Tanya PANJI (-${HINT_PENALTY})
-          </button>
+          <div class="ps-helper-actions">
+            <div class="ps-level-time-card ps-level-time-compact">
+              <label>Waktu</label>
+              <strong id="psLevelTimeText">${(challenge.type === 'tenderRush' || challenge.type === 'bonusOpenWorld' || challenge.type === 'bonusSnake') ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
+              <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
+            </div>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnPanjiHint">
+              Tanya PANJI (-${HINT_PENALTY})
+            </button>
+          </div>
         </div>
 
         ${renderChallengeBody(challenge)}
@@ -2966,6 +2946,34 @@
     requestAnimationFrame(updatePanjiAutoBottom);
   }
 
+
+  function renderQuestionPanel(challenge, mainQuestion = '') {
+    const typeName = getChallengeTypeName(challenge.type);
+    const title = challenge.type === 'bonusOpenWorld'
+      ? 'SOAL BONUS 4 / MISI 3D'
+      : challenge.type === 'bonusSnake'
+        ? 'SOAL BONUS 8 / SNAKE'
+        : 'SOAL / PERTANYAAN';
+    const detail = mainQuestion || challenge.question || challenge.desc || '';
+    const meta = [];
+    if (challenge.budget) meta.push('Pagu/Nilai: ' + challenge.budget);
+    if (challenge.difficulty) meta.push(challenge.difficulty);
+    meta.push(typeName);
+
+    return `
+      <div class="ps-question-panel">
+        <div class="ps-question-label">${title}</div>
+        <div class="ps-question-main">
+          <h2>${escapeHtml(challenge.caseTitle || getDisplayChallengeTitle(challenge))}</h2>
+          <p>${escapeHtml(detail)}</p>
+        </div>
+        <div class="ps-question-meta">
+          ${meta.map(item => `<span>${escapeHtml(item)}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   function renderPipelineChallenge(challenge) {
     const placedIds = new Set(GAME_STATE.placed.filter(Boolean).map(item => item.id));
     const showPipelineTutorial = !GAME_STATE.pipelineTutorialSeen && getCurrentLevelNumber() === 1;
@@ -2977,7 +2985,7 @@
           <div>
             <h4>Pelan-pelan dulu, ini cara main pipeline.</h4>
             <ol>
-              <li><b>Baca kasusnya di panel atas</b>: lihat nama paket, nilai/pagu, dan tingkat kesulitan.</li>
+              <li><b>Baca panel SOAL / PERTANYAAN</b>: posisinya tepat di atas slot, jadi kamu tidak perlu bolak-balik lihat jauh ke atas.</li>
               <li><b>Baca tujuan pipeline</b>: susun kartu proses dari kiri ke kanan.</li>
               <li><b>Cara meletakkan kartu</b>: drag kartu ke slot, atau klik kartu lalu klik slot biru.</li>
               <li><b>Jangan asal taruh</b>: slot harus diisi urut dari kiri. Kartu jebakan bikin risiko naik.</li>
@@ -2987,6 +2995,7 @@
           </div>
         </div>
       ` : ''}
+      ${renderQuestionPanel(challenge)}
       <div class="ps-pipeline">
         ${challenge.idealIds.map((_, index) => renderSlot(index)).join('')}
       </div>
@@ -3081,6 +3090,7 @@
 
     if (!rush.started) {
       return `
+        ${renderQuestionPanel(challenge)}
         <div class="ps-rush-tutorial">
           <div class="ps-rush-tutorial-main">
             <div class="ps-rush-kicker">Tutorial PANJI dulu</div>
@@ -3110,6 +3120,7 @@
 
     if (!currentPackage && GAME_STATE.progress === 100) {
       return `
+        ${renderQuestionPanel(challenge)}
         <div class="ps-rush-finished">
           <h3>🏁 Tender Rush selesai</h3>
           <p>${escapeHtml(challenge.explanation)}</p>
@@ -3123,6 +3134,7 @@
     }
 
     return `
+      ${renderQuestionPanel(challenge)}
       <div class="ps-rush-arena">
         <div class="ps-rush-hud">
           <div><label>Paket</label><strong>${Math.min(rush.currentIndex + 1, total)} / ${total}</strong></div>
@@ -3281,6 +3293,10 @@
         <div class="ps-bonus3d-panel ps-bonus3d-story-panel">
           <div class="ps-bonus3d-kicker">Bonus Level 4 • Full Screen 3D Quest</div>
           <h3>${escapeHtml(active.title)}</h3>
+          <div class="ps-bonus3d-soal">
+            <b>SOAL QUEST:</b> ${escapeHtml(active.desc)}<br>
+            <span><b>Masalahnya:</b> ${escapeHtml(storyLine)}</span>
+          </div>
           <p>${escapeHtml(storyLine)}</p>
           <div class="ps-bonus3d-panji">
             <b>PANJI:</b> ${escapeHtml(active.desc)} Pilihan di bawah ini diacak. Ada yang aman, ada yang jebakan. Jangan asal klik, karena pilihanmu masuk analisa akhir.
@@ -3472,9 +3488,7 @@
     const correctRuntimeIndex = Number.isInteger(challenge.runtimeAnswer) ? challenge.runtimeAnswer : Number(challenge.answer || 0);
 
     return `
-      <div class="ps-quiz-question">
-        ${escapeHtml(challenge.question)}
-      </div>
+      ${renderQuestionPanel(challenge, challenge.question)}
 
       <div class="ps-quiz-options">
         ${options.map((option, index) => {
@@ -4278,7 +4292,7 @@
         GAME_STATE.pipelineTutorialSeen = true;
         startLevelTimer(getCurrentChallenge());
         renderGame();
-        showPanji('Oke, baru sekarang waktunya jalan. Baca kasus di panel atas, pilih kartu, lalu taruh dari slot kiri ke kanan.', 'happy');
+        showPanji('Oke, baru sekarang waktunya jalan. Baca panel SOAL di atas slot, pilih kartu, lalu taruh dari slot kiri ke kanan.', 'happy');
       });
     }
 
