@@ -1126,24 +1126,32 @@
   async function fetchReviewRowsForBubble() {
     if (!LEADERBOARD_API_URL) return [];
     try {
-      const response = await fetch(`${LEADERBOARD_API_URL}?action=leaderboard&v=${Date.now()}`, {
+      const response = await fetch(`${LEADERBOARD_API_URL}?action=reviews&v=${Date.now()}`, {
         method: 'GET',
         cache: 'no-store'
       });
       const json = await response.json();
-      const rows = Array.isArray(json) ? json : Array.isArray(json.leaderboard) ? json.leaderboard : [];
-      return sortLeaderboardRows(rows).filter(row => getRowReview(row)).slice(0, 6);
+      const rows = Array.isArray(json)
+        ? json
+        : Array.isArray(json.reviews)
+          ? json.reviews
+          : Array.isArray(json.leaderboard)
+            ? json.leaderboard
+            : [];
+      return rows
+        .filter(row => row && getRowReview(row))
+        .slice(0, 8);
     } catch (error) {
       return [];
     }
   }
 
   async function showReviewBubbleOnMenuOpen() {
-    if (destroyed || sessionStorage.getItem('procstack_review_bubble_seen_v2') === '1') return;
+    if (destroyed || sessionStorage.getItem('procstack_review_bubble_seen_v11') === '1') return;
     const rows = await fetchReviewRowsForBubble();
     if (destroyed || !rows.length) return;
 
-    sessionStorage.setItem('procstack_review_bubble_seen_v2', '1');
+    sessionStorage.setItem('procstack_review_bubble_seen_v11', '1');
     const emojis = ['😄','🔥','⭐','💬','🚀','🧠','🎮','🙌','😂','✨'];
     const pickedRows = rows.slice(0, Math.min(5, rows.length));
     const created = [];
@@ -3445,6 +3453,9 @@
         </div>
         <div class="ps-snake-stage ps-snake-stage-big">
           <canvas id="psSnakeCanvas" width="960" height="960" aria-label="PANJI Star Snake"></canvas>
+          <div class="ps-snake-arena-tip" style="--tip-x:${22 + ((snake.score * 17) % 58)}%;--tip-y:${16 + ((snake.score * 23) % 54)}%">
+            <b>PANJI nyeletuk:</b> ${escapeHtml(snake.activeTip || 'Jangan asal klik. Tetap baca kisi-kisi PBJ sambil main.')}
+          </div>
           <div class="ps-snake-caption">⭐ Bintang = poin · 🧾 Revisi = jebakan · Tap/Klik = belok · WASD/Arrow juga bisa</div>
         </div>
       </div>
