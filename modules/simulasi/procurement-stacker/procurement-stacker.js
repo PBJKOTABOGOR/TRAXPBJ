@@ -25,6 +25,8 @@
 
   let leaderboardModalEl = null;
   let leaderboardRefreshTimer = null;
+  let reviewBubbleEl = null;
+  let reviewBubbleTimer = null;
 
   let levelTimer = null;
   let levelTimerStartedAt = 0;
@@ -912,6 +914,8 @@
 
   function buildMainChallengeFlow() {
     const rushTemplate = CHALLENGE_RAW.find(item => item.type === 'tenderRush');
+    const miniCompetitionPipeline = CHALLENGE_RAW[20];
+    const miniCompetitionQuiz = CHALLENGE_RAW[21];
     const list = [
       CHALLENGE_RAW[0],
       CHALLENGE_RAW[1],
@@ -923,11 +927,12 @@
       BONUS_LEVEL_8_SNAKE,
       CHALLENGE_RAW[6],
       CHALLENGE_RAW[7],
-      CHALLENGE_RAW[20],
-      CHALLENGE_RAW[21]
+      rushTemplate ? cloneTenderRushChallenge(rushTemplate, 11, 1) : CHALLENGE_RAW[2],
+      miniCompetitionPipeline,
+      miniCompetitionQuiz
     ].filter(Boolean);
 
-    return list.slice(0, 12);
+    return list;
   }
 
   const CHALLENGES = buildMainChallengeFlow().map(buildChallenge);
@@ -1117,6 +1122,59 @@
     }
   }
 
+
+  async function fetchReviewRowsForBubble() {
+    if (!LEADERBOARD_API_URL) return [];
+    try {
+      const response = await fetch(`${LEADERBOARD_API_URL}?action=leaderboard&v=${Date.now()}`, {
+        method: 'GET',
+        cache: 'no-store'
+      });
+      const json = await response.json();
+      const rows = Array.isArray(json) ? json : Array.isArray(json.leaderboard) ? json.leaderboard : [];
+      return sortLeaderboardRows(rows).filter(row => getRowReview(row)).slice(0, 6);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  async function showReviewBubbleOnMenuOpen() {
+    if (destroyed || reviewBubbleEl || sessionStorage.getItem('procstack_review_bubble_seen_v1') === '1') return;
+    const rows = await fetchReviewRowsForBubble();
+    if (destroyed || reviewBubbleEl || !rows.length) return;
+
+    sessionStorage.setItem('procstack_review_bubble_seen_v1', '1');
+    const picked = rows[Math.floor(Math.random() * rows.length)];
+    const more = rows.slice(0, 3);
+    reviewBubbleEl = document.createElement('div');
+    reviewBubbleEl.className = 'ps-review-bubble-pop';
+    reviewBubbleEl.innerHTML = `
+      <button type="button" class="ps-review-bubble-close" aria-label="Tutup">×</button>
+      <div class="ps-review-bubble-head">
+        <span>💬 Review Pemain</span>
+        <b>PANJI bilang...</b>
+      </div>
+      <div class="ps-review-main">
+        “${escapeHtml(getRowReview(picked))}”
+        <small>${escapeHtml(picked.nama || 'Pemain')} · ${escapeHtml(picked.instansi || 'Instansi')}</small>
+      </div>
+      <div class="ps-review-mini-list">
+        ${more.map(row => `<div><b>${escapeHtml(row.nama || 'Pemain')}:</b> ${escapeHtml(getRowReview(row))}</div>`).join('')}
+      </div>
+    `;
+    document.body.appendChild(reviewBubbleEl);
+    const close = () => {
+      if (!reviewBubbleEl) return;
+      reviewBubbleEl.classList.add('closing');
+      setTimeout(() => {
+        if (reviewBubbleEl) reviewBubbleEl.remove();
+        reviewBubbleEl = null;
+      }, 220);
+    };
+    reviewBubbleEl.querySelector('.ps-review-bubble-close')?.addEventListener('click', close);
+    reviewBubbleTimer = setTimeout(close, 8500);
+  }
+
   async function submitFinalScoreToLeaderboard() {
     if (GAME_STATE.scoreSubmitted || PLAYER_STATE.savingScore) return;
 
@@ -1143,6 +1201,7 @@
       level_selesai: result.levelSelesai,
       durasi_detik: result.durasiDetik,
       analisa_panji: getFinalPanjiAnalysisText(result),
+      review: PLAYER_STATE.feedback || '',
       pengalaman_main: PLAYER_STATE.feedback || ''
     };
 
@@ -1503,8 +1562,13 @@
     }).map((row, index) => ({ ...row, rank: index + 1 }));
   }
 
+  function getRowReview(row) {
+    return String(row.review || row.pengalaman_main || row.feedback || row.masukan || '').trim();
+  }
+
   function renderLeaderboardRow(row) {
     const rank = Number(row.rank || 0);
+    const reviewText = getRowReview(row);
     const isMine = hasPlayerProfile()
       && String(row.nama || '').trim().toLowerCase() === PLAYER_STATE.nama.toLowerCase()
       && String(row.instansi || '').trim().toLowerCase() === PLAYER_STATE.instansi.toLowerCase();
@@ -1519,7 +1583,7 @@
         <div class="ps-lb-meta">
           <b>${Number(row.skor || 0).toLocaleString('id-ID')}</b>
           <span>Level ${getRowLevelValue(row) || '-'} · ${Number(row.benar || 0)}/${Number(row.total_soal || 0)} benar · Risiko ${Number(row.risiko || 0)}</span>
-          ${row.pengalaman_main ? `<em class="ps-lb-feedback">“${escapeHtml(row.pengalaman_main)}”</em>` : ''}
+          ${reviewText ? `<em class="ps-lb-feedback">“${escapeHtml(reviewText)}”</em>` : ''}
         </div>
       </div>
     `;
@@ -3261,17 +3325,53 @@
     GAME_STATE.progress = Math.round((completedCount / bonus.nodes.length) * 100);
 
     const nextNode = bonus.nodes.find(item => !bonus.completed[item.id]);
+    const finishedAll = !nextNode;
     if (nextNode) {
       bonus.activeNode = nextNode.id;
     } else {
       GAME_STATE.progress = 100;
       GAME_STATE.score += 20;
       addLog('ok', 'Bonus level 4 selesai', 'Poin analisa dari bonus open world sudah masuk nilai akhir.');
-      showPanji('Evaluator Battle selesai. Bonus poin kamu: ' + bonus.bonusScore + '. Konsolidasi berhasil cukup baik, portal keluar dari dunia 3D terbuka. Poin ini masuk nilai akhir.', 'happy');
+      showPanji('Evaluator Battle selesai. Aku hitung dulu poin bonus dan gaya analisamu. Portal 3D mulai terbuka.', 'happy');
       showToast('Portal 3D terbuka. Bonus +' + bonus.bonusScore, 'ok');
     }
 
     renderGame();
+    if (finishedAll) {
+      setTimeout(() => showBonusOpenWorldCompletePopup(bonus), 80);
+    }
+  }
+
+
+  function showBonusOpenWorldCompletePopup(bonus) {
+    if (document.getElementById('psBonus4FinishPopup')) return;
+    const goodCount = Object.values(bonus.decisions || {}).filter(item => item && item.good).length;
+    const total = bonus.nodes.length;
+    const analysis = goodCount >= 3
+      ? 'Gaya analisamu lumayan aman. Kamu sudah mulai balik ke data, cek pasar, dan tidak terlalu gampang kepancing pilihan murah-cepat.'
+      : 'Gaya analisamu masih rawan. Kamu beberapa kali tergoda pilihan cepat atau murah tanpa cukup bukti. Di PBJ, itu bisa bikin risiko naik.';
+    const overlay = document.createElement('div');
+    overlay.id = 'psBonus4FinishPopup';
+    overlay.className = 'ps-bonus4-finish-popup';
+    overlay.innerHTML = `
+      <div class="ps-bonus4-finish-card">
+        <div class="ps-bonus4-finish-orb">🌍</div>
+        <h2>Portal Dunia 3D Terbuka!</h2>
+        <p><b>Poin Bonus:</b> ${Number(bonus.bonusScore || 0)} · <b>Keputusan aman:</b> ${goodCount}/${total}</p>
+        <div class="ps-bonus4-panji-note"><b>PANJI:</b> ${escapeHtml(analysis)} Konsolidasi berhasil diselesaikan, jadi kamu bisa keluar dari dunia 3D.</div>
+        <small>Otomatis lanjut ke level berikutnya...</small>
+        <button type="button" class="ps-btn ps-btn-primary" id="btnBonus4GoNext">Lanjut sekarang</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const go = () => {
+      overlay.remove();
+      if (getCurrentChallenge() && getCurrentChallenge().type === 'bonusOpenWorld' && GAME_STATE.progress === 100) {
+        nextChallenge();
+      }
+    };
+    document.getElementById('btnBonus4GoNext')?.addEventListener('click', go);
+    setTimeout(go, 4200);
   }
 
   function createBonusSnakeState() {
@@ -3305,7 +3405,7 @@
         <div class="ps-snake-info">
           <div class="ps-bonus3d-kicker">Bonus Level 8 • Mood Booster</div>
           <h3>PANJI Star Snake</h3>
-          <p>Ambil bintang sebanyak mungkin. Hindari tembok, badan sendiri, dan jebakan revisi. Pakai tap HP / klik mouse di area game buat belokin ular. Keyboard WASD/arrow tetap bisa. Bonus ini boleh diulang, atau dilewati kalau mau lanjut level berikutnya.</p>
+          <p>Ambil bintang sebanyak mungkin. Tembus tembok boleh: kanan tembus ke kiri, bawah tembus ke atas. Yang bahaya itu badan sendiri dan jebakan revisi. Pakai tap HP / klik mouse di area game buat belokin ular. Keyboard WASD/arrow tetap bisa. Bonus ini boleh diulang, atau dilewati kalau mau lanjut level berikutnya.</p>
           <div class="ps-snake-score-row">
             <div><label>Bintang</label><b>${snake.score}/${snake.target}</b></div>
             <div><label>Hati</label><b>${'❤️'.repeat(Math.max(0, snake.hearts || 0)) || '0'}</b></div>
@@ -3643,7 +3743,7 @@
     }
     clearBonusSnakeTimers();
     snake.running = true;
-    showPanji('Gas! Tap atau klik area game buat belokin ular. Ambil bintang, jangan tabrak revisi. Skor bonus tetap dihitung.', 'happy');
+    showPanji('Gas! Tap atau klik area game buat belokin ular. Ambil bintang, jangan tabrak revisi. Tembok bisa ditembus. Skor bonus tetap dihitung.', 'happy');
 
     bonusSnakeKeyHandler = event => {
       const key = event.key.toLowerCase();
@@ -3698,12 +3798,14 @@
     if (!snake.running || snake.finished) return;
     snake.dir = snake.nextDir;
     const head = snake.snake[0];
-    const next = { x: head.x + snake.dir.x, y: head.y + snake.dir.y };
+    const next = {
+      x: (head.x + snake.dir.x + snake.grid) % snake.grid,
+      y: (head.y + snake.dir.y + snake.grid) % snake.grid
+    };
 
-    const hitWall = next.x < 0 || next.y < 0 || next.x >= snake.grid || next.y >= snake.grid;
     const hitSelf = snake.snake.some(p => p.x === next.x && p.y === next.y);
     const hitObs = snake.obstacles.some(o => o.x === next.x && o.y === next.y);
-    if (hitWall || hitSelf || hitObs) {
+    if (hitSelf || hitObs) {
       snake.hearts = Math.max(0, Number(snake.hearts || 0) - 1);
       addLog('bad', 'Snake kena jebakan', 'PANJI nabrak revisi. Hati tersisa ' + snake.hearts + '.');
       showToast('Aduh nabrak! Hati -1', 'bad');
@@ -4579,6 +4681,7 @@
     ensureLeaderboardModal();
     fetchLeaderboard();
     initPanji(container);
+    setTimeout(() => showReviewBubbleOnMenuOpen(), 1200);
 
     GAME_STATE.stage = 'ready';
     GAME_STATE.current = null;
@@ -4611,6 +4714,16 @@
       if (leaderboardRefreshTimer) {
         clearInterval(leaderboardRefreshTimer);
         leaderboardRefreshTimer = null;
+      }
+
+      if (reviewBubbleTimer) {
+        clearTimeout(reviewBubbleTimer);
+        reviewBubbleTimer = null;
+      }
+
+      if (reviewBubbleEl) {
+        reviewBubbleEl.remove();
+        reviewBubbleEl = null;
       }
 
       if (leaderboardModalEl) {
