@@ -2158,13 +2158,29 @@
   function startGameMusic() {
     if (psMusicOn) return;
     psMusicOn = true;
-    const notes = [262, 330, 392, 523, 392, 330];
-    let i = 0;
-    psMusicTimer = setInterval(() => {
-      if (document.hidden || !psMusicOn) return;
-      playTone(notes[i % notes.length], 0.08, 'triangle', 0.012);
-      i += 1;
-    }, 950);
+
+    // Musik retro happy ringan, dibuat dari WebAudio supaya tidak perlu file mp3.
+    // Browser baru akan mengizinkan suara setelah user klik/tekan tombol.
+    const melody = [523, 659, 784, 659, 698, 880, 784, 659, 587, 698, 784, 988, 880, 784, 659, 523];
+    const bass = [131, 131, 196, 196, 147, 147, 196, 196];
+    let beat = 0;
+
+    const playBeat = () => {
+      if (destroyed || !psMusicOn) return;
+      if (document.hidden) return;
+
+      const m = melody[beat % melody.length];
+      const b = bass[Math.floor(beat / 2) % bass.length];
+
+      playTone(m, 0.10, beat % 4 === 0 ? 'square' : 'triangle', 0.018);
+      if (beat % 2 === 0) playTone(b, 0.14, 'sine', 0.010);
+      if (beat % 8 === 6) setTimeout(() => playTone(m * 1.25, 0.07, 'triangle', 0.010), 95);
+
+      beat += 1;
+    };
+
+    playBeat();
+    psMusicTimer = setInterval(playBeat, 360);
   }
 
   function showToast(message, type = 'info') {
@@ -3359,7 +3375,6 @@
             <span><b>Cerita dan masalahnya:</b> ${escapeHtml(storyLine)}</span><br>
             <span><b>Tugas kamu:</b> ${escapeHtml(active.desc)} Pilih jawaban yang paling aman. Pilihanmu menentukan poin bonus dan jalan keluar dari dunia 3D.</span>
           </div>
-          <p>${escapeHtml(storyLine)}</p>
           <div class="ps-bonus3d-panji">
             <b>PANJI:</b> ${escapeHtml(active.desc)} Pilihan di bawah ini diacak. Ada yang aman, ada yang jebakan. Jangan asal klik, karena pilihanmu masuk analisa akhir.
           </div>
@@ -4890,6 +4905,12 @@
       if (leaderboardModalEl) {
         leaderboardModalEl.remove();
         leaderboardModalEl = null;
+      }
+
+      if (psMusicTimer) {
+        clearInterval(psMusicTimer);
+        psMusicTimer = null;
+        psMusicOn = false;
       }
 
       if (toastEl) {
