@@ -1150,9 +1150,10 @@
 
     pickedRows.forEach((row, index) => {
       const bubble = document.createElement('div');
-      bubble.className = 'ps-review-bubble-pop ps-review-bubble-float';
+      bubble.className = `ps-review-bubble-pop ps-review-bubble-float review-pos-${index % 6}`;
       bubble.style.setProperty('--review-i', String(index));
       bubble.style.setProperty('--review-delay', `${index * 0.18}s`);
+      bubble.style.setProperty('--review-rand', String((index * 37) % 19));
       bubble.innerHTML = `
         <button type="button" class="ps-review-bubble-close" aria-label="Tutup">×</button>
         <div class="ps-review-bubble-head">
@@ -3670,15 +3671,20 @@
   function steerSnakeFromPointer(event) {
     const canvas = root && root.querySelector('#psSnakeCanvas');
     const snake = getBonusSnakeState();
-    if (!canvas || !snake || !snake.running || snake.finished) return;
+    if (!canvas || !snake || snake.finished) return;
+
+    if (!snake.running) {
+      snake.briefed = true;
+      startBonusSnakeGame();
+    }
 
     const rect = canvas.getBoundingClientRect();
     const point = event.touches && event.touches[0] ? event.touches[0] : event;
-    const size = canvas.width;
-    const cell = size / snake.grid;
     const head = snake.snake[0];
-    const headX = rect.left + ((head.x + 0.5) * cell / size) * rect.width;
-    const headY = rect.top + ((head.y + 0.5) * cell / size) * rect.height;
+    const cellW = rect.width / snake.grid;
+    const cellH = rect.height / snake.grid;
+    const headX = rect.left + ((head.x + 0.5) * cellW);
+    const headY = rect.top + ((head.y + 0.5) * cellH);
     const dx = point.clientX - headX;
     const dy = point.clientY - headY;
 
@@ -3687,6 +3693,8 @@
     } else {
       setSnakeDirection(0, dy > 0 ? 1 : -1);
     }
+
+    if (event) event.preventDefault && event.preventDefault();
   }
 
   function drawBonusSnake() {
@@ -3694,52 +3702,62 @@
     if (!canvas) return;
     const snake = getBonusSnakeState();
     const c = canvas.getContext('2d');
-    const size = canvas.width;
-    const cell = size / snake.grid;
 
-    c.clearRect(0, 0, size, size);
-    const g = c.createLinearGradient(0, 0, size, size);
-    g.addColorStop(0, '#0f172a');
-    g.addColorStop(1, '#123a72');
+    const cssW = Math.max(320, Math.floor(canvas.clientWidth || 960));
+    const cssH = Math.max(320, Math.floor(canvas.clientHeight || 720));
+    if (canvas.width !== cssW || canvas.height !== cssH) {
+      canvas.width = cssW;
+      canvas.height = cssH;
+    }
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const cellW = w / snake.grid;
+    const cellH = h / snake.grid;
+    const radius = Math.max(8, Math.min(cellW, cellH) * .22);
+
+    c.clearRect(0, 0, w, h);
+    const g = c.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, '#071a2e');
+    g.addColorStop(.55, '#123a72');
+    g.addColorStop(1, '#06111f');
     c.fillStyle = g;
-    c.fillRect(0, 0, size, size);
-
-    c.fillStyle = 'rgba(255,255,255,.92)';
-    c.font = 'bold 22px Arial';
-    c.fillText('❤️'.repeat(Math.max(0, snake.hearts || 0)), 18, 34);
-    c.font = 'bold 18px Arial';
-    c.fillText('⭐ ' + snake.score + '/' + snake.target, size - 120, 34);
+    c.fillRect(0, 0, w, h);
 
     for (let x = 0; x < snake.grid; x += 1) {
       for (let y = 0; y < snake.grid; y += 1) {
-        if ((x + y) % 2 === 0) {
-          c.fillStyle = 'rgba(255,255,255,.035)';
-          c.fillRect(x * cell, y * cell, cell, cell);
-        }
+        c.fillStyle = (x + y) % 2 === 0 ? 'rgba(255,255,255,.045)' : 'rgba(255,255,255,.018)';
+        c.fillRect(x * cellW, y * cellH, cellW, cellH);
       }
     }
+
+    c.fillStyle = 'rgba(255,255,255,.96)';
+    c.font = 'bold 22px Arial';
+    c.fillText('❤️'.repeat(Math.max(0, snake.hearts || 0)), 18, 34);
+    c.font = 'bold 18px Arial';
+    c.fillText('⭐ ' + snake.score + '/' + snake.target, Math.max(18, w - 130), 34);
 
     snake.obstacles.forEach(o => {
       c.fillStyle = '#dc2626';
       c.beginPath();
-      c.roundRect(o.x * cell + 4, o.y * cell + 4, cell - 8, cell - 8, 8);
+      c.roundRect(o.x * cellW + 5, o.y * cellH + 5, cellW - 10, cellH - 10, radius);
       c.fill();
-      c.font = '20px Arial';
-      c.fillText('🧾', o.x * cell + 7, o.y * cell + 23);
+      c.font = `${Math.max(20, Math.min(cellW, cellH) * .56)}px Arial`;
+      c.fillText('🧾', o.x * cellW + cellW * .24, o.y * cellH + cellH * .68);
     });
 
-    c.font = '24px Arial';
-    c.fillText('⭐', snake.star.x * cell + 5, snake.star.y * cell + 24);
+    c.font = `${Math.max(22, Math.min(cellW, cellH) * .62)}px Arial`;
+    c.fillText('⭐', snake.star.x * cellW + cellW * .20, snake.star.y * cellH + cellH * .70);
 
     snake.snake.forEach((part, index) => {
       c.fillStyle = index === 0 ? '#f59e0b' : '#22d3ee';
       c.beginPath();
-      c.roundRect(part.x * cell + 3, part.y * cell + 3, cell - 6, cell - 6, 8);
+      c.roundRect(part.x * cellW + 4, part.y * cellH + 4, cellW - 8, cellH - 8, radius);
       c.fill();
       if (index === 0) {
         c.fillStyle = '#111827';
-        c.font = '14px Arial';
-        c.fillText('P', part.x * cell + 10, part.y * cell + 19);
+        c.font = `bold ${Math.max(12, Math.min(cellW, cellH) * .33)}px Arial`;
+        c.fillText('P', part.x * cellW + cellW * .36, part.y * cellH + cellH * .62);
       }
     });
   }
@@ -3810,12 +3828,18 @@
 
   function getSnakePbjTip(score) {
     const tips = [
-      'Kisi-kisi: market sounding itu cari info pasar, bukan langsung milih pemenang.',
-      'Kisi-kisi: e-Purchasing tetap perlu cek spek, stok, ongkir, dan total harga.',
-      'Kisi-kisi: kalau pakai e-Purchasing, jangan lupa negosiasi/klarifikasi kalau diperlukan.',
-      'Kisi-kisi: mini kompetisi dipakai untuk menjaga persaingan sehat saat kondisi mengharuskan.',
-      'Kisi-kisi: BAST jangan asal tanda tangan. Barang atau pekerjaan harus dicek dulu.',
-      'Kisi-kisi: risiko naik kalau kamu lompat tahap atau memilih karena kebiasaan, bukan data.'
+      'Kisi-kisi: Perencanaan dulu. Jangan langsung belanja kalau kebutuhan, volume, lokasi, dan jadwal belum kebaca.',
+      'Kisi-kisi: Di Katalog V6 alurnya cari produk, isi detail pesanan, negosiasi, buat pesanan/kontrak, pembayaran, pengiriman, BAST, baru review.',
+      'Kisi-kisi: e-Purchasing tetap perlu cek spek, stok, ongkir, total harga, PDN/TKDN, dan bukti proses. Jangan cuma lihat harga item.',
+      'Kisi-kisi: Negosiasi di katalog itu bukan asal minta murah. Yang dicari harga wajar, stok jelas, pengiriman masuk akal, dan bukti rapi.',
+      'Kisi-kisi: Mini kompetisi konstruksi dipakai supaya penyedia katalog punya kesempatan yang sama dan prosesnya lebih kompetitif.',
+      'Kisi-kisi: Sebelum tetapkan penyedia, cek lagi kebenaran produk, kualifikasi, dan kesesuaian penawaran. Jangan modal percaya.',
+      'Kisi-kisi: Swakelola juga ada tahapan. Ada perencanaan, persiapan, pelaksanaan, pengawasan, serah terima, dan pembayaran.',
+      'Kisi-kisi: Kontrak jangan cuma dibuat lalu ditinggal. Pantau waktu, mutu, volume, perubahan, dan bukti serah terimanya.',
+      'Kisi-kisi: BAST jangan asal tanda tangan. Pastikan barang atau pekerjaan sudah sesuai, lengkap, dan bisa dipakai.',
+      'Kisi-kisi: Percepatan PBJ boleh, tapi jangan nabrak prinsip efisien, efektif, transparan, dan akuntabel.',
+      'Kisi-kisi: Kalau rencana awal katalog gagal, dokumentasikan hasil cek dulu. Baru evaluasi metode, jangan langsung lompat.',
+      'Kisi-kisi: Risiko naik kalau kamu memilih karena biasa, karena cepat, atau karena murah doang. Balik lagi ke data.'
     ];
     return tips[Math.abs(Number(score || 0)) % tips.length];
   }
