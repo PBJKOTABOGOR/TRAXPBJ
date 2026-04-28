@@ -4682,3 +4682,127 @@
   .ps-snake-wrap-big{grid-template-columns:1fr !important}
   .ps-snake-stage-big{height:72vh !important;min-height:620px !important}
 }
+
+/* =========================================================
+   FIX V11 - review bubble endpoint OK, snake tip ganggu arena, PPK/PANJI grounded
+   ========================================================= */
+/* Bubble review sengaja disebar, bukan ditumpuk di kanan bawah */
+.ps-review-bubble-pop.ps-review-bubble-float{
+  width:min(310px, calc(100vw - 34px)) !important;
+  max-width:310px !important;
+  z-index:2147483646 !important;
+  animation:psReviewFloatV11 5.2s ease-in-out infinite var(--review-delay,0s), psReviewBubbleIn .28s ease !important;
+}
+.ps-review-bubble-pop.review-pos-0{left:26px !important;top:82px !important;right:auto !important;bottom:auto !important;}
+.ps-review-bubble-pop.review-pos-1{right:32px !important;top:82px !important;left:auto !important;bottom:auto !important;}
+.ps-review-bubble-pop.review-pos-2{left:34px !important;top:310px !important;right:auto !important;bottom:auto !important;}
+.ps-review-bubble-pop.review-pos-3{right:38px !important;top:330px !important;left:auto !important;bottom:auto !important;}
+.ps-review-bubble-pop.review-pos-4{left:50% !important;top:42px !important;right:auto !important;bottom:auto !important;transform:translateX(-50%) !important;}
+.ps-review-bubble-pop.review-pos-5{left:50% !important;top:560px !important;right:auto !important;bottom:auto !important;transform:translateX(-50%) !important;}
+.ps-review-bubble-pop.review-pos-6{left:22px !important;bottom:70px !important;right:auto !important;top:auto !important;}
+.ps-review-bubble-pop.review-pos-7{right:24px !important;bottom:76px !important;left:auto !important;top:auto !important;}
+@keyframes psReviewFloatV11{
+  0%,100%{translate:0 0;rotate:-.5deg}
+  25%{translate:10px -14px;rotate:.7deg}
+  55%{translate:-8px -8px;rotate:-.3deg}
+  80%{translate:6px 4px;rotate:.4deg}
+}
+
+/* Bonus level 4: karakter dipaksa di ground, bukan ikut langit/map */
+.ps-bonus3d-scene > .ps-bonus3d-player{
+  top:calc(100% - 132px) !important;
+  bottom:auto !important;
+  left:calc(11% + (var(--player-step,0) * 18%)) !important;
+  transform:scale(.82) !important;
+  z-index:20 !important;
+}
+.ps-bonus3d-scene > .ps-bonus3d-companion{
+  top:calc(100% - 112px) !important;
+  bottom:auto !important;
+  left:calc(19% + (var(--player-step,0) * 18%)) !important;
+  transform:scale(.80) !important;
+  z-index:21 !important;
+}
+.ps-bonus3d-scene > .ps-bonus3d-player::after,
+.ps-bonus3d-scene > .ps-bonus3d-companion::after{bottom:-8px !important;}
+.ps-bonus3d-road{bottom:22px !important;height:86px !important;z-index:3 !important;}
+
+/* Snake: arena full satu frame kanan, canvas mengisi semua stage */
+.ps-snake-wrap-big{
+  grid-template-columns:340px minmax(820px,1fr) !important;
+  gap:16px !important;
+  align-items:stretch !important;
+}
+.ps-snake-stage-big{
+  position:relative !important;
+  height:calc(100vh - 150px) !important;
+  min-height:760px !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  display:grid !important;
+  grid-template-rows:minmax(0,1fr) auto !important;
+  border-radius:30px !important;
+}
+.ps-snake-stage-big #psSnakeCanvas{
+  width:100% !important;
+  height:100% !important;
+  min-width:100% !important;
+  min-height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  object-fit:fill !important;
+}
+.ps-snake-arena-tip{
+  position:absolute;
+  left:var(--tip-x, 28%);
+  top:var(--tip-y, 18%);
+  max-width:360px;
+  padding:12px 14px;
+  border-radius:18px 18px 18px 6px;
+  background:rgba(255,247,237,.95);
+  border:2px solid #fed7aa;
+  color:#9a3412;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:850;
+  box-shadow:0 18px 36px rgba(15,23,42,.22);
+  pointer-events:none;
+  animation:psSnakeTipDrift 2.2s ease-in-out infinite;
+  z-index:5;
+}
+.ps-snake-arena-tip::after{
+  content:"";
+  position:absolute;
+  left:20px;
+  bottom:-9px;
+  width:16px;
+  height:16px;
+  background:rgba(255,247,237,.95);
+  border-right:2px solid #fed7aa;
+  border-bottom:2px solid #fed7aa;
+  transform:rotate(45deg);
+}
+@keyframes psSnakeTipDrift{0%,100%{translate:0 0}50%{translate:0 -8px}}
+@media(max-width:1200px){
+  .ps-snake-wrap-big{grid-template-columns:1fr !important;}
+  .ps-snake-stage-big{height:78vh !important;min-height:680px !important;}
+  .ps-review-bubble-pop.review-pos-0,
+  .ps-review-bubble-pop.review-pos-1,
+  .ps-review-bubble-pop.review-pos-2,
+  .ps-review-bubble-pop.review-pos-3,
+  .ps-review-bubble-pop.review-pos-4,
+  .ps-review-bubble-pop.review-pos-5,
+  .ps-review-bubble-pop.review-pos-6,
+  .ps-review-bubble-pop.review-pos-7{
+    left:16px !important;
+    right:16px !important;
+    top:auto !important;
+    bottom:calc(92px + (var(--review-i,0) * 110px)) !important;
+    width:auto !important;
+    max-width:none !important;
+    transform:none !important;
+  }
+}
