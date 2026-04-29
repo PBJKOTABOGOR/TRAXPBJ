@@ -838,8 +838,8 @@ function renderDashboardReady(data) {
 
       <div class="stats-grid dashboard-kpi-grid">
         ${renderKpiCard('Skor ITKP Kota Bogor', formatScore(data.itkpOverall), 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD', '📊')}
-        ${renderKpiCard('Pagu Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾')}
-        ${renderKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰')}
+        ${renderKpiCard('Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾')}
+        ${renderKpiCard('Pagu Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰')}
         ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses · ${scopeLabel}`, '📦')}
       </div>
 
@@ -922,8 +922,7 @@ function renderDashboardReady(data) {
         <div class="dashboard-card-links">
           <div class="dashboard-card-links-title">Akses Cepat</div>
           <div class="quick-grid quick-grid--compact">
-            ${renderQuickCard('📊', 'linear-gradient(135deg,#2665df,#3a8bff)', 'ITKP - SiRUP', 'Lihat monitoring indikator ITKP dari modul SiRUP.', 'monitoring-sirup')}
-            ${renderQuickCard('🛒', 'linear-gradient(135deg,#123a72,#2f9a8f)', 'ITKP - eKatalog', 'Pantau pemanfaatan transaksi katalog.', 'monitoring-ekatalog')}
+            ${renderQuickCard('🧩', 'linear-gradient(135deg,#2563eb,#22c55e)', 'Monitoring Paket Konsolidasi', 'Pantau paket konsolidasi yang sudah disiapkan di portal.', 'monitoring-konsolidasi')}
             ${renderQuickCard('📦', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Monitoring Realisasi', 'Pantau progress realisasi paket perangkat daerah.', 'monitoring-perencanaan')}
             ${renderQuickCard('🗓️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
             ${renderQuickCard('📈', 'linear-gradient(135deg,#0f766e,#22c55e)', 'Looker Studio ITKP', 'Buka dashboard indikator pemanfaatan sistem di Looker Studio.', '', 'https://datastudio.google.com/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2')}
@@ -1082,7 +1081,7 @@ function renderSmallMetric(label, value, desc, percent = 0) {
       <span>${escapeHtml(label)}</span>
       <small>${escapeHtml(desc)}</small>
       <div class="small-metric-percent">${percent.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</div>
-      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:${Math.min(100, Math.max(0, percent))}%"></span></div>
+      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:0%"></span></div>
     </div>
   `;
 }
