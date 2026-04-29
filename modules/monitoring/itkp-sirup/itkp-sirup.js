@@ -20,8 +20,6 @@
     selectedRawRows: [],
     rekapPage: 1,
     detailPage: 1,
-    sortRekapKey: '',
-    sortRekapDir: 'desc',
     initialized: false,
     destroyed: false
   };
@@ -89,8 +87,6 @@
       insightMetodeNote: qs('insightMetodeNote'),
       btnShowTopOpd: qs('btnShowTopOpd'),
       btnShowLowOpd: qs('btnShowLowOpd'),
-      btnSortPersentase: qs('btnSortPersentase'),
-      btnSortNilaiItkp: qs('btnSortNilaiItkp'),
       opdModal: qs('opdModal'),
       opdModalTitle: qs('opdModalTitle'),
       opdModalSubtitle: qs('opdModalSubtitle'),
@@ -405,7 +401,6 @@
     renderStats(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
     renderInsights(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
     renderRekapTable(APP_STATE.filteredScore);
-    updateSortButtons();
 
     if (APP_STATE.selectedOpd) {
       renderDetailForOpd(APP_STATE.selectedOpd);
@@ -445,14 +440,26 @@
         EL.opdModalList.innerHTML = '<div class="opd-list-empty">Belum ada data OPD.</div>';
       } else {
         EL.opdModalList.innerHTML = safeItems.map((item, index) => `
-          <div class="opd-list-item">
+          <button
+            type="button"
+            class="opd-list-item opd-list-item--button"
+            data-opd="${escapeAttr(item.satuan_kerja || '')}"
+            title="Klik untuk filter OPD ini"
+          >
             <span class="opd-list-number">${index + 1}</span>
             <div class="opd-list-main">
               <b>${escapeHtml(item.satuan_kerja || '-')}</b>
               <small>Nilai ITKP ${formatDecimal(item.nilai_itkp)} | Prosentase ${formatPercent(item.prosentase)}%</small>
             </div>
-          </div>
+          </button>
         `).join('');
+
+        EL.opdModalList.querySelectorAll('.opd-list-item--button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            closeOpdModal();
+            applyOpdSelection(btn.getAttribute('data-opd') || '');
+          });
+        });
       }
     }
 
@@ -464,6 +471,32 @@
     if (EL.opdModal) EL.opdModal.hidden = true;
     document.body.style.overflow = '';
   }
+
+  function applyOpdSelection(opdName, options = {}) {
+    const safeOpd = String(opdName || '').trim();
+    if (!safeOpd) return;
+
+    APP_STATE.selectedOpd = safeOpd;
+    APP_STATE.rekapPage = 1;
+    APP_STATE.detailPage = 1;
+
+    if (EL.filterOpd) {
+      EL.filterOpd.value = safeOpd;
+    }
+
+    applyFilters();
+
+    if (options.scrollToDetail !== false) {
+      const detailSection = getRoot().querySelector('.detail-panel') || document.querySelector('.detail-panel');
+      if (detailSection) {
+        detailSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }
+  }
+
 
   function renderStats(filteredRaw, filteredScore) {
     const jumlahOpd = filteredScore.length;
@@ -543,56 +576,7 @@
     if (EL.btnShowLowOpd) EL.btnShowLowOpd.disabled = opdDiBawah10.length === 0;
   }
 
-
-  function getSortIndicator(key) {
-    if (APP_STATE.sortRekapKey !== key) return '↕';
-    return APP_STATE.sortRekapDir === 'desc' ? '↓' : '↑';
-  }
-
-  function updateSortButtons() {
-    if (EL.btnSortPersentase) {
-      EL.btnSortPersentase.classList.toggle('active', APP_STATE.sortRekapKey === 'prosentase');
-      EL.btnSortPersentase.querySelector('.sort-indicator')?.replaceChildren(document.createTextNode(getSortIndicator('prosentase')));
-    }
-
-    if (EL.btnSortNilaiItkp) {
-      EL.btnSortNilaiItkp.classList.toggle('active', APP_STATE.sortRekapKey === 'nilai_itkp');
-      EL.btnSortNilaiItkp.querySelector('.sort-indicator')?.replaceChildren(document.createTextNode(getSortIndicator('nilai_itkp')));
-    }
-  }
-
-  function setRekapSort(key) {
-    if (!key) return;
-    if (APP_STATE.sortRekapKey === key) {
-      APP_STATE.sortRekapDir = APP_STATE.sortRekapDir === 'desc' ? 'asc' : 'desc';
-    } else {
-      APP_STATE.sortRekapKey = key;
-      APP_STATE.sortRekapDir = 'desc';
-    }
-
-    APP_STATE.rekapPage = 1;
-    renderRekapTable(APP_STATE.filteredScore);
-    updateSortButtons();
-  }
-
-  function sortRekapRows(rows) {
-    const list = Array.isArray(rows) ? rows.slice() : [];
-    const key = APP_STATE.sortRekapKey;
-    if (!key) return list;
-
-    const dir = APP_STATE.sortRekapDir === 'asc' ? 1 : -1;
-
-    return list.sort((a, b) => {
-      const av = Number(a[key] || 0);
-      const bv = Number(b[key] || 0);
-
-      if (av !== bv) return (av - bv) * dir;
-      return String(a.satuan_kerja || '').localeCompare(String(b.satuan_kerja || ''), 'id');
-    });
-  }
-
   function renderRekapTable(rows) {
-    rows = sortRekapRows(rows);
     const totalRows = rows.length;
     const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE_REKAP));
 
@@ -632,13 +616,33 @@
     EL.rekapTableBody.innerHTML = pageRows.map((row, index) => `
       <tr>
         <td>${startIndex + index + 1}</td>
-        <td class="cell-strong">${escapeHtml(row.satuan_kerja)}</td>
+        <td class="cell-strong opd-name-cell">${escapeHtml(row.satuan_kerja)}</td>
         <td>${formatTableNumber(row.penyedia_diumumkan)}</td>
         <td>${formatTableNumber(row.swakelola_diumumkan)}</td>
         <td>${formatTableNumber(row.total_rup_diumumkan)}</td>
         <td>${formatTableNumber(row.total_komitmen)}</td>
-        <td>${renderPercentBadge(row.prosentase)}</td>
-        <td>${renderItkpBadge(row.nilai_itkp)}</td>
+        <td>
+          <button
+            type="button"
+            class="badge-click badge-trigger"
+            data-opd="${escapeAttr(row.satuan_kerja)}"
+            data-badge-type="prosentase"
+            title="Klik untuk filter OPD ini"
+          >
+            ${renderPercentBadge(row.prosentase)}
+          </button>
+        </td>
+        <td>
+          <button
+            type="button"
+            class="badge-click badge-trigger"
+            data-opd="${escapeAttr(row.satuan_kerja)}"
+            data-badge-type="itkp"
+            title="Klik untuk filter OPD ini"
+          >
+            ${renderItkpBadge(row.nilai_itkp)}
+          </button>
+        </td>
         <td>
           <button type="button" class="action-btn" data-opd="${escapeAttr(row.satuan_kerja)}">
             Lihat Paket
@@ -649,9 +653,13 @@
 
     EL.rekapTableBody.querySelectorAll('.action-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        APP_STATE.selectedOpd = btn.getAttribute('data-opd') || '';
-        APP_STATE.detailPage = 1;
-        renderDetailForOpd(APP_STATE.selectedOpd);
+        applyOpdSelection(btn.getAttribute('data-opd') || '');
+      });
+    });
+
+    EL.rekapTableBody.querySelectorAll('.badge-trigger').forEach(btn => {
+      btn.addEventListener('click', () => {
+        applyOpdSelection(btn.getAttribute('data-opd') || '');
       });
     });
 
@@ -1032,7 +1040,6 @@
     APP_STATE.rekapPage = 1;
     APP_STATE.detailPage = 1;
     applyFilters();
-    updateSortButtons();
   }
 
   function toNumber(value) {
@@ -1280,9 +1287,6 @@
       initMonitoringSirup();
     });
 
-    on(EL.btnSortPersentase, 'click', () => setRekapSort('prosentase'));
-    on(EL.btnSortNilaiItkp, 'click', () => setRekapSort('nilai_itkp'));
-
     on(EL.btnShowTopOpd, 'click', () => {
       const { opdNilai10 } = getInsightLists();
       openOpdModal(
@@ -1330,7 +1334,6 @@
     EL = getElements();
 
     bindEventsOnce();
-    updateSortButtons();
     initMonitoringSirup();
 
     return function destroy() {
