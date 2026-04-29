@@ -20,6 +20,8 @@
     selectedRawRows: [],
     rekapPage: 1,
     detailPage: 1,
+    sortRekapKey: '',
+    sortRekapDir: 'desc',
     initialized: false,
     destroyed: false
   };
@@ -87,6 +89,8 @@
       insightMetodeNote: qs('insightMetodeNote'),
       btnShowTopOpd: qs('btnShowTopOpd'),
       btnShowLowOpd: qs('btnShowLowOpd'),
+      btnSortPersentase: qs('btnSortPersentase'),
+      btnSortNilaiItkp: qs('btnSortNilaiItkp'),
       opdModal: qs('opdModal'),
       opdModalTitle: qs('opdModalTitle'),
       opdModalSubtitle: qs('opdModalSubtitle'),
@@ -401,6 +405,7 @@
     renderStats(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
     renderInsights(APP_STATE.filteredRawGlobal, APP_STATE.filteredScore);
     renderRekapTable(APP_STATE.filteredScore);
+    updateSortButtons();
 
     if (APP_STATE.selectedOpd) {
       renderDetailForOpd(APP_STATE.selectedOpd);
@@ -538,7 +543,56 @@
     if (EL.btnShowLowOpd) EL.btnShowLowOpd.disabled = opdDiBawah10.length === 0;
   }
 
+
+  function getSortIndicator(key) {
+    if (APP_STATE.sortRekapKey !== key) return '↕';
+    return APP_STATE.sortRekapDir === 'desc' ? '↓' : '↑';
+  }
+
+  function updateSortButtons() {
+    if (EL.btnSortPersentase) {
+      EL.btnSortPersentase.classList.toggle('active', APP_STATE.sortRekapKey === 'prosentase');
+      EL.btnSortPersentase.querySelector('.sort-indicator')?.replaceChildren(document.createTextNode(getSortIndicator('prosentase')));
+    }
+
+    if (EL.btnSortNilaiItkp) {
+      EL.btnSortNilaiItkp.classList.toggle('active', APP_STATE.sortRekapKey === 'nilai_itkp');
+      EL.btnSortNilaiItkp.querySelector('.sort-indicator')?.replaceChildren(document.createTextNode(getSortIndicator('nilai_itkp')));
+    }
+  }
+
+  function setRekapSort(key) {
+    if (!key) return;
+    if (APP_STATE.sortRekapKey === key) {
+      APP_STATE.sortRekapDir = APP_STATE.sortRekapDir === 'desc' ? 'asc' : 'desc';
+    } else {
+      APP_STATE.sortRekapKey = key;
+      APP_STATE.sortRekapDir = 'desc';
+    }
+
+    APP_STATE.rekapPage = 1;
+    renderRekapTable(APP_STATE.filteredScore);
+    updateSortButtons();
+  }
+
+  function sortRekapRows(rows) {
+    const list = Array.isArray(rows) ? rows.slice() : [];
+    const key = APP_STATE.sortRekapKey;
+    if (!key) return list;
+
+    const dir = APP_STATE.sortRekapDir === 'asc' ? 1 : -1;
+
+    return list.sort((a, b) => {
+      const av = Number(a[key] || 0);
+      const bv = Number(b[key] || 0);
+
+      if (av !== bv) return (av - bv) * dir;
+      return String(a.satuan_kerja || '').localeCompare(String(b.satuan_kerja || ''), 'id');
+    });
+  }
+
   function renderRekapTable(rows) {
+    rows = sortRekapRows(rows);
     const totalRows = rows.length;
     const totalPages = Math.max(1, Math.ceil(totalRows / PAGE_SIZE_REKAP));
 
@@ -978,6 +1032,7 @@
     APP_STATE.rekapPage = 1;
     APP_STATE.detailPage = 1;
     applyFilters();
+    updateSortButtons();
   }
 
   function toNumber(value) {
@@ -1225,6 +1280,9 @@
       initMonitoringSirup();
     });
 
+    on(EL.btnSortPersentase, 'click', () => setRekapSort('prosentase'));
+    on(EL.btnSortNilaiItkp, 'click', () => setRekapSort('nilai_itkp'));
+
     on(EL.btnShowTopOpd, 'click', () => {
       const { opdNilai10 } = getInsightLists();
       openOpdModal(
@@ -1272,6 +1330,7 @@
     EL = getElements();
 
     bindEventsOnce();
+    updateSortButtons();
     initMonitoringSirup();
 
     return function destroy() {
