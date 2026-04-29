@@ -2126,35 +2126,24 @@ textarea{
 }
 
 .dim-detail-strip{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:8px;
-  margin-top:10px;
+  margin-top:8px;
+  padding:0 2px;
+  color:#5f6f86;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:800;
 }
 
 .dim-detail-chip{
-  padding:8px 10px;
-  border-radius:12px;
-  background:rgba(255,255,255,.72);
-  border:1px solid rgba(18,58,114,.08);
+  display:none;
 }
 
 .dim-detail-chip small{
-  display:block;
-  font-size:10px;
-  line-height:1.2;
-  font-weight:800;
-  color:#64748b;
-  margin-bottom:4px;
+  display:none;
 }
 
 .dim-detail-chip strong{
-  display:block;
-  font-size:14px;
-  line-height:1.2;
-  color:#123a72;
-  font-weight:900;
-  word-break:break-word;
+  display:none;
 }
 
 .small-metric-foot{
@@ -2189,6 +2178,6 @@ textarea{
   }
 
   .dim-detail-strip{
-    grid-template-columns:1fr;
+    font-size:11px;
   }
 }
