@@ -43,8 +43,9 @@
 
   let bonusSnakeTimer = null;
   let bonusSnakeKeyHandler = null;
-
-  let bonusOpenWorldTimer = null;
+  let bonusZumaFrame = null;
+  let bonusZumaResizeHandler = null;
+  let bonusZumaKeyHandler = null;
 
   const CARD_LIBRARY = {
     rup: {
@@ -902,12 +903,12 @@
 
   const BONUS_LEVEL_4_OPENWORLD = {
     type: 'bonusOpenWorld',
-    title: 'Level 4 — Bonus Tower Defense: Pertahankan Kota Konsolidasi',
-    caseTitle: 'PANJI Defense — Konsolidasi ATK Kota Bogor',
-    desc: 'Bonus level tower defense. Bangun pertahanan proses konsolidasi agar gangguan data, harga, penyedia, dan katalog tidak merusak jalur e-Purchasing.',
+    title: 'Level 4 — Bonus Zuma: Jalur Konsolidasi',
+    caseTitle: 'Pertahankan Jalur Konsolidasi Kota Bogor',
+    desc: 'Bonus level gaya Zuma. Tembak bola warna sejenis untuk menjaga jalur konsolidasi tetap aman dari data berantakan sampai e-Purchasing.',
     budget: 'Bonus Level 4',
-    difficulty: 'Bonus Tower Defense',
-    explanation: 'Bonus ini melatih alur konsolidasi: identifikasi kebutuhan, market sounding, KAK/HPS, kontrak payung, katalog, dan pengendalian risiko.'
+    difficulty: 'Arcade Puzzle',
+    explanation: 'Bonus ini melatih konsolidasi secara visual: rapikan data kebutuhan, market sounding, KAK/HPS, kontrak payung, lalu kunci e-Purchasing.'
   };
 
   const BONUS_LEVEL_8_SNAKE = {
@@ -1807,7 +1808,7 @@
     }
 
     if (challenge.type === 'bonusOpenWorld') {
-      return 'Hi.. aku balik lagi. Ini bonus level 4 versi tower defense. Pilih menara proses yang tepat, pasang di jalur, lalu tahan gangguan data, harga, penyedia, dan katalog sampai e-Purchasing aman.';
+      return 'Hi.. aku balik lagi. Ini bonus level 4 versi Zuma. Tugasmu menjaga jalur konsolidasi: tembak bola warna sejenis supaya rantai masalah tidak sampai ke portal e-Purchasing.';
     }
 
     if (challenge.type === 'bonusSnake') {
@@ -1855,13 +1856,6 @@
     if (tenderRushNextTimer) {
       clearTimeout(tenderRushNextTimer);
       tenderRushNextTimer = null;
-    }
-  }
-
-  function clearBonusOpenWorldTimers() {
-    if (bonusOpenWorldTimer) {
-      clearInterval(bonusOpenWorldTimer);
-      bonusOpenWorldTimer = null;
     }
   }
 
@@ -2019,8 +2013,8 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearBonusZumaTimers();
     clearBonusSnakeTimers();
-    clearBonusOpenWorldTimers();
     clearPanjiIntroTimers();
 
     GAME_STATE.finished = true;
@@ -2612,7 +2606,7 @@
     }
 
     if (challenge.type === 'bonusOpenWorld') {
-      return 'Hint PANJI: jangan kejar cepat. Di bonus ini lihat alurnya: pilih tim yang bisa analisa, samakan item yang benar-benar sejenis, market sounding ke semua toko, lalu evaluasi berdasarkan data.';
+      return 'Hint PANJI: lihat warna rantai dulu. Samakan minimal 3 bola sejenis. Biru untuk data kebutuhan, hijau untuk market sounding, emas untuk KAK/HPS, ungu untuk kontrak payung, dan merah muda untuk katalog/e-Purchasing.';
     }
 
     if (challenge.type === 'bonusSnake') {
@@ -2677,7 +2671,7 @@
 
     if (challenge.type === 'bonusOpenWorld') {
       showPanji(
-        'Bonus level 4 dimulai. Aku tetap kelihatan di sini, jadi kamu nggak kehilangan arahan. Cek map quest 3D, pilihanmu akan memengaruhi poin analisa akhir.',
+        'Bonus level 4 dimulai. Sekarang kita main gaya Zuma. Jaga rantai konsolidasi supaya nggak jebol ke portal. Cocokkan warna, bangun combo, dan rapikan alur sampai e-Purchasing.',
         'thinking'
       );
       return;
@@ -2701,8 +2695,8 @@
     clearAutoNextTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearBonusZumaTimers();
     clearBonusSnakeTimers();
-    clearBonusOpenWorldTimers();
     clearPanjiIntroTimers();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
@@ -2740,8 +2734,8 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearBonusZumaTimers();
     clearBonusSnakeTimers();
-    clearBonusOpenWorldTimers();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
 
@@ -2801,7 +2795,7 @@
       addLog(
         'info',
         'Bonus Level 4 dimulai',
-        'Bangun menara proses konsolidasi dan tahan gangguan sampai jalur e-Purchasing tetap aman.'
+        'PPK masuk arena Zuma Konsolidasi bersama PANJI. Jaga rantai proses agar tidak menembus portal e-Purchasing.'
       );
     } else if (challenge.type === 'bonusSnake') {
       GAME_STATE.stage = 'bonusSnake';
@@ -2875,6 +2869,7 @@
     clearLevelTimer();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
+    clearBonusZumaTimers();
     clearBonusSnakeTimers();
 
     if (GAME_STATE.index < GAME_STATE.order.length - 1) {
@@ -2900,7 +2895,7 @@
   function getChallengeTypeLabel(type) {
     if (type === 'pipeline') return 'Pipeline';
     if (type === 'tenderRush') return 'Tender Rush';
-    if (type === 'bonusOpenWorld') return 'Bonus Tower Defense';
+    if (type === 'bonusOpenWorld') return 'Bonus Zuma';
     if (type === 'bonusSnake') return 'Bonus Snake';
     return 'ABCD';
   }
@@ -2908,7 +2903,7 @@
   function getChallengeTypeName(type) {
     if (type === 'pipeline') return 'Susun Pipeline';
     if (type === 'tenderRush') return 'Arcade Metode';
-    if (type === 'bonusOpenWorld') return 'Tower Defense Bonus';
+    if (type === 'bonusOpenWorld') return 'Zuma Konsolidasi';
     if (type === 'bonusSnake') return 'Snake Bintang';
     return 'Pilihan ABCD';
   }
@@ -3053,7 +3048,7 @@
   function renderQuestionPanel(challenge, mainQuestion = '') {
     const typeName = getChallengeTypeName(challenge.type);
     const title = challenge.type === 'bonusOpenWorld'
-      ? 'SOAL BONUS 4 / TOWER DEFENSE'
+      ? 'SOAL BONUS 4 / MISI 3D'
       : challenge.type === 'bonusSnake'
         ? 'SOAL BONUS 8 / SNAKE'
         : 'SOAL / PERTANYAAN';
@@ -3282,81 +3277,49 @@
   }
 
 
-
   function createBonusOpenWorldState() {
-    const waves = [
-      [
-        { lane: 0, hp: 5, speed: 0.42, reward: 14, icon: '📄', name: 'Data belum sinkron', tag: 'Data' },
-        { lane: 2, hp: 5, speed: 0.42, reward: 14, icon: '📄', name: 'Data belum sinkron', tag: 'Data' }
-      ],
-      [
-        { lane: 1, hp: 7, speed: 0.46, reward: 16, icon: '💸', name: 'Harga liar', tag: 'Harga' },
-        { lane: 3, hp: 7, speed: 0.46, reward: 16, icon: '💸', name: 'Harga liar', tag: 'Harga' }
-      ],
-      [
-        { lane: 0, hp: 9, speed: 0.48, reward: 18, icon: '🏪', name: 'Penyedia belum siap', tag: 'Pasar' },
-        { lane: 2, hp: 9, speed: 0.48, reward: 18, icon: '🏪', name: 'Penyedia belum siap', tag: 'Pasar' },
-        { lane: 3, hp: 7, speed: 0.50, reward: 16, icon: '⚙️', name: 'SOP belum rapi', tag: 'Proses' }
-      ],
-      [
-        { lane: 1, hp: 11, speed: 0.50, reward: 20, icon: '🛒', name: 'Katalog macet', tag: 'Katalog' },
-        { lane: 2, hp: 10, speed: 0.52, reward: 20, icon: '🧾', name: 'KAK/HPS lemah', tag: 'Dokumen' },
-        { lane: 0, hp: 9, speed: 0.54, reward: 18, icon: '🧠', name: 'Komitmen pimpinan lemah', tag: 'SDM' }
-      ]
-    ];
+    const colorMap = {
+      data: { label: 'Data Kebutuhan', short: 'D', color: '#5ecbff', glow: 'rgba(94,203,255,.45)' },
+      pasar: { label: 'Market Sounding', short: 'M', color: '#74d66f', glow: 'rgba(116,214,111,.45)' },
+      kak: { label: 'KAK / HPS', short: 'K', color: '#ffc85a', glow: 'rgba(255,200,90,.45)' },
+      kontrak: { label: 'Kontrak Payung', short: 'C', color: '#a78bfa', glow: 'rgba(167,139,250,.45)' },
+      katalog: { label: 'Katalog / e-Purchasing', short: 'E', color: '#ff79b0', glow: 'rgba(255,121,176,.45)' }
+    };
 
     return {
-      phase: 'build',
-      selectedTower: 'data',
-      hp: 12,
-      money: 180,
-      waveIndex: 0,
-      maxWaves: waves.length,
-      waves,
-      enemies: [],
-      slots: Array.from({ length: 4 }, (_, lane) => Array.from({ length: 4 }, (_, col) => ({ lane, col, tower: null }))),
-      bonusScore: 0,
-      ticks: 0,
+      started: false,
+      running: false,
       finished: false,
-      summary: 'Kota konsolidasi masih tenang. Pasang menara proses dulu sebelum gelombang masalah masuk.',
-      towerTypes: {
-        data: {
-          id: 'data',
-          icon: '📊',
-          label: 'Data Kebutuhan',
-          cost: 45,
-          damage: 2,
-          range: 2,
-          desc: 'Nahan data kebutuhan yang berantakan.'
-        },
-        pasar: {
-          id: 'pasar',
-          icon: '🏪',
-          label: 'Market Sounding',
-          cost: 60,
-          damage: 3,
-          range: 2,
-          desc: 'Ngebaca harga, stok, dan kesiapan penyedia.'
-        },
-        dokumen: {
-          id: 'dokumen',
-          icon: '🧾',
-          label: 'KAK / HPS',
-          cost: 70,
-          damage: 4,
-          range: 1,
-          desc: 'Dokumen teknis kuat, serangan lebih sakit.'
-        },
-        katalog: {
-          id: 'katalog',
-          icon: '🛒',
-          label: 'Katalog & Monitoring',
-          cost: 80,
-          damage: 2,
-          range: 3,
-          desc: 'Jaga implementasi katalog dan progres OPD.'
-        }
-      }
+      failed: false,
+      mounted: false,
+      score: 0,
+      shots: 0,
+      hits: 0,
+      removed: 0,
+      combo: 0,
+      bestCombo: 0,
+      targetRemoved: 26,
+      speed: 56,
+      spacing: 28,
+      ballRadius: 13,
+      shooterAngle: -Math.PI / 2,
+      currentColor: 'data',
+      nextColor: 'pasar',
+      chain: [],
+      projectiles: [],
+      particles: [],
+      path: null,
+      colorMap,
+      colorKeys: Object.keys(colorMap),
+      storyNote: 'Mulai dari data kebutuhan. Kalau data masih berantakan, rantai masalah akan cepat memanjang.',
+      storyMilestones: [
+        { removed: 5, note: 'Data kebutuhan OPD mulai rapi. Sekarang fokus ke pendalaman pasar dan proses bisnis.', panji: 'Bagus. Data kebutuhan mulai rapi, jadi kita bisa masuk ke pendalaman pasar dengan lebih tenang.' },
+        { removed: 10, note: 'Market sounding mulai terbaca. Harga, stok, dan kesiapan penyedia makin jelas.', panji: 'Nah, market sounding mulai kebaca. Jangan cuma lihat harga, cek juga stok dan kesiapan penyedia.' },
+        { removed: 15, note: 'KAK dan HPS mulai terkunci. Spesifikasi makin jelas dan tidak asal copy-paste.', panji: 'Mantap. KAK dan HPS mulai rapi. Jaga supaya spesifikasi tetap fungsional dan tidak mengarah.' },
+        { removed: 20, note: 'Kontrak payung hampir siap. Tinggal jaga ritme supaya jalur tidak jebol.', panji: 'Kontrak payung sudah kelihatan bentuknya. Sedikit lagi, jaga ritme dan jangan panik.' },
+        { removed: 26, note: 'Produk siap masuk katalog dan OPD bisa lanjut belanja lewat e-Purchasing.', panji: 'Selesai! Jalur konsolidasi aman. Tinggal pastikan pencantuman katalog dan e-Purchasing berjalan rapi.' }
+      ],
+      storyIndex: 0
     };
   }
 
@@ -3367,290 +3330,850 @@
     return GAME_STATE.bonusOpenWorld;
   }
 
-  function getBonusOpenWorldTowerList() {
+  function getBonusOpenWorldColorLabel(colorKey) {
     const bonus = getBonusOpenWorldState();
-    return Object.values(bonus.towerTypes || {});
+    return bonus.colorMap[colorKey] ? bonus.colorMap[colorKey].label : colorKey;
   }
 
-  function getBonusOpenWorldSlot(bonus, lane, col) {
-    return bonus && bonus.slots && bonus.slots[lane] ? bonus.slots[lane][col] : null;
+  function pickBonusOpenWorldColor(bonus) {
+    const source = bonus.chain.map(item => item.color).filter(Boolean);
+    const pool = source.length ? source : bonus.colorKeys;
+    return pool[Math.floor(Math.random() * pool.length)] || bonus.colorKeys[0];
   }
 
-  function finishBonusOpenWorld(success, text) {
-    const bonus = getBonusOpenWorldState();
-    clearBonusOpenWorldTimers();
-    bonus.finished = true;
-    bonus.phase = success ? 'finished' : 'failed';
-    bonus.summary = text;
+  function buildBonusOpenWorldPath(width, height) {
+    const cx = width * 0.5;
+    const cy = height * 0.52;
+    const maxR = Math.min(width, height) * 0.38;
+    const minR = 72;
+    const rawPoints = [];
+    const loops = 2.32;
+    const steps = 260;
 
-    if (success) {
-      GAME_STATE.progress = 100;
-      GAME_STATE.score += 20 + Math.max(0, bonus.bonusScore);
-      GAME_STATE.correct += 1;
-      addLog('ok', 'Bonus level 4 selesai', 'Jalur konsolidasi berhasil dipertahankan sampai e-Purchasing aman.');
-      showPanji('Mantap. Kota konsolidasi aman. Data, pasar, dokumen, kontrak payung, katalog, sampai e-Purchasing berhasil kita jaga.', 'happy');
-      showToast('Bonus level 4 selesai. +' + (20 + Math.max(0, bonus.bonusScore)), 'ok');
-      spawnConfetti();
-    } else {
-      GAME_STATE.risk += 10;
-      GAME_STATE.wrong += 1;
-      addLog('bad', 'Pertahanan jebol', text || 'Gangguan terlalu banyak lolos ke jalur e-Purchasing.');
-      showPanji('Aduh, pertahanan jebol. Tenang, reset level ini dulu lalu atur tower yang lebih rapi.', 'sad');
-      showToast('Pertahanan jebol. Coba atur ulang tower.', 'bad');
-    }
-
-    renderGame();
-  }
-
-  function settleBonusOpenWorldWave() {
-    const bonus = getBonusOpenWorldState();
-    if (bonus.phase !== 'running') return;
-    if (bonus.enemies.length > 0) return;
-
-    clearBonusOpenWorldTimers();
-
-    if (bonus.waveIndex >= bonus.maxWaves) {
-      finishBonusOpenWorld(true, 'Semua gelombang gangguan berhasil ditahan. Kota konsolidasi aman sampai tahap e-Purchasing.');
-      return;
-    }
-
-    bonus.phase = 'build';
-    bonus.money += 35;
-    bonus.bonusScore += 10;
-    bonus.summary = 'Gelombang selesai. Tambahan anggaran pertahanan +35. Rapikan tower lalu lanjut ke gelombang berikutnya.';
-    showPanji('Satu gelombang aman. Tambah tower kalau perlu, lalu lanjut lagi.', 'happy');
-    showToast('Gelombang aman. Dana +35', 'ok');
-    renderGame();
-  }
-
-  function tickBonusOpenWorld() {
-    const bonus = getBonusOpenWorldState();
-    if (!bonus || bonus.phase !== 'running' || bonus.finished) return;
-
-    bonus.ticks += 1;
-
-    bonus.enemies.forEach(enemy => {
-      enemy.progress += enemy.speed;
-    });
-
-    bonus.slots.forEach((laneSlots, laneIndex) => {
-      laneSlots.forEach(slot => {
-        if (!slot.tower) return;
-        const tower = bonus.towerTypes[slot.tower];
-        if (!tower) return;
-        const target = bonus.enemies.find(enemy => enemy.lane === laneIndex && enemy.progress >= Math.max(0, slot.col - 0.2) && enemy.progress <= slot.col + tower.range + 0.45);
-        if (!target) return;
-        target.hp -= tower.damage;
-        bonus.bonusScore += 1;
+    for (let i = 0; i <= steps; i += 1) {
+      const t = i / steps;
+      const angle = Math.PI * 1.12 + (loops * Math.PI * 2 * t);
+      const radius = maxR - (maxR - minR) * t;
+      rawPoints.push({
+        x: cx + Math.cos(angle) * radius,
+        y: cy + Math.sin(angle) * radius
       });
-    });
-
-    const survivors = [];
-    bonus.enemies.forEach(enemy => {
-      if (enemy.hp <= 0) {
-        bonus.money += enemy.reward;
-        bonus.bonusScore += 4;
-        return;
-      }
-      if (enemy.progress >= 4.7) {
-        bonus.hp -= 1;
-        GAME_STATE.risk += 2;
-        bonus.summary = enemy.name + ' lolos ke jalur akhir. Pertahanan kota goyang.';
-        return;
-      }
-      survivors.push(enemy);
-    });
-    bonus.enemies = survivors;
-
-    if (bonus.hp <= 0) {
-      finishBonusOpenWorld(false, 'HP kota habis. Data, harga, dan implementasi katalog kebobolan.');
-      return;
     }
 
-    if (!bonus.enemies.length) {
-      settleBonusOpenWorldWave();
-      return;
+    const last = rawPoints[rawPoints.length - 1];
+    const portal = { x: cx, y: cy - 92 };
+    for (let i = 1; i <= 36; i += 1) {
+      rawPoints.push({
+        x: last.x + (portal.x - last.x) * (i / 36),
+        y: last.y + (portal.y - last.y) * (i / 36)
+      });
     }
 
-    renderGame();
+    const step = 6;
+    const points = [rawPoints[0]];
+    for (let i = 1; i < rawPoints.length; i += 1) {
+      const prev = rawPoints[i - 1];
+      const curr = rawPoints[i];
+      const dx = curr.x - prev.x;
+      const dy = curr.y - prev.y;
+      const dist = Math.hypot(dx, dy);
+      const pieces = Math.max(1, Math.ceil(dist / step));
+      for (let p = 1; p <= pieces; p += 1) {
+        points.push({
+          x: prev.x + dx * (p / pieces),
+          y: prev.y + dy * (p / pieces)
+        });
+      }
+    }
+
+    return {
+      step,
+      points,
+      maxDistance: Math.max(0, (points.length - 1) * step),
+      start: points[0],
+      end: points[points.length - 1]
+    };
   }
 
-  function startBonusOpenWorldWave() {
-    const bonus = getBonusOpenWorldState();
-    if (!bonus || bonus.phase === 'running' || bonus.finished) return;
-    if (bonus.waveIndex >= bonus.maxWaves) {
-      finishBonusOpenWorld(true, 'Semua gelombang sudah beres.');
-      return;
+  function getBonusOpenWorldPathPoint(path, distance) {
+    if (!path || !path.points || !path.points.length) {
+      return { x: 0, y: 0 };
+    }
+    const clamped = Math.max(0, Math.min(path.maxDistance, distance));
+    const scaled = clamped / path.step;
+    const baseIndex = Math.floor(scaled);
+    const fract = scaled - baseIndex;
+    const a = path.points[Math.min(baseIndex, path.points.length - 1)];
+    const b = path.points[Math.min(baseIndex + 1, path.points.length - 1)] || a;
+    return {
+      x: a.x + (b.x - a.x) * fract,
+      y: a.y + (b.y - a.y) * fract
+    };
+  }
+
+  function getBonusOpenWorldCenter(bonus) {
+    const canvas = bonus.canvas;
+    return {
+      x: canvas ? canvas.width * 0.5 : 320,
+      y: canvas ? canvas.height * 0.52 : 220
+    };
+  }
+
+  function initialiseBonusOpenWorldChain(bonus, force = false) {
+    if (!bonus.path) return;
+    if (bonus.chain.length && !force) return;
+
+    const totalBalls = 26;
+    const sequence = [];
+    while (sequence.length < totalBalls) {
+      const color = bonus.colorKeys[Math.floor(Math.random() * bonus.colorKeys.length)];
+      const run = 1 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < run && sequence.length < totalBalls; i += 1) {
+        sequence.push(color);
+      }
     }
 
-    clearBonusOpenWorldTimers();
-    const template = bonus.waves[bonus.waveIndex] || [];
-    bonus.enemies = template.map((enemy, index) => ({
-      ...enemy,
-      id: bonus.waveIndex + '-' + index + '-' + Date.now(),
-      progress: -0.65 * index,
-      maxHp: enemy.hp
+    const headDistance = Math.min(bonus.path.maxDistance * 0.34, bonus.spacing * (totalBalls + 5));
+    bonus.chain = sequence.map((color, index) => ({
+      color,
+      distance: headDistance - index * bonus.spacing
     }));
-    bonus.waveIndex += 1;
-    bonus.phase = 'running';
-    bonus.summary = 'Gelombang ' + bonus.waveIndex + ' mulai. Jaga agar gangguan tidak masuk ke e-Purchasing.';
-    showPanji('Gelombang ' + bonus.waveIndex + ' mulai. Perhatikan lane yang rame, lalu pasang tower secukupnya.', 'alert');
-    bonusOpenWorldTimer = setInterval(tickBonusOpenWorld, 850);
+    bonus.projectiles = [];
+    bonus.particles = [];
+    bonus.currentColor = pickBonusOpenWorldColor(bonus);
+    bonus.nextColor = pickBonusOpenWorldColor(bonus);
+    bonus.storyNote = 'Mulai dari data kebutuhan. Kalau data masih berantakan, rantai masalah akan cepat memanjang.';
+    bonus.storyIndex = 0;
+  }
+
+  function updateBonusOpenWorldHUD() {
+    const bonus = getBonusOpenWorldState();
+    const currentMeta = bonus.colorMap[bonus.currentColor] || {};
+    const nextMeta = bonus.colorMap[bonus.nextColor] || {};
+    const accuracy = bonus.shots ? Math.round((bonus.hits / bonus.shots) * 100) : 100;
+
+    const setText = (selector, value) => {
+      const el = root && root.querySelector(selector);
+      if (el) el.textContent = String(value);
+    };
+
+    setText('#psBonusZumaScore', bonus.score);
+    setText('#psBonusZumaCombo', bonus.bestCombo);
+    setText('#psBonusZumaRemoved', `${bonus.removed}/${bonus.targetRemoved}`);
+    setText('#psBonusZumaAcc', `${accuracy}%`);
+    setText('#psBonusZumaStory', bonus.storyNote);
+    setText('#psBonusZumaCurrent', currentMeta.label || '-');
+    setText('#psBonusZumaNext', nextMeta.label || '-');
+
+    const currentChip = root && root.querySelector('#psBonusZumaCurrentChip');
+    if (currentChip) currentChip.style.background = currentMeta.color || '#5ecbff';
+    const nextChip = root && root.querySelector('#psBonusZumaNextChip');
+    if (nextChip) nextChip.style.background = nextMeta.color || '#74d66f';
+  }
+
+  function drawBonusOpenWorldBoard() {
+    const bonus = getBonusOpenWorldState();
+    if (!bonus.canvas || !bonus.ctx || !bonus.path) return;
+
+    const ctx = bonus.ctx;
+    const canvas = bonus.canvas;
+    const { width, height } = canvas;
+    const center = getBonusOpenWorldCenter(bonus);
+
+    ctx.clearRect(0, 0, width, height);
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, '#122038');
+    bg.addColorStop(.55, '#182f48');
+    bg.addColorStop(1, '#0f1728');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    for (let i = 0; i < 18; i += 1) {
+      ctx.fillStyle = `rgba(255,255,255,${0.02 + (i % 3) * 0.01})`;
+      ctx.beginPath();
+      ctx.arc((i * 83) % width, ((i * 47) % height), 2 + (i % 4), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(237,199,116,.96)';
+    ctx.lineWidth = bonus.ballRadius * 2.42;
+    ctx.beginPath();
+    bonus.path.points.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(106,68,28,.9)';
+    ctx.lineWidth = bonus.ballRadius * 1.58;
+    ctx.beginPath();
+    bonus.path.points.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.stroke();
+    ctx.restore();
+
+    const portal = bonus.path.end;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, .08)';
+    ctx.beginPath();
+    ctx.arc(portal.x, portal.y, 34, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#70f0d0';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(portal.x, portal.y, 28, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#dffef6';
+    ctx.font = '700 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('PORTAL', portal.x, portal.y + 4);
+    ctx.restore();
+
+    const start = bonus.path.start;
+    ctx.save();
+    ctx.fillStyle = '#213f5c';
+    ctx.beginPath();
+    ctx.arc(start.x, start.y, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#eef7ff';
+    ctx.font = '700 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('OPD', start.x, start.y + 4);
+    ctx.restore();
+
+    bonus.chain.forEach(ball => {
+      const point = getBonusOpenWorldPathPoint(bonus.path, ball.distance);
+      const meta = bonus.colorMap[ball.color] || {};
+      ctx.save();
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = meta.glow || 'rgba(255,255,255,.3)';
+      ctx.fillStyle = meta.color || '#5ecbff';
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, bonus.ballRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(16,24,40,.55)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.28)';
+      ctx.beginPath();
+      ctx.arc(point.x - 4, point.y - 5, bonus.ballRadius * .38, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fffdf7';
+      ctx.font = '700 10px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(meta.short || '?', point.x, point.y + 3.5);
+      ctx.restore();
+    });
+
+    bonus.projectiles.forEach(projectile => {
+      const meta = bonus.colorMap[projectile.color] || {};
+      ctx.save();
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = meta.glow || 'rgba(255,255,255,.35)';
+      ctx.fillStyle = meta.color || '#ffffff';
+      ctx.beginPath();
+      ctx.arc(projectile.x, projectile.y, bonus.ballRadius - 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    bonus.particles.forEach(particle => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+      ctx.fillStyle = particle.color;
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    ctx.save();
+    ctx.translate(center.x, center.y);
+    ctx.shadowBlur = 22;
+    ctx.shadowColor = 'rgba(255, 206, 140, .34)';
+    const pedestal = ctx.createRadialGradient(0, 0, 8, 0, 0, 38);
+    pedestal.addColorStop(0, '#20344f');
+    pedestal.addColorStop(1, '#0c1728');
+    ctx.fillStyle = pedestal;
+    ctx.beginPath();
+    ctx.arc(0, 0, 34, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.rotate(bonus.shooterAngle);
+    ctx.fillStyle = '#d7a041';
+    ctx.fillRect(0, -6, 34, 12);
+    ctx.beginPath();
+    ctx.arc(38, 0, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const currentMeta = bonus.colorMap[bonus.currentColor] || {};
+    const nextMeta = bonus.colorMap[bonus.nextColor] || {};
+    ctx.save();
+    ctx.fillStyle = currentMeta.color || '#5ecbff';
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, bonus.ballRadius + 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(currentMeta.short || '?', center.x, center.y + 3.5);
+
+    ctx.fillStyle = nextMeta.color || '#74d66f';
+    ctx.beginPath();
+    ctx.arc(center.x - 42, center.y + 28, bonus.ballRadius - 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(nextMeta.short || '?', center.x - 42, center.y + 31);
+    ctx.restore();
+  }
+
+  function bonusOpenWorldBurst(point, color, amount = 8) {
+    const bonus = getBonusOpenWorldState();
+    for (let i = 0; i < amount; i += 1) {
+      const angle = (Math.PI * 2 * i) / amount;
+      const speed = 40 + Math.random() * 80;
+      bonus.particles.push({
+        x: point.x,
+        y: point.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 2 + Math.random() * 3,
+        color,
+        life: .42 + Math.random() * .18,
+        maxLife: .52
+      });
+    }
+  }
+
+  function advanceBonusOpenWorldStory() {
+    const bonus = getBonusOpenWorldState();
+    while (bonus.storyMilestones[bonus.storyIndex] && bonus.removed >= bonus.storyMilestones[bonus.storyIndex].removed) {
+      const milestone = bonus.storyMilestones[bonus.storyIndex];
+      bonus.storyNote = milestone.note;
+      addLog('info', 'Progress Konsolidasi', milestone.note);
+      showPanji(milestone.panji, 'talking');
+      bonus.storyIndex += 1;
+    }
+  }
+
+  function resolveBonusOpenWorldMatches(centerIndex) {
+    const bonus = getBonusOpenWorldState();
+    if (!bonus.chain.length) return 0;
+    let totalRemoved = 0;
+    let continueCheck = true;
+    let probeIndex = centerIndex;
+
+    while (continueCheck && bonus.chain.length) {
+      continueCheck = false;
+      probeIndex = Math.max(0, Math.min(probeIndex, bonus.chain.length - 1));
+      const focus = bonus.chain[probeIndex];
+      if (!focus) break;
+      let start = probeIndex;
+      let end = probeIndex;
+      while (start > 0 && bonus.chain[start - 1].color === focus.color) start -= 1;
+      while (end < bonus.chain.length - 1 && bonus.chain[end + 1].color === focus.color) end += 1;
+      const size = end - start + 1;
+      if (size >= 3) {
+        const removedBalls = bonus.chain.splice(start, size);
+        totalRemoved += size;
+        bonus.removed += size;
+        bonus.combo += 1;
+        bonus.bestCombo = Math.max(bonus.bestCombo, bonus.combo);
+        const gain = size * 12 + Math.max(0, bonus.combo - 1) * 8;
+        bonus.score += gain;
+        GAME_STATE.score += gain;
+        GAME_STATE.correct += 1;
+        removedBalls.forEach(ball => {
+          const point = getBonusOpenWorldPathPoint(bonus.path, ball.distance);
+          bonusOpenWorldBurst(point, (bonus.colorMap[ball.color] || {}).color || '#fff', 9);
+        });
+        showToast(`Match ${size}! +${gain}`, 'ok');
+        flashScreen('ok');
+        popScore(root || document.body, `+${gain}`, 'ok');
+        spawnConfetti();
+        probeIndex = Math.max(0, start - 1);
+        continueCheck = true;
+      } else if (totalRemoved === 0) {
+        bonus.combo = 0;
+      }
+    }
+
+    if (totalRemoved > 0) {
+      advanceBonusOpenWorldStory();
+    }
+
+    return totalRemoved;
+  }
+
+  function insertBonusOpenWorldProjectile(hitIndex, color) {
+    const bonus = getBonusOpenWorldState();
+    if (!bonus.chain.length) return;
+
+    const before = bonus.chain[Math.max(0, hitIndex - 1)] || null;
+    const target = bonus.chain[hitIndex] || null;
+    let distance = target ? target.distance : (before ? before.distance - bonus.spacing : 0);
+
+    if (before && target) {
+      distance = (before.distance + target.distance) / 2;
+    } else if (target) {
+      distance = target.distance + bonus.spacing * .5;
+    }
+
+    bonus.chain.splice(hitIndex, 0, { color, distance });
+    const matched = resolveBonusOpenWorldMatches(hitIndex);
+    if (!matched) {
+      bonus.score += 2;
+      GAME_STATE.score += 2;
+    }
+
+    GAME_STATE.progress = Math.min(99, Math.round((bonus.removed / bonus.targetRemoved) * 100));
+    if (!bonus.chain.length || bonus.removed >= bonus.targetRemoved) {
+      finishBonusOpenWorld(true);
+    }
+  }
+
+  function tickBonusOpenWorldGame(dt) {
+    const bonus = getBonusOpenWorldState();
+    if (!bonus.running || !bonus.path) return;
+
+    if (bonus.chain.length) {
+      bonus.chain[0].distance += bonus.speed * dt;
+      for (let i = 1; i < bonus.chain.length; i += 1) {
+        const desired = bonus.chain[i - 1].distance - bonus.spacing;
+        bonus.chain[i].distance += (desired - bonus.chain[i].distance) * Math.min(1, dt * 12);
+      }
+      if (bonus.chain[0].distance >= bonus.path.maxDistance - 4) {
+        finishBonusOpenWorld(false);
+        return;
+      }
+    }
+
+    for (let i = bonus.projectiles.length - 1; i >= 0; i -= 1) {
+      const projectile = bonus.projectiles[i];
+      projectile.x += projectile.vx * dt;
+      projectile.y += projectile.vy * dt;
+      projectile.life += dt;
+
+      if (!bonus.canvas || projectile.x < -30 || projectile.x > bonus.canvas.width + 30 || projectile.y < -30 || projectile.y > bonus.canvas.height + 30) {
+        bonus.projectiles.splice(i, 1);
+        continue;
+      }
+
+      let hit = false;
+      for (let ballIndex = 0; ballIndex < bonus.chain.length; ballIndex += 1) {
+        const point = getBonusOpenWorldPathPoint(bonus.path, bonus.chain[ballIndex].distance);
+        if (Math.hypot(projectile.x - point.x, projectile.y - point.y) <= bonus.ballRadius * 1.45) {
+          bonus.projectiles.splice(i, 1);
+          bonus.hits += 1;
+          insertBonusOpenWorldProjectile(ballIndex, projectile.color);
+          hit = true;
+          break;
+        }
+      }
+      if (hit) continue;
+    }
+
+    for (let i = bonus.particles.length - 1; i >= 0; i -= 1) {
+      const particle = bonus.particles[i];
+      particle.life -= dt;
+      particle.x += particle.vx * dt;
+      particle.y += particle.vy * dt;
+      particle.vx *= .98;
+      particle.vy *= .98;
+      particle.size *= .992;
+      if (particle.life <= 0 || particle.size < .6) {
+        bonus.particles.splice(i, 1);
+      }
+    }
+
+    GAME_STATE.progress = Math.min(99, Math.round((bonus.removed / bonus.targetRemoved) * 100));
+    updateBonusOpenWorldHUD();
+  }
+
+  function clearBonusZumaTimers() {
+    if (bonusZumaFrame) {
+      cancelAnimationFrame(bonusZumaFrame);
+      bonusZumaFrame = null;
+    }
+    if (bonusZumaResizeHandler) {
+      window.removeEventListener('resize', bonusZumaResizeHandler);
+      bonusZumaResizeHandler = null;
+    }
+    if (bonusZumaKeyHandler) {
+      document.removeEventListener('keydown', bonusZumaKeyHandler);
+      bonusZumaKeyHandler = null;
+    }
+  }
+
+  function mountBonusOpenWorldGame() {
+    const challenge = getCurrentChallenge();
+    const bonus = getBonusOpenWorldState();
+    const canvas = root && root.querySelector('#psBonusZumaCanvas');
+    if (!canvas || !challenge || challenge.type !== 'bonusOpenWorld' || !bonus.started) return;
+
+    clearBonusZumaTimers();
+
+    bonus.canvas = canvas;
+    bonus.ctx = canvas.getContext('2d');
+
+    const fitCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(700, Math.round(rect.width * (window.devicePixelRatio > 1 ? 1.25 : 1)));
+      canvas.height = Math.max(420, Math.round(rect.height * (window.devicePixelRatio > 1 ? 1.25 : 1)));
+      bonus.path = buildBonusOpenWorldPath(canvas.width, canvas.height);
+      if (!bonus.chain.length) {
+        initialiseBonusOpenWorldChain(bonus, true);
+      }
+      drawBonusOpenWorldBoard();
+      updateBonusOpenWorldHUD();
+    };
+
+    fitCanvas();
+
+    const updateAim = (clientX, clientY) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (clientX - rect.left) * scaleX;
+      const y = (clientY - rect.top) * scaleY;
+      const center = getBonusOpenWorldCenter(bonus);
+      bonus.shooterAngle = Math.atan2(y - center.y, x - center.x);
+      drawBonusOpenWorldBoard();
+    };
+
+    canvas.onpointermove = event => {
+      updateAim(event.clientX, event.clientY);
+    };
+    canvas.onpointerdown = event => {
+      updateAim(event.clientX, event.clientY);
+      shootBonusOpenWorldProjectile();
+    };
+
+    bonusZumaResizeHandler = () => {
+      fitCanvas();
+    };
+    window.addEventListener('resize', bonusZumaResizeHandler);
+
+    bonusZumaKeyHandler = event => {
+      if (!getCurrentChallenge() || getCurrentChallenge().type !== 'bonusOpenWorld') return;
+      if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault();
+        shootBonusOpenWorldProjectile();
+      }
+      if (event.key.toLowerCase() === 'x') {
+        event.preventDefault();
+        swapBonusOpenWorldAmmo();
+      }
+      if (event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        resetBonusOpenWorld();
+      }
+    };
+    document.addEventListener('keydown', bonusZumaKeyHandler);
+
+    bonus.running = !bonus.finished && !bonus.failed;
+    let lastTs = performance.now();
+    const frame = now => {
+      const current = getCurrentChallenge();
+      if (destroyed || !current || current.type !== 'bonusOpenWorld') {
+        clearBonusZumaTimers();
+        return;
+      }
+      const dt = Math.min(.032, Math.max(.012, (now - lastTs) / 1000));
+      lastTs = now;
+      if (bonus.running) tickBonusOpenWorldGame(dt);
+      drawBonusOpenWorldBoard();
+      updateBonusOpenWorldHUD();
+      if (bonus.running) {
+        bonusZumaFrame = requestAnimationFrame(frame);
+      }
+    };
+    bonusZumaFrame = requestAnimationFrame(frame);
+  }
+
+  function startBonusOpenWorld() {
+    const bonus = getBonusOpenWorldState();
+    bonus.started = true;
+    bonus.finished = false;
+    bonus.failed = false;
+    bonus.score = 0;
+    bonus.shots = 0;
+    bonus.hits = 0;
+    bonus.removed = 0;
+    bonus.combo = 0;
+    bonus.bestCombo = 0;
+    bonus.chain = [];
+    bonus.projectiles = [];
+    bonus.particles = [];
     renderGame();
+    showPanji('Gas. Cocokkan minimal 3 warna yang sama. Anggap setiap warna itu tahapan konsolidasi yang harus kamu rapikan supaya jalurnya aman.', 'happy');
   }
 
   function resetBonusOpenWorld() {
-    clearBonusOpenWorldTimers();
-    GAME_STATE.bonusOpenWorld = createBonusOpenWorldState();
+    clearBonusZumaTimers();
+    const bonus = createBonusOpenWorldState();
+    bonus.started = true;
+    GAME_STATE.bonusOpenWorld = bonus;
     GAME_STATE.progress = 0;
     renderGame();
-    showPanji('Bonus tower defense direset. Sekarang atur tower dari awal ya.', 'thinking');
-    showToast('Bonus level 4 direset', 'info');
+    showPanji('Oke, kita ulang bonus Zuma dari awal. Fokus ke rantainya, jangan panik, dan bangun combo pelan-pelan.', 'thinking');
   }
 
-  function selectBonusOpenWorldTower(towerId) {
+  function swapBonusOpenWorldAmmo() {
     const bonus = getBonusOpenWorldState();
-    if (!bonus || bonus.finished) return;
-    if (!bonus.towerTypes[towerId]) return;
-    bonus.selectedTower = towerId;
-    bonus.summary = 'Tower aktif: ' + bonus.towerTypes[towerId].label + '. Klik pad kosong untuk memasang.';
-    renderGame();
+    const temp = bonus.currentColor;
+    bonus.currentColor = bonus.nextColor;
+    bonus.nextColor = temp;
+    updateBonusOpenWorldHUD();
+    drawBonusOpenWorldBoard();
   }
 
-  function placeBonusOpenWorldTower(payload, buttonEl) {
+  function shootBonusOpenWorldProjectile() {
     const bonus = getBonusOpenWorldState();
-    if (!bonus || bonus.phase === 'running' || bonus.finished) {
-      showToast('Tower hanya bisa dipasang saat fase build.', 'bad');
-      return;
+    if (!bonus.running || !bonus.canvas) return;
+    const center = getBonusOpenWorldCenter(bonus);
+    const speed = 520;
+    bonus.projectiles.push({
+      x: center.x + Math.cos(bonus.shooterAngle) * 22,
+      y: center.y + Math.sin(bonus.shooterAngle) * 22,
+      vx: Math.cos(bonus.shooterAngle) * speed,
+      vy: Math.sin(bonus.shooterAngle) * speed,
+      color: bonus.currentColor,
+      life: 0
+    });
+    bonus.shots += 1;
+    const firedLabel = getBonusOpenWorldColorLabel(bonus.currentColor);
+    bonus.currentColor = bonus.nextColor;
+    bonus.nextColor = pickBonusOpenWorldColor(bonus);
+    updateBonusOpenWorldHUD();
+    playBeep(780, .06, 'triangle', .018);
+    if (bonus.shots === 1) {
+      showPanji(`Sip, tembakan pertama keluar. Bola yang kamu lepas barusan mewakili ${firedLabel}. Cari 2 warna sama lainnya biar pecah.`, 'talking');
     }
-
-    const [laneText, colText] = String(payload || '').split(':');
-    const lane = Number(laneText);
-    const col = Number(colText);
-    const slot = getBonusOpenWorldSlot(bonus, lane, col);
-    const tower = bonus.towerTypes[bonus.selectedTower];
-
-    if (!slot || !tower) return;
-    if (slot.tower) {
-      showPanji('Slot itu sudah terisi. Kalau mau ganti, reset bonus level ini dulu ya.', 'thinking');
-      showToast('Slot sudah terisi', 'bad');
-      return;
-    }
-    if (bonus.money < tower.cost) {
-      showPanji('Dananya belum cukup buat tower itu. Pilih yang lebih murah atau tahan sampai gelombang aman.', 'sad');
-      showToast('Dana kurang', 'bad');
-      return;
-    }
-
-    slot.tower = tower.id;
-    bonus.money -= tower.cost;
-    bonus.bonusScore += 3;
-    bonus.summary = tower.label + ' dipasang di lane ' + (lane + 1) + '. Sekarang jalur makin aman.';
-    showToast(tower.label + ' terpasang', 'ok');
-    popScore(buttonEl || document.body, '-' + tower.cost, 'info');
-    renderGame();
   }
 
   function renderBonusOpenWorldChallenge() {
     const bonus = getBonusOpenWorldState();
-    const towers = getBonusOpenWorldTowerList();
-    const lanesHtml = bonus.slots.map((laneSlots, laneIndex) => {
-      const laneEnemies = bonus.enemies.filter(enemy => enemy.lane === laneIndex);
+    const legend = bonus.colorKeys.map(key => {
+      const item = bonus.colorMap[key];
       return `
-        <div class="ps-td-lane">
-          <div class="ps-td-lane-label">Lane ${laneIndex + 1}</div>
-          <div class="ps-td-track">
-            <div class="ps-td-base">e-Purchasing</div>
-            ${laneSlots.map(slot => {
-              const tower = slot.tower ? bonus.towerTypes[slot.tower] : null;
-              return `
-                <button type="button" class="ps-td-pad ${tower ? 'filled' : ''}" data-bonus-tower-slot="${laneIndex}:${slot.col}">
-                  ${tower ? `<span class="ps-td-tower-icon">${tower.icon}</span><b>${escapeHtml(tower.label)}</b><small>Dmg ${tower.damage}</small>` : '<span class="ps-td-build">+ Pasang</span>'}
-                </button>
-              `;
-            }).join('')}
-            ${laneEnemies.map(enemy => `
-              <div class="ps-td-enemy" style="left:${Math.max(0, Math.min(88, enemy.progress * 20 + 4))}%">
-                <span>${enemy.icon}</span>
-                <small>${enemy.tag}</small>
-                <i style="width:${Math.max(8, Math.min(100, (enemy.hp / enemy.maxHp) * 100))}%"></i>
-              </div>
-            `).join('')}
+        <div class="ps-zuma-legend-item">
+          <span class="ps-zuma-ball" style="--ball:${item.color}">${escapeHtml(item.short)}</span>
+          <div>
+            <b>${escapeHtml(item.label)}</b>
+            <small>${
+              key === 'data' ? 'Rapikan kebutuhan OPD' :
+              key === 'pasar' ? 'Cek harga, stok, dan kesiapan pasar' :
+              key === 'kak' ? 'Kunci spesifikasi dan HPS' :
+              key === 'kontrak' ? 'Amankan kontrak payung' :
+              'Dorong katalog & e-Purchasing'
+            }</small>
           </div>
         </div>
       `;
     }).join('');
 
+    if (!bonus.started) {
+      return `
+        <div class="ps-zuma-shell">
+          <div class="ps-zuma-brief-card">
+            <div class="ps-zuma-kicker">Bonus Level 4 • Zuma Mode</div>
+            <h3>PANJI: Jalur Konsolidasi Kota Bogor</h3>
+            <p>Bonus ini dibuat seperti <b>Zuma</b>. Rantai bola melambangkan masalah yang harus dibereskan dari <b>identifikasi kebutuhan</b>, lanjut <b>pendalaman pasar</b>, <b>KAK/HPS</b>, <b>kontrak payung</b>, sampai <b>katalog elektronik dan e-Purchasing</b>.</p>
+            <div class="ps-zuma-brief-grid">
+              <div class="ps-zuma-brief-box">
+                <b>Cara main</b>
+                <ul>
+                  <li>Klik / tap arena untuk menembak.</li>
+                  <li>Cocokkan minimal <b>3 warna yang sama</b>.</li>
+                  <li>Tombol <b>X</b> atau klik <b>Tukar Bola</b> untuk swap bola aktif.</li>
+                  <li>Jangan sampai rantai menembus <b>portal e-Purchasing</b>.</li>
+                </ul>
+              </div>
+              <div class="ps-zuma-brief-box">
+                <b>Alur cerita</b>
+                <p>Kamu sedang menjaga perjalanan Paket Konsolidasi Kota Bogor. Semakin banyak rantai yang pecah, semakin rapi data, market sounding, KAK/HPS, kontrak payung, sampai akhirnya siap masuk katalog dan dipakai OPD lewat e-Purchasing.</p>
+              </div>
+            </div>
+            <div class="ps-zuma-legend-grid">${legend}</div>
+            <div class="ps-zuma-actions">
+              <button type="button" class="ps-btn ps-btn-primary" id="btnStartBonusZuma">Mulai Bonus Zuma</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     return `
-      <div class="ps-td-wrap">
-        <div class="ps-td-hero">
-          <div>
-            <div class="ps-bonus3d-kicker">Bonus Level 4 • Tower Defense</div>
-            <h3>Pertahankan Kota Konsolidasi</h3>
-            <p>Kota Bogor sedang menyiapkan konsolidasi ATK. Gangguan seperti data belum sinkron, harga liar, penyedia belum siap, dokumen lemah, sampai katalog macet datang per gelombang. Pasang menara proses biar jalur e-Purchasing tetap aman.</p>
+      <div class="ps-zuma-shell">
+        <div class="ps-zuma-layout">
+          <div class="ps-zuma-board-card">
+            <div class="ps-zuma-board-head">
+              <div>
+                <div class="ps-zuma-kicker">Bonus Level 4 • Zuma Konsolidasi</div>
+                <h3>Pertahankan jalur sampai portal e-Purchasing aman</h3>
+              </div>
+              <div class="ps-zuma-mini-hud">
+                <span><label>Poin</label><b id="psBonusZumaScore">0</b></span>
+                <span><label>Combo</label><b id="psBonusZumaCombo">0</b></span>
+                <span><label>Progress</label><b id="psBonusZumaRemoved">0/0</b></span>
+                <span><label>Akurasi</label><b id="psBonusZumaAcc">100%</b></span>
+              </div>
+            </div>
+            <div class="ps-zuma-canvas-wrap">
+              <canvas id="psBonusZumaCanvas"></canvas>
+              <div class="ps-zuma-canvas-tip">Klik / tap area arena untuk menembak • X untuk tukar bola • R untuk ulang</div>
+            </div>
+            <div class="ps-zuma-bottom-bar">
+              <div class="ps-zuma-ammo-card">
+                <span class="ps-zuma-chip" id="psBonusZumaCurrentChip"></span>
+                <div>
+                  <small>Bola aktif</small>
+                  <b id="psBonusZumaCurrent">-</b>
+                </div>
+              </div>
+              <div class="ps-zuma-ammo-card next">
+                <span class="ps-zuma-chip" id="psBonusZumaNextChip"></span>
+                <div>
+                  <small>Bola berikutnya</small>
+                  <b id="psBonusZumaNext">-</b>
+                </div>
+              </div>
+              <div class="ps-zuma-bottom-actions">
+                <button type="button" class="ps-btn ps-btn-soft" id="btnSwapBonusZuma">Tukar Bola (X)</button>
+                <button type="button" class="ps-btn ps-btn-soft" id="btnRestartBonusZuma">Ulang Bonus</button>
+              </div>
+            </div>
           </div>
-          <div class="ps-td-stats">
-            <div class="ps-td-stat"><label>HP Kota</label><strong>${bonus.hp}</strong></div>
-            <div class="ps-td-stat"><label>Dana</label><strong>${bonus.money}</strong></div>
-            <div class="ps-td-stat"><label>Gelombang</label><strong>${Math.min(bonus.waveIndex + (bonus.phase === 'running' ? 0 : 1), bonus.maxWaves)}/${bonus.maxWaves}</strong></div>
-            <div class="ps-td-stat"><label>Bonus Poin</label><strong>${bonus.bonusScore}</strong></div>
-          </div>
-        </div>
 
-        <div class="ps-td-toolbar">
-          ${towers.map(tower => `
-            <button type="button" class="ps-td-tower-btn ${bonus.selectedTower === tower.id ? 'active' : ''}" data-bonus-select-tower="${tower.id}">
-              <span>${tower.icon}</span>
-              <b>${escapeHtml(tower.label)}</b>
-              <small>${tower.desc}</small>
-              <em>Biaya ${tower.cost}</em>
-            </button>
-          `).join('')}
+          <aside class="ps-zuma-side-card">
+            <div class="ps-zuma-side-box story">
+              <div class="ps-zuma-kicker">Cerita PANJI</div>
+              <p id="psBonusZumaStory">${escapeHtml(bonus.storyNote)}</p>
+            </div>
+            <div class="ps-zuma-side-box">
+              <div class="ps-zuma-kicker">Makna warna</div>
+              <div class="ps-zuma-legend-grid compact">${legend}</div>
+            </div>
+            <div class="ps-zuma-side-box">
+              <div class="ps-zuma-kicker">Target</div>
+              <ul class="ps-zuma-checklist">
+                <li>Pecahkan rantai minimal <b>${bonus.targetRemoved}</b> bola.</li>
+                <li>Bangun combo supaya poin naik lebih cepat.</li>
+                <li>Jangan sampai rantai menyentuh portal.</li>
+                <li>Kalau panik, tukar bola aktif dulu.</li>
+              </ul>
+            </div>
+          </aside>
         </div>
-
-        <div class="ps-td-stage">
-          ${lanesHtml}
-        </div>
-
-        <div class="ps-td-brief">
-          <div class="ps-explanation"><strong>PANJI:</strong> ${escapeHtml(bonus.summary)}</div>
-          <div class="ps-buttons">
-            <button type="button" class="ps-btn ps-btn-primary" id="btnBonusTdStart" ${bonus.phase === 'running' || bonus.finished ? 'disabled' : ''}>${bonus.waveIndex === 0 ? 'Mulai Gelombang 1' : bonus.waveIndex >= bonus.maxWaves ? 'Selesai' : 'Mulai Gelombang ' + (bonus.waveIndex + 1)}</button>
-            <button type="button" class="ps-btn ps-btn-soft" id="btnBonusTdReset">Reset Bonus 4</button>
-          </div>
-        </div>
-
-        ${bonus.finished ? `
-          <div class="ps-explanation">
-            <strong>${bonus.phase === 'finished' ? 'Bonus Level 4 selesai:' : 'Pertahanan jebol:'}</strong><br>
-            ${escapeHtml(bonus.summary)}
-          </div>
-        ` : ''}
       </div>
+
+      ${bonus.finished && !bonus.failed ? `
+        <div class="ps-explanation"><strong>Bonus Level 4 selesai:</strong><br>Jalur konsolidasi aman. Kamu berhasil menahan masalah dari data kebutuhan sampai katalog/e-Purchasing.</div>
+      ` : ''}
     `;
   }
 
-  function answerBonusOpenWorld(payload, buttonEl) {
-    if (!payload) return;
-    if (String(payload).startsWith('slot::')) {
-      placeBonusOpenWorldTower(String(payload).replace('slot::', ''), buttonEl);
+  function finishBonusOpenWorld(success) {
+    const bonus = getBonusOpenWorldState();
+    if (bonus.finished && !bonus.failed) return;
+
+    bonus.running = false;
+    bonus.finished = Boolean(success);
+    bonus.failed = !success;
+    GAME_STATE.progress = success ? 100 : GAME_STATE.progress;
+    clearBonusZumaTimers();
+
+    if (success) {
+      const reward = 20 + Math.min(90, Math.round(bonus.score * .35));
+      GAME_STATE.score += reward;
+      addLog('ok', 'Bonus level 4 selesai', `Kamu menjaga jalur konsolidasi dengan baik. Bonus akhir +${reward}. Combo terbaik: ${bonus.bestCombo}.`);
+      showToast('Jalur konsolidasi aman!', 'ok');
+      showPanji('Mantap. Jalur konsolidasi berhasil kamu jaga sampai portal e-Purchasing aman. Ini baru namanya belajar PBJ sambil main.', 'happy');
+      renderGame();
+      setTimeout(() => showBonusOpenWorldCompletePopup(bonus, true), 80);
       return;
     }
-    if (String(payload).startsWith('tower::')) {
-      selectBonusOpenWorldTower(String(payload).replace('tower::', ''));
-      return;
-    }
-    if (payload === 'start-wave') {
-      startBonusOpenWorldWave();
-      return;
-    }
-    if (payload === 'reset-bonus') {
+
+    GAME_STATE.risk += 10;
+    GAME_STATE.wrong += 1;
+    addLog('bad', 'Portal jebol', 'Rantai masalah berhasil menembus portal. Bonus bisa diulang supaya alur konsolidasi lebih aman.');
+    showToast('Portal jebol. Coba lagi.', 'bad');
+    showPanji('Aduh, rantainya sampai ke portal. Artinya jalur konsolidasi belum aman. Santai, bonus ini bisa kamu ulangi.', 'sad');
+    renderGame();
+    setTimeout(() => showBonusOpenWorldCompletePopup(bonus, false), 80);
+  }
+
+  function answerBonusOpenWorld() {
+    return;
+  }
+
+  function showBonusOpenWorldCompletePopup(bonus, success = true) {
+    const existing = document.getElementById('psBonus4FinishPopup');
+    if (existing) existing.remove();
+
+    const accuracy = bonus.shots ? Math.round((bonus.hits / bonus.shots) * 100) : 100;
+    const overlay = document.createElement('div');
+    overlay.id = 'psBonus4FinishPopup';
+    overlay.className = 'ps-bonus4-finish-popup';
+    overlay.innerHTML = success ? `
+      <div class="ps-bonus4-finish-card zuma">
+        <div class="ps-bonus4-finish-orb">🎯</div>
+        <h2>Jalur Konsolidasi Aman!</h2>
+        <p><b>Poin internal bonus:</b> ${Number(bonus.score || 0)} · <b>Removed:</b> ${bonus.removed}/${bonus.targetRemoved} · <b>Akurasi:</b> ${accuracy}%</p>
+        <div class="ps-bonus4-panji-note"><b>PANJI:</b> Data kebutuhan sampai e-Purchasing berhasil kamu jaga dengan ritme yang rapi. Itu artinya alur konsolidasi sudah mulai kebayang di kepala kamu.</div>
+        <small>Otomatis lanjut ke level berikutnya...</small>
+        <button type="button" class="ps-btn ps-btn-primary" id="btnBonus4GoNext">Lanjut sekarang</button>
+      </div>
+    ` : `
+      <div class="ps-bonus4-finish-card zuma failed">
+        <div class="ps-bonus4-finish-orb">🌀</div>
+        <h2>Portal Kebobolan</h2>
+        <p><b>Removed:</b> ${bonus.removed}/${bonus.targetRemoved} · <b>Akurasi:</b> ${accuracy}%</p>
+        <div class="ps-bonus4-panji-note"><b>PANJI:</b> Belum apa-apa. Di PBJ juga begitu, kalau ritmenya salah ya diperbaiki. Ulangi bonus atau lewati kalau mau lanjut.</div>
+        <div class="ps-zuma-popup-actions">
+          <button type="button" class="ps-btn ps-btn-primary" id="btnBonus4Retry">Ulangi Bonus</button>
+          <button type="button" class="ps-btn ps-btn-soft" id="btnBonus4Skip">Lewati Bonus</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const go = () => {
+      overlay.remove();
+      if (getCurrentChallenge() && getCurrentChallenge().type === 'bonusOpenWorld' && GAME_STATE.progress === 100) {
+        nextChallenge();
+      }
+    };
+
+    const retry = () => {
+      overlay.remove();
       resetBonusOpenWorld();
-      return;
-    }
+    };
+
+    const skip = () => {
+      overlay.remove();
+      GAME_STATE.progress = 100;
+      nextChallenge();
+    };
+
+    document.getElementById('btnBonus4GoNext')?.addEventListener('click', go);
+    document.getElementById('btnBonus4Retry')?.addEventListener('click', retry);
+    document.getElementById('btnBonus4Skip')?.addEventListener('click', skip);
+    if (success) setTimeout(go, 4200);
   }
 
   function createBonusSnakeState() {
+
     return {
       running: false,
       finished: false,
@@ -4045,6 +4568,7 @@
       snake = getBonusSnakeState();
       renderGame();
     }
+    clearBonusZumaTimers();
     clearBonusSnakeTimers();
     snake.running = true;
     playSfx('ok');
@@ -4068,6 +4592,7 @@
     if (snake.finished) return;
     snake.running = false;
     snake.finished = true;
+    clearBonusZumaTimers();
     clearBonusSnakeTimers();
     const bonus = Math.min(120, snake.score * 10);
     GAME_STATE.score += bonus;
@@ -4159,6 +4684,7 @@
   }
 
   function skipBonusSnake() {
+    clearBonusZumaTimers();
     clearBonusSnakeTimers();
     const snake = getBonusSnakeState();
     if (!snake.finished) {
@@ -4173,6 +4699,7 @@
   }
 
   function resetBonusSnake() {
+    clearBonusZumaTimers();
     clearBonusSnakeTimers();
     GAME_STATE.bonusSnake = createBonusSnakeState();
     GAME_STATE.progress = 0;
@@ -4439,7 +4966,20 @@
 
     root.querySelectorAll('[data-bonus-node]').forEach(button => {
       button.addEventListener('click', () => {
-        answerBonusOpenWorld(button.dataset.bonusNode, button);
+        const bonus = GAME_STATE.bonusOpenWorld;
+        if (!bonus) return;
+        const order = bonus.nodes.map(node => node.id);
+        const targetId = button.dataset.bonusNode;
+        const targetIndex = order.indexOf(targetId);
+        const completedCount = Object.keys(bonus.completed).length;
+        if (targetIndex > completedCount) {
+          showPanji('Belum bisa lompat ke quest itu. Bonus level 4 ini story line, jadi jalannya harus berurutan dulu.', 'sad');
+          showToast('Quest masih terkunci', 'bad');
+          return;
+        }
+        bonus.activeNode = targetId;
+        renderGame();
+        showPanji('Quest dipilih. Baca pilihan pelan-pelan ya, karena opsi diacak dan ada jebakan.', 'thinking');
       });
     });
 
@@ -4449,30 +4989,31 @@
       });
     });
 
-    root.querySelectorAll('[data-bonus-select-tower]').forEach(button => {
-      button.addEventListener('click', () => {
-        answerBonusOpenWorld('tower::' + button.dataset.bonusSelectTower, button);
-      });
-    });
-
-    root.querySelectorAll('[data-bonus-tower-slot]').forEach(button => {
-      button.addEventListener('click', () => {
-        answerBonusOpenWorld('slot::' + button.dataset.bonusTowerSlot, button);
-      });
-    });
-
-    const btnBonusTdStart = root.querySelector('#btnBonusTdStart');
-    if (btnBonusTdStart) {
-      btnBonusTdStart.addEventListener('click', () => {
-        answerBonusOpenWorld('start-wave', btnBonusTdStart);
+    const btnStartBonusZuma = root.querySelector('#btnStartBonusZuma');
+    if (btnStartBonusZuma) {
+      btnStartBonusZuma.addEventListener('click', () => {
+        startBonusOpenWorld();
       });
     }
 
-    const btnBonusTdReset = root.querySelector('#btnBonusTdReset');
-    if (btnBonusTdReset) {
-      btnBonusTdReset.addEventListener('click', () => {
-        answerBonusOpenWorld('reset-bonus', btnBonusTdReset);
+    const btnRestartBonusZuma = root.querySelector('#btnRestartBonusZuma');
+    if (btnRestartBonusZuma) {
+      btnRestartBonusZuma.addEventListener('click', () => {
+        resetBonusOpenWorld();
       });
+    }
+
+    const btnSwapBonusZuma = root.querySelector('#btnSwapBonusZuma');
+    if (btnSwapBonusZuma) {
+      btnSwapBonusZuma.addEventListener('click', () => {
+        swapBonusOpenWorldAmmo();
+      });
+    }
+
+    if (getCurrentChallenge() && getCurrentChallenge().type === 'bonusOpenWorld' && GAME_STATE.bonusOpenWorld && GAME_STATE.bonusOpenWorld.started) {
+      setTimeout(() => {
+        mountBonusOpenWorldGame();
+      }, 0);
     }
 
     const btnSnakeBriefStart = root.querySelector('#btnSnakeBriefStart');
@@ -5057,7 +5598,8 @@
       clearLevelTimer();
       clearTenderRushTimers();
       disableTenderRushKeyboard();
-      clearBonusSnakeTimers();
+      clearBonusZumaTimers();
+    clearBonusSnakeTimers();
       clearPanjiIntroTimers();
       clearPanjiTalkTimer();
 
