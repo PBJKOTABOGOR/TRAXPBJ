@@ -2307,3 +2307,40 @@ textarea{
     min-height:0;
   }
 }
+
+
+/* Revision v3 */
+.stat-card--lux .label{
+  font-size:16px !important;
+  font-weight:950 !important;
+  letter-spacing:.02em !important;
+  text-transform:uppercase;
+  color:#ffffff !important;
+}
+
+.stat-card--lux .desc{
+  margin-top:10px !important;
+  font-size:17px !important;
+  line-height:1.45 !important;
+  font-weight:900 !important;
+  color:rgba(255,255,255,.92) !important;
+}
+
+.stat-card--lux .value{
+  font-size:28px !important;
+  font-weight:950 !important;
+}
+
+.small-metric-track{
+  background:#dfe8f3 !important;
+}
+
+.small-metric-bar{
+  width:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+
+.small-metric-percent{
+  font-weight:950 !important;
+}
