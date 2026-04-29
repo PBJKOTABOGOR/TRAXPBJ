@@ -651,7 +651,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'blue',
         route: 'monitoring-sirup',
         hint: 'Klik untuk buka Monitoring SiRUP',
-        detailText: formatCompactPair(totalKomitmenSirup, totalRupSirup),
+        detailText: formatCompactPair(totalRupSirup, totalKomitmenSirup),
         detailHref: 'https://datastudio.google.com/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2'
       },
       {
@@ -670,7 +670,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'purple',
         route: 'monitoring-ekatalog',
         hint: 'Klik untuk buka Monitoring eKatalog',
-        detailText: formatPlainPair(paketAktifEpurchasing, paketSelesaiEpurchasing)
+        detailText: formatPlainPair(paketSelesaiEpurchasing, paketAktifEpurchasing)
       },
       {
         name: 'e-Tendering',
@@ -679,7 +679,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'orange',
         route: 'monitoring-etendering',
         hint: 'Klik untuk buka Monitoring eTendering',
-        detailText: formatPlainPair(paketTerumumkanTender, paketSelesaiTender)
+        detailText: formatPlainPair(paketSelesaiTender, paketTerumumkanTender)
       },
       {
         name: 'e-Kontrak',
@@ -688,7 +688,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'green',
         route: 'monitoring-ekontrak',
         hint: 'Klik untuk buka Monitoring eKontrak',
-        detailText: formatPlainPair(totalPaketAktifKontrak, totalPaketSelesaiKontrak)
+        detailText: formatPlainPair(totalPaketSelesaiKontrak, totalPaketAktifKontrak)
       },
       {
         name: 'Non eTendering / Non ePurchasing',
@@ -697,7 +697,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'red',
         route: 'monitoring-nontender',
         hint: 'Klik untuk buka Monitoring Non eTendering',
-        detailText: formatCompactPair(totalPaguNonTender, totalRealisasiNonTender)
+        detailText: formatCompactPair(totalRealisasiNonTender, totalPaguNonTender)
       }
     ]
   };
