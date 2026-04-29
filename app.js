@@ -837,10 +837,10 @@ function renderDashboardReady(data) {
       </div>
 
       <div class="stats-grid dashboard-kpi-grid">
-        ${renderKpiCard('Skor ITKP Kota Bogor', formatScore(data.itkpOverall), 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD', '📊')}
-        ${renderKpiCard('Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾')}
-        ${renderKpiCard('Pagu Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰')}
-        ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses · ${scopeLabel}`, '📦')}
+        ${renderKpiCard('Skor ITKP Kota Bogor', formatScore(data.itkpOverall), 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD', '📊', '')}
+        ${renderKpiCard('Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾', '')}
+        ${renderKpiCard('Pagu Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰', getToneByPercent(data.realisasiPersen))}
+        ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses · ${scopeLabel}`, '📦', '')}
       </div>
 
       <div class="hero-actions">
@@ -895,7 +895,7 @@ function renderDashboardReady(data) {
             <span class="section-kicker">Kinerja Realisasi · ${escapeHtml(scopeLabel)}</span>
             <h3>Progress Pagu vs Realisasi</h3>
           </div>
-          <span class="soft-pill">${formatPercent(data.realisasiPersen)}</span>
+          <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">${formatPercent(data.realisasiPersen)}</span>
         </div>
 
         <div class="money-progress">
@@ -1062,11 +1062,14 @@ function bindDashboardEvents() {
   });
 }
 
-function renderKpiCard(label, value, desc, icon) {
+function renderKpiCard(label, value, desc, icon, tone = '') {
+  const toneClass = tone ? ` stat-card--${tone}` : '';
   return `
-    <div class="stat-card stat-card--lux">
-      <div class="stat-icon">${icon}</div>
-      <div class="label">${escapeHtml(label)}</div>
+    <div class="stat-card stat-card--lux${toneClass}">
+      <div class="stat-card-top">
+        <div class="stat-icon">${icon}</div>
+        <div class="label">${escapeHtml(label)}</div>
+      </div>
       <div class="value">${escapeHtml(value)}</div>
       <div class="desc">${escapeHtml(desc)}</div>
     </div>
@@ -1081,7 +1084,7 @@ function renderSmallMetric(label, value, desc, percent = 0) {
       <span>${escapeHtml(label)}</span>
       <small>${escapeHtml(desc)}</small>
       <div class="small-metric-percent">${percent.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</div>
-      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:0%"></span></div>
+      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:${Math.max(0, Math.min(100, percent))}%"></span></div>
     </div>
   `;
 }
