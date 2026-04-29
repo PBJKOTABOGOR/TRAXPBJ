@@ -27,6 +27,7 @@
   let leaderboardRefreshTimer = null;
   let reviewBubbleEl = null;
   let reviewBubbleTimer = null;
+  let reviewBubbleLastShownAt = 0;
 
   let levelTimer = null;
   let levelTimerStartedAt = 0;
@@ -42,6 +43,25 @@
 
   let bonusSnakeTimer = null;
   let bonusSnakeKeyHandler = null;
+  let bonusDinoTimer = null;
+  let bonusDinoKeyHandler = null;
+
+
+  const BONUS_ASSET_PATHS = {
+    npcMerchant: 'assets/npcs/merchant.png',
+    npcMage: 'assets/npcs/mage.png',
+    npcArcher: 'assets/npcs/archer.png',
+    npcKnight: 'assets/npcs/knight.png',
+    npcThief: 'assets/npcs/thief.png',
+    npcBlacksmith: 'assets/npcs/blacksmith.png',
+    playerRun: 'assets/player/run_strip8.png'
+  };
+
+  const BONUS_ASSETS = Object.fromEntries(Object.entries(BONUS_ASSET_PATHS).map(([key, src]) => {
+    const img = new Image();
+    img.src = src;
+    return [key, img];
+  }));
 
   const CARD_LIBRARY = {
     rup: {
@@ -882,7 +902,7 @@
   }
 
   function buildChallenge(raw) {
-    if (raw.type === 'quiz' || raw.type === 'tenderRush' || raw.type === 'bonusOpenWorld' || raw.type === 'bonusSnake') {
+    if (raw.type === 'quiz' || raw.type === 'tenderRush' || raw.type === 'bonusOpenWorld' || raw.type === 'bonusSnake' || raw.type === 'bonusDino') {
       return raw;
     }
 
@@ -917,6 +937,17 @@
     explanation: 'Bonus Snake melatih fokus cepat: ambil item baik, hindari jebakan, dan tetap jaga mood sebelum lanjut analisa PBJ.'
   };
 
+
+  const BONUS_LEVEL_10_DINO = {
+    type: 'bonusDino',
+    title: 'Level 10 — Bonus Dino Run: Kejar Paket Aman',
+    caseTitle: 'Runner 2D Anti Revisi',
+    desc: 'Bonus level 10. Lari, lompat, dan hindari gangguan seperti Revisi Dadakan, Spek Mengarah, dan Data Ganda. Karakter memakai sprite yang kamu kirim.',
+    budget: 'Bonus Level 10',
+    difficulty: 'Runner 2D',
+    explanation: 'Bonus Dino melatih fokus dan timing. Satu lompatan yang salah bisa bikin progres tersandung seperti paket yang terlalu buru-buru.'
+  };
+
   function buildMainChallengeFlow() {
     const rushTemplate = CHALLENGE_RAW.find(item => item.type === 'tenderRush');
     const miniCompetitionPipeline = CHALLENGE_RAW[20];
@@ -932,7 +963,8 @@
       BONUS_LEVEL_8_SNAKE,
       CHALLENGE_RAW[6],
       CHALLENGE_RAW[7],
-      rushTemplate ? cloneTenderRushChallenge(rushTemplate, 11, 1) : CHALLENGE_RAW[2],
+      BONUS_LEVEL_10_DINO,
+      rushTemplate ? cloneTenderRushChallenge(rushTemplate, 12, 1) : CHALLENGE_RAW[2],
       miniCompetitionPipeline,
       miniCompetitionQuiz
     ].filter(Boolean);
@@ -1151,19 +1183,28 @@
     }
   }
 
-  async function showReviewBubbleOnMenuOpen() {
-    if (destroyed || sessionStorage.getItem('procstack_review_bubble_seen_v11') === '1') return;
+  async function showReviewBubbleOnMenuOpen(options = {}) {
+    if (destroyed) return;
+
+    const now = Date.now();
+    if (!options.force && now - reviewBubbleLastShownAt < 3500) return;
+    reviewBubbleLastShownAt = now;
+
+    document.querySelectorAll('.ps-review-bubble-pop').forEach(el => el.remove());
+    if (reviewBubbleTimer) {
+      clearTimeout(reviewBubbleTimer);
+      reviewBubbleTimer = null;
+    }
+
     const rows = await fetchReviewRowsForBubble();
     if (destroyed || !rows.length) return;
-
-    sessionStorage.setItem('procstack_review_bubble_seen_v11', '1');
     const emojis = ['😄','🔥','⭐','💬','🚀','🧠','🎮','🙌','😂','✨'];
-    const pickedRows = rows.slice(0, Math.min(5, rows.length));
+    const pickedRows = rows.slice(0, Math.min(8, rows.length));
     const created = [];
 
     pickedRows.forEach((row, index) => {
       const bubble = document.createElement('div');
-      bubble.className = `ps-review-bubble-pop ps-review-bubble-float review-pos-${index % 6}`;
+      bubble.className = `ps-review-bubble-pop ps-review-bubble-float review-pos-${index % 8}`;
       bubble.style.setProperty('--review-i', String(index));
       bubble.style.setProperty('--review-delay', `${index * 0.18}s`);
       bubble.style.setProperty('--review-rand', String((index * 37) % 19));
@@ -1357,6 +1398,10 @@
         setTimeout(attachPanjiToLeaderboardModal, 600);
       }
     }, 120);
+
+    setTimeout(() => {
+      if (!destroyed) showReviewBubbleOnMenuOpen({ force: true });
+    }, 520);
 
     if (tab === 'leaderboard' || !PLAYER_STATE.leaderboard.length) {
       fetchLeaderboard();
@@ -1798,6 +1843,10 @@
       return 'Hi.. aku balik lagi. Ini bonus level 8: PANJI Star Snake. Ambil bintang sebanyak mungkin, hindari revisi dan berkas numpuk. Ini buat refreshing tapi tetap masuk skor akhir.';
     }
 
+    if (challenge.type === 'bonusDino') {
+      return 'Hi.. aku balik lagi. Ini bonus level 10. Konsepnya runner 2D ala dino, tapi isinya dunia PBJ. Lompat pakai karakter kamu, hindari revisi, spek mengarah, dan data ganda.';
+    }
+
     return 'Hi.. aku balik lagi. Lanjutkan permainan dengan membaca kasus dan memilih langkah PBJ yang paling aman.';
   }
 
@@ -1997,6 +2046,7 @@
     clearTenderRushTimers();
     disableTenderRushKeyboard();
     clearBonusSnakeTimers();
+    clearBonusDinoTimers();
     clearPanjiIntroTimers();
 
     GAME_STATE.finished = true;
@@ -2070,6 +2120,10 @@
 
       if (challenge.type === 'bonusSnake') {
         return total + 120;
+      }
+
+      if (challenge.type === 'bonusDino') {
+        return total + 140;
       }
 
       return total + 20;
@@ -2595,6 +2649,10 @@
       return 'Hint PANJI: di Snake, jangan rakus. Putar arah pelan-pelan, ambil bintang yang aman dulu, dan hindari nabrak jebakan revisi.';
     }
 
+    if (challenge.type === 'bonusDino') {
+      return 'Hint PANJI: simpan lompatan untuk rintangan dekat. Jangan spam. Fokus ke tempo lari, bukan panik.';
+    }
+
     if (challenge.hint) {
       return `Hint PANJI: ${challenge.hint}`;
     }
@@ -2667,6 +2725,14 @@
       return;
     }
 
+    if (challenge.type === 'bonusDino') {
+      showPanji(
+        'Bonus level 10 dimulai. Ini runner 2D ala dino. Karaktermu lari terus, tugasmu lompatin gangguan pengadaan sampai target aman tercapai.',
+        'happy'
+      );
+      return;
+    }
+
     showPanji(
       'Ini soal ABCD. Baca kata kuncinya pelan-pelan. Pilih jawaban yang paling sesuai prinsip dan tahapan PBJ, bukan yang sekadar paling cepat.',
       'thinking'
@@ -2678,6 +2744,7 @@
     clearTenderRushTimers();
     disableTenderRushKeyboard();
     clearBonusSnakeTimers();
+    clearBonusDinoTimers();
     clearPanjiIntroTimers();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
@@ -2716,6 +2783,7 @@
     clearTenderRushTimers();
     disableTenderRushKeyboard();
     clearBonusSnakeTimers();
+    clearBonusDinoTimers();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
 
@@ -2790,6 +2858,19 @@
         'Bonus Level 8 dimulai',
         'Main Snake, ambil bintang, dan hindari jebakan. Poin bonus masuk nilai akhir.'
       );
+    } else if (challenge.type === 'bonusDino') {
+      GAME_STATE.stage = 'bonusDino';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.tenderRush = null;
+      GAME_STATE.progress = 0;
+      GAME_STATE.bonusDino = createBonusDinoState();
+
+      addLog(
+        'info',
+        'Bonus Level 10 dimulai',
+        'Runner 2D dimulai. Lompat pakai karakter utama dan hindari gangguan pengadaan.'
+      );
     } else {
       GAME_STATE.stage = 'quiz';
       GAME_STATE.placed = [];
@@ -2808,7 +2889,7 @@
     renderGame();
 
     const pauseForPipelineTutorial = challenge.type === 'pipeline' && !GAME_STATE.pipelineTutorialSeen && getCurrentLevelNumber() === 1;
-    if (challenge.type !== 'tenderRush' && challenge.type !== 'bonusOpenWorld' && challenge.type !== 'bonusSnake' && !pauseForPipelineTutorial) {
+    if (challenge.type !== 'tenderRush' && challenge.type !== 'bonusOpenWorld' && challenge.type !== 'bonusSnake' && challenge.type !== 'bonusDino' && !pauseForPipelineTutorial) {
       startLevelTimer(challenge);
     } else if (pauseForPipelineTutorial) {
       GAME_STATE.levelTimeLimit = getDefaultLevelTime(challenge);
@@ -2868,6 +2949,7 @@
     if (challenge.type === 'tenderRush') return GAME_STATE.progress === 100;
     if (challenge.type === 'bonusOpenWorld') return GAME_STATE.progress === 100;
     if (challenge.type === 'bonusSnake') return GAME_STATE.progress === 100;
+    if (challenge.type === 'bonusDino') return GAME_STATE.progress === 100;
     return GAME_STATE.answered;
   }
 
@@ -2876,6 +2958,7 @@
     if (type === 'tenderRush') return 'Tender Rush';
     if (type === 'bonusOpenWorld') return 'Bonus 3D';
     if (type === 'bonusSnake') return 'Bonus Snake';
+    if (type === 'bonusDino') return 'Bonus Dino';
     return 'ABCD';
   }
 
@@ -2884,6 +2967,7 @@
     if (type === 'tenderRush') return 'Arcade Metode';
     if (type === 'bonusOpenWorld') return 'Open World Bonus';
     if (type === 'bonusSnake') return 'Snake Bintang';
+    if (type === 'bonusDino') return 'Dino Runner';
     return 'Pilihan ABCD';
   }
 
@@ -2892,6 +2976,7 @@
     if (challenge.type === 'tenderRush') return renderTenderRushChallenge(challenge);
     if (challenge.type === 'bonusOpenWorld') return renderBonusOpenWorldChallenge(challenge);
     if (challenge.type === 'bonusSnake') return renderBonusSnakeChallenge(challenge);
+    if (challenge.type === 'bonusDino') return renderBonusDinoChallenge(challenge);
     return renderQuizChallenge(challenge);
   }
 
@@ -2992,7 +3077,7 @@
             <div class="ps-pill ps-current-soal-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
             <div class="ps-level-time-card ps-level-time-compact">
               <label>Waktu</label>
-              <strong id="psLevelTimeText">${(challenge.type === 'tenderRush' || challenge.type === 'bonusOpenWorld' || challenge.type === 'bonusSnake') ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
+              <strong id="psLevelTimeText">${(challenge.type === 'tenderRush' || challenge.type === 'bonusOpenWorld' || challenge.type === 'bonusSnake' || challenge.type === 'bonusDino') ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
               <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
             </div>
             <button type="button" class="ps-btn ps-btn-soft" id="btnPanjiHint">
@@ -3030,7 +3115,9 @@
       ? 'SOAL BONUS 4 / MISI 3D'
       : challenge.type === 'bonusSnake'
         ? 'SOAL BONUS 8 / SNAKE'
-        : 'SOAL / PERTANYAAN';
+        : challenge.type === 'bonusDino'
+          ? 'SOAL BONUS 10 / DINO RUN'
+          : 'SOAL / PERTANYAAN';
     const detail = mainQuestion || challenge.question || challenge.desc || '';
     const meta = [];
     if (challenge.budget) meta.push('Pagu/Nilai: ' + challenge.budget);
@@ -3256,60 +3343,83 @@
   }
 
 
+  
   function createBonusOpenWorldState() {
     const nodes = [
       {
-        id: 'team',
-        title: 'Recruit Team',
-        icon: '🧑‍💼',
-        desc: 'Pilih tim yang bisa bantu analisa data, pasar, dan evaluasi.',
+        id: 'mcsp',
+        title: 'Bangun Tim & Mandat',
+        icon: '🏛️',
+        desc: 'Mulai dari dorongan indikator tata kelola, lalu pilih tim inti yang paling siap buat bantu konsolidasi Kota Bogor.',
+        story: 'PANJI mengajak PPK masuk ke plaza bonus level 4. Portal hanya terbuka kalau misi konsolidasi diselesaikan dengan benar. Tahap pertama: bentuk tim yang bukan cuma cepat, tapi bisa baca data, pasar, dan implementasi katalog.',
+        enemy: 'Musuh pertama: rapat tanpa arah dan tim asal tunjuk.',
         choices: [
-          { id: 'data-eval', text: 'Pilih Analis Data + Evaluator teliti', good: true, panji: 'Pilihan bagus. Data dan evaluasi adalah tulang punggung konsolidasi.' },
-          { id: 'cheap-fast', text: 'Pilih tim yang penting murah dan cepat', good: false, panji: 'Ini rawan. Cepat dan murah belum tentu bisa dipertanggungjawabkan.' },
-          { id: 'katalog-monitor', text: 'Pilih Spesialis Katalog + Monitoring', good: true, panji: 'Bagus. Implementasi katalog dan monitoring OPD jadi lebih kebaca.' },
-          { id: 'langganan', text: 'Pilih orang yang dekat dengan toko langganan', good: false, panji: 'Ini jebakan. Konsolidasi harus berbasis data dan persaingan sehat.' }
+          { id: 'tim-aman', text: 'Bentuk tim berisi analis data, evaluator, dan monitoring implementasi', good: true, panji: 'Ini aman. Konsolidasi butuh orang yang bisa membaca data kebutuhan sampai pelaksanaan.' },
+          { id: 'tim-asal', text: 'Pilih siapa pun yang sedang kosong agar cepat', good: false, panji: 'Cepat belum tentu aman. Tim yang tidak pas bikin keputusan awal gampang goyah.' },
+          { id: 'mandat-jelas', text: 'Pastikan mandat dan peran tiap orang jelas sejak awal', good: true, panji: 'Bagus. Payung kerja dan pembagian peran bikin alur konsolidasi lebih tertib.' },
+          { id: 'toko-langganan', text: 'Masukkan orang yang dekat dengan toko langganan supaya enak nanti', good: false, panji: 'Jebakan. Kedekatan tidak boleh menggantikan dasar evaluasi dan persaingan sehat.' }
         ]
       },
       {
-        id: 'nama',
-        title: 'Samakan Nama Barang',
-        icon: '🧩',
-        desc: 'Analisa item mana yang sejenis dan layak digabung.',
+        id: 'data',
+        title: 'Rapikan Barang Sejenis',
+        icon: '🧾',
+        desc: 'Baca kebutuhan OPD dan samakan item yang benar-benar sejenis seperti HVS, tinta printer, dan ballpoint.',
+        story: 'Data OPD datang dengan nama yang berantakan. Ada HVS A4 70 gsm, kertas A4 70 gram, pulpen gel, bolpoin gel, dan item lain yang kelihatannya mirip. Kalau salah gabung, paket konsolidasi bisa kacau dari awal.',
+        enemy: 'Musuh kedua: Data Ganda dan Nama Barang Acak.',
         choices: [
-          { id: 'hvs-a4', text: 'Gabungkan HVS A4 70 gsm, Kertas A4 70 gram, A4 70 putih', good: true, panji: 'Betul. Nama beda, tapi spesifikasi masih satu keluarga.' },
-          { id: 'campur-semua', text: 'Gabungkan HVS A4, HVS F4, tinta printer, dan ballpoint jadi satu paket', good: false, panji: 'Jangan asal gabung. Komoditas beda harus dibaca terpisah.' },
-          { id: 'ballpoint', text: 'Gabungkan Bolpoin Gel, Pulpen Gel, dan Gel Pen', good: true, panji: 'Ya, ini bisa distandarkan ke kelompok Ballpoint Gel.' },
-          { id: 'spidol-gel', text: 'Masukkan spidol whiteboard ke kelompok ballpoint gel', good: false, panji: 'Mirip alat tulis, tapi jenisnya beda. Jangan dipaksa.' }
+          { id: 'hvs-ballpoint', text: 'Kelompokkan HVS, tinta printer, dan ballpoint per keluarga barang, bukan dicampur semua', good: true, panji: 'Betul. Keluarga barang harus dibaca per kelompok agar spesifikasi dan HPS tetap masuk akal.' },
+          { id: 'campur-total', text: 'Gabungkan semua ATK dan semua elektronik kecil jadi satu paket besar', good: false, panji: 'Terlalu dipaksa. Konsolidasi mencari kesamaan, bukan menggabung semua hal tanpa logika.' },
+          { id: 'samakan-nama', text: 'Samakan istilah yang beda tapi spesifikasinya sama, misalnya pulpen gel dan bolpoin gel', good: true, panji: 'Nah, itu inti analisa kebutuhan sejenis.' },
+          { id: 'ikuti-ketik', text: 'Anggap nama barang yang beda berarti pasti barangnya beda', good: false, panji: 'Belum tentu. Perlu dibaca lagi volume, ukuran, gramasi, dan jenisnya.' }
         ]
       },
       {
         id: 'pasar',
-        title: 'Pasar Penyedia',
+        title: 'Market Sounding Kota Bogor',
         icon: '🏪',
-        desc: 'Datangi toko, cek harga, akun Katalog V6, stok, dan distribusi.',
+        desc: 'Datangi penyedia, cek harga, stok, akun Katalog V6, distribusi, dan kesiapan pasar.',
+        story: 'PPK dan PANJI masuk ke pasar penyedia. Di kanan kiri ada merchant, blacksmith, mage, dan archer yang mewakili penyedia berbeda. Tugasmu bukan memilih pemenang, tapi membaca kondisi pasar dengan kepala dingin.',
+        enemy: 'Musuh ketiga: Harga Liar, stok semu, dan janji manis tanpa bukti.',
         choices: [
-          { id: 'murah-belum-v6', text: 'Pilih harga termurah walau belum punya akun Katalog V6', good: false, panji: 'Harga murah menggoda, tapi kalau belum siap katalog bisa macet saat implementasi.' },
-          { id: 'v6-stok', text: 'Pilih toko yang harga masuk akal, akun V6 siap, stok dan distribusi jelas', good: true, panji: 'Nah ini sehat. Murah boleh, tapi kesiapan pasar tetap dicek.' },
-          { id: 'langganan-toko', text: 'Pilih toko langganan karena sudah biasa', good: false, panji: 'Kebiasaan bukan dasar evaluasi. Tetap pakai data.' },
-          { id: 'market-lengkap', text: 'Catat minimal 3 toko untuk pembanding harga dan kesiapan', good: true, panji: 'Bagus. Market sounding butuh gambaran pasar, bukan satu suara saja.' }
+          { id: 'pasar-v6', text: 'Pilih penyedia yang harganya masuk akal, akun Katalog V6 siap, dan distribusi ke OPD jelas', good: true, panji: 'Bagus. Harga murah penting, tapi kesiapan implementasi juga wajib dicek.' },
+          { id: 'murah-saja', text: 'Ambil yang paling murah walau belum siap katalog', good: false, panji: 'Murah belum cukup. Kalau implementasi macet, OPD nanti yang repot.' },
+          { id: 'tiga-pembanding', text: 'Catat minimal tiga pembanding harga dan kesiapan pasar', good: true, panji: 'Ini sehat. Market sounding butuh pembanding, bukan satu suara.' },
+          { id: 'langganan', text: 'Cukup tanya toko langganan karena sudah paling dikenal', good: false, panji: 'Kebiasaan bukan dasar evaluasi pasar.' }
+        ]
+      },
+      {
+        id: 'tantangan',
+        title: 'Lawan Tantangan Konsolidasi',
+        icon: '⚔️',
+        desc: 'Saat alur mulai jalan, muncul gangguan: data kebutuhan belum rapi, pembentukan harga, katalog, sampai komitmen pimpinan.',
+        story: 'Tiba-tiba gerombolan knight dan thief muncul membawa tujuh tantangan konsolidasi: data kebutuhan, pasar dan proses bisnis, pembentukan harga, kepastian anggaran dan pembelian, skema pemilihan penyedia, penggunaan katalog, dan kesiapan SDM/pimpinan.',
+        enemy: 'Musuh keempat: Pasukan Tantangan Konsolidasi.',
+        choices: [
+          { id: 'ceklist-tantangan', text: 'Hadapi satu per satu: rapikan data, baca pasar, bentuk harga, siapkan katalog, dan jaga komitmen pimpinan', good: true, panji: 'Benar. Tantangan tidak hilang dengan feeling. Harus diurai satu-satu.' },
+          { id: 'skip-tantangan', text: 'Lewati saja tantangannya, yang penting paket cepat tayang', good: false, panji: 'Ini jebakan besar. Paket yang cepat tapi rapuh akan bermasalah saat dipakai.' },
+          { id: 'monitoring-opd', text: 'Siapkan monitoring implementasi OPD sejak sebelum katalog tayang', good: true, panji: 'Mantap. Konsolidasi berhasil kalau dipakai bersama, bukan cuma bagus di slide.' },
+          { id: 'andalkan-untung', text: 'Biarkan nanti jalan sendiri kalau sudah diumumkan', good: false, panji: 'Tanpa pengawalan, konsolidasi gampang mandek.' }
         ]
       },
       {
         id: 'evaluasi',
-        title: 'Evaluator Battle',
-        icon: '⚔️',
-        desc: 'Keputusan awal diuji. Lawan jebakan evaluasi dengan analisa.',
+        title: 'Evaluasi Akhir & Portal Pulang',
+        icon: '🌍',
+        desc: 'Portal akan terbuka kalau keputusanmu cukup aman untuk membawa konsolidasi sampai implementasi.',
+        story: 'Semua keputusan diuji terakhir kali. PANJI menatap portal dan bertanya: apakah kamu benar-benar membawa alur dari mandat, data, pasar, sampai tantangan implementasi dengan tertib?',
+        enemy: 'Boss akhir: Spek Mengarah Prime dan Lord Feeling Mepet.',
         choices: [
-          { id: 'bukti-data', text: 'Kembali ke data kebutuhan, hasil market sounding, dan kesiapan penyedia', good: true, panji: 'Ini jawaban paling aman. Evaluasi harus bisa dijelaskan.' },
-          { id: 'tutup-akun', text: 'Tutup mata soal akun katalog karena harganya murah', good: false, panji: 'Jebakan. Katalog V6 jadi pintu implementasi OPD.' },
-          { id: 'cek-distribusi', text: 'Cek distribusi ke OPD sebelum menetapkan penyedia', good: true, panji: 'Mantap. Konsolidasi gagal kalau distribusi tidak siap.' },
-          { id: 'feeling', text: 'Pilih berdasarkan feeling karena waktunya mepet', good: false, panji: 'Feeling boleh buat curiga, tapi keputusan harus punya bukti.' }
+          { id: 'bukti-lengkap', text: 'Kembali ke data kebutuhan, hasil market sounding, dan kesiapan implementasi sebelum menyimpulkan', good: true, panji: 'Ini jawaban paling aman. Semua keputusan harus bisa dijelaskan dengan bukti.' },
+          { id: 'feeling-cepat', text: 'Pilih yang menurut perasaan paling praktis karena waktunya mepet', good: false, panji: 'Feeling boleh buat waspada, tapi keputusan resmi tidak boleh berdiri di atas feeling saja.' },
+          { id: 'cek-opd', text: 'Pastikan hasil konsolidasi nanti benar-benar bisa dipakai OPD melalui katalog/e-purchasing', good: true, panji: 'Pas. Ending konsolidasi ada pada implementasi, bukan sekadar penetapan.' },
+          { id: 'harga-saja', text: 'Yang penting harga paling murah meski alur lain belum siap', good: false, panji: 'Harga penting, tapi bukan satu-satunya ukuran keamanan proses.' }
         ]
       }
     ];
 
     return {
-      activeNode: 'team',
+      activeNode: 'mcsp',
       completed: {},
       decisions: {},
       nodes,
@@ -3331,27 +3441,49 @@
     const completedCount = Object.keys(bonus.completed).length;
     const activeIndex = order.indexOf(active.id);
     const shuffledChoices = shuffleArray(active.choices || []);
-    const storyLine = active.id === 'team'
-      ? 'PPK dan PANJI terjebak di Dunia Konsolidasi 3D. Di depan mereka ada portal pulang, tapi portal itu terkunci. Kuncinya bukan adu cepat, melainkan menyelesaikan proses konsolidasi dengan benar. Tahap pertama: pilih tim yang bisa bantu analisa data OPD, kondisi pasar, katalog, dan evaluasi penyedia.'
-      : active.id === 'nama'
-        ? 'Tim sudah terbentuk. Sekarang data kebutuhan OPD datang dengan nama barang yang beda-beda. Ada yang tulis HVS A4, kertas A4 70 gram, bolpoin gel, pulpen gel, dan item lain yang kelihatannya mirip. Masalahnya: kalau barang beda jenis dipaksa gabung, konsolidasi jadi kacau.'
-        : active.id === 'pasar'
-          ? 'Setelah data mulai rapi, PPK dan PANJI masuk ke Pasar Penyedia. Di sini tugasnya bukan langsung milih pemenang. Tugasnya cari info pasar: harga, stok, akun Katalog V6, distribusi ke OPD, dan kesiapan penyedia.'
-          : 'Semua keputusan awal masuk arena evaluasi. Di sini kelihatan apakah pilihan tim, data, dan pasar tadi sehat atau malah jebakan. Portal pulang baru terbuka kalau analisanya masuk akal dan bisa dijelaskan.';
+    const npcStrip = [
+      ['merchant', 'Merchant Pasar'],
+      ['blacksmith', 'Toko Peralatan'],
+      ['mage', 'Analis Harga'],
+      ['archer', 'Kurir Distribusi']
+    ];
+    const enemyStrip = [
+      ['knight', 'Data Ganda'],
+      ['thief', 'Spek Mengarah']
+    ];
 
     return `
-      <div class="ps-bonus3d-fullscreen">
-        <div class="ps-bonus3d-scene">
+      <div class="ps-bonus3d-fullscreen ps-bonus4-konsolidasi">
+        <div class="ps-bonus3d-scene ps-bonus4-scene">
           <div class="ps-bonus3d-sky"></div>
           <div class="ps-bonus3d-cloud c1"></div>
           <div class="ps-bonus3d-cloud c2"></div>
           <div class="ps-bonus3d-mountain m1"></div>
           <div class="ps-bonus3d-mountain m2"></div>
           <div class="ps-bonus3d-road"></div>
-          <div class="ps-bonus3d-portal ${GAME_STATE.progress >= 100 ? 'open' : ''}">PORTAL</div>
+          <div class="ps-bonus3d-portal ${GAME_STATE.progress >= 100 ? 'open' : ''}">PORTAL PULANG</div>
           <div class="ps-bonus3d-player" style="--player-step:${activeIndex}"><span>PPK</span></div>
           <div class="ps-bonus3d-companion" style="--player-step:${activeIndex}"><span>PANJI</span></div>
-          <div class="ps-bonus3d-map openworld-map">
+
+          <div class="ps-bonus4-npc-lane">
+            ${npcStrip.map(([key, label], idx) => `
+              <div class="ps-bonus4-npc-card" style="--npc-delay:${idx * .4}s">
+                <img src="${BONUS_ASSET_PATHS['npc' + key.charAt(0).toUpperCase() + key.slice(1)] || ''}" alt="${escapeHtml(label)}">
+                <small>${escapeHtml(label)}</small>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="ps-bonus4-enemy-lane">
+            ${enemyStrip.map(([key, label], idx) => `
+              <div class="ps-bonus4-enemy" style="--enemy-delay:${idx * .35}s">
+                <img src="${BONUS_ASSET_PATHS['npc' + key.charAt(0).toUpperCase() + key.slice(1)] || ''}" alt="${escapeHtml(label)}">
+                <span>${escapeHtml(label)}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="ps-bonus3d-map openworld-map ps-bonus4-map">
             ${bonus.nodes.map((node, index) => {
               const isDone = Boolean(bonus.completed[node.id]);
               const isActive = bonus.activeNode === node.id;
@@ -3360,23 +3492,23 @@
                 <button type="button" class="ps-bonus3d-node ${isActive ? 'active' : ''} ${isDone ? 'done' : ''} ${isLocked ? 'locked' : ''}" data-bonus-node="${node.id}" style="--i:${index}">
                   <span class="ps-bonus3d-orb">${isDone ? '✅' : isLocked ? '🔒' : node.icon}</span>
                   <b>${escapeHtml(node.title)}</b>
-                  <small>${isDone ? '✓ Sudah dikunjungi' : isLocked ? 'Terkunci' : isActive ? 'Quest aktif' : 'Berikutnya'}</small>
+                  <small>${isDone ? '✓ Sudah beres' : isLocked ? 'Terkunci' : isActive ? 'Quest aktif' : 'Berikutnya'}</small>
                 </button>
               `;
             }).join('')}
           </div>
         </div>
 
-        <div class="ps-bonus3d-panel ps-bonus3d-story-panel">
-          <div class="ps-bonus3d-kicker">Bonus Level 4 • Full Screen 3D Quest</div>
+        <div class="ps-bonus3d-panel ps-bonus3d-story-panel ps-bonus4-story-panel">
+          <div class="ps-bonus3d-kicker">Bonus Level 4 • Kota Konsolidasi</div>
           <h3>${escapeHtml(active.title)}</h3>
           <div class="ps-bonus3d-soal">
-            <b>SOAL QUEST:</b> ${escapeHtml(active.title)}<br>
-            <span><b>Cerita dan masalahnya:</b> ${escapeHtml(storyLine)}</span><br>
-            <span><b>Tugas kamu:</b> ${escapeHtml(active.desc)} Pilih jawaban yang paling aman. Pilihanmu menentukan poin bonus dan jalan keluar dari dunia 3D.</span>
+            <b>Cerita:</b> ${escapeHtml(active.story)}<br>
+            <span><b>Tugas kamu:</b> ${escapeHtml(active.desc)}</span><br>
+            <span><b>Gangguan:</b> ${escapeHtml(active.enemy)}</span>
           </div>
           <div class="ps-bonus3d-panji">
-            <b>PANJI:</b> ${escapeHtml(active.desc)} Pilihan di bawah ini diacak. Ada yang aman, ada yang jebakan. Jangan asal klik, karena pilihanmu masuk analisa akhir.
+            <b>PANJI:</b> Ini bonus level 4 khusus konsep proyekmu. Aku tetap mengawal di sini. Pilihan aman bikin portal cepat terbuka, pilihan sembrono bikin risiko naik.
           </div>
 
           <div class="ps-bonus3d-choices">
@@ -3389,7 +3521,7 @@
 
           <div class="ps-bonus3d-status">
             <span>Quest: <b>${activeIndex + 1}/${bonus.nodes.length}</b></span>
-            <span>Ceklis map: <b>${completedCount}/${bonus.nodes.length}</b></span>
+            <span>NPC & musuh aktif: <b>${npcStrip.length + enemyStrip.length}</b></span>
             <span>Bonus poin: <b>${bonus.bonusScore}</b></span>
           </div>
         </div>
@@ -3398,7 +3530,7 @@
       ${GAME_STATE.progress >= 100 ? `
         <div class="ps-explanation">
           <strong>Bonus Level 4 selesai:</strong><br>
-          PANJI sudah catat gaya analisamu dari tim, data barang, pasar penyedia, dan evaluasi. Nilai bonus ini ikut masuk skor akhir.
+          Kamu berhasil membawa Konsolidasi Kota Bogor dari pembentukan tim sampai evaluasi implementasi. NPC, pasar, dan musuh sudah kamu lewati, dan poin bonus ikut masuk skor akhir.
         </div>
       ` : ''}
     `;
@@ -3447,7 +3579,7 @@
       GAME_STATE.progress = 100;
       GAME_STATE.score += 20;
       addLog('ok', 'Bonus level 4 selesai', 'Poin analisa dari bonus open world sudah masuk nilai akhir.');
-      showPanji('Evaluator Battle selesai. Aku hitung dulu poin bonus dan gaya analisamu. Portal 3D mulai terbuka.', 'happy');
+      showPanji('Seluruh tantangan bonus level 4 beres. Portal Kota Konsolidasi terbuka, dan semua keputusanmu ikut dihitung.', 'happy');
       showToast('Portal 3D terbuka. Bonus +' + bonus.bonusScore, 'ok');
     }
 
@@ -3459,6 +3591,7 @@
 
 
   function showBonusOpenWorldCompletePopup(bonus) {
+
     if (document.getElementById('psBonus4FinishPopup')) return;
     const goodCount = Object.values(bonus.decisions || {}).filter(item => item && item.good).length;
     const total = bonus.nodes.length;
@@ -3742,7 +3875,260 @@
   }
 
 
+
+  function createBonusDinoState() {
+    return {
+      running: false,
+      finished: false,
+      briefed: false,
+      score: 0,
+      target: 1800,
+      distance: 0,
+      speed: 8,
+      gravity: 1.05,
+      jumpPower: 15.5,
+      heroY: 0,
+      heroV: 0,
+      frame: 0,
+      tick: 0,
+      floor: 0,
+      obstacles: [],
+      activeTip: 'Lompati revisi, spek mengarah, dan data ganda. Timing lebih penting daripada panik.',
+      hearts: 1,
+      spawnCooldown: 40,
+      bestScore: 0
+    };
+  }
+
+  function getBonusDinoState() {
+    if (!GAME_STATE.bonusDino) GAME_STATE.bonusDino = createBonusDinoState();
+    return GAME_STATE.bonusDino;
+  }
+
+  function renderBonusDinoChallenge() {
+    const dino = getBonusDinoState();
+    return `
+      <div class="ps-dino-wrap">
+        <div class="ps-dino-info">
+          <div class="ps-bonus3d-kicker">Bonus Level 10 • Dino Runner</div>
+          <h3>PANJI Dino Run: Kejar Paket Aman</h3>
+          <p>Ini bonus level 10. Konsepnya runner 2D ala dino, tapi temanya PBJ. Karakter utama pakai sprite yang kamu kirim. Tekan <b>Space</b>, <b>W</b>, <b>Arrow Up</b>, atau klik area game untuk lompat.</p>
+          <div class="ps-snake-score-row">
+            <div><label>Jarak Aman</label><b>${Math.floor(dino.distance)} / ${dino.target}</b></div>
+            <div><label>Hati</label><b>${'❤️'.repeat(Math.max(0, dino.hearts || 0)) || '0'}</b></div>
+            <div><label>Bonus</label><b>${dino.score}</b></div>
+          </div>
+          <div class="ps-bonus3d-panji"><b>PANJI:</b> Ini bonus dino buat level 10. Musuhnya bukan monster random, tapi gangguan pengadaan: <b>Revisi Dadakan</b>, <b>Data Ganda</b>, dan <b>Spek Mengarah</b>. Satu tabrakan, bonus selesai.</div>
+          <div class="ps-dino-pbj-pop"><b>Popup kisi-kisi:</b> ${escapeHtml(dino.activeTip)}</div>
+          <div class="ps-buttons">
+            <button type="button" class="ps-btn ps-btn-primary" id="btnStartDino">${dino.finished ? 'Main Lagi Bonus Dino' : 'Mulai Bonus Dino'}</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnResetDino">Reset Bonus Dino</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnSkipDino">Lewati Bonus</button>
+          </div>
+        </div>
+        <div class="ps-dino-stage">
+          <canvas id="psDinoCanvas" width="960" height="320" aria-label="PANJI Dino Run"></canvas>
+          <div class="ps-dino-caption">Jump = Space / W / Arrow Up / Klik • Runner 2D khusus bonus level 10</div>
+        </div>
+      </div>
+      ${dino.finished ? `<div class="ps-explanation"><strong>Bonus Dino selesai:</strong><br>Kamu menempuh ${Math.floor(dino.distance)} jarak aman dan mendapat bonus ${dino.score}. Klik <b>Main Lagi Bonus Dino</b> kalau mau memperbaiki skor, atau lanjut ke level berikutnya.</div>` : ''}
+    `;
+  }
+
+  function clearBonusDinoTimers() {
+    if (bonusDinoTimer) {
+      clearInterval(bonusDinoTimer);
+      bonusDinoTimer = null;
+    }
+    if (bonusDinoKeyHandler) {
+      document.removeEventListener('keydown', bonusDinoKeyHandler);
+      bonusDinoKeyHandler = null;
+    }
+  }
+
+  function jumpBonusDino() {
+    const dino = getBonusDinoState();
+    if (!dino.running || dino.finished) return;
+    if (dino.heroY <= 0.01) {
+      dino.heroV = dino.jumpPower;
+      playSfx('info');
+    }
+  }
+
+  function randomDinoTip() {
+    return shuffleArray([
+      'Jangan terlalu sering lompat. Simpan untuk rintangan yang dekat.',
+      'Kayak PBJ, timing lebih aman daripada panik.',
+      'Data Ganda dan Revisi Dadakan itu kecil, tapi bahaya kalau telat baca.',
+      'Spek Mengarah lebih tinggi. Lompatnya harus pas.'
+    ])[0];
+  }
+
+  function drawBonusDino() {
+    const canvas = root && root.querySelector('#psDinoCanvas');
+    const dino = getBonusDinoState();
+    if (!canvas || !dino) return;
+    const c = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    c.clearRect(0,0,w,h);
+    // sky + hills
+    const g = c.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#dff3ff');
+    g.addColorStop(1,'#f8fdff');
+    c.fillStyle = g;
+    c.fillRect(0,0,w,h);
+    c.fillStyle = '#d7ead2'; c.fillRect(0,h-78,w,78);
+    c.fillStyle = '#8bbd73'; c.fillRect(0,h-60,w,60);
+    c.fillStyle = '#6d9d54'; c.fillRect(0,h-46,w,46);
+    c.strokeStyle = '#335b2f'; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(0,h-46); c.lineTo(w,h-46); c.stroke();
+    c.fillStyle = '#173127'; c.font = 'bold 18px Arial'; c.fillText('Jarak ' + Math.floor(dino.distance) + ' / ' + dino.target, 18, 28);
+    c.fillText('Bonus ' + dino.score, w - 160, 28);
+    c.fillText('❤️'.repeat(Math.max(0, dino.hearts || 0)), w/2 - 20, 28);
+    // obstacles
+    dino.obstacles.forEach(obs => {
+      if (obs.kind === 'revisi') {
+        c.fillStyle = '#dc2626'; c.fillRect(obs.x, h-46-obs.h, obs.w, obs.h);
+        c.fillStyle = '#fff'; c.font = 'bold 14px Arial'; c.fillText('REV', obs.x+6, h-46-obs.h+20);
+      } else if (obs.kind === 'data') {
+        c.fillStyle = '#2563eb'; c.beginPath(); c.arc(obs.x+obs.w/2, h-46-obs.h/2, obs.w/2, 0, Math.PI*2); c.fill();
+        c.fillStyle = '#fff'; c.font = 'bold 12px Arial'; c.fillText('DG', obs.x+5, h-46-obs.h/2+4);
+      } else {
+        c.fillStyle = '#7c2d12'; c.beginPath(); c.moveTo(obs.x, h-46); c.lineTo(obs.x+obs.w/2, h-46-obs.h); c.lineTo(obs.x+obs.w, h-46); c.closePath(); c.fill();
+        c.fillStyle = '#fff'; c.font = 'bold 11px Arial'; c.fillText('SM', obs.x+4, h-46-obs.h/2+4);
+      }
+    });
+    // hero
+    const sprite = BONUS_ASSETS.playerRun;
+    const heroX = 120;
+    const heroYpx = h - 46 - 82 - dino.heroY;
+    if (sprite && sprite.complete && sprite.naturalWidth) {
+      const frameW = sprite.naturalWidth / 8;
+      const frame = dino.frame % 8;
+      c.drawImage(sprite, frame*frameW, 0, frameW, sprite.naturalHeight, heroX, heroYpx, 92, 82);
+    } else {
+      c.fillStyle = '#123a72'; c.fillRect(heroX+20, heroYpx+18, 32, 52);
+      c.fillStyle = '#f0c7a4'; c.beginPath(); c.arc(heroX+36, heroYpx+18, 14, 0, Math.PI*2); c.fill();
+    }
+  }
+
+  function finishBonusDino(message, crashed = false) {
+    const dino = getBonusDinoState();
+    if (dino.finished) return;
+    dino.running = false;
+    dino.finished = true;
+    clearBonusDinoTimers();
+    if (crashed) {
+      dino.score = Math.max(0, Math.floor(dino.distance / 12));
+      GAME_STATE.score += dino.score;
+      GAME_STATE.risk += 8;
+      GAME_STATE.wrong += 1;
+      GAME_STATE.progress = 100;
+      addLog('bad', 'Bonus Dino selesai karena tabrakan', message);
+      showPanji(message, 'sad');
+      showToast('Bonus Dino selesai. +' + dino.score, 'info');
+      renderGame();
+      setTimeout(() => { const current = getCurrentChallenge(); if (current && current.type === 'bonusDino') nextChallenge(); }, 2400);
+      return;
+    }
+    dino.score = Math.max(dino.score, 140);
+    GAME_STATE.score += dino.score;
+    GAME_STATE.correct += 1;
+    GAME_STATE.progress = 100;
+    addLog('ok', 'Bonus Dino selesai', message);
+    showPanji(message, 'happy');
+    showToast('Bonus Dino clear! +' + dino.score, 'ok');
+    spawnConfetti();
+    renderGame();
+    setTimeout(() => { const current = getCurrentChallenge(); if (current && current.type === 'bonusDino') nextChallenge(); }, 2600);
+  }
+
+  function tickBonusDino() {
+    const dino = getBonusDinoState();
+    if (!dino.running || dino.finished) return;
+    dino.tick += 1;
+    dino.distance += dino.speed;
+    dino.frame = (dino.frame + 1) % 8;
+    dino.heroY += dino.heroV;
+    dino.heroV -= dino.gravity;
+    if (dino.heroY < 0) { dino.heroY = 0; dino.heroV = 0; }
+
+    dino.spawnCooldown -= 1;
+    if (dino.spawnCooldown <= 0) {
+      const kind = shuffleArray(['revisi','data','spek'])[0];
+      const meta = kind === 'revisi' ? {w:28,h:46} : kind === 'data' ? {w:34,h:34} : {w:38,h:58};
+      dino.obstacles.push({x: 980, kind, ...meta});
+      dino.spawnCooldown = 28 + Math.floor(Math.random()*24);
+      dino.activeTip = randomDinoTip();
+    }
+
+    dino.obstacles.forEach(obs => { obs.x -= dino.speed + 4; });
+    dino.obstacles = dino.obstacles.filter(obs => obs.x + obs.w > -20);
+
+    const heroRect = {x: 138, y: 320 - 46 - 82 - dino.heroY + 10, w: 52, h: 70};
+    for (const obs of dino.obstacles) {
+      const obsRect = {x: obs.x, y: 320 - 46 - obs.h, w: obs.w, h: obs.h};
+      if (heroRect.x < obsRect.x + obsRect.w && heroRect.x + heroRect.w > obsRect.x && heroRect.y < obsRect.y + obsRect.h && heroRect.y + heroRect.h > obsRect.y) {
+        dino.hearts = 0;
+        drawBonusDino();
+        finishBonusDino('Aduh, kamu nabrak ' + (obs.kind === 'revisi' ? 'Revisi Dadakan' : obs.kind === 'data' ? 'Data Ganda' : 'Spek Mengarah') + '. Bonus dino selesai, tapi poin lari aman tetap masuk.', true);
+        return;
+      }
+    }
+
+    GAME_STATE.progress = Math.min(99, Math.round((dino.distance / dino.target) * 100));
+    drawBonusDino();
+    if (dino.distance >= dino.target) {
+      finishBonusDino('Mantap! Kamu berhasil membawa karakter utama menembus runner 2D sampai garis aman. Bonus level 10 clear.', false);
+    }
+  }
+
+  function startBonusDinoGame() {
+    let dino = getBonusDinoState();
+    if (dino.running) return;
+    if (dino.finished) {
+      GAME_STATE.bonusDino = createBonusDinoState();
+      renderGame();
+      dino = getBonusDinoState();
+    }
+    clearBonusDinoTimers();
+    dino.running = true;
+    dino.finished = false;
+    showPanji('Gas! Ini bonus dino level 10. Lompatin gangguan pengadaan dan jaga ritme larimu.', 'happy');
+    bonusDinoKeyHandler = event => {
+      const key = String(event.key || '').toLowerCase();
+      if (['arrowup','w',' '].includes(key)) {
+        jumpBonusDino();
+        event.preventDefault();
+      }
+    };
+    document.addEventListener('keydown', bonusDinoKeyHandler);
+    bonusDinoTimer = setInterval(tickBonusDino, 90);
+    drawBonusDino();
+  }
+
+  function resetBonusDino() {
+    clearBonusDinoTimers();
+    GAME_STATE.bonusDino = createBonusDinoState();
+    GAME_STATE.progress = 0;
+    renderGame();
+    showPanji('Bonus Dino direset. Kalau sudah siap, mulai lagi dari awal.', 'thinking');
+  }
+
+  function skipBonusDino() {
+    clearBonusDinoTimers();
+    const dino = getBonusDinoState();
+    dino.finished = true;
+    dino.running = false;
+    GAME_STATE.progress = 100;
+    addLog('info', 'Bonus Dino dilewati', 'Kamu memilih skip bonus level 10 dan lanjut ke soal berikutnya.');
+    renderGame();
+    setTimeout(() => nextChallenge(), 200);
+  }
+
   function maybeStartSnakeFromAnyInput(event) {
+
     const challenge = getCurrentChallenge && getCurrentChallenge();
     if (!challenge || challenge.type !== 'bonusSnake') return;
     const snake = getBonusSnakeState();
@@ -4366,6 +4752,43 @@
       btnSkipSnake.addEventListener('click', () => skipBonusSnake());
     }
 
+    const btnStartDino = root.querySelector('#btnStartDino');
+    if (btnStartDino) {
+      btnStartDino.addEventListener('click', () => {
+        const dino = getBonusDinoState();
+        dino.briefed = true;
+        startBonusDinoGame();
+      });
+    }
+
+    const btnResetDino = root.querySelector('#btnResetDino');
+    if (btnResetDino) {
+      btnResetDino.addEventListener('click', () => resetBonusDino());
+    }
+
+    const btnSkipDino = root.querySelector('#btnSkipDino');
+    if (btnSkipDino) {
+      btnSkipDino.addEventListener('click', () => skipBonusDino());
+    }
+
+    const dinoCanvas = root.querySelector('#psDinoCanvas');
+    const dinoStarter = event => {
+      const current = getCurrentChallenge && getCurrentChallenge();
+      if (!current || current.type !== 'bonusDino') return;
+      const dino = getBonusDinoState();
+      if (!dino.running && !dino.finished) {
+        dino.briefed = true;
+        startBonusDinoGame();
+      } else {
+        jumpBonusDino();
+      }
+      event.preventDefault();
+    };
+    if (dinoCanvas) {
+      dinoCanvas.addEventListener('pointerdown', dinoStarter);
+      dinoCanvas.addEventListener('touchstart', dinoStarter, {passive:false});
+    }
+
     const btnClosePipelineTutorial = root.querySelector('#btnClosePipelineTutorial');
     if (btnClosePipelineTutorial) {
       btnClosePipelineTutorial.addEventListener('click', () => {
@@ -4378,6 +4801,10 @@
 
     if (GAME_STATE.current && GAME_STATE.current.type === 'bonusSnake') {
       setTimeout(drawBonusSnake, 0);
+    }
+
+    if (GAME_STATE.current && GAME_STATE.current.type === 'bonusDino') {
+      setTimeout(drawBonusDino, 0);
     }
 
     const btnNext = root.querySelector('#btnNextChallenge');
@@ -4857,7 +5284,7 @@
     ensureLeaderboardModal();
     fetchLeaderboard();
     initPanji(container);
-    setTimeout(() => showReviewBubbleOnMenuOpen(), 1200);
+    setTimeout(() => showReviewBubbleOnMenuOpen({ force: true }), 1200);
 
     GAME_STATE.stage = 'ready';
     GAME_STATE.current = null;
@@ -4884,6 +5311,7 @@
       clearTenderRushTimers();
       disableTenderRushKeyboard();
       clearBonusSnakeTimers();
+      clearBonusDinoTimers();
       clearPanjiIntroTimers();
       clearPanjiTalkTimer();
 
