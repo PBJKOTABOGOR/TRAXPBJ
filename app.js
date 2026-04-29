@@ -226,6 +226,96 @@ const DASHBOARD_STATE = {
   selectedItkpSatker: 'PEMERINTAH KOTA BOGOR'
 };
 
+const DASHBOARD_CONTEXT_KEY = 'traxpbj_dashboard_context';
+
+function getDashboardContext() {
+  try {
+    const raw = localStorage.getItem(DASHBOARD_CONTEXT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function persistDashboardContext() {
+  const payload = {
+    selectedSatker: DASHBOARD_STATE.selectedItkpSatker || 'PEMERINTAH KOTA BOGOR',
+    updatedAt: Date.now()
+  };
+
+  try {
+    localStorage.setItem(DASHBOARD_CONTEXT_KEY, JSON.stringify(payload));
+  } catch (error) {
+    // ignore storage issues
+  }
+
+  window.__dashboardSelectedSatker = payload.selectedSatker;
+  return payload;
+}
+
+function escapeSelectorValue(value) {
+  if (window.CSS && typeof window.CSS.escape === 'function') {
+    return window.CSS.escape(String(value || ''));
+  }
+  return String(value || '').replace(/(["'\\.#:[\]()])/g, '\\$1');
+}
+
+function applyDashboardSatkerToModule(moduleContainer) {
+  const context = getDashboardContext();
+  const selectedSatker = String(context.selectedSatker || '').trim();
+  if (!selectedSatker) return false;
+
+  const root = moduleContainer || contentArea || document;
+  let applied = false;
+
+  const selectCandidates = Array.from(root.querySelectorAll('select'));
+  selectCandidates.forEach((select) => {
+    if (applied) return;
+    const descriptor = [select.id, select.name, select.getAttribute('aria-label'), select.getAttribute('data-filter'), select.closest('label')?.textContent]
+      .join(' ')
+      .toLowerCase();
+    if (!/satker|satuan kerja|perangkat daerah|opd/.test(descriptor)) return;
+
+    const option = Array.from(select.options || []).find((item) => String(item.textContent || item.value || '').trim().toUpperCase() === selectedSatker.toUpperCase());
+    if (!option) return;
+
+    select.value = option.value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    select.dispatchEvent(new Event('input', { bubbles: true }));
+    applied = true;
+  });
+
+  if (applied) return true;
+
+  const inputCandidates = Array.from(root.querySelectorAll('input[type="search"], input[type="text"], .choices__input, [role="combobox"] input'));
+  inputCandidates.forEach((input) => {
+    if (applied) return;
+    const descriptor = [input.id, input.name, input.placeholder, input.getAttribute('aria-label'), input.closest('label')?.textContent]
+      .join(' ')
+      .toLowerCase();
+    if (!/satker|satuan kerja|perangkat daerah|opd/.test(descriptor)) return;
+
+    input.value = selectedSatker;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    applied = true;
+  });
+
+  return applied;
+}
+
+function applyDashboardContextToModule(page, moduleContainer) {
+  if (!page || !page.html) return;
+  if (!/itkp-sirup|itkp-ekatalog|itkp-etendering|itkp-ekontrak|itkp-nontender/.test(page.html)) return;
+
+  [120, 400, 900, 1600].forEach((delay) => {
+    window.setTimeout(() => {
+      applyDashboardSatkerToModule(moduleContainer);
+    }, delay);
+  });
+}
+
+
 function normalizeHeader(value) {
   return String(value || '')
     .toLowerCase()
@@ -561,7 +651,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'blue',
         route: 'monitoring-sirup',
         hint: 'Klik untuk buka Monitoring SiRUP',
-        detailText: formatCompactPair(totalRupSirup, totalKomitmenSirup),
+        detailText: formatCompactPair(totalKomitmenSirup, totalRupSirup),
         detailHref: 'https://datastudio.google.com/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2'
       },
       {
@@ -580,7 +670,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'purple',
         route: 'monitoring-ekatalog',
         hint: 'Klik untuk buka Monitoring eKatalog',
-        detailText: formatPlainPair(paketSelesaiEpurchasing, paketAktifEpurchasing)
+        detailText: formatPlainPair(paketAktifEpurchasing, paketSelesaiEpurchasing)
       },
       {
         name: 'e-Tendering',
@@ -589,7 +679,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'orange',
         route: 'monitoring-etendering',
         hint: 'Klik untuk buka Monitoring eTendering',
-        detailText: formatPlainPair(paketSelesaiTender, paketTerumumkanTender)
+        detailText: formatPlainPair(paketTerumumkanTender, paketSelesaiTender)
       },
       {
         name: 'e-Kontrak',
@@ -598,7 +688,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'green',
         route: 'monitoring-ekontrak',
         hint: 'Klik untuk buka Monitoring eKontrak',
-        detailText: formatPlainPair(totalPaketSelesaiKontrak, totalPaketAktifKontrak)
+        detailText: formatPlainPair(totalPaketAktifKontrak, totalPaketSelesaiKontrak)
       },
       {
         name: 'Non eTendering / Non ePurchasing',
@@ -607,7 +697,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'red',
         route: 'monitoring-nontender',
         hint: 'Klik untuk buka Monitoring Non eTendering',
-        detailText: formatCompactPair(totalRealisasiNonTender, totalPaguNonTender)
+        detailText: formatCompactPair(totalPaguNonTender, totalRealisasiNonTender)
       }
     ]
   };
@@ -735,6 +825,8 @@ async function loadDashboardData(force = false) {
 }
 
 function renderDashboardSkeleton() {
+  persistDashboardContext();
+
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-glow"></div>
@@ -754,6 +846,8 @@ function renderDashboardSkeleton() {
 }
 
 function renderDashboardError(error) {
+  persistDashboardContext();
+
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-kicker">SIPPBJ · Dashboard</div>
@@ -819,6 +913,8 @@ function renderDashboardReady(data) {
     ? 'Profile Kota Bogor'
     : `Profile ${selectedProfile.name}`;
 
+  persistDashboardContext();
+
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-glow"></div>
@@ -837,7 +933,7 @@ function renderDashboardReady(data) {
       </div>
 
       <div class="stats-grid dashboard-kpi-grid">
-        ${renderKpiCard('Skor ITKP Kota Bogor', formatScore(data.itkpOverall), 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD', '📊', '')}
+        ${renderKpiCard(data.scopeIsCity ? 'Skor ITKP Kota Bogor' : 'Skor ITKP Satuan Kerja', formatScore(selectedProfile.score), data.scopeIsCity ? 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD' : selectedProfile.name, '📊', '')}
         ${renderKpiCard('Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾', '')}
         ${renderKpiCard('Pagu Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰', getToneByPercent(data.realisasiPersen))}
         ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses · ${scopeLabel}`, '📦', '')}
@@ -861,13 +957,17 @@ function renderDashboardReady(data) {
 
           <label class="satker-select-wrap">
             <span>Pilih Satuan Kerja</span>
-            <select id="itkpSatkerSelect" class="satker-select">
-              ${data.itkpProfiles.map((profile) => `
-                <option value="${escapeHtml(profile.name)}" ${profile.name === selectedProfile.name ? 'selected' : ''}>
-                  ${escapeHtml(profile.name)}
-                </option>
-              `).join('')}
-            </select>
+            <div class="satker-combobox" id="itkpSatkerCombobox">
+              <div class="satker-combobox-top">
+                <input type="search" id="itkpSatkerSearch" class="satker-select satker-search" autocomplete="off" placeholder="Cari satuan kerja..." value="${escapeHtml(selectedProfile.name)}">
+                <button class="satker-combobox-toggle" type="button" id="itkpSatkerToggle" aria-label="Buka daftar satuan kerja">▾</button>
+              </div>
+              <div class="satker-dropdown" id="itkpSatkerDropdown">
+                ${data.itkpProfiles.map((profile) => `
+                  <button class="satker-option ${profile.name === selectedProfile.name ? 'is-active' : ''}" type="button" data-satker-option="${escapeHtml(profile.name)}">${escapeHtml(profile.name)}</button>
+                `).join('')}
+              </div>
+            </div>
           </label>
         </div>
 
@@ -1027,23 +1127,89 @@ function bindDashboardEvents() {
     });
   }
 
-  const satkerSelect = document.getElementById('itkpSatkerSelect');
+  const rerenderDashboardBySatker = (satkerName) => {
+    DASHBOARD_STATE.selectedItkpSatker = satkerName;
+    persistDashboardContext();
 
-  if (satkerSelect) {
-    satkerSelect.addEventListener('change', () => {
-      DASHBOARD_STATE.selectedItkpSatker = satkerSelect.value;
-      if (DASHBOARD_STATE.data) {
-        DASHBOARD_STATE.data = analyzeDashboardData({
-          itkp: DASHBOARD_STATE.data.cityProfile && DASHBOARD_STATE.data.cityProfile.__sourceRow
-            ? DASHBOARD_STATE.data.itkpRows.concat([DASHBOARD_STATE.data.cityProfile.__sourceRow])
-            : DASHBOARD_STATE.data.itkpRows,
-          itkpSubOpd: DASHBOARD_STATE.data.itkpSubOpdRows,
-          perencanaan: DASHBOARD_STATE.data.planningRows,
-          realisasi: DASHBOARD_STATE.data.realRows
-        });
-        renderDashboardReady(DASHBOARD_STATE.data);
-        bindDashboardEvents();
-        initScrollAnimation();
+    if (DASHBOARD_STATE.data) {
+      DASHBOARD_STATE.data = analyzeDashboardData({
+        itkp: DASHBOARD_STATE.data.cityProfile && DASHBOARD_STATE.data.cityProfile.__sourceRow
+          ? DASHBOARD_STATE.data.itkpRows.concat([DASHBOARD_STATE.data.cityProfile.__sourceRow])
+          : DASHBOARD_STATE.data.itkpRows,
+        itkpSubOpd: DASHBOARD_STATE.data.itkpSubOpdRows,
+        perencanaan: DASHBOARD_STATE.data.planningRows,
+        realisasi: DASHBOARD_STATE.data.realRows
+      });
+      renderDashboardReady(DASHBOARD_STATE.data);
+      bindDashboardEvents();
+      initScrollAnimation();
+    }
+  };
+
+  const satkerSearch = document.getElementById('itkpSatkerSearch');
+  const satkerToggle = document.getElementById('itkpSatkerToggle');
+  const satkerDropdown = document.getElementById('itkpSatkerDropdown');
+  const satkerCombobox = document.getElementById('itkpSatkerCombobox');
+
+  if (satkerSearch && satkerDropdown) {
+    const optionButtons = () => Array.from(satkerDropdown.querySelectorAll('[data-satker-option]'));
+
+    const openDropdown = () => satkerCombobox?.classList.add('is-open');
+    const closeDropdown = () => satkerCombobox?.classList.remove('is-open');
+
+    const filterOptions = () => {
+      const keyword = String(satkerSearch.value || '').trim().toLowerCase();
+      let visibleCount = 0;
+
+      optionButtons().forEach((button) => {
+        const name = String(button.dataset.satkerOption || '').toLowerCase();
+        const visible = !keyword || name.includes(keyword);
+        button.hidden = !visible;
+        if (visible) visibleCount += 1;
+      });
+
+      satkerDropdown.classList.toggle('is-empty', visibleCount === 0);
+    };
+
+    satkerSearch.addEventListener('focus', () => {
+      openDropdown();
+      filterOptions();
+    });
+
+    satkerSearch.addEventListener('input', () => {
+      openDropdown();
+      filterOptions();
+    });
+
+    satkerSearch.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeDropdown();
+      if (event.key === 'Enter') {
+        const exactButton = optionButtons().find((button) => !button.hidden && String(button.dataset.satkerOption || '').toUpperCase() === String(satkerSearch.value || '').trim().toUpperCase());
+        if (exactButton) {
+          event.preventDefault();
+          rerenderDashboardBySatker(exactButton.dataset.satkerOption);
+          closeDropdown();
+        }
+      }
+    });
+
+    satkerToggle?.addEventListener('click', () => {
+      satkerCombobox?.classList.toggle('is-open');
+      filterOptions();
+      if (satkerCombobox?.classList.contains('is-open')) satkerSearch.focus();
+    });
+
+    optionButtons().forEach((button) => {
+      button.addEventListener('click', () => {
+        satkerSearch.value = button.dataset.satkerOption || '';
+        rerenderDashboardBySatker(button.dataset.satkerOption || 'PEMERINTAH KOTA BOGOR');
+        closeDropdown();
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!satkerCombobox?.contains(event.target)) {
+        closeDropdown();
       }
     });
   }
@@ -1057,7 +1223,7 @@ function bindDashboardEvents() {
       }
 
       const route = item.dataset.quick || item.dataset.route;
-      if (route) loadPage(route);
+      if (route) { persistDashboardContext(); loadPage(route); }
     });
   });
 }
@@ -1513,6 +1679,7 @@ async function renderModulePage(page) {
       currentModuleDestroy = null;
     }
 
+    applyDashboardContextToModule(page, moduleContainer);
     return true;
   } catch (error) {
     console.error('Gagal memuat module:', error);
