@@ -5078,274 +5078,224 @@
   }
 }
 
+
 /* =========================================================
-   BONUS LEVEL 4 - CITY BUILDING
+   BONUS LEVEL 4 — TOWER DEFENSE KONSOLIDASI
    ========================================================= */
-.ps-citybonus-wrap{
+.ps-td-wrap{
   display:grid;
-  grid-template-columns:minmax(0,1.25fr) minmax(320px,.95fr);
   gap:16px;
-  margin-bottom:16px;
 }
 
-.ps-citybonus-board,
-.ps-citybonus-panel{
-  background:rgba(255,255,255,.92);
-  border:1px solid #dbeafe;
-  border-radius:26px;
-  padding:18px;
-  box-shadow:var(--ps-shadow-sm);
-}
-
-.ps-citybonus-topbar{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-  margin-bottom:14px;
-}
-
-.ps-citybonus-kicker{
-  display:inline-flex;
-  align-items:center;
-  min-height:30px;
-  padding:0 12px;
-  border-radius:999px;
-  background:#eef4fb;
-  color:#123a72;
-  border:1px solid #dbeafe;
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-}
-
-.ps-citybonus-topbar h3,
-.ps-citybonus-panel h3{
-  margin:12px 0 0;
-  color:var(--ps-text);
-  font-size:28px;
-  line-height:1.15;
-  font-weight:950;
-}
-
-.ps-citybonus-stats{
+.ps-td-hero{
   display:grid;
-  gap:8px;
-  text-align:right;
-  color:#475569;
-  font-size:13px;
+  grid-template-columns:1.2fr .8fr;
+  gap:14px;
+  padding:18px;
+  border-radius:24px;
+  background:linear-gradient(135deg,#102544,#123a72 58%,#0f766e);
+  color:#fff;
+  box-shadow:0 20px 48px rgba(15,23,42,.16);
 }
 
-.ps-citybonus-stats span{
-  display:inline-flex;
-  align-items:center;
-  justify-content:flex-end;
-  min-height:34px;
-  padding:0 12px;
-  border-radius:999px;
-  background:#f8fbff;
+.ps-td-hero h3{
+  margin:8px 0 8px;
+  font-size:30px;
+  line-height:1.08;
+  color:#fff;
+}
+
+.ps-td-hero p{
+  margin:0;
+  color:rgba(255,255,255,.88);
+  font-size:14px;
+  line-height:1.7;
+}
+
+.ps-td-stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+
+.ps-td-stat{
+  padding:14px;
+  border-radius:18px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.16);
+}
+
+.ps-td-stat label{
+  display:block;
+  font-size:12px;
+  font-weight:900;
+  color:#dbeafe;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.ps-td-stat strong{
+  display:block;
+  margin-top:8px;
+  font-size:30px;
+  line-height:1;
+  color:#fff;
+}
+
+.ps-td-toolbar{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+
+.ps-td-tower-btn{
+  border:none;
+  cursor:pointer;
+  border-radius:20px;
+  padding:14px;
+  background:#fff;
+  border:1px solid #dbe5f0;
+  box-shadow:0 10px 22px rgba(15,23,42,.06);
+  text-align:left;
+  transition:.18s ease;
+  display:grid;
+  gap:6px;
+}
+
+.ps-td-tower-btn:hover{transform:translateY(-2px)}
+.ps-td-tower-btn.active{
+  border-color:#2563eb;
+  box-shadow:0 0 0 4px rgba(37,99,235,.12), 0 12px 24px rgba(37,99,235,.12);
+  background:#eff6ff;
+}
+
+.ps-td-tower-btn span{font-size:26px}
+.ps-td-tower-btn b{font-size:14px;color:#102544;line-height:1.2}
+.ps-td-tower-btn small{font-size:12px;line-height:1.45;color:#64748b}
+.ps-td-tower-btn em{font-style:normal;font-size:12px;font-weight:900;color:#166534}
+
+.ps-td-stage{
+  display:grid;
+  gap:12px;
+  padding:16px;
+  border-radius:26px;
+  background:linear-gradient(180deg,#f8fbff,#ffffff);
   border:1px solid #dbeafe;
 }
 
-.ps-citybonus-map{
-  position:relative;
-  min-height:560px;
-  border-radius:28px;
-  overflow:hidden;
-  border:1px solid #bfdbfe;
-  background:
-    linear-gradient(180deg,#bfe9ff 0%,#d8f4ff 28%,#8ed089 28%,#7ec67c 100%);
+.ps-td-lane{
+  display:grid;
+  grid-template-columns:90px 1fr;
+  gap:12px;
+  align-items:center;
 }
 
-.ps-citybonus-map::before{
+.ps-td-lane-label{
+  font-size:13px;
+  font-weight:950;
+  color:#123a72;
+  text-align:center;
+}
+
+.ps-td-track{
+  position:relative;
+  min-height:112px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr)) 96px;
+  gap:10px;
+  align-items:stretch;
+  padding:12px;
+  border-radius:22px;
+  background:
+    linear-gradient(180deg, rgba(34,197,94,.14), rgba(20,83,45,.10)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.20) 0 1px, transparent 1px 24%);
+  overflow:hidden;
+}
+
+.ps-td-track::before{
   content:"";
   position:absolute;
   inset:0;
-  background:
-    linear-gradient(90deg, rgba(255,255,255,.08) 0 64px, transparent 64px 128px),
-    linear-gradient(180deg, rgba(255,255,255,.08) 0 64px, transparent 64px 128px);
-  background-size:128px 128px;
+  background:linear-gradient(90deg, rgba(16,37,68,.06), transparent 18%, transparent 82%, rgba(16,37,68,.06));
   pointer-events:none;
 }
 
-.ps-citybonus-road{
-  position:absolute;
-  background:#dbc590;
-  box-shadow:inset 0 0 0 3px rgba(255,255,255,.15);
-}
-
-.ps-citybonus-road.horizontal{height:88px; left:80px; right:80px; border-radius:28px;}
-.ps-citybonus-road.vertical{width:88px; top:80px; bottom:80px; border-radius:28px;}
-.ps-citybonus-road.road-top{top:120px;}
-.ps-citybonus-road.road-right{right:170px;}
-.ps-citybonus-road.road-bottom{bottom:120px;}
-.ps-citybonus-road.road-left{left:170px;}
-
-.ps-citybonus-plaza{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  width:190px;
-  height:190px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:20px;
-  color:#123a72;
-  font-size:22px;
-  font-weight:950;
-  background:radial-gradient(circle at 30% 30%,#ffffff,#dbeafe 70%,#bfdbfe 100%);
-  border:4px solid rgba(18,58,114,.18);
-  box-shadow:0 16px 32px rgba(15,23,42,.10);
+.ps-td-pad,
+.ps-td-base{
+  position:relative;
   z-index:2;
+  border:none;
+  border-radius:18px;
+  padding:10px;
+  min-height:88px;
 }
 
-.ps-citybonus-lot{
-  position:absolute;
-  width:214px;
-  min-height:128px;
-  border:none;
+.ps-td-pad{
   cursor:pointer;
-  border-radius:24px;
-  padding:16px 14px 12px;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:flex-end;
-  gap:6px;
-  text-align:left;
-  color:#173127;
-  background:linear-gradient(180deg,#ffffff 0%,#fff7ea 100%);
-  border:2px solid #dbeafe;
-  box-shadow:0 12px 28px rgba(15,23,42,.08);
+  background:#fff;
+  border:2px dashed #c9d8e8;
+  display:grid;
+  place-items:center;
+  text-align:center;
   transition:.18s ease;
+}
+
+.ps-td-pad:hover{transform:translateY(-2px);border-color:#2563eb;background:#eff6ff}
+.ps-td-pad.filled{border-style:solid;border-color:#86efac;background:#ecfdf5}
+.ps-td-build{font-size:13px;font-weight:900;color:#64748b}
+.ps-td-tower-icon{font-size:22px;display:block;margin-bottom:4px}
+.ps-td-pad b{display:block;font-size:12px;color:#102544;line-height:1.2}
+.ps-td-pad small{display:block;margin-top:4px;color:#64748b;font-size:11px}
+
+.ps-td-base{
+  background:linear-gradient(135deg,#102544,#2563eb);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:13px;
+  font-weight:950;
+  box-shadow:0 14px 24px rgba(18,58,114,.16);
+}
+
+.ps-td-enemy{
+  position:absolute;
+  top:50%;
+  translate:0 -50%;
+  width:76px;
+  min-height:58px;
+  border-radius:18px;
+  background:#fff7ed;
+  border:2px solid #fdba74;
+  box-shadow:0 12px 24px rgba(15,23,42,.12);
+  display:grid;
+  place-items:center;
+  gap:2px;
+  padding:8px 8px 12px;
   z-index:3;
 }
 
-.ps-citybonus-lot:hover{transform:translateY(-2px);}
-.ps-citybonus-lot.active{border-color:#2563eb; box-shadow:0 0 0 4px rgba(37,99,235,.12),0 14px 28px rgba(37,99,235,.10);}
-.ps-citybonus-lot.done{background:linear-gradient(180deg,#ecfdf5 0%,#dcfce7 100%); border-color:#86efac;}
-.ps-citybonus-lot.locked{opacity:.58; filter:grayscale(.08);}
-
-.ps-citybonus-lot:nth-of-type(1){left:74px; top:54px;}
-.ps-citybonus-lot:nth-of-type(2){left:362px; top:54px;}
-.ps-citybonus-lot:nth-of-type(3){right:74px; top:54px;}
-.ps-citybonus-lot:nth-of-type(4){right:38px; top:218px;}
-.ps-citybonus-lot:nth-of-type(5){right:74px; bottom:54px;}
-.ps-citybonus-lot:nth-of-type(6){left:362px; bottom:54px;}
-.ps-citybonus-lot:nth-of-type(7){left:74px; bottom:54px;}
-.ps-citybonus-lot:nth-of-type(8){left:38px; top:218px;}
-
-.ps-citybonus-lot-no{
+.ps-td-enemy span{font-size:22px;line-height:1}
+.ps-td-enemy small{font-size:11px;font-weight:900;color:#9a3412;text-align:center;line-height:1.15}
+.ps-td-enemy i{
   position:absolute;
-  top:10px;
-  right:10px;
-  width:30px;
-  height:30px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:950;
-  color:#123a72;
-  background:#e0ecff;
+  left:8px;
+  right:8px;
+  bottom:6px;
+  height:7px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#16a34a,#22c55e);
 }
 
-.ps-citybonus-lot-icon{font-size:30px; line-height:1;}
-.ps-citybonus-lot strong{display:block; font-size:16px; line-height:1.25; font-weight:950;}
-.ps-citybonus-lot small{display:block; color:#64748b; font-size:12px; line-height:1.4;}
+.ps-td-brief .ps-explanation{margin-bottom:0}
 
-.ps-citybonus-story,
-.ps-citybonus-panji,
-.ps-citybonus-footer{
-  padding:14px 16px;
-  border-radius:18px;
-  line-height:1.65;
-  font-size:14px;
-}
-
-.ps-citybonus-story{
-  margin-top:14px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-  color:#334155;
-}
-
-.ps-citybonus-panji{
-  margin-top:12px;
-  background:#ecfeff;
-  border:1px solid #bae6fd;
-  color:#0f3d56;
-}
-
-.ps-citybonus-choices{
-  display:grid;
-  gap:10px;
-  margin-top:14px;
-}
-
-.ps-citybonus-choice{
-  border:none;
-  cursor:pointer;
-  border-radius:18px;
-  padding:15px 16px;
-  background:#fff;
-  border:1px solid #dbe5f0;
-  color:var(--ps-text);
-  text-align:left;
-  font-size:14px;
-  line-height:1.55;
-  font-weight:850;
-  transition:.18s ease;
-}
-
-.ps-citybonus-choice:hover{
-  transform:translateY(-2px);
-  box-shadow:0 12px 24px rgba(15,23,42,.08);
-}
-
-.ps-citybonus-footer{
-  margin-top:14px;
-  background:#fff7ed;
-  border:1px solid #fed7aa;
-  color:#9a3412;
-  display:grid;
-  gap:6px;
-}
-
-@media (max-width:1200px){
-  .ps-citybonus-wrap{grid-template-columns:1fr;}
+@media (max-width:1280px){
+  .ps-td-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ps-td-hero{grid-template-columns:1fr}
 }
 
 @media (max-width:900px){
-  .ps-citybonus-map{min-height:720px;}
-  .ps-citybonus-lot{width:200px;}
-}
-
-@media (max-width:680px){
-  .ps-citybonus-topbar{flex-direction:column;}
-  .ps-citybonus-stats{text-align:left;}
-  .ps-citybonus-stats span{justify-content:flex-start;}
-  .ps-citybonus-map{min-height:980px;}
-  .ps-citybonus-road.horizontal{left:34px; right:34px; height:72px;}
-  .ps-citybonus-road.vertical{top:34px; bottom:34px; width:72px;}
-  .ps-citybonus-road.road-top{top:142px;}
-  .ps-citybonus-road.road-right{right:96px;}
-  .ps-citybonus-road.road-bottom{bottom:142px;}
-  .ps-citybonus-road.road-left{left:96px;}
-  .ps-citybonus-plaza{width:156px; height:156px; font-size:19px;}
-  .ps-citybonus-lot{width:170px; min-height:116px; padding:14px 12px 10px;}
-  .ps-citybonus-lot:nth-of-type(1){left:20px; top:46px;}
-  .ps-citybonus-lot:nth-of-type(2){left:calc(50% - 85px); top:46px;}
-  .ps-citybonus-lot:nth-of-type(3){right:20px; top:46px;}
-  .ps-citybonus-lot:nth-of-type(4){right:20px; top:260px;}
-  .ps-citybonus-lot:nth-of-type(5){right:20px; bottom:46px;}
-  .ps-citybonus-lot:nth-of-type(6){left:calc(50% - 85px); bottom:46px;}
-  .ps-citybonus-lot:nth-of-type(7){left:20px; bottom:46px;}
-  .ps-citybonus-lot:nth-of-type(8){left:20px; top:260px;}
+  .ps-td-lane{grid-template-columns:1fr}
+  .ps-td-track{grid-template-columns:repeat(2,minmax(0,1fr));padding-bottom:110px}
+  .ps-td-base{grid-column:1 / -1;min-height:68px}
+  .ps-td-toolbar{grid-template-columns:1fr}
 }
