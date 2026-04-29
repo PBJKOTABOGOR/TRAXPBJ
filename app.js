@@ -310,8 +310,9 @@ function formatScore(value) {
   return toNumber(value).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatCompactMetric(value, kind = 'number') {
+function formatCompactMetric(value, kind = 'number', fallbackMax = 0) {
   if (kind === 'money') return formatMoney(value);
+  if (kind === 'score-ratio') return `${formatNumber(value)} / ${formatNumber(fallbackMax)}`;
   return formatNumber(value);
 }
 
@@ -542,7 +543,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         route: 'monitoring-ekatalog',
         hint: 'Klik untuk buka Monitoring eKatalog/Toko Daring',
         detailMetrics: [
-          { label: 'Paket Aktif', value: getField(row || {}, ['Pelaksanaan belanja e-Purchasing (Toko Daring)', 'Paket Aktif (Toko Daring)', 'Paket Aktif']), kind: 'number' }
+          { label: 'Capaian', value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)', 'Toko Daring'])), kind: 'score-ratio', max: 1 }
         ]
       },
       {
@@ -1078,6 +1079,9 @@ function renderDimension(item) {
   const percent = item.max > 0 ? Math.min(100, (toNumber(item.value) / item.max) * 100) : 0;
   const route = item.route || '';
   const metrics = Array.isArray(item.detailMetrics) ? item.detailMetrics.filter((metric) => toNumber(metric.value) > 0) : [];
+  const detailText = metrics.length
+    ? metrics.map((metric) => formatCompactMetric(metric.value, metric.kind || 'number', metric.max || item.max || 0)).join(' / ')
+    : '';
 
   return `
     <button class="dim-row dim-row--${escapeHtml(item.accent || 'blue')} dim-row--button" type="button" data-route="${escapeHtml(route)}" title="${escapeHtml(item.hint || 'Klik untuk membuka modul monitoring')}">
@@ -1091,16 +1095,7 @@ function renderDimension(item) {
         </div>
         <div class="dim-value">${toNumber(item.value).toLocaleString('id-ID', { maximumFractionDigits: 2 })}/${item.max}</div>
       </div>
-      ${metrics.length ? `
-        <div class="dim-detail-strip">
-          ${metrics.map((metric) => `
-            <div class="dim-detail-chip">
-              <small>${escapeHtml(metric.label)}</small>
-              <strong>${escapeHtml(formatCompactMetric(metric.value, metric.kind || 'number'))}</strong>
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
+      ${detailText ? `<div class="dim-detail-strip">${escapeHtml(detailText)}</div>` : ''}
     </button>
   `;
 }
