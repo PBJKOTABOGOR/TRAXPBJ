@@ -216,7 +216,7 @@
 
       <section class="mini-insights">
         <div class="insight-card">
-          <div class="insight-label">OPD Tertinggi</div>
+          <div class="insight-label">OPD Nilai ITKP 10</div>
           <div
             class="insight-value"
             id="insightTopOpd"
@@ -229,10 +229,17 @@
           >
             Belum ada data
           </div>
+          <button
+            type="button"
+            class="btn btn-soft btn-sm insight-btn"
+            id="btnShowTopOpd"
+          >
+            Lihat Nama OPD
+          </button>
         </div>
 
         <div class="insight-card">
-          <div class="insight-label">OPD Terendah</div>
+          <div class="insight-label">OPD Di Bawah Nilai 10</div>
           <div
             class="insight-value"
             id="insightLowOpd"
@@ -245,6 +252,13 @@
           >
             Belum ada data
           </div>
+          <button
+            type="button"
+            class="btn btn-soft btn-sm insight-btn"
+            id="btnShowLowOpd"
+          >
+            Lihat Nama OPD
+          </button>
         </div>
 
         <div class="insight-card">
@@ -386,6 +400,37 @@
           id="detailPagination"
         ></div>
       </section>
+    </div>
+
+    <div
+      class="opd-modal"
+      id="opdModal"
+      hidden
+    >
+      <div class="opd-modal-card">
+        <div class="opd-modal-head">
+          <div>
+            <h3 id="opdModalTitle">Daftar OPD</h3>
+            <p id="opdModalSubtitle">Daftar nama OPD sesuai kategori.</p>
+          </div>
+          <button
+            type="button"
+            class="opd-modal-close"
+            id="btnCloseOpdModal"
+            aria-label="Tutup"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="opd-modal-meta" id="opdModalMeta">0 OPD</div>
+
+        <div class="opd-modal-body">
+          <div class="opd-list" id="opdModalList">
+            <div class="opd-list-empty">Belum ada data.</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div
