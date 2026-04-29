@@ -1,5201 +1,5384 @@
-:root{
-  --ps-bg:#eef4fb;
-  --ps-card:#ffffff;
-  --ps-line:#dbe5f0;
-  --ps-line2:#dbeafe;
-  --ps-text:#102544;
-  --ps-muted:#64748b;
-  --ps-navy:#123a72;
-  --ps-blue:#2563eb;
-  --ps-cyan:#22d3ee;
-  --ps-green:#16a34a;
-  --ps-green-soft:#dcfce7;
-  --ps-red:#dc2626;
-  --ps-red-soft:#fee2e2;
-  --ps-yellow:#f59e0b;
-  --ps-yellow-soft:#fef3c7;
-  --ps-shadow:0 20px 48px rgba(15,23,42,.10);
-  --ps-shadow-sm:0 10px 24px rgba(15,23,42,.08);
-  --ps-radius:24px;
-}
-
-*{
-  box-sizing:border-box;
-}
-
-.procstack-shell{
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-  position:relative;
-  padding-bottom:280px;
-}
-
-.procstack-hero{
-  position:relative;
-  overflow:hidden;
-  border-radius:30px;
-  padding:28px 28px 30px;
-  color:#fff;
-  background:
-    radial-gradient(circle at top right, rgba(34,211,238,.22), transparent 28%),
-    radial-gradient(circle at left top, rgba(255,255,255,.10), transparent 22%),
-    linear-gradient(135deg,#102544 0%, #123a72 48%, #245a9b 78%, #0f766e 100%);
-  box-shadow:0 22px 58px rgba(18,58,114,.20);
-}
-
-.procstack-kicker{
-  display:inline-flex;
-  align-items:center;
-  min-height:30px;
-  padding:0 12px;
-  border-radius:999px;
-  background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.18);
-  color:#dbeafe;
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-}
-
-.procstack-hero h2{
-  margin:14px 0 8px;
-  font-size:42px;
-  line-height:1.05;
-  font-weight:950;
-  letter-spacing:-.04em;
-}
-
-.procstack-hero p{
-  margin:0;
-  max-width:960px;
-  color:rgba(255,255,255,.88);
-  font-size:15px;
-  line-height:1.75;
-}
-
-.procstack-game-card{
-  background:transparent;
-}
-
-.ps-card{
-  background:rgba(255,255,255,.92);
-  border:1px solid rgba(255,255,255,.78);
-  border-radius:28px;
-  padding:18px;
-  box-shadow:var(--ps-shadow-sm);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  position:relative;
-  overflow:visible;
-}
-
-.ps-card::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:0;
-  right:0;
-  height:1px;
-  background:linear-gradient(90deg, transparent, rgba(37,99,235,.45), rgba(34,211,238,.45), transparent);
-}
-
-.ps-card-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:16px;
-}
-
-.ps-card h3{
-  margin:0;
-  color:var(--ps-text);
-  font-size:30px;
-  line-height:1.18;
-  font-weight:950;
-}
-
-.ps-card p{
-  margin:8px 0 0;
-  color:#475569;
-  font-size:16px;
-  line-height:1.7;
-}
-
-.ps-pill-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  justify-content:flex-end;
-}
-
-.ps-pill{
-  display:inline-flex;
-  align-items:center;
-  min-height:34px;
-  padding:0 12px;
-  border-radius:999px;
-  border:1px solid #dbeafe;
-  background:#eff6ff;
-  color:#123a72;
-  font-size:12px;
-  font-weight:900;
-  white-space:nowrap;
-}
-
-.ps-pill.green{
-  background:#dcfce7;
-  color:#166534;
-  border-color:#86efac;
-}
-
-.ps-pill.warn{
-  background:#fef3c7;
-  color:#92400e;
-  border-color:#fde68a;
-}
-
-/* =========================================================
-   KASUS / TOPIK DIPERBESAR
-   ========================================================= */
-
-.ps-case-panel{
-  display:grid;
-  grid-template-columns:1fr 170px 170px 170px;
-  gap:12px;
-  margin-bottom:18px;
-}
-
-.ps-case-box{
-  min-height:118px;
-  padding:18px;
-  border-radius:20px;
-  background:
-    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
-  border:1px solid #bfdbfe;
-  box-shadow:0 8px 20px rgba(15,23,42,.035);
-}
-
-.ps-case-box:first-child{
-  min-height:136px;
-  border-color:#93c5fd;
-  background:
-    radial-gradient(circle at top left, rgba(37,99,235,.10), transparent 32%),
-    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
-}
-
-.ps-case-box label,
-.ps-score-card label,
-.ps-result-card label{
-  display:block;
-  color:#475569;
-  font-size:14px;
-  font-weight:950;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  margin-bottom:10px;
-}
-
-.ps-case-box:first-child label{
-  color:#123a72;
-  font-size:15px;
-}
-
-.ps-case-box strong{
-  display:block;
-  color:var(--ps-text);
-  font-size:22px;
-  font-weight:950;
-  line-height:1.22;
-}
-
-.ps-case-box:first-child strong{
-  font-size:28px;
-  letter-spacing:-.02em;
-  color:#0f1f38;
-}
-
-.ps-case-box span{
-  display:block;
-  color:#334155;
-  font-size:16px;
-  line-height:1.65;
-  margin-top:9px;
-}
-
-.ps-case-box:first-child span{
-  font-size:18px;
-  line-height:1.65;
-  font-weight:650;
-  color:#334155;
-}
-
-.ps-score-grid{
-  display:grid;
-  grid-template-columns:repeat(4, minmax(0,1fr));
-  gap:10px;
-  margin-bottom:16px;
-}
-
-.ps-score-card{
-  position:relative;
-  overflow:hidden;
-  border-radius:18px;
-  padding:14px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-}
-
-.ps-score-card strong{
-  display:block;
-  margin-top:6px;
-  color:var(--ps-text);
-  font-size:28px;
-  line-height:1;
-  font-weight:950;
-}
-
-.ps-progress-track{
-  height:11px;
-  border-radius:999px;
-  background:#e5edf5;
-  overflow:hidden;
-  margin-bottom:16px;
-}
-
-.ps-progress-bar{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg, #123a72, #2563eb, #22d3ee);
-  border-radius:999px;
-  transition:width .25s ease;
-  box-shadow:0 0 18px rgba(34,211,238,.30);
-}
-
-.ps-helper-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom:14px;
-}
-
-.ps-helper-note{
-  color:var(--ps-muted);
-  font-size:13px;
-  line-height:1.5;
-}
-
-.ps-helper-note b{
-  color:var(--ps-text);
-}
-
-.ps-pipeline{
-  display:grid;
-  grid-template-columns:repeat(5, minmax(0,1fr));
-  gap:10px;
-  margin-bottom:16px;
-}
-
-.ps-slot{
-  min-height:126px;
-  border-radius:20px;
-  border:2px dashed #c9d8e8;
-  background:#f8fbff;
-  padding:10px;
-  position:relative;
-  transition:.18s ease;
-  cursor:pointer;
-}
-
-.ps-slot.drag-over,
-.ps-slot.click-ready{
-  border-color:#2563eb;
-  background:#eff6ff;
-  box-shadow:0 0 0 4px rgba(37,99,235,.10);
-  transform:translateY(-2px);
-}
-
-.ps-slot.correct{
-  border-style:solid;
-  border-color:#86efac;
-  background:#ecfdf5;
-}
-
-.ps-slot.fx-correct{
-  animation:psSlotCorrect .42s ease;
-}
-
-@keyframes psSlotCorrect{
-  0%{
-    transform:scale(.96);
-  }
-
-  60%{
-    transform:scale(1.03);
-  }
-
-  100%{
-    transform:scale(1);
-  }
-}
-
-.ps-slot-number{
-  position:absolute;
-  top:8px;
-  right:9px;
-  width:24px;
-  height:24px;
-  border-radius:9px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#64748b;
-  background:#e5edf5;
-  font-size:11px;
-  font-weight:950;
-  z-index:3;
-}
-
-.ps-slot-placeholder{
-  height:100%;
-  min-height:96px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  color:#94a3b8;
-  font-size:12px;
-  font-weight:850;
-  padding:10px;
-}
-
-.ps-bank{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  min-height:130px;
-  padding:14px;
-  border-radius:22px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-  margin-bottom:16px;
-}
-
-.ps-action-card{
-  width:152px;
-  min-height:104px;
-  border:none;
-  cursor:grab;
-  border-radius:18px;
-  padding:12px;
-  background:#fff;
-  border:1px solid #dbe5f0;
-  box-shadow:0 8px 20px rgba(15,23,42,.06);
-  text-align:left;
-  transition:.18s ease;
-  user-select:none;
-  -webkit-user-select:none;
-  touch-action:none;
-  position:relative;
-  overflow:hidden;
-}
-
-.ps-action-card:hover{
-  transform:translateY(-2px);
-  box-shadow:0 14px 26px rgba(15,23,42,.10);
-}
-
-.ps-action-card.selected{
-  border-color:#2563eb;
-  box-shadow:
-    0 0 0 4px rgba(37,99,235,.13),
-    0 16px 28px rgba(37,99,235,.14);
-  transform:translateY(-3px);
-}
-
-.ps-action-card.used{
-  opacity:.34;
-  pointer-events:none;
-  transform:scale(.98);
-  filter:grayscale(.35);
-}
-
-.ps-action-card.wrong{
-  animation:psShake .30s ease;
-  border-color:#fecaca;
-  background:#fff1f2;
-}
-
-.ps-action-card.correct-card{
-  background:#dcfce7;
-  border-color:#86efac;
-}
-
-.ps-action-card.trap-card{
-  background:linear-gradient(180deg,#ffffff 0%,#fff1f2 100%);
-  border-color:#fecaca;
-}
-
-@keyframes psShake{
-  0%{
-    transform:translateX(0);
-  }
-
-  20%{
-    transform:translateX(-8px);
-  }
-
-  40%{
-    transform:translateX(8px);
-  }
-
-  60%{
-    transform:translateX(-6px);
-  }
-
-  80%{
-    transform:translateX(4px);
-  }
-
-  100%{
-    transform:translateX(0);
-  }
-}
-
-.ps-card-icon{
-  width:35px;
-  height:35px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:13px;
-  background:#eff6ff;
-  margin-bottom:8px;
-  font-size:17px;
-}
-
-.ps-action-card strong{
-  display:block;
-  color:var(--ps-text);
-  font-size:13px;
-  font-weight:950;
-  line-height:1.2;
-}
-
-.ps-action-card span{
-  display:block;
-  margin-top:5px;
-  color:var(--ps-muted);
-  font-size:11px;
-  line-height:1.35;
-}
-
-.ps-slot .ps-action-card{
-  width:100%;
-  min-height:102px;
-  cursor:default;
-  box-shadow:none;
-  touch-action:auto;
-}
-
-.ps-quiz-question{
-  color:var(--ps-text);
-  font-size:24px;
-  font-weight:950;
-  line-height:1.45;
-  margin:12px 0 16px;
-}
-
-.ps-quiz-options{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  margin-bottom:16px;
-}
-
-.ps-quiz-option{
-  border:none;
-  cursor:pointer;
-  border-radius:18px;
-  background:#fff;
-  border:1px solid #dbe5f0;
-  padding:18px;
-  text-align:left;
-  color:var(--ps-text);
-  font-size:16px;
-  line-height:1.48;
-  font-weight:800;
-  transition:.18s ease;
-  min-height:82px;
-}
-
-.ps-quiz-option:hover{
-  transform:translateY(-2px);
-  box-shadow:0 10px 22px rgba(15,23,42,.08);
-}
-
-.ps-quiz-option.correct{
-  background:#dcfce7;
-  border-color:#86efac;
-  color:#166534;
-}
-
-.ps-quiz-option.wrong{
-  background:#fee2e2;
-  border-color:#fecaca;
-  color:#991b1b;
-}
-
-.ps-explanation{
-  padding:14px;
-  border-radius:18px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-  color:#475569;
-  font-size:13px;
-  line-height:1.65;
-  margin-bottom:16px;
-}
-
-/* =========================================================
-   LOG PEMBELAJARAN DIBATASI
-   ========================================================= */
-
-.ps-log-box{
-  padding:14px;
-  border-radius:18px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-  color:#475569;
-  font-size:13px;
-  line-height:1.65;
-  margin-bottom:16px;
-  max-height:210px;
-  overflow-y:auto;
-  overflow-x:hidden;
-  scrollbar-width:thin;
-  scrollbar-color:#93c5fd #eaf2ff;
-}
-
-.ps-log-box::-webkit-scrollbar{
-  width:8px;
-}
-
-.ps-log-box::-webkit-scrollbar-track{
-  background:#eaf2ff;
-  border-radius:999px;
-}
-
-.ps-log-box::-webkit-scrollbar-thumb{
-  background:#93c5fd;
-  border-radius:999px;
-}
-
-.ps-log-list{
-  display:grid;
-  gap:8px;
-  margin-top:10px;
-}
-
-.ps-log-item{
-  display:grid;
-  grid-template-columns:34px 1fr;
-  gap:10px;
-  align-items:start;
-  padding:11px;
-  border-radius:16px;
-  background:#fff;
-  border:1px solid #e5edf5;
-  color:#334155;
-  font-size:12px;
-  line-height:1.5;
-  animation:psLogIn .25s ease;
-}
-
-@keyframes psLogIn{
-  from{
-    opacity:0;
-    transform:translateY(8px);
-  }
-
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
-.ps-log-icon{
-  width:34px;
-  height:34px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-weight:950;
-}
-
-.ps-log-icon.ok{
-  background:#16a34a;
-}
-
-.ps-log-icon.bad{
-  background:#dc2626;
-}
-
-.ps-log-icon.info{
-  background:#2563eb;
-}
-
-.ps-log-title{
-  font-weight:950;
-  color:var(--ps-text);
-  margin-bottom:3px;
-}
-
-.ps-log-sub{
-  color:var(--ps-muted);
-  line-height:1.55;
-}
-
-.ps-buttons{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.ps-btn{
-  border:none;
-  min-height:42px;
-  padding:0 16px;
-  border-radius:14px;
-  cursor:pointer;
-  font-size:13px;
-  font-weight:900;
-  transition:.18s ease;
-}
-
-.ps-btn-primary{
-  background:linear-gradient(135deg,#123a72,#2563eb);
-  color:#fff;
-  box-shadow:0 12px 24px rgba(18,58,114,.16);
-}
-
-.ps-btn-soft{
-  background:#eef4fb;
-  color:#123a72;
-  border:1px solid #d9e6f4;
-}
-
-.ps-btn:hover{
-  transform:translateY(-1px);
-}
-
-.ps-btn:disabled{
-  opacity:.45;
-  cursor:not-allowed;
-  transform:none;
-}
-
-.ps-result-hero{
-  border-radius:30px;
-  padding:26px;
-  color:#fff;
-  background:
-    radial-gradient(circle at top right, rgba(34,211,238,.25), transparent 34%),
-    linear-gradient(135deg,#102544,#123a72 58%,#0f766e);
-  box-shadow:0 24px 56px rgba(15,23,42,.18);
-  margin-bottom:16px;
-}
-
-.ps-result-hero h2{
-  margin:0;
-  font-size:34px;
-  line-height:1.1;
-  font-weight:950;
-}
-
-.ps-result-hero p{
-  margin:10px 0 0;
-  color:rgba(255,255,255,.82);
-  line-height:1.7;
-  font-size:14px;
-}
-
-.ps-result-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-  margin-bottom:16px;
-}
-
-.ps-result-card{
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-  border-radius:20px;
-  padding:16px;
-}
-
-.ps-result-card strong{
-  display:block;
-  font-size:28px;
-  line-height:1;
-  color:var(--ps-text);
-  font-weight:950;
-}
-
-.ps-result-note{
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-  border-radius:20px;
-  padding:16px;
-  color:#475569;
-  line-height:1.7;
-  margin-bottom:16px;
-}
-
-.ps-toast{
-  position:fixed;
-  right:24px;
-  bottom:24px;
-  z-index:999998;
-  min-width:280px;
-  max-width:420px;
-  padding:14px 16px;
-  border-radius:18px;
-  color:#fff;
-  box-shadow:0 18px 42px rgba(15,23,42,.22);
-  transform:translateY(20px);
-  opacity:0;
-  pointer-events:none;
-  transition:.22s ease;
-  font-size:13px;
-  line-height:1.55;
-  font-weight:800;
-}
-
-.ps-toast.show{
-  transform:translateY(0);
-  opacity:1;
-}
-
-.ps-toast.ok{
-  background:linear-gradient(135deg,#15803d,#16a34a);
-}
-
-.ps-toast.bad{
-  background:linear-gradient(135deg,#991b1b,#dc2626);
-}
-
-.ps-toast.info{
-  background:linear-gradient(135deg,#123a72,#2563eb);
-}
-
-.ps-screen-flash{
-  position:fixed;
-  inset:0;
-  z-index:999997;
-  pointer-events:none;
-  opacity:0;
-}
-
-.ps-screen-flash.ok{
-  background:rgba(34,197,94,.14);
-  animation:psFlash .34s ease;
-}
-
-.ps-screen-flash.bad{
-  background:rgba(220,38,38,.13);
-  animation:psFlash .34s ease;
-}
-
-@keyframes psFlash{
-  0%{
-    opacity:0;
-  }
-
-  35%{
-    opacity:1;
-  }
-
-  100%{
-    opacity:0;
-  }
-}
-
-.ps-floating-score{
-  position:fixed;
-  z-index:999999;
-  font-size:13px;
-  font-weight:950;
-  color:#fff;
-  padding:8px 11px;
-  border-radius:999px;
-  pointer-events:none;
-  animation:psFloatScore .75s ease forwards;
-  box-shadow:0 12px 28px rgba(15,23,42,.18);
-}
-
-.ps-floating-score.ok{
-  background:#16a34a;
-}
-
-.ps-floating-score.bad{
-  background:#dc2626;
-}
-
-.ps-floating-score.info{
-  background:#2563eb;
-}
-
-@keyframes psFloatScore{
-  from{
-    opacity:0;
-    transform:translateY(8px) scale(.92);
-  }
-
-  20%{
-    opacity:1;
-  }
-
-  to{
-    opacity:0;
-    transform:translateY(-34px) scale(1.05);
-  }
-}
-
-.ps-confetti{
-  position:fixed;
-  width:8px;
-  height:12px;
-  z-index:999999;
-  pointer-events:none;
-  animation:psConfettiFall .9s ease forwards;
-  border-radius:2px;
-}
-
-@keyframes psConfettiFall{
-  from{
-    opacity:1;
-    transform:translateY(0) rotate(0deg);
-  }
-
-  to{
-    opacity:0;
-    transform:translateY(110px) rotate(220deg);
-  }
-}
-
-/* =========================================================
-   PANJI FLOATING ASSISTANT
-   KANAN BAWAH + AUTO NAIK/TURUN VIA JS
-   ========================================================= */
-
-.panji-assistant{
-  position:fixed !important;
-  right:26px !important;
-  top:auto !important;
-  bottom:var(--panji-bottom, 34px) !important;
-  left:auto !important;
-  z-index:2147483647 !important;
-  display:flex !important;
-  align-items:flex-end !important;
-  gap:14px !important;
-  opacity:1 !important;
-  visibility:visible !important;
-  pointer-events:none !important;
-  transform:none !important;
-  transition:
-    bottom .22s ease,
-    transform .22s ease,
-    opacity .22s ease !important;
-}
-
-.panji-assistant *{
-  pointer-events:auto !important;
-}
-
-.panji-assistant.panji-hidden{
-  opacity:0 !important;
-  visibility:hidden !important;
-  pointer-events:none !important;
-  transform:none !important;
-}
-
-.panji-assistant.panji-minimized .panji-bubble{
-  opacity:0 !important;
-  visibility:hidden !important;
-  width:0 !important;
-  min-width:0 !important;
-  min-height:0 !important;
-  max-height:0 !important;
-  padding:0 !important;
-  border:0 !important;
-  overflow:hidden !important;
-}
-
-.panji-bubble{
-  width:340px !important;
-  min-height:118px !important;
-  max-height:260px !important;
-  position:relative;
-  padding:16px;
-  border-radius:22px;
-  display:block !important;
-  opacity:1 !important;
-  visibility:visible !important;
-  transform:none !important;
-  background:
-    radial-gradient(circle at top left, rgba(59,130,246,.14), transparent 38%),
-    rgba(255,255,255,.96);
-  border:1px solid rgba(219,234,254,.9);
-  box-shadow:0 22px 48px rgba(15,23,42,.16);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  transition:
-    opacity .22s ease,
-    transform .22s ease,
-    width .22s ease,
-    padding .22s ease;
-  animation:panjiBubbleIdle 3.8s ease-in-out infinite;
-  will-change:transform;
-  overflow-y:auto;
-  overflow-x:hidden;
-}
-
-.panji-bubble.burst{
-  animation:
-    panjiBurst .32s ease,
-    panjiBubbleIdle 3.8s ease-in-out infinite .32s;
-}
-
-@keyframes panjiBurst{
-  0%{
-    transform:scale(.96);
-  }
-
-  60%{
-    transform:scale(1.02);
-  }
-
-  100%{
-    transform:scale(1);
-  }
-}
-
-@keyframes panjiBubbleIdle{
-  0%,100%{
-    transform:translateY(0);
-  }
-
-  50%{
-    transform:translateY(-4px);
-  }
-}
-
-.panji-bubble::after{
-  content:"";
-  position:absolute;
-  right:-10px;
-  bottom:34px;
-  width:20px;
-  height:20px;
-  background:rgba(255,255,255,.96);
-  border-right:1px solid rgba(219,234,254,.9);
-  border-bottom:1px solid rgba(219,234,254,.9);
-  transform:rotate(-45deg);
-}
-
-.panji-bubble-top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.panji-name{
-  display:inline-flex;
-  align-items:center;
-  min-height:26px;
-  padding:0 10px;
-  border-radius:999px;
-  background:linear-gradient(135deg,#123a72,#2563eb);
-  color:#fff;
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.12em;
-  box-shadow:0 8px 18px rgba(37,99,235,.22);
-}
-
-.panji-emote{
-  width:34px;
-  height:34px;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#eef4fb;
-  font-size:18px;
-  animation:panjiEmotePop 2s ease-in-out infinite;
-}
-
-@keyframes panjiEmotePop{
-  0%,100%{
-    transform:scale(1);
-  }
-
-  50%{
-    transform:scale(1.12);
-  }
-}
-
-.panji-text{
-  color:#102544;
-  font-size:14px;
-  line-height:1.68;
-  font-weight:750;
-}
-
-.panji-actions{
-  display:flex;
-  gap:8px;
-  margin-top:12px;
-  flex-wrap:wrap;
-}
-
-.panji-actions button{
-  border:none;
-  min-height:34px;
-  padding:0 11px;
-  border-radius:11px;
-  cursor:pointer;
-  font-size:11px;
-  font-weight:900;
-  background:#eef4fb;
-  color:#123a72;
-  border:1px solid #dbeafe;
-  transition:.18s ease;
-}
-
-.panji-actions button:hover{
-  transform:translateY(-1px);
-  background:#dbeafe;
-}
-
-.panji-close{
-  position:absolute;
-  right:-8px;
-  top:-8px;
-  width:28px;
-  height:28px;
-  z-index:5;
-  border:none;
-  border-radius:999px;
-  cursor:pointer;
-  background:#102544;
-  color:#fff;
-  font-size:18px;
-  font-weight:900;
-  box-shadow:0 8px 18px rgba(15,23,42,.22);
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
-
-.panji-character{
-  width:108px !important;
-  height:138px !important;
-  position:relative;
-  border:none;
-  background:transparent;
-  cursor:pointer;
-  padding:0;
-  flex-shrink:0 !important;
-  display:block !important;
-  opacity:1 !important;
-  visibility:visible !important;
-  animation:
-    panjiFloat 2.8s ease-in-out infinite,
-    panjiIdleTilt 4.2s ease-in-out infinite;
-  transform-origin:center bottom;
-  will-change:transform;
-}
-
-@keyframes panjiFloat{
-  0%,100%{
-    transform:translateY(0);
-  }
-
-  50%{
-    transform:translateY(-8px);
-  }
-}
-
-@keyframes panjiIdleTilt{
-  0%,100%{
-    rotate:0deg;
-  }
-
-  25%{
-    rotate:-2deg;
-  }
-
-  50%{
-    rotate:0deg;
-  }
-
-  75%{
-    rotate:2deg;
-  }
-}
-
-.panji-glow{
-  position:absolute;
-  inset:22px 4px 0 !important;
-  border-radius:999px;
-  background:radial-gradient(circle, rgba(37,99,235,.28), transparent 68%);
-  filter:blur(10px);
-  animation:panjiGlowPulse 2.4s ease-in-out infinite;
-  will-change:transform,opacity;
-}
-
-@keyframes panjiGlowPulse{
-  0%,100%{
-    opacity:.65;
-    transform:scale(.96);
-  }
-
-  50%{
-    opacity:1;
-    transform:scale(1.08);
-  }
-}
-
-.panji-head{
-  position:absolute;
-  left:16px !important;
-  top:8px !important;
-  width:76px !important;
-  height:76px !important;
-  border-radius:28px 28px 25px 25px;
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
-    linear-gradient(135deg,#f8fbff,#c7ddff);
-  border:2px solid #123a72;
-  box-shadow:
-    0 14px 28px rgba(18,58,114,.20),
-    inset 0 -8px 18px rgba(37,99,235,.10);
-  transition:.25s ease;
-  animation:panjiHeadBob 3.4s ease-in-out infinite;
-  transform-origin:center bottom;
-  will-change:transform;
-}
-
-@keyframes panjiHeadBob{
-  0%,100%{
-    transform:translateY(0);
-  }
-
-  50%{
-    transform:translateY(-3px);
-  }
-}
-
-.panji-hat{
-  position:absolute;
-  left:9px;
-  top:-14px;
-  width:58px;
-  height:26px;
-  border-radius:12px 12px 8px 8px;
-  background:linear-gradient(135deg,#123a72,#2563eb);
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.08em;
-  box-shadow:0 8px 16px rgba(18,58,114,.22);
-}
-
-.panji-eye{
-  position:absolute;
-  top:34px;
-  width:12px;
-  height:16px;
-  border-radius:999px;
-  background:#102544;
-  animation:panjiBlink 4.8s infinite;
-  transform-origin:center center;
-}
-
-.panji-eye-left{
-  left:21px;
-}
-
-.panji-eye-right{
-  right:21px;
-}
-
-@keyframes panjiBlink{
-  0%,91%,100%{
-    transform:scaleY(1);
-  }
-
-  94%{
-    transform:scaleY(.12);
-  }
-
-  96%{
-    transform:scaleY(1);
-  }
-}
-
-.panji-mouth{
-  position:absolute;
-  left:31px;
-  bottom:17px;
-  width:16px;
-  height:8px;
-  border-bottom:3px solid #102544;
-  border-radius:0 0 999px 999px;
-  transition:.25s ease;
-}
-
-.panji-body{
-  position:absolute;
-  left:24px !important;
-  top:84px !important;
-  width:60px !important;
-  height:45px !important;
-  border-radius:21px 21px 17px 17px;
-  background:linear-gradient(135deg,#123a72,#2f9a8f);
-  border:2px solid rgba(255,255,255,.88);
-  box-shadow:0 14px 24px rgba(15,23,42,.18);
-  animation:panjiBodyBreath 2.6s ease-in-out infinite;
-  transform-origin:center center;
-  will-change:transform;
-}
-
-@keyframes panjiBodyBreath{
-  0%,100%{
-    transform:scale(1);
-  }
-
-  50%{
-    transform:scale(1.025);
-  }
-}
-
-.panji-badge{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  width:30px;
-  height:30px;
-  border-radius:999px;
-  background:#fff;
-  color:#123a72;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:11px;
-  font-weight:950;
-}
-
-.panji-hand{
-  position:absolute;
-  top:94px !important;
-  width:18px;
-  height:34px;
-  border-radius:999px;
-  background:linear-gradient(135deg,#c7ddff,#f8fbff);
-  border:2px solid #123a72;
-}
-
-.panji-hand-left{
-  left:8px !important;
-  transform:rotate(24deg);
-}
-
-.panji-hand-right{
-  right:8px !important;
-  transform-origin:top center;
-  animation:panjiWave 1.8s ease-in-out infinite;
-}
-
-@keyframes panjiWave{
-  0%,100%{
-    transform:rotate(-18deg);
-  }
-
-  50%{
-    transform:rotate(-46deg);
-  }
-}
-
-/* PANJI TALKING */
-.panji-assistant.panji-talking .panji-mouth{
-  animation:panjiTalkMouth .22s ease-in-out infinite;
-}
-
-@keyframes panjiTalkMouth{
-  0%,100%{
-    height:5px;
-    width:15px;
-    left:31px;
-    bottom:17px;
-    border-bottom:3px solid currentColor;
-    border-top:none;
-    border-left:none;
-    border-right:none;
-    border-radius:0 0 999px 999px;
-    background:transparent;
-  }
-
-  50%{
-    height:15px;
-    width:20px;
-    left:28px;
-    bottom:12px;
-    border:3px solid currentColor;
-    border-radius:999px;
-    background:rgba(15,23,42,.08);
-  }
-}
-
-.panji-assistant.panji-happy .panji-mouth{
-  color:#166534;
-}
-
-.panji-assistant.panji-sad .panji-mouth{
-  color:#991b1b;
-}
-
-.panji-assistant.panji-thinking .panji-mouth{
-  color:#102544;
-}
-
-/* INTRO */
-.panji-assistant.panji-intro .panji-character{
-  animation:panjiIntroCome .85s cubic-bezier(.2,.8,.2,1);
-}
-
-@keyframes panjiIntroCome{
-  0%{
-    opacity:0;
-    transform:translateY(38px) scale(.82) rotate(-8deg);
-  }
-
-  60%{
-    opacity:1;
-    transform:translateY(-10px) scale(1.05) rotate(4deg);
-  }
-
-  100%{
-    opacity:1;
-    transform:translateY(0) scale(1) rotate(0deg);
-  }
-}
-
-.panji-assistant.panji-intro .panji-bubble{
-  animation:panjiIntroBubble .75s ease .15s both;
-}
-
-@keyframes panjiIntroBubble{
-  0%{
-    opacity:0;
-    transform:translateY(16px) scale(.92);
-  }
-
-  100%{
-    opacity:1;
-    transform:translateY(0) scale(1);
-  }
-}
-
-/* HAPPY */
-.panji-assistant.panji-happy .panji-head{
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
-    linear-gradient(135deg,#ecfdf5,#bbf7d0);
-  border-color:#16a34a;
-}
-
-.panji-assistant.panji-happy .panji-eye{
-  height:8px;
-  top:40px;
-  border-radius:999px;
-  transform:rotate(0deg);
-  background:transparent;
-  border-bottom:4px solid #166534;
-  animation:none;
-}
-
-.panji-assistant.panji-happy .panji-mouth{
-  height:12px;
-  border-bottom-color:#166534;
-}
-
-.panji-assistant.panji-happy .panji-character{
-  animation:
-    panjiHappyJump .72s ease,
-    panjiFloat 2.8s ease-in-out infinite .72s,
-    panjiIdleTilt 4.2s ease-in-out infinite .72s;
-}
-
-@keyframes panjiHappyJump{
-  0%{
-    transform:translateY(0) scale(1) rotate(0deg);
-  }
-
-  30%{
-    transform:translateY(-18px) scale(1.06) rotate(-5deg);
-  }
-
-  55%{
-    transform:translateY(-6px) scale(1.02) rotate(5deg);
-  }
-
-  75%{
-    transform:translateY(-12px) scale(1.04) rotate(-3deg);
-  }
-
-  100%{
-    transform:translateY(0) scale(1) rotate(0deg);
-  }
-}
-
-.panji-assistant.panji-happy .panji-hand-right{
-  animation:panjiFastWave .44s ease-in-out infinite;
-}
-
-@keyframes panjiFastWave{
-  0%,100%{
-    transform:rotate(-12deg);
-  }
-
-  50%{
-    transform:rotate(-62deg);
-  }
-}
-
-.panji-assistant.panji-happy .panji-emote{
-  animation:panjiHappyEmote .65s ease infinite;
-}
-
-@keyframes panjiHappyEmote{
-  0%,100%{
-    transform:scale(1) rotate(0deg);
-  }
-
-  50%{
-    transform:scale(1.18) rotate(-7deg);
-  }
-}
-
-/* SAD + CRY */
-.panji-assistant.panji-sad .panji-head{
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
-    linear-gradient(135deg,#fff1f2,#fecdd3);
-  border-color:#dc2626;
-}
-
-.panji-assistant.panji-sad .panji-eye{
-  height:14px;
-  background:#102544;
-  animation:panjiSadBlink 2.2s ease-in-out infinite;
-}
-
-@keyframes panjiSadBlink{
-  0%,85%,100%{
-    transform:scaleY(1);
-  }
-
-  90%{
-    transform:scaleY(.18);
-  }
-}
-
-.panji-assistant.panji-sad .panji-eye-left::after,
-.panji-assistant.panji-sad .panji-eye-right::after{
-  content:"";
-  position:absolute;
-  left:3px;
-  top:13px;
-  width:6px;
-  height:10px;
-  border-radius:999px;
-  background:linear-gradient(180deg,#93c5fd,#38bdf8);
-  opacity:.95;
-  animation:panjiTearDrop 1.1s ease-in-out infinite;
-}
-
-.panji-assistant.panji-sad .panji-eye-right::after{
-  animation-delay:.22s;
-}
-
-@keyframes panjiTearDrop{
-  0%{
-    opacity:0;
-    transform:translateY(-4px) scale(.7);
-  }
-
-  25%{
-    opacity:1;
-  }
-
-  100%{
-    opacity:0;
-    transform:translateY(16px) scale(1);
-  }
-}
-
-.panji-assistant.panji-sad .panji-mouth{
-  width:18px;
-  height:4px;
-  left:29px;
-  bottom:16px;
-  border-bottom:none;
-  border-top:3px solid #991b1b;
-  border-left:none;
-  border-right:none;
-  border-radius:999px 999px 0 0;
-}
-
-.panji-assistant.panji-sad .panji-character{
-  animation:
-    panjiSadWobble .78s ease,
-    panjiSadIdle 3.2s ease-in-out infinite .78s;
-}
-
-@keyframes panjiSadIdle{
-  0%,100%{
-    transform:translateY(0) rotate(-1deg);
-  }
-
-  50%{
-    transform:translateY(4px) rotate(1deg);
-  }
-}
-
-.panji-assistant.panji-sad .panji-head{
-  animation:
-    panjiSadHead .78s ease,
-    panjiSadHeadIdle 2.8s ease-in-out infinite .78s;
-}
-
-@keyframes panjiSadWobble{
-  0%{
-    transform:translateX(0) rotate(0deg);
-  }
-
-  20%{
-    transform:translateX(-6px) rotate(-4deg);
-  }
-
-  40%{
-    transform:translateX(6px) rotate(4deg);
-  }
-
-  60%{
-    transform:translateX(-4px) rotate(-3deg);
-  }
-
-  80%{
-    transform:translateX(3px) rotate(2deg);
-  }
-
-  100%{
-    transform:translateX(0) rotate(0deg);
-  }
-}
-
-@keyframes panjiSadHead{
-  0%{
-    transform:translateY(0) rotate(0deg);
-  }
-
-  60%{
-    transform:translateY(6px) rotate(-7deg);
-  }
-
-  100%{
-    transform:translateY(0) rotate(0deg);
-  }
-}
-
-@keyframes panjiSadHeadIdle{
-  0%,100%{
-    transform:translateY(2px) rotate(-2deg);
-  }
-
-  50%{
-    transform:translateY(6px) rotate(2deg);
-  }
-}
-
-.panji-assistant.panji-sad .panji-hand-right{
-  animation:panjiSadHand 1.2s ease-in-out infinite;
-}
-
-@keyframes panjiSadHand{
-  0%,100%{
-    transform:rotate(-4deg);
-  }
-
-  50%{
-    transform:rotate(8deg);
-  }
-}
-
-.panji-assistant.panji-sad .panji-hand-left{
-  transform:rotate(6deg);
-}
-
-.panji-assistant.panji-sad .panji-emote{
-  animation:panjiSadEmote 1.1s ease-in-out infinite;
-}
-
-@keyframes panjiSadEmote{
-  0%,100%{
-    transform:translateY(0) scale(1);
-  }
-
-  50%{
-    transform:translateY(3px) scale(.96);
-  }
-}
-
-/* THINKING */
-.panji-assistant.panji-thinking .panji-head{
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,.95), transparent 18%),
-    linear-gradient(135deg,#eff6ff,#bfdbfe);
-}
-
-.panji-assistant.panji-thinking .panji-character{
-  animation:
-    panjiThinkingSway 1.2s ease-in-out,
-    panjiFloat 2.8s ease-in-out infinite 1.2s,
-    panjiIdleTilt 4.2s ease-in-out infinite 1.2s;
-}
-
-@keyframes panjiThinkingSway{
-  0%{
-    transform:rotate(0deg);
-  }
-
-  25%{
-    transform:rotate(-6deg);
-  }
-
-  50%{
-    transform:rotate(5deg);
-  }
-
-  75%{
-    transform:rotate(-3deg);
-  }
-
-  100%{
-    transform:rotate(0deg);
-  }
-}
-
-.panji-assistant.panji-thinking .panji-character::after{
-  content:"?";
-  position:absolute;
-  right:0;
-  top:0;
-  width:28px;
-  height:28px;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fef3c7;
-  color:#92400e;
-  font-weight:950;
-  box-shadow:0 8px 18px rgba(15,23,42,.14);
-  animation:panjiQuestionFloat 1.1s ease-in-out infinite;
-}
-
-@keyframes panjiQuestionFloat{
-  0%,100%{
-    transform:translateY(0) scale(1);
-  }
-
-  50%{
-    transform:translateY(-7px) scale(1.08);
-  }
-}
-
-.panji-assistant.panji-thinking .panji-emote{
-  animation:panjiThinkingEmote 1.3s ease-in-out infinite;
-}
-
-@keyframes panjiThinkingEmote{
-  0%,100%{
-    transform:rotate(0deg) scale(1);
-  }
-
-  35%{
-    transform:rotate(-10deg) scale(1.08);
-  }
-
-  70%{
-    transform:rotate(8deg) scale(1.04);
-  }
-}
-
-/* IDLE LOOK AROUND */
-.panji-assistant:not(.panji-hidden):not(.panji-sad):not(.panji-happy):not(.panji-thinking) .panji-eye-left{
-  animation:
-    panjiBlink 4.8s infinite,
-    panjiLookAroundLeft 6.5s ease-in-out infinite;
-}
-
-.panji-assistant:not(.panji-hidden):not(.panji-sad):not(.panji-happy):not(.panji-thinking) .panji-eye-right{
-  animation:
-    panjiBlink 4.8s infinite,
-    panjiLookAroundRight 6.5s ease-in-out infinite;
-}
-
-@keyframes panjiLookAroundLeft{
-  0%,100%{
-    left:21px;
-  }
-
-  35%{
-    left:18px;
-  }
-
-  70%{
-    left:24px;
-  }
-}
-
-@keyframes panjiLookAroundRight{
-  0%,100%{
-    right:21px;
-  }
-
-  35%{
-    right:24px;
-  }
-
-  70%{
-    right:18px;
-  }
-}
-
-@media (max-width:1400px){
-  .panji-assistant{
-    right:24px !important;
-    bottom:var(--panji-bottom, 34px) !important;
-    top:auto !important;
-    transform:none !important;
-  }
-
-  .panji-bubble{
-    width:310px !important;
-    max-height:245px !important;
-  }
-
-  .panji-character{
-    width:102px !important;
-    height:132px !important;
-  }
-
-  .ps-case-box:first-child strong{
-    font-size:25px;
-  }
-
-  .ps-case-box:first-child span{
-    font-size:16px;
-  }
-}
-
-@media (max-width:1280px){
-  .ps-case-panel,
-  .ps-score-grid,
-  .ps-result-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-
-  .ps-pipeline{
-    grid-template-columns:repeat(4,minmax(0,1fr));
-  }
-
-  .ps-quiz-options{
-    grid-template-columns:1fr;
-  }
-
-  .panji-assistant{
-    right:18px !important;
-    bottom:var(--panji-bottom, 34px) !important;
-    top:auto !important;
-    transform:none !important;
-  }
-
-  .panji-bubble{
-    width:292px !important;
-    max-height:230px !important;
-  }
-}
-
-@media (max-width:900px){
-  .procstack-hero h2{
-    font-size:34px;
-  }
-
-  .ps-case-panel,
-  .ps-score-grid,
-  .ps-result-grid{
-    grid-template-columns:1fr;
-  }
-
-  .ps-pipeline{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-
-  .panji-assistant{
-    right:12px !important;
-    bottom:var(--panji-bottom, 76px) !important;
-    top:auto !important;
-    transform:none !important;
-  }
-
-  .panji-bubble{
-    width:286px !important;
-  }
-}
-
-/* =========================================================
-   LEADERBOARD MINI GAME - POPUP 2 TAB
-   ========================================================= */
-
-.ps-leaderboard-modal{
-  position:fixed;
-  inset:0;
-  z-index:2147483646;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:18px;
-}
-
-.ps-leaderboard-modal.ps-hidden{
-  display:none;
-}
-
-.ps-leaderboard-backdrop{
-  position:absolute;
-  inset:0;
-  background:rgba(15,23,42,.46);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-}
-
-.ps-leaderboard-panel{
-  position:relative;
-  width:min(760px, 100%);
-  max-height:min(86vh, 780px);
-  overflow:hidden;
-  border-radius:28px;
-  background:rgba(255,255,255,.96);
-  border:1px solid rgba(255,255,255,.86);
-  box-shadow:0 28px 90px rgba(15,23,42,.28);
-}
-
-.ps-leaderboard-content{
-  max-height:min(86vh, 780px);
-  overflow-y:auto;
-  padding:18px;
-}
-
-.ps-leaderboard-close{
-  position:absolute;
-  right:14px;
-  top:14px;
-  z-index:3;
-  width:34px;
-  height:34px;
-  border:none;
-  border-radius:999px;
-  background:#102544;
-  color:#fff;
-  font-size:22px;
-  line-height:1;
-  cursor:pointer;
-  box-shadow:0 10px 20px rgba(15,23,42,.22);
-}
-
-.ps-lb-hero{
-  position:relative;
-  overflow:hidden;
-  display:flex;
-  justify-content:space-between;
-  gap:16px;
-  padding:24px;
-  border-radius:24px;
-  color:#fff;
-  background:
-    radial-gradient(circle at top right, rgba(34,211,238,.28), transparent 32%),
-    linear-gradient(135deg,#102544,#123a72 58%,#0f766e);
-  box-shadow:0 20px 45px rgba(18,58,114,.20);
-}
-
-.ps-lb-kicker{
-  display:inline-flex;
-  align-items:center;
-  min-height:26px;
-  padding:0 10px;
-  border-radius:999px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.20);
-  color:#dbeafe;
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-}
-
-.ps-lb-hero h3{
-  margin:12px 0 8px;
-  font-size:34px;
-  line-height:1.06;
-  letter-spacing:-.04em;
-  font-weight:950;
-}
-
-.ps-lb-hero p{
-  margin:0;
-  max-width:560px;
-  color:rgba(255,255,255,.88);
-  line-height:1.65;
-  font-weight:700;
-}
-
-.ps-lb-score{
-  min-width:132px;
-  align-self:stretch;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  border-radius:20px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.20);
-}
-
-.ps-lb-score span{
-  color:rgba(255,255,255,.72);
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-}
-
-.ps-lb-score b{
-  margin-top:6px;
-  font-size:38px;
-  line-height:1;
-  font-weight:950;
-}
-
-.ps-lb-tabs{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin:14px 0;
-}
-
-.ps-lb-tabs button{
-  min-height:42px;
-  border:none;
-  border-radius:14px;
-  cursor:pointer;
-  font-weight:950;
-  color:#123a72;
-  background:#eef4fb;
-  border:1px solid #dbeafe;
-}
-
-.ps-lb-tabs button.active{
-  color:#fff;
-  background:linear-gradient(135deg,#123a72,#2563eb);
-  box-shadow:0 12px 24px rgba(37,99,235,.16);
-}
-
-.ps-lb-summary{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:10px;
-  margin-bottom:14px;
-}
-
-.ps-lb-summary div{
-  padding:12px;
-  border-radius:16px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-}
-
-.ps-lb-summary span{
-  display:block;
-  color:#64748b;
-  font-size:11px;
-  font-weight:950;
-  text-transform:uppercase;
-  letter-spacing:.07em;
-}
-
-.ps-lb-summary b{
-  display:block;
-  margin-top:6px;
-  color:#102544;
-  font-size:16px;
-  line-height:1.25;
-  font-weight:950;
-  word-break:break-word;
-}
-
-.ps-lb-message{
-  padding:12px 14px;
-  border-radius:16px;
-  background:#eff6ff;
-  border:1px solid #bfdbfe;
-  color:#123a72;
-  font-weight:850;
-  line-height:1.5;
-  margin-bottom:14px;
-}
-
-.ps-lb-message.empty{
-  color:#64748b;
-  background:#f8fbff;
-}
-
-.ps-player-form{
-  display:grid;
-  gap:12px;
-}
-
-.ps-player-form label{
-  display:grid;
-  gap:7px;
-  color:#102544;
-  font-size:12px;
-  font-weight:950;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-}
-
-.ps-player-form input{
-  width:100%;
-  min-height:48px;
-  border-radius:15px;
-  border:1px solid #cfe0f3;
-  background:#fff;
-  color:#102544;
-  padding:0 14px;
-  font-size:14px;
-  font-weight:800;
-  outline:none;
-}
-
-.ps-player-form input:focus{
-  border-color:#2563eb;
-  box-shadow:0 0 0 4px rgba(37,99,235,.12);
-}
-
-.ps-lb-toolbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:10px;
-}
-
-.ps-lb-toolbar strong{
-  color:#102544;
-  font-size:18px;
-  font-weight:950;
-}
-
-.ps-lb-list{
-  display:grid;
-  gap:9px;
-}
-
-.ps-lb-row{
-  display:grid;
-  grid-template-columns:42px 1fr auto;
-  gap:10px;
-  align-items:center;
-  padding:11px;
-  border-radius:17px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-}
-
-.ps-lb-row.mine{
-  background:#ecfdf5;
-  border-color:#86efac;
-  box-shadow:0 0 0 3px rgba(22,163,74,.10);
-}
-
-.ps-lb-rank{
-  width:36px;
-  height:36px;
-  border-radius:13px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  background:#123a72;
-  font-weight:950;
-}
-
-.ps-lb-row:nth-child(1) .ps-lb-rank{
-  background:linear-gradient(135deg,#f59e0b,#fbbf24);
-}
-
-.ps-lb-row:nth-child(2) .ps-lb-rank{
-  background:linear-gradient(135deg,#64748b,#94a3b8);
-}
-
-.ps-lb-row:nth-child(3) .ps-lb-rank{
-  background:linear-gradient(135deg,#b45309,#f97316);
-}
-
-.ps-lb-main{
-  min-width:0;
-}
-
-.ps-lb-main b{
-  display:block;
-  color:#102544;
-  font-size:14px;
-  font-weight:950;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.ps-lb-main span{
-  display:block;
-  margin-top:3px;
-  color:#64748b;
-  font-size:12px;
-  font-weight:800;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.ps-lb-meta{
-  text-align:right;
-}
-
-.ps-lb-meta b{
-  display:block;
-  color:#0f766e;
-  font-size:18px;
-  font-weight:950;
-}
-
-.ps-lb-meta span{
-  display:block;
-  margin-top:3px;
-  color:#64748b;
-  font-size:11px;
-  font-weight:800;
-  white-space:nowrap;
-}
-
-.ps-lb-empty{
-  padding:18px;
-  border-radius:16px;
-  background:#f8fbff;
-  border:1px dashed #bcd2ea;
-  color:#64748b;
-  font-weight:850;
-  text-align:center;
-}
-
-@media (max-width:900px){
-  .ps-leaderboard-modal{
-    align-items:flex-start;
-    padding:10px;
-    padding-top:34px;
-  }
-
-  .ps-leaderboard-content{
-    padding:12px;
-  }
-
-  .ps-lb-hero{
-    flex-direction:column;
-    padding:18px;
-  }
-
-  .ps-lb-hero h3{
-    font-size:28px;
-  }
-
-  .ps-lb-score{
-    min-width:0;
-    min-height:90px;
-  }
-
-  .ps-lb-summary{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .ps-lb-row{
-    grid-template-columns:38px 1fr;
-  }
-
-  .ps-lb-meta{
-    grid-column:2;
-    text-align:left;
-  }
-
-  .ps-lb-meta span{
-    white-space:normal;
-  }
-}
-
-/* =========================================================
-   PANJI NEMPEL KE POPUP LEADERBOARD
-   ========================================================= */
-
-.panji-assistant.panji-leaderboard-mode{
-  right:var(--panji-lb-right, 24px) !important;
-  bottom:var(--panji-lb-bottom, 24px) !important;
-  z-index:2147483646 !important;
-  transform:scale(.86) !important;
-  transform-origin:right bottom !important;
-}
-
-.panji-assistant.panji-leaderboard-mode .panji-bubble{
-  width:320px !important;
-}
-
-.ps-leaderboard-close{
-  z-index:2147483647 !important;
-  pointer-events:auto !important;
-}
-
-.ps-leaderboard-panel,
-.ps-leaderboard-content,
-.ps-leaderboard-content *{
-  pointer-events:auto !important;
-}
-
-@media (max-width:900px){
-  .panji-assistant.panji-leaderboard-mode{
-    right:var(--panji-lb-right, 12px) !important;
-    bottom:var(--panji-lb-bottom, 12px) !important;
-    transform:scale(.72) !important;
-  }
-
-  .panji-assistant.panji-leaderboard-mode .panji-bubble{
-    width:270px !important;
-  }
-}
-
-/* =========================================================
-   TENDER RUSH — SOAL ARCADE DI DALAM PROCUREMENT STACKER
-   ========================================================= */
-
-.ps-pill.rush{
-  background:#fef3c7;
-  color:#92400e;
-  border-color:#fde68a;
-}
-
-.ps-rush-tutorial,
-.ps-rush-arena,
-.ps-rush-finished{
-  position:relative;
-  overflow:hidden;
-  border-radius:26px;
-  padding:18px;
-  background:
-    radial-gradient(circle at top right, rgba(245,158,11,.16), transparent 30%),
-    radial-gradient(circle at bottom left, rgba(37,99,235,.13), transparent 30%),
-    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
-  border:1px solid #dbeafe;
-  box-shadow:0 16px 34px rgba(15,23,42,.07);
-  margin-bottom:16px;
-}
-
-.ps-rush-tutorial-main{
-  padding:6px 2px 16px;
-}
-
-.ps-rush-kicker{
-  display:inline-flex;
-  align-items:center;
-  min-height:28px;
-  padding:0 11px;
-  border-radius:999px;
-  background:#fff7ed;
-  color:#9a3412;
-  border:1px solid #fed7aa;
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  margin-bottom:10px;
-}
-
-.ps-rush-tutorial h3,
-.ps-rush-finished h3{
-  margin:0 0 8px;
-  font-size:30px;
-  line-height:1.15;
-  color:#102544;
-  font-weight:950;
-  letter-spacing:-.03em;
-}
-
-.ps-rush-tutorial p,
-.ps-rush-finished p{
-  margin:0;
-  color:#475569;
-  font-size:15px;
-  line-height:1.72;
-}
-
-.ps-rush-method-grid{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:10px;
-  margin-bottom:16px;
-}
-
-.ps-rush-method-card{
-  position:relative;
-  min-height:156px;
-  padding:14px 12px;
-  border-radius:20px;
-  background:#fff;
-  border:1px solid #dbeafe;
-  box-shadow:0 10px 24px rgba(15,23,42,.055);
-  overflow:hidden;
-}
-
-.ps-rush-method-card::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(135deg, rgba(37,99,235,.08), transparent 48%);
-  pointer-events:none;
-}
-
-.ps-rush-method-key,
-.ps-rush-key{
-  width:34px;
-  height:34px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:12px;
-  background:linear-gradient(135deg,#123a72,#2563eb);
-  color:#fff;
-  font-size:15px;
-  font-weight:950;
-  box-shadow:0 10px 20px rgba(37,99,235,.18);
-}
-
-.ps-rush-method-icon{
-  margin-top:12px;
-  width:44px;
-  height:44px;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#eff6ff;
-  font-size:24px;
-}
-
-.ps-rush-method-card strong{
-  display:block;
-  margin-top:10px;
-  color:#102544;
-  font-size:14px;
-  line-height:1.22;
-  font-weight:950;
-}
-
-.ps-rush-method-card span{
-  display:block;
-  margin-top:7px;
-  color:#64748b;
-  font-size:11px;
-  line-height:1.45;
-  font-weight:750;
-}
-
-.ps-rush-hud{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:10px;
-  margin-bottom:12px;
-}
-
-.ps-rush-hud > div,
-.ps-rush-summary > div{
-  border-radius:18px;
-  padding:12px;
-  background:rgba(255,255,255,.9);
-  border:1px solid #dbeafe;
-}
-
-.ps-rush-hud label,
-.ps-rush-summary label{
-  display:block;
-  font-size:11px;
-  color:#64748b;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  font-weight:950;
-  margin-bottom:6px;
-}
-
-.ps-rush-hud strong,
-.ps-rush-summary strong{
-  display:block;
-  color:#102544;
-  font-size:24px;
-  line-height:1;
-  font-weight:950;
-}
-
-.ps-rush-time-track{
-  height:12px;
-  border-radius:999px;
-  background:#e5edf5;
-  overflow:hidden;
-  margin-bottom:14px;
-}
-
-.ps-rush-time-bar{
-  height:100%;
-  border-radius:999px;
-  background:linear-gradient(90deg,#16a34a,#f59e0b,#dc2626);
-  box-shadow:0 0 20px rgba(245,158,11,.35);
-  transition:width .22s linear;
-}
-
-.ps-rush-fall-lane{
-  position:relative;
-  min-height:260px;
-  border-radius:24px;
-  background:
-    linear-gradient(90deg, rgba(18,58,114,.05) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(18,58,114,.05) 1px, transparent 1px),
-    linear-gradient(180deg,#eff6ff 0%,#f8fbff 100%);
-  background-size:42px 42px;
-  border:1px solid #bfdbfe;
-  overflow:hidden;
-  margin-bottom:14px;
-}
-
-.ps-rush-fall-lane::after{
-  content:"Pilih jalur metode sebelum waktu habis";
-  position:absolute;
-  left:50%;
-  bottom:12px;
-  transform:translateX(-50%);
-  padding:8px 12px;
-  border-radius:999px;
-  background:rgba(255,255,255,.85);
-  border:1px solid #dbeafe;
-  color:#64748b;
-  font-size:12px;
-  font-weight:900;
-}
-
-.ps-rush-package{
-  position:absolute;
-  left:50%;
-  top:18px;
-  width:min(520px, calc(100% - 28px));
-  transform:translateX(-50%);
-  border-radius:24px;
-  padding:18px;
-  background:#fff;
-  border:1px solid #bfdbfe;
-  box-shadow:0 22px 48px rgba(15,23,42,.16);
-  animation:psRushDrop 8s linear forwards;
-}
-
-.ps-rush-package.correct{
-  animation:none;
-  border-color:#86efac;
-  background:#f0fdf4;
-  box-shadow:0 0 0 7px rgba(22,163,74,.12), 0 22px 48px rgba(15,23,42,.14);
-}
-
-.ps-rush-package.wrong{
-  animation:none;
-  border-color:#fecaca;
-  background:#fff1f2;
-  box-shadow:0 0 0 7px rgba(220,38,38,.11), 0 22px 48px rgba(15,23,42,.14);
-}
-
-@keyframes psRushDrop{
-  from{
-    top:12px;
-  }
-
-  to{
-    top:150px;
-  }
-}
-
-.ps-rush-package-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:12px;
-}
-
-.ps-rush-package-top span{
-  display:inline-flex;
-  align-items:center;
-  min-height:28px;
-  padding:0 10px;
-  border-radius:999px;
-  background:#eff6ff;
-  color:#123a72;
-  border:1px solid #bfdbfe;
-  font-size:12px;
-  font-weight:950;
-}
-
-.ps-rush-package-top b{
-  color:#0f766e;
-  font-size:14px;
-  font-weight:950;
-}
-
-.ps-rush-package h3{
-  margin:0;
-  color:#102544;
-  font-size:24px;
-  line-height:1.2;
-  font-weight:950;
-}
-
-.ps-rush-package p{
-  margin:10px 0 0;
-  color:#475569;
-  font-size:14px;
-  line-height:1.62;
-  font-weight:750;
-}
-
-.ps-rush-drop-grid{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:10px;
-}
-
-.ps-rush-drop{
-  min-height:86px;
-  border:none;
-  cursor:pointer;
-  border-radius:20px;
-  padding:12px;
-  background:#fff;
-  border:1px solid #dbeafe;
-  box-shadow:0 10px 22px rgba(15,23,42,.06);
-  display:grid;
-  grid-template-columns:34px 1fr;
-  grid-template-rows:auto auto;
-  gap:7px 10px;
-  align-items:center;
-  text-align:left;
-  transition:.18s ease;
-}
-
-.ps-rush-drop:hover:not(:disabled){
-  transform:translateY(-3px);
-  box-shadow:0 16px 28px rgba(37,99,235,.13);
-  border-color:#93c5fd;
-}
-
-.ps-rush-drop:disabled{
-  opacity:.62;
-  cursor:not-allowed;
-}
-
-.ps-rush-icon{
-  grid-row:2;
-  grid-column:1;
-  font-size:22px;
-}
-
-.ps-rush-drop strong{
-  grid-column:2;
-  grid-row:1 / span 2;
-  color:#102544;
-  font-size:13px;
-  line-height:1.22;
-  font-weight:950;
-}
-
-.ps-rush-result{
-  padding:13px 14px;
-  border-radius:18px;
-  font-size:13px;
-  line-height:1.62;
-  margin-bottom:14px;
-  border:1px solid transparent;
-  animation:psRushResultIn .24s ease;
-}
-
-@keyframes psRushResultIn{
-  from{
-    opacity:0;
-    transform:translateY(8px);
-  }
-
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
-.ps-rush-result.ok{
-  background:#ecfdf5;
-  border-color:#86efac;
-  color:#166534;
-}
-
-.ps-rush-result.bad{
-  background:#fff1f2;
-  border-color:#fecaca;
-  color:#991b1b;
-}
-
-.ps-rush-result strong{
-  display:block;
-  margin-bottom:3px;
-  font-weight:950;
-}
-
-.ps-rush-summary{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:10px;
-  margin-top:14px;
-}
-
-@media (max-width:1280px){
-  .ps-rush-method-grid,
-  .ps-rush-drop-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr));
-  }
-}
-
-@media (max-width:900px){
-  .ps-rush-method-grid,
-  .ps-rush-drop-grid,
-  .ps-rush-hud,
-  .ps-rush-summary{
-    grid-template-columns:1fr;
-  }
-
-  .ps-rush-fall-lane{
-    min-height:300px;
-  }
-
-  .ps-rush-package h3{
-    font-size:20px;
-  }
-}
-
-/* =========================================================
-   REVISI TENDER RUSH + PANJI KECIL
-   - ruang jatuh paket diperpanjang
-   - tombol metode dibuat lebih ringkas
-   - bubble PANJI diperkecil agar tidak nutup game
-   ========================================================= */
-
-.ps-ready-card{
-  min-height:360px;
-}
-
-.panji-assistant{
-  right:14px !important;
-  bottom:var(--panji-bottom, 18px) !important;
-  gap:8px !important;
-}
-
-.panji-bubble{
-  width:250px !important;
-  min-height:0 !important;
-  max-height:178px !important;
-  padding:11px 12px !important;
-  border-radius:18px !important;
-}
-
-.panji-bubble::after{
-  right:-7px !important;
-  bottom:26px !important;
-  width:14px !important;
-  height:14px !important;
-}
-
-.panji-name{
-  min-height:22px !important;
-  padding:0 8px !important;
-  font-size:9px !important;
-  letter-spacing:.08em !important;
-}
-
-.panji-emote{
-  width:26px !important;
-  height:26px !important;
-  font-size:14px !important;
-}
-
-.panji-text{
-  font-size:12px !important;
-  line-height:1.5 !important;
-  font-weight:750 !important;
-}
-
-.panji-actions{
-  margin-top:8px !important;
-  gap:6px !important;
-}
-
-.panji-actions button{
-  min-height:28px !important;
-  padding:0 8px !important;
-  border-radius:9px !important;
-  font-size:10px !important;
-}
-
-.panji-character{
-  transform:scale(.78) !important;
-  transform-origin:right bottom !important;
-}
-
-.panji-assistant.panji-minimized .panji-character{
-  transform:scale(.82) !important;
-}
-
-.ps-rush-arena{
-  padding:14px !important;
-}
-
-.ps-rush-hud{
-  gap:8px !important;
-  margin-bottom:8px !important;
-}
-
-.ps-rush-hud > div{
-  padding:9px 11px !important;
-  border-radius:15px !important;
-}
-
-.ps-rush-hud label{
-  font-size:10px !important;
-  margin-bottom:5px !important;
-}
-
-.ps-rush-hud strong{
-  font-size:22px !important;
-}
-
-.ps-rush-time-track{
-  height:10px !important;
-  margin-bottom:10px !important;
-}
-
-.ps-rush-fall-lane{
-  min-height:430px !important;
-  margin-bottom:10px !important;
-}
-
-.ps-rush-fall-lane::after{
-  bottom:16px !important;
-  font-size:11px !important;
-  padding:7px 11px !important;
-}
-
-.ps-rush-package{
-  width:min(460px, calc(100% - 30px)) !important;
-  padding:16px !important;
-  animation-duration:var(--rush-duration, 10s) !important;
-}
-
-@keyframes psRushDrop{
-  from{
-    top:14px;
-  }
-
-  to{
-    top:285px;
-  }
-}
-
-.ps-rush-package h3{
-  font-size:21px !important;
-}
-
-.ps-rush-package p{
-  font-size:13px !important;
-  line-height:1.5 !important;
-}
-
-.ps-rush-drop-grid{
-  gap:8px !important;
-}
-
-.ps-rush-drop{
-  min-height:68px !important;
-  padding:9px 10px !important;
-  border-radius:16px !important;
-  grid-template-columns:30px 1fr !important;
-  gap:5px 8px !important;
-}
-
-.ps-rush-key{
-  width:30px !important;
-  height:30px !important;
-  border-radius:10px !important;
-  font-size:13px !important;
-}
-
-.ps-rush-icon{
-  font-size:18px !important;
-}
-
-.ps-rush-drop strong{
-  font-size:12px !important;
-}
-
-.ps-rush-result{
-  margin-bottom:10px !important;
-  padding:10px 12px !important;
-  font-size:12px !important;
-  line-height:1.5 !important;
-}
-
-@media (max-width:900px){
-  .panji-bubble{
-    width:220px !important;
-    max-height:150px !important;
-  }
-
-  .ps-rush-fall-lane{
-    min-height:360px !important;
-  }
-
-  @keyframes psRushDrop{
-    from{ top:12px; }
-    to{ top:230px; }
-  }
-}
-
-
-/* =========================================================
-   REVISI UX/UI TENDER RUSH + PANJI COMPACT
-   ========================================================= */
-
-.ps-score-grid{ grid-template-columns:repeat(5,minmax(0,1fr)); }
-.ps-level-time-card{ background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%); }
-.ps-level-time-card.warning{ background:#fffbeb; border-color:#fde68a; }
-.ps-level-time-card.danger{ background:#fff1f2; border-color:#fecaca; animation:psTimerPulse .72s ease-in-out infinite; }
-.ps-mini-time-track{ height:6px; margin-top:10px; border-radius:999px; overflow:hidden; background:#e5edf5; }
-.ps-mini-time-bar{ height:100%; width:100%; border-radius:999px; background:linear-gradient(90deg,#16a34a,#f59e0b,#dc2626); transition:width .25s linear; }
-@keyframes psTimerPulse{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-2px); box-shadow:0 0 0 5px rgba(220,38,38,.08); } }
-.ps-result-stop-note{ border-color:#fed7aa !important; background:linear-gradient(135deg,#fff7ed,#ffffff) !important; }
-.panji-bubble{ width:250px !important; min-height:92px !important; max-height:185px !important; padding:12px !important; border-radius:18px !important; }
-.panji-text{ font-size:12px !important; line-height:1.5 !important; font-weight:760 !important; }
-.panji-name{ min-height:22px !important; padding:0 8px !important; font-size:9px !important; }
-.panji-emote{ width:26px !important; height:26px !important; font-size:14px !important; }
-.panji-actions{ margin-top:8px !important; }
-.panji-actions button{ min-height:28px !important; padding:0 8px !important; font-size:10px !important; border-radius:9px !important; }
-.panji-close{ width:24px !important; height:24px !important; font-size:15px !important; }
-.panji-character{ width:78px !important; height:104px !important; }
-.panji-assistant{ right:18px !important; gap:9px !important; }
-.panji-assistant.panji-minimized .panji-character{ filter:drop-shadow(0 12px 18px rgba(37,99,235,.24)); }
-.ps-rush-arena{ padding:20px !important; background:radial-gradient(circle at 16% 10%, rgba(34,211,238,.20), transparent 24%), radial-gradient(circle at 90% 30%, rgba(245,158,11,.14), transparent 28%), linear-gradient(180deg,#f8fbff 0%,#ffffff 100%) !important; }
-.ps-rush-arena::before{ content:""; position:absolute; inset:-2px; pointer-events:none; background:linear-gradient(120deg, transparent 0%, rgba(37,99,235,.10) 45%, rgba(34,211,238,.15) 50%, transparent 58%); animation:psRushShine 3.4s ease-in-out infinite; }
-@keyframes psRushShine{ 0%,100%{ transform:translateX(-45%); opacity:.45; } 50%{ transform:translateX(45%); opacity:.9; } }
-.ps-rush-hud,.ps-rush-time-track,.ps-rush-fall-lane,.ps-rush-result,.ps-rush-drop-grid{ position:relative; z-index:2; }
-.ps-rush-hud{ grid-template-columns:repeat(4,minmax(0,1fr)); }
-.ps-rush-fall-lane{ min-height:390px !important; margin-bottom:20px !important; border:1px solid #93c5fd !important; box-shadow:inset 0 0 0 1px rgba(255,255,255,.75), 0 14px 30px rgba(37,99,235,.08); }
-.ps-rush-fall-lane::after{ bottom:18px !important; font-size:11px !important; }
-.ps-rush-package{ width:min(500px, calc(100% - 42px)) !important; padding:20px !important; animation:psRushDrop var(--rush-duration, 10s) linear forwards !important; }
-.ps-rush-package.correct,.ps-rush-package.wrong{ animation:none !important; }
-@keyframes psRushDrop{ from{ top:18px; transform:translateX(-50%) scale(.98); } 40%{ transform:translateX(-50%) scale(1); } to{ top:252px; transform:translateX(-50%) scale(1); } }
-.ps-rush-package h3{ font-size:26px !important; }
-.ps-rush-drop{ min-height:96px !important; border-width:1px !important; }
-.ps-rush-drop:hover:not(:disabled){ transform:translateY(-5px) scale(1.015) !important; }
-.ps-rush-drop:active:not(:disabled){ transform:translateY(-1px) scale(.98) !important; }
-@media (max-width:1280px){ .ps-score-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } .ps-rush-fall-lane{ min-height:350px !important; } }
-@media (max-width:900px){ .ps-score-grid{ grid-template-columns:1fr 1fr; } .panji-bubble{ width:220px !important; } .panji-character{ width:66px !important; height:90px !important; } .ps-rush-fall-lane{ min-height:310px !important; } }
-
-/* =========================================================
-   REVISI 3 — TENDER RUSH LEBIH PANJANG + LEADERBOARD PANJI
-   ========================================================= */
-
-.ps-result-grid{
-  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
-}
-
-.ps-lb-panji-note{
-  display:grid;
-  grid-template-columns:46px 1fr;
-  gap:12px;
-  align-items:start;
-  margin:12px 0 12px;
-  padding:13px 14px;
-  border-radius:18px;
-  border:1px solid #dbeafe;
-  background:linear-gradient(135deg,#eff6ff,#ffffff);
-  color:#334155;
-  font-size:13px;
-  line-height:1.6;
-  box-shadow:0 10px 22px rgba(15,23,42,.055);
-}
-
-.ps-lb-panji-note.happy{
-  border-color:#86efac;
-  background:linear-gradient(135deg,#ecfdf5,#ffffff);
-}
-
-.ps-lb-panji-note.sad{
-  border-color:#fecaca;
-  background:linear-gradient(135deg,#fff1f2,#ffffff);
-}
-
-.ps-lb-panji-face{
-  width:46px;
-  height:46px;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fff;
-  font-size:25px;
-  box-shadow:0 10px 20px rgba(15,23,42,.08);
-  animation:psPanjiFacePop 1.6s ease-in-out infinite;
-}
-
-@keyframes psPanjiFacePop{
-  0%,100%{ transform:translateY(0) scale(1); }
-  50%{ transform:translateY(-3px) scale(1.05); }
-}
-
-.ps-rush-arena{
-  padding:22px !important;
-  border-radius:28px !important;
-  background:
-    radial-gradient(circle at 16% 10%, rgba(34,211,238,.22), transparent 24%),
-    radial-gradient(circle at 86% 24%, rgba(245,158,11,.16), transparent 28%),
-    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%) !important;
-  box-shadow:inset 0 0 0 1px rgba(147,197,253,.65), 0 16px 34px rgba(37,99,235,.08) !important;
-}
-
-.ps-rush-fall-lane{
-  min-height:560px !important;
-  margin-bottom:24px !important;
-  border-radius:26px !important;
-  overflow:hidden !important;
-  background:
-    linear-gradient(90deg, rgba(37,99,235,.055) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(37,99,235,.055) 1px, transparent 1px),
-    radial-gradient(circle at top, rgba(34,211,238,.12), transparent 36%),
-    linear-gradient(180deg,#f8fbff,#edf6ff) !important;
-  background-size:42px 42px,42px 42px,100% 100%,100% 100% !important;
-}
-
-.ps-rush-fall-lane::before{
-  content:"";
-  position:absolute;
-  left:50%;
-  top:0;
-  bottom:0;
-  width:2px;
-  transform:translateX(-50%);
-  background:linear-gradient(180deg, transparent, rgba(37,99,235,.28), transparent);
-  opacity:.7;
-}
-
-.ps-rush-fall-lane::after{
-  bottom:28px !important;
-  padding:7px 14px !important;
-  border-radius:999px !important;
-  background:#ffffff !important;
-  box-shadow:0 10px 24px rgba(15,23,42,.08) !important;
-}
-
-.ps-rush-package{
-  width:min(560px, calc(100% - 52px)) !important;
-  padding:22px !important;
-  border-radius:24px !important;
-  animation:psRushDropLong var(--rush-duration, 10s) linear forwards !important;
-  box-shadow:0 24px 45px rgba(15,23,42,.16), 0 0 0 6px rgba(37,99,235,.06) !important;
-}
-
-.ps-rush-package.correct,
-.ps-rush-package.wrong{
-  animation:none !important;
-}
-
-@keyframes psRushDropLong{
-  0%{
-    top:20px;
-    transform:translateX(-50%) scale(.96) rotate(-.6deg);
-  }
-  18%{
-    transform:translateX(-50%) scale(1) rotate(.4deg);
-  }
-  70%{
-    transform:translateX(-50%) scale(1) rotate(0deg);
-  }
-  100%{
-    top:405px;
-    transform:translateX(-50%) scale(1) rotate(.4deg);
-  }
-}
-
-.ps-rush-package h3{
-  font-size:28px !important;
-  letter-spacing:-.035em !important;
-}
-
-.ps-rush-package p{
-  font-size:15px !important;
-}
-
-.ps-rush-drop-grid{
-  gap:12px !important;
-}
-
-.ps-rush-drop{
-  min-height:108px !important;
-  border-radius:22px !important;
-  background:linear-gradient(180deg,#ffffff,#f8fbff) !important;
-  box-shadow:0 12px 24px rgba(15,23,42,.06) !important;
-}
-
-.ps-rush-drop:hover:not(:disabled){
-  transform:translateY(-6px) scale(1.018) !important;
-  border-color:#2563eb !important;
-  box-shadow:0 18px 36px rgba(37,99,235,.16) !important;
-}
-
-.ps-rush-key{
-  box-shadow:0 8px 16px rgba(37,99,235,.20) !important;
-}
-
-.ps-rush-time-bar{
-  background:linear-gradient(90deg,#16a34a 0%,#22c55e 38%,#f59e0b 70%,#dc2626 100%) !important;
-  box-shadow:0 0 18px rgba(245,158,11,.25) !important;
-}
-
-.ps-rush-hud > div{
-  transition:transform .18s ease, box-shadow .18s ease;
-}
-
-.ps-rush-hud > div:hover{
-  transform:translateY(-2px);
-  box-shadow:0 12px 24px rgba(15,23,42,.07);
-}
-
-@media (max-width:1280px){
-  .ps-result-grid{ grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
-  .ps-rush-fall-lane{ min-height:500px !important; }
-  @keyframes psRushDropLong{
-    0%{ top:18px; transform:translateX(-50%) scale(.96); }
-    100%{ top:355px; transform:translateX(-50%) scale(1); }
-  }
-}
-
-@media (max-width:900px){
-  .ps-result-grid{ grid-template-columns:1fr 1fr !important; }
-  .ps-lb-panji-note{ grid-template-columns:38px 1fr; font-size:12px; }
-  .ps-lb-panji-face{ width:38px; height:38px; font-size:21px; }
-  .ps-rush-fall-lane{ min-height:430px !important; }
-  .ps-rush-package h3{ font-size:20px !important; }
-  @keyframes psRushDropLong{
-    0%{ top:14px; transform:translateX(-50%) scale(.96); }
-    100%{ top:285px; transform:translateX(-50%) scale(1); }
-  }
-}
-
-
-/* =========================================================
-   REVISI 4 — Tender Rush random UX, PANJI final reaction,
-   smaller package card, animated pipeline cards
-   ========================================================= */
-
-.ps-rush-package{
-  width:min(430px, calc(100% - 80px)) !important;
-  min-height:104px !important;
-  padding:15px 17px !important;
-  border-radius:18px !important;
-  animation:psRushDrop var(--rush-duration, 10s) linear forwards, psRushCardPulse 1.8s ease-in-out infinite !important;
-}
-
-.ps-rush-package.correct,
-.ps-rush-package.wrong{
-  animation:none !important;
-}
-
-.ps-rush-package h3{
-  font-size:21px !important;
-  line-height:1.18 !important;
-  margin:7px 0 6px !important;
-}
-
-.ps-rush-package p{
-  font-size:12.5px !important;
-  line-height:1.45 !important;
-}
-
-.ps-rush-package-top span{
-  font-size:10px !important;
-  padding:5px 9px !important;
-}
-
-.ps-rush-package-top b{
-  font-size:12px !important;
-}
-
-@keyframes psRushCardPulse{
-  0%,100%{ box-shadow:0 20px 46px rgba(15,23,42,.12), 0 0 0 rgba(37,99,235,0); }
-  50%{ box-shadow:0 26px 56px rgba(15,23,42,.16), 0 0 22px rgba(37,99,235,.16); }
-}
-
-.ps-bank .ps-action-card{
-  animation:psPipelineCardIdle 3.2s ease-in-out infinite;
-  animation-delay:calc((var(--ps-card-i, 0)) * .08s);
-}
-
-.ps-bank .ps-action-card:nth-child(2n){ animation-delay:.18s; }
-.ps-bank .ps-action-card:nth-child(3n){ animation-delay:.32s; }
-.ps-bank .ps-action-card:nth-child(4n){ animation-delay:.46s; }
-
-.ps-action-card::after{
-  content:"";
-  position:absolute;
-  inset:-40% auto auto -70%;
-  width:60%;
-  height:180%;
-  background:linear-gradient(90deg, transparent, rgba(255,255,255,.62), transparent);
-  transform:rotate(22deg);
-  opacity:0;
-  pointer-events:none;
-}
-
-.ps-bank .ps-action-card:hover::after,
-.ps-bank .ps-action-card.selected::after{
-  animation:psCardShine .72s ease;
-}
-
-@keyframes psPipelineCardIdle{
-  0%,100%{ transform:translateY(0); }
-  50%{ transform:translateY(-3px); }
-}
-
-@keyframes psCardShine{
-  0%{ left:-70%; opacity:0; }
-  20%{ opacity:1; }
-  100%{ left:130%; opacity:0; }
-}
-
-.ps-slot .ps-action-card{
-  animation:none !important;
-}
-
-/* card PANJI bilang di leaderboard disembunyikan total; PANJI berbicara lewat bubble sendiri */
-.ps-lb-panji-note{
-  display:none !important;
-}
-
-.panji-assistant.panji-celebrate .panji-character{
-  animation:panjiCelebrateFlip 1.05s ease-in-out 0s 3;
-}
-
-.panji-assistant.panji-celebrate .panji-hand-left{
-  animation:panjiHappyWaveLeft .45s ease-in-out 0s 6;
-}
-
-.panji-assistant.panji-celebrate .panji-hand-right{
-  animation:panjiHappyWaveRight .45s ease-in-out 0s 6;
-}
-
-@keyframes panjiCelebrateFlip{
-  0%{ transform:translateY(0) rotate(0deg) scale(1); }
-  22%{ transform:translateY(-24px) rotate(-8deg) scale(1.04); }
-  48%{ transform:translateY(-5px) rotate(8deg) scale(.98); }
-  72%{ transform:translateY(-18px) rotate(360deg) scale(1.04); }
-  100%{ transform:translateY(0) rotate(360deg) scale(1); }
-}
-
-@keyframes panjiHappyWaveLeft{
-  0%,100%{ transform:rotate(24deg); }
-  50%{ transform:rotate(62deg); }
-}
-
-@keyframes panjiHappyWaveRight{
-  0%,100%{ transform:rotate(-24deg); }
-  50%{ transform:rotate(-62deg); }
-}
-
-.panji-assistant.panji-cry .panji-character{
-  animation:panjiCryShake .32s ease-in-out 0s 14;
-}
-
-.panji-assistant.panji-cry .panji-head::after{
-  content:"";
-  position:absolute;
-  left:17px;
-  top:37px;
-  width:6px;
-  height:19px;
-  border-radius:999px;
-  background:#38bdf8;
-  box-shadow:28px 0 0 #38bdf8;
-  animation:panjiTears .55s linear 0s infinite;
-}
-
-@keyframes panjiCryShake{
-  0%,100%{ transform:translateX(-50%) translateY(0); }
-  25%{ transform:translateX(calc(-50% - 3px)) translateY(1px); }
-  75%{ transform:translateX(calc(-50% + 3px)) translateY(-1px); }
-}
-
-@keyframes panjiTears{
-  from{ opacity:1; transform:translateY(0); }
-  to{ opacity:.15; transform:translateY(13px); }
-}
-
-@media (max-width:900px){
-  .ps-rush-package{
-    width:min(340px, calc(100% - 38px)) !important;
-    min-height:96px !important;
-    padding:13px 14px !important;
-  }
-
-  .ps-rush-package h3{ font-size:18px !important; }
-}
-
-
-/* =========================================================
-   REVISI 5 — PANJI PROPORSI, EKSPRESI MINIMIZE, TENDER RUSH COMPACT
-   ========================================================= */
-
-/* Saat hasil akhir, tombol Tanya PANJI tidak perlu tampil di bubble. */
-.panji-assistant.panji-result-mode #panjiHintBtn{
-  display:none !important;
-}
-
-/* Normalisasi ukuran PANJI agar badan/tangan tidak gepeng walau ada override lama. */
-.panji-character{
-  width:88px !important;
-  height:118px !important;
-  min-width:88px !important;
-  min-height:118px !important;
-  max-width:88px !important;
-  max-height:118px !important;
-  padding:0 !important;
-  display:block !important;
-  overflow:visible !important;
-  flex:0 0 88px !important;
-  transform-origin:center bottom !important;
-}
-
-.panji-head{
-  left:50% !important;
-  top:8px !important;
-  width:62px !important;
-  height:62px !important;
-  transform:translateX(-50%) !important;
-  border-radius:22px 22px 20px 20px !important;
-}
-
-.panji-hat{
-  left:50% !important;
-  top:-12px !important;
-  width:50px !important;
-  height:23px !important;
-  transform:translateX(-50%) !important;
-  font-size:9px !important;
-}
-
-.panji-eye{
-  top:27px !important;
-  width:9px !important;
-  height:13px !important;
-}
-
-.panji-eye-left{ left:17px !important; }
-.panji-eye-right{ right:17px !important; }
-
-.panji-mouth{
-  left:50% !important;
-  bottom:13px !important;
-  width:16px !important;
-  height:8px !important;
-  transform:translateX(-50%) !important;
-}
-
-.panji-body{
-  left:50% !important;
-  top:71px !important;
-  width:52px !important;
-  height:40px !important;
-  transform:translateX(-50%) !important;
-  border-radius:18px 18px 15px 15px !important;
-}
-
-.panji-badge{
-  width:26px !important;
-  height:26px !important;
-  font-size:9px !important;
-}
-
-.panji-hand{
-  top:78px !important;
-  width:13px !important;
-  height:30px !important;
-  border-radius:999px !important;
-  transform-origin:top center !important;
-}
-
-.panji-hand-left{
-  left:8px !important;
-  right:auto !important;
-  transform:rotate(22deg) !important;
-}
-
-.panji-hand-right{
-  right:8px !important;
-  left:auto !important;
-  transform:rotate(-22deg) !important;
-}
-
-/* Ekspresi tetap tampak saat minimize: bubble diam, karakter tetap berubah mood. */
-.panji-assistant.panji-minimized .panji-character{
-  opacity:1 !important;
-  filter:drop-shadow(0 14px 20px rgba(37,99,235,.28)) !important;
-}
-
-.panji-assistant.panji-happy.panji-minimized .panji-head{
-  box-shadow:0 0 0 6px rgba(22,163,74,.13), 0 14px 28px rgba(18,58,114,.20) !important;
-}
-
-.panji-assistant.panji-sad.panji-minimized .panji-head{
-  box-shadow:0 0 0 6px rgba(220,38,38,.13), 0 14px 28px rgba(18,58,114,.20) !important;
-}
-
-/* Tender Rush card turun dibuat lebih kecil lagi supaya arena terasa lega. */
-.ps-rush-package{
-  width:min(360px, calc(100% - 72px)) !important;
-  min-height:82px !important;
-  padding:12px 14px !important;
-  border-radius:17px !important;
-}
-
-.ps-rush-package h3{
-  font-size:18px !important;
-  line-height:1.18 !important;
-  margin:6px 0 6px !important;
-}
-
-.ps-rush-package p{
-  font-size:12px !important;
-  line-height:1.42 !important;
-}
-
-.ps-rush-package-top{
-  gap:8px !important;
-  margin-bottom:6px !important;
-}
-
-.ps-rush-package-top span{
-  font-size:9px !important;
-  padding:4px 8px !important;
-}
-
-.ps-rush-package-top b{
-  font-size:11px !important;
-}
-
-@keyframes psRushDrop{
-  from{
-    top:16px;
-    transform:translateX(-50%) scale(.96);
-  }
-  40%{
-    transform:translateX(-50%) scale(.99);
-  }
-  to{
-    top:300px;
-    transform:translateX(-50%) scale(.99);
-  }
-}
-
-/* Animasi final PANJI dibuat stabil, tidak menarik posisi badan/tangan. */
-.panji-assistant.panji-celebrate .panji-character{
-  animation:panjiCelebrateFlipV5 1.05s ease-in-out 0s 3 !important;
-}
-
-.panji-assistant.panji-cry .panji-character{
-  animation:panjiCryShakeV5 .32s ease-in-out 0s 14 !important;
-}
-
-.panji-assistant.panji-celebrate .panji-hand-left{
-  animation:panjiHappyWaveLeftV5 .45s ease-in-out 0s 6 !important;
-}
-
-.panji-assistant.panji-celebrate .panji-hand-right{
-  animation:panjiHappyWaveRightV5 .45s ease-in-out 0s 6 !important;
-}
-
-@keyframes panjiCelebrateFlipV5{
-  0%{ transform:translateY(0) rotate(0deg) scale(1); }
-  22%{ transform:translateY(-22px) rotate(-8deg) scale(1.04); }
-  48%{ transform:translateY(-4px) rotate(8deg) scale(.98); }
-  72%{ transform:translateY(-16px) rotate(360deg) scale(1.04); }
-  100%{ transform:translateY(0) rotate(360deg) scale(1); }
-}
-
-@keyframes panjiCryShakeV5{
-  0%,100%{ transform:translateX(0) rotate(0deg); }
-  25%{ transform:translateX(-3px) rotate(-1deg); }
-  75%{ transform:translateX(3px) rotate(1deg); }
-}
-
-@keyframes panjiHappyWaveLeftV5{
-  0%,100%{ transform:rotate(22deg); }
-  50%{ transform:rotate(58deg); }
-}
-
-@keyframes panjiHappyWaveRightV5{
-  0%,100%{ transform:rotate(-22deg); }
-  50%{ transform:rotate(-58deg); }
-}
-
-@media (max-width:900px){
-  .panji-character{
-    width:74px !important;
-    height:100px !important;
-    min-width:74px !important;
-    min-height:100px !important;
-    max-width:74px !important;
-    max-height:100px !important;
-    flex-basis:74px !important;
-  }
-
-  .panji-head{ width:54px !important; height:54px !important; }
-  .panji-body{ top:62px !important; width:46px !important; height:35px !important; }
-  .panji-hand{ top:68px !important; width:11px !important; height:26px !important; }
-
-  .ps-rush-package{
-    width:min(300px, calc(100% - 52px)) !important;
-    min-height:76px !important;
-    padding:10px 12px !important;
-  }
-}
-
-/* =========================================================
-   BONUS LEVEL 4 — PANJI KONSOLIDASI QUEST 3D
-   ========================================================= */
-.ps-bonus3d-wrap{
-  display:grid;
-  grid-template-columns:1.1fr .9fr;
-  gap:16px;
-  margin-bottom:16px;
-}
-
-.ps-bonus3d-stage{
-  min-height:430px;
-  border-radius:28px;
-  overflow:hidden;
-  position:relative;
-  background:
-    radial-gradient(circle at 30% 20%, rgba(34,211,238,.25), transparent 28%),
-    linear-gradient(180deg,#0b1730 0%,#102544 46%,#0f3f3a 100%);
-  border:1px solid rgba(191,219,254,.5);
-  box-shadow:0 22px 56px rgba(15,23,42,.16) inset, 0 16px 32px rgba(15,23,42,.08);
-  perspective:900px;
-}
-
-.ps-bonus3d-stage::before{
-  content:"";
-  position:absolute;
-  inset:auto -12% -44% -12%;
-  height:70%;
-  background:
-    linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255,255,255,.08) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(34,197,94,.35), rgba(14,165,233,.20));
-  background-size:58px 58px;
-  transform:rotateX(62deg) rotateZ(-2deg);
-  transform-origin:top center;
-  border-radius:40px;
-  box-shadow:0 -18px 44px rgba(0,0,0,.18);
-}
-
-.ps-bonus3d-sky{
-  position:absolute;
-  inset:0;
-  background:
-    radial-gradient(circle at 15% 22%, rgba(255,255,255,.42) 0 2px, transparent 3px),
-    radial-gradient(circle at 72% 18%, rgba(255,255,255,.35) 0 2px, transparent 3px),
-    radial-gradient(circle at 45% 9%, rgba(255,255,255,.25) 0 1px, transparent 3px);
-  animation:psBonusSky 6s linear infinite;
-}
-
-@keyframes psBonusSky{
-  from{transform:translateX(0)}
-  to{transform:translateX(-20px)}
-}
-
-.ps-bonus3d-map{
-  position:absolute;
-  left:50%;
-  top:54%;
-  width:72%;
-  height:72%;
-  transform:translate(-50%,-50%) rotateX(56deg) rotateZ(-6deg);
-  transform-style:preserve-3d;
-}
-
-.ps-bonus3d-node{
-  position:absolute;
-  width:158px;
-  min-height:112px;
-  border:0;
-  border-radius:22px;
-  padding:14px 12px;
-  color:#fff;
-  background:linear-gradient(135deg,#1d4ed8,#0f766e);
-  box-shadow:0 18px 0 #082f49, 0 26px 40px rgba(0,0,0,.32);
-  transform:translateZ(42px);
-  transition:.2s ease;
-  text-align:center;
-}
-
-.ps-bonus3d-node:nth-child(1){left:0;top:20px}
-.ps-bonus3d-node:nth-child(2){left:38%;top:0}
-.ps-bonus3d-node:nth-child(3){right:0;top:84px}
-.ps-bonus3d-node:nth-child(4){left:28%;bottom:6px}
-
-.ps-bonus3d-node:hover,
-.ps-bonus3d-node.active{
-  transform:translateZ(70px) translateY(-8px);
-  filter:brightness(1.08);
-}
-
-.ps-bonus3d-node.done{
-  background:linear-gradient(135deg,#16a34a,#22c55e);
-  box-shadow:0 18px 0 #14532d, 0 26px 40px rgba(0,0,0,.32);
-}
-
-.ps-bonus3d-orb{
-  display:grid;
-  place-items:center;
-  width:42px;
-  height:42px;
-  margin:0 auto 8px;
-  border-radius:16px;
-  background:rgba(255,255,255,.18);
-  font-size:24px;
-  animation:psBonusOrb 2.2s ease-in-out infinite;
-}
-
-@keyframes psBonusOrb{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-5px)}
-}
-
-.ps-bonus3d-node b,
-.ps-bonus3d-node small{
-  display:block;
-}
-
-.ps-bonus3d-node b{
-  font-size:14px;
-  line-height:1.25;
-}
-
-.ps-bonus3d-node small{
-  margin-top:5px;
-  opacity:.84;
-  font-weight:850;
-}
-
-.ps-bonus3d-panel{
-  min-height:430px;
-  border-radius:28px;
-  padding:20px;
-  background:
-    radial-gradient(circle at top right, rgba(37,99,235,.10), transparent 30%),
-    #f8fbff;
-  border:1px solid #dbeafe;
-  box-shadow:0 14px 32px rgba(15,23,42,.07);
-}
-
-.ps-bonus3d-kicker{
-  display:inline-flex;
-  min-height:28px;
-  align-items:center;
-  padding:0 10px;
-  border-radius:999px;
-  background:#dbeafe;
-  color:#1d4ed8;
-  font-size:11px;
-  font-weight:950;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  margin-bottom:10px;
-}
-
-.ps-bonus3d-panel h3{
-  margin:0;
-  color:#102544;
-  font-size:28px;
-  line-height:1.1;
-  font-weight:950;
-}
-
-.ps-bonus3d-panel p{
-  margin:10px 0 0;
-  color:#475569;
-  line-height:1.6;
-}
-
-.ps-bonus3d-panji{
-  margin:14px 0;
-  border-radius:18px;
-  padding:12px 14px;
-  background:#fff7ed;
-  border:1px solid #fed7aa;
-  color:#9a3412;
-  font-size:13px;
-  line-height:1.55;
-  font-weight:800;
-}
-
-.ps-bonus3d-choices{
-  display:grid;
-  gap:10px;
-}
-
-.ps-bonus3d-choice{
-  border:1px solid #dbeafe;
-  background:#fff;
-  border-radius:16px;
-  padding:13px 14px;
-  color:#123a72;
-  text-align:left;
-  font-weight:900;
-  line-height:1.4;
-  box-shadow:0 8px 18px rgba(15,23,42,.045);
-  transition:.18s ease;
-}
-
-.ps-bonus3d-choice:hover{
-  transform:translateY(-2px);
-  box-shadow:0 14px 24px rgba(37,99,235,.12);
-  background:#eff6ff;
-}
-
-.ps-bonus3d-status{
-  margin-top:14px;
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.ps-bonus3d-status span{
-  display:inline-flex;
-  min-height:30px;
-  align-items:center;
-  border-radius:999px;
-  padding:0 10px;
-  background:#eef4fb;
-  border:1px solid #dbe5f0;
-  color:#334155;
-  font-size:12px;
-  font-weight:900;
-}
-
-/* =========================================================
-   BONUS LEVEL 8 — SNAKE BINTANG
-   ========================================================= */
-.ps-snake-wrap{
-  display:grid;
-  grid-template-columns:.9fr 1.1fr;
-  gap:16px;
-  align-items:stretch;
-  margin-bottom:16px;
-}
-
-.ps-snake-info,
-.ps-snake-stage{
-  border-radius:28px;
-  padding:20px;
-  background:#f8fbff;
-  border:1px solid #dbeafe;
-  box-shadow:0 14px 32px rgba(15,23,42,.07);
-}
-
-.ps-snake-info h3{
-  margin:0;
-  font-size:30px;
-  color:#102544;
-  font-weight:950;
-}
-
-.ps-snake-info p{
-  color:#475569;
-  line-height:1.65;
-}
-
-.ps-snake-score-row{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin:14px 0;
-}
-
-.ps-snake-score-row div{
-  border-radius:18px;
-  background:#fff;
-  border:1px solid #e2e8f0;
-  padding:12px;
-}
-
-.ps-snake-score-row label{
-  display:block;
-  color:#64748b;
-  font-size:11px;
-  font-weight:950;
-  text-transform:uppercase;
-  letter-spacing:.07em;
-}
-
-.ps-snake-score-row b{
-  display:block;
-  color:#102544;
-  font-size:23px;
-  margin-top:4px;
-}
-
-.ps-snake-stage{
-  display:grid;
-  place-items:center;
-  background:
-    radial-gradient(circle at top left, rgba(34,211,238,.14), transparent 30%),
-    linear-gradient(180deg,#0b1730,#102544);
-}
-
-#psSnakeCanvas{
-  width:min(480px,100%);
-  max-width:100%;
-  aspect-ratio:1/1;
-  border-radius:24px;
-  border:3px solid rgba(255,255,255,.20);
-  box-shadow:0 18px 42px rgba(0,0,0,.28);
-  background:#0f172a;
-}
-
-.ps-snake-caption{
-  color:#dbeafe;
-  font-size:12px;
-  font-weight:900;
-  margin-top:10px;
-  text-align:center;
-}
-
-.ps-feedback-box textarea,
-.ps-player-form textarea{
-  width:100%;
-  margin:10px 0 12px;
-  padding:12px 14px;
-  border-radius:16px;
-  border:1px solid #dbe5f0;
-  background:#fff;
-  color:#102544;
-  font:inherit;
-  resize:vertical;
-  min-height:90px;
-}
-
-.ps-pill.rush{
-  background:#fef3c7;
-  color:#92400e;
-  border-color:#fde68a;
-}
-
-@media(max-width:900px){
-  .ps-bonus3d-wrap,
-  .ps-snake-wrap{
-    grid-template-columns:1fr;
-  }
-  .ps-bonus3d-stage{min-height:360px}
-  .ps-bonus3d-node{width:132px;min-height:100px}
-  .ps-snake-score-row{grid-template-columns:1fr}
-}
-
-/* =========================================================
-   PATCH V5 — Tutorial Pipeline Pertama
-   ========================================================= */
-.ps-pipeline-tutorial{
-  display:grid;
-  grid-template-columns:86px 1fr;
-  gap:14px;
-  align-items:start;
-  margin:0 0 16px;
-  padding:16px;
-  border-radius:22px;
-  background:
-    radial-gradient(circle at top left, rgba(245,158,11,.18), transparent 34%),
-    linear-gradient(180deg,#fff7ed,#ffffff);
-  border:1px solid #fed7aa;
-  box-shadow:0 12px 26px rgba(245,158,11,.12);
-}
-
-.ps-tutorial-panji{
-  width:78px;
-  height:78px;
-  border-radius:28px;
-  display:grid;
-  place-items:center;
-  background:linear-gradient(145deg,#f59e0b,#2563eb);
-  color:#fff;
-  font-weight:950;
-  font-size:12px;
-  letter-spacing:.08em;
-  box-shadow:0 14px 24px rgba(15,23,42,.18);
-  animation:psPanjiTutorialFloat 2.6s ease-in-out infinite;
-}
-
-@keyframes psPanjiTutorialFloat{
-  0%,100%{transform:translateY(0) rotate(-2deg)}
-  50%{transform:translateY(-8px) rotate(2deg)}
-}
-
-.ps-pipeline-tutorial h4{
-  margin:0 0 8px;
-  color:#102544;
-  font-size:20px;
-  font-weight:950;
-}
-
-.ps-pipeline-tutorial ol{
-  margin:0 0 12px 20px;
-  padding:0;
-  color:#475569;
-  line-height:1.65;
-  font-size:14px;
-}
-
-.ps-pipeline-tutorial li{margin:3px 0}
-
-/* =========================================================
-   PATCH V5 — Bonus Level 4 lebih kerasa open-world 3D
-   ========================================================= */
-.ps-bonus3d-stage{
-  min-height:520px !important;
-  background:
-    radial-gradient(circle at 22% 16%, rgba(255,255,255,.25), transparent 8%),
-    radial-gradient(circle at 78% 22%, rgba(34,211,238,.20), transparent 18%),
-    linear-gradient(180deg,#6bb7ff 0%, #9bd8ff 24%, #0f766e 25%, #14532d 100%) !important;
-}
-
-.ps-bonus3d-stage::before{
-  inset:auto -20% -36% -20% !important;
-  height:74% !important;
-  background:
-    linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255,255,255,.16) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(34,197,94,.75), rgba(14,165,233,.28)) !important;
-  background-size:64px 64px !important;
-  transform:rotateX(61deg) rotateZ(-4deg) !important;
-}
-
-.ps-bonus3d-cloud{
-  position:absolute;
-  width:118px;
-  height:38px;
-  border-radius:999px;
-  background:rgba(255,255,255,.72);
-  filter:blur(.2px);
-  box-shadow:42px 8px 0 rgba(255,255,255,.55), 76px -2px 0 rgba(255,255,255,.42);
-  animation:psCloudMove 8s ease-in-out infinite;
-}
-.ps-bonus3d-cloud.c1{left:8%;top:10%}
-.ps-bonus3d-cloud.c2{right:18%;top:17%;transform:scale(.8);animation-duration:10s}
-@keyframes psCloudMove{0%,100%{translate:0 0}50%{translate:22px -4px}}
-
-.ps-bonus3d-road{
-  position:absolute;
-  left:16%;
-  right:16%;
-  bottom:112px;
-  height:82px;
-  border-radius:999px;
-  background:linear-gradient(90deg,#d6a85e,#f5d38a,#d6a85e);
-  box-shadow:0 18px 36px rgba(0,0,0,.16);
-  transform:perspective(700px) rotateX(56deg) rotateZ(-3deg);
-}
-
-.ps-bonus3d-player,
-.ps-bonus3d-companion{
-  position:absolute;
-  z-index:4;
-  display:grid;
-  place-items:center;
-  color:#fff;
-  font-weight:950;
-  font-size:11px;
-  text-shadow:0 2px 8px rgba(0,0,0,.35);
-  filter:drop-shadow(0 16px 20px rgba(0,0,0,.30));
-  animation:psWorldBob 2.1s ease-in-out infinite;
-}
-
-.ps-bonus3d-player{
-  left:20%;
-  bottom:132px;
-  width:78px;
-  height:108px;
-  border-radius:38px 38px 18px 18px;
-  background:linear-gradient(180deg,#facc15 0 35%, #2563eb 36% 100%);
-}
-
-.ps-bonus3d-player::before{
-  content:"";
-  position:absolute;
-  top:-28px;
-  width:58px;
-  height:58px;
-  border-radius:50%;
-  background:#fde68a;
-  border:3px solid #1e3a8a;
-}
-
-.ps-bonus3d-player span{position:relative;top:20px}
-
-.ps-bonus3d-companion{
-  left:31%;
-  bottom:122px;
-  width:66px;
-  height:88px;
-  border-radius:30px 30px 18px 18px;
-  background:linear-gradient(180deg,#f59e0b 0 42%, #0ea5e9 43% 100%);
-  animation-delay:.4s;
-}
-
-.ps-bonus3d-companion::before{
-  content:"";
-  position:absolute;
-  top:-24px;
-  width:50px;
-  height:50px;
-  border-radius:50%;
-  background:#fbbf24;
-  border:3px solid #fff;
-}
-
-.ps-bonus3d-companion span{position:relative;top:20px;font-size:9px}
-
-@keyframes psWorldBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-
-.ps-bonus3d-node{
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,.25), transparent 38%),
-    linear-gradient(135deg,#1d4ed8,#0f766e) !important;
-}
-
-.ps-bonus3d-node.done::after{
-  content:"✓";
-  position:absolute;
-  right:-8px;
-  top:-8px;
-  width:32px;
-  height:32px;
-  border-radius:999px;
-  display:grid;
-  place-items:center;
-  background:#22c55e;
-  color:#fff;
-  border:3px solid #fff;
-  box-shadow:0 10px 18px rgba(0,0,0,.18);
-}
-
-.ps-bonus3d-wrap{grid-template-columns:1.18fr .82fr !important}
-
-/* =========================================================
-   PATCH V5 — Snake level 8 lebih besar + ulang/lewati
-   ========================================================= */
-.ps-snake-wrap-big{
-  grid-template-columns:.72fr 1.28fr !important;
-  gap:18px !important;
-}
-
-.ps-snake-stage-big{
-  min-height:680px !important;
-}
-
-.ps-snake-stage-big #psSnakeCanvas{
-  width:min(620px,100%) !important;
-  max-width:620px !important;
-  border-radius:30px !important;
-  border-width:4px !important;
-  box-shadow:0 26px 70px rgba(0,0,0,.36), 0 0 0 10px rgba(255,255,255,.08) !important;
-}
-
-.ps-snake-stage-big .ps-snake-caption{
-  font-size:14px !important;
-  margin-top:14px !important;
-}
-
-@media(max-width:1100px){
-  .ps-bonus3d-wrap,.ps-snake-wrap-big{grid-template-columns:1fr !important}
-  .ps-snake-stage-big{min-height:auto !important}
-}
-
-/* =========================================================
-   FIX V6 - tutorial, bonus open world, snake tap, feedback
-   ========================================================= */
-.ps-pipeline-tutorial{
-  position:relative;
-  overflow:hidden;
-  border:2px solid #bfdbfe;
-  background:
-    radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 28%),
-    linear-gradient(180deg,#ffffff 0%,#eff6ff 100%);
-  box-shadow:0 18px 38px rgba(37,99,235,.16);
-  animation:psTutorialPop .32s ease;
-}
-.ps-pipeline-tutorial::after{
-  content:"⬇ taruh kartu ke slot kiri → kanan";
-  position:absolute;
-  right:18px;
-  bottom:16px;
-  padding:9px 12px;
-  border-radius:999px;
-  background:#123a72;
-  color:#fff;
-  font-size:12px;
-  font-weight:950;
-  box-shadow:0 12px 26px rgba(18,58,114,.18);
-}
-.ps-tutorial-panji{
-  animation:panjiTutorBounce 1.2s ease-in-out infinite;
-}
-@keyframes psTutorialPop{
-  from{opacity:0;transform:translateY(12px) scale(.98)}
-  to{opacity:1;transform:translateY(0) scale(1)}
-}
-@keyframes panjiTutorBounce{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-7px)}
-}
-
-.ps-bonus3d-fullscreen{
-  display:grid;
-  grid-template-columns:minmax(560px,1.3fr) minmax(360px,.7fr);
-  gap:18px;
-  min-height:680px;
-}
-.ps-bonus3d-scene{
-  position:relative;
-  min-height:680px;
-  border-radius:34px;
-  overflow:hidden;
-  background:
-    linear-gradient(180deg,#8bd3ff 0%,#c7f1ff 35%,#7dd46f 36%,#24864d 100%);
-  box-shadow:inset 0 -28px 80px rgba(8,47,73,.25),0 24px 50px rgba(15,23,42,.14);
-  perspective:900px;
-  transform-style:preserve-3d;
-}
-.ps-bonus3d-scene::before{
-  content:"";
-  position:absolute;
-  inset:42% -10% -15%;
-  background:
-    radial-gradient(ellipse at center, rgba(255,255,255,.34), transparent 55%),
-    linear-gradient(90deg, rgba(255,255,255,.22), transparent, rgba(255,255,255,.20));
-  transform:rotateX(62deg);
-  border-radius:50%;
-}
-.ps-bonus3d-mountain{
-  position:absolute;
-  width:260px;
-  height:260px;
-  background:linear-gradient(135deg,#1d4ed8,#0f766e);
-  transform:rotate(45deg);
-  border-radius:28px;
-  opacity:.62;
-  top:145px;
-}
-.ps-bonus3d-mountain.m1{left:5%}
-.ps-bonus3d-mountain.m2{right:8%;top:170px;transform:rotate(45deg) scale(.72)}
-.ps-bonus3d-portal{
-  position:absolute;
-  right:40px;
-  top:70px;
-  width:126px;
-  height:126px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  font-size:12px;
-  font-weight:950;
-  color:#fff;
-  background:radial-gradient(circle,#a78bfa,#4c1d95 62%,#1e1b4b 100%);
-  box-shadow:0 0 28px rgba(124,58,237,.7), inset 0 0 30px rgba(255,255,255,.18);
-  animation:portalPulse 2.2s ease-in-out infinite;
-}
-.ps-bonus3d-portal.open{
-  background:radial-gradient(circle,#fde68a,#22c55e 58%,#0f766e 100%);
-  box-shadow:0 0 38px rgba(34,197,94,.8), inset 0 0 30px rgba(255,255,255,.25);
-}
-@keyframes portalPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.ps-bonus3d-fullscreen .ps-bonus3d-map{
-  position:absolute;
-  left:8%;
-  right:8%;
-  top:230px;
-  bottom:70px;
-  transform:rotateX(56deg) rotateZ(-2deg);
-  transform-style:preserve-3d;
-}
-.ps-bonus3d-fullscreen .ps-bonus3d-node{
-  transform:translateZ(36px) rotateX(-56deg);
-  box-shadow:0 18px 32px rgba(15,23,42,.20);
-}
-.ps-bonus3d-node.locked{
-  opacity:.55;
-  filter:grayscale(.45);
-  cursor:not-allowed;
-}
-.ps-bonus3d-story-panel{
-  max-height:680px;
-  overflow:auto;
-}
-.ps-bonus3d-choice{
-  text-align:left;
-}
-.ps-bonus3d-choice::before{
-  content:"🎲";
-  margin-right:6px;
-}
-.ps-bonus3d-player,.ps-bonus3d-companion{
-  z-index:4;
-}
-
-#psSnakeCanvas{
-  touch-action:none;
-  cursor:pointer;
-}
-.ps-snake-stage-big #psSnakeCanvas{
-  width:min(74vh,720px) !important;
-  height:min(74vh,720px) !important;
-  max-width:100%;
-  border-radius:28px;
-  box-shadow:0 22px 52px rgba(15,23,42,.25);
-}
-.ps-snake-wrap-big{
-  grid-template-columns:.72fr 1.28fr !important;
-  align-items:stretch;
-}
-.ps-snake-caption::after{
-  content:"  • di HP cukup tap arah yang mau dituju";
-  font-weight:900;
-  color:#123a72;
-}
-
-.ps-final-feedback-box{
-  margin:14px 0;
-  padding:16px;
-  border-radius:22px;
-  background:#fff7ed;
-  border:1px solid #fed7aa;
-  display:grid;
-  gap:10px;
-}
-.ps-final-feedback-box strong{
-  color:#9a3412;
-  font-size:17px;
-}
-.ps-final-feedback-box p{
-  margin:4px 0 0;
-  color:#9a3412;
-  line-height:1.55;
-  font-size:13px;
-}
-.ps-final-feedback-box textarea{
-  width:100%;
-  resize:vertical;
-  border:1px solid #fdba74;
-  border-radius:16px;
-  padding:12px 14px;
-  font:inherit;
-  color:#102544;
-  background:#fff;
-}
-.ps-lb-feedback{
-  display:block;
-  margin-top:6px;
-  padding:8px 10px;
-  border-radius:12px;
-  background:#eef4fb;
-  color:#334155;
-  font-style:normal;
-  line-height:1.45;
-  font-size:12px;
-}
-@media(max-width:1100px){
-  .ps-bonus3d-fullscreen,.ps-snake-wrap-big{grid-template-columns:1fr !important}
-  .ps-bonus3d-scene{min-height:520px}
-  .ps-bonus3d-story-panel{max-height:none}
-}
-
-
-/* PATCH V7 - requested revisions */
-.ps-bonus3d-player{
-  left:calc(13% + (var(--player-step,0) * 17%)) !important;
-  bottom:calc(132px + (var(--player-step,0) % 2) * 26px) !important;
-  transition:left .55s ease,bottom .55s ease,transform .35s ease !important;
-}
-.ps-bonus3d-companion{
-  left:calc(22% + (var(--player-step,0) * 17%)) !important;
-  bottom:calc(118px + (var(--player-step,0) % 2) * 26px) !important;
-  transition:left .55s ease,bottom .55s ease,transform .35s ease !important;
-}
-.ps-bonus3d-player::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:-18px;
-  width:74px;
-  height:20px;
-  transform:translateX(-50%);
-  border-radius:999px;
-  background:rgba(15,23,42,.22);
-  filter:blur(1px);
-}
-.ps-snake-brief-modal{
-  margin-top:12px;
-  padding:14px;
-  border-radius:18px;
-  background:#eff6ff;
-  border:1px solid #bfdbfe;
-  color:#123a72;
-  line-height:1.55;
-  font-weight:800;
-}
-.ps-snake-brief-modal .ps-btn{margin-top:10px}
-.ps-snake-pbj-pop{
-  margin-top:12px;
-  padding:12px 14px;
-  border-radius:18px;
-  background:#fff7ed;
-  border:1px solid #fed7aa;
-  color:#9a3412;
-  line-height:1.55;
-  font-size:13px;
-  font-weight:800;
-  animation:psTipPop 1.2s ease-in-out infinite alternate;
-}
-@keyframes psTipPop{from{transform:translateY(0)}to{transform:translateY(-3px)}}
-.ps-snake-stage-big #psSnakeCanvas{
-  width:min(82vh,860px) !important;
-  height:min(82vh,860px) !important;
-}
-.ps-snake-wrap-big{
-  grid-template-columns:.62fr 1.38fr !important;
-}
-.ps-lb-tabs button[data-lb-tab="player"]:only-child{display:none}
-
-/* =========================================================
-   FIX V8 - user revisions 28/04
-   ========================================================= */
-.ps-bonus3d-player{
-  bottom:calc(72px + (var(--player-step,0) % 2) * 16px) !important;
-  left:calc(11% + (var(--player-step,0) * 17%)) !important;
-}
-.ps-bonus3d-companion{
-  bottom:calc(64px + (var(--player-step,0) % 2) * 16px) !important;
-  left:calc(20% + (var(--player-step,0) * 17%)) !important;
-}
-.ps-bonus3d-road{
-  bottom:58px !important;
-}
-.ps-bonus3d-fullscreen .ps-bonus3d-map{
-  top:250px !important;
-  bottom:118px !important;
-}
-.ps-bonus4-finish-popup{
-  position:fixed;
-  inset:0;
-  z-index:2147483646;
-  display:grid;
-  place-items:center;
-  background:rgba(2,6,23,.58);
-  backdrop-filter:blur(10px);
-  animation:psBonusFadeIn .22s ease;
-}
-.ps-bonus4-finish-card{
-  width:min(620px,92vw);
-  padding:28px;
-  border-radius:30px;
-  background:
-    radial-gradient(circle at top right, rgba(34,197,94,.18), transparent 28%),
-    linear-gradient(180deg,#ffffff 0%,#eff6ff 100%);
-  border:1px solid rgba(255,255,255,.88);
-  box-shadow:0 28px 80px rgba(15,23,42,.32);
-  color:#102544;
-  text-align:center;
-  animation:psBonusCardPop .28s ease;
-}
-.ps-bonus4-finish-orb{
-  width:74px;
-  height:74px;
-  margin:0 auto 12px;
-  border-radius:999px;
-  display:grid;
-  place-items:center;
-  font-size:38px;
-  background:radial-gradient(circle,#bbf7d0,#22c55e);
-  box-shadow:0 0 34px rgba(34,197,94,.55);
-}
-.ps-bonus4-finish-card h2{margin:0 0 8px;font-size:32px;font-weight:950;color:#0f172a}
-.ps-bonus4-finish-card p{margin:0 0 12px;color:#334155;line-height:1.6}
-.ps-bonus4-panji-note{margin:14px 0;padding:14px;border-radius:18px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;line-height:1.65;text-align:left;font-weight:750}
-.ps-bonus4-finish-card small{display:block;margin:10px 0 14px;color:#64748b;font-weight:800}
-@keyframes psBonusFadeIn{from{opacity:0}to{opacity:1}}
-@keyframes psBonusCardPop{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-
-.ps-snake-stage-big{
-  min-height:820px !important;
-  display:flex !important;
-  flex-direction:column !important;
-  justify-content:center !important;
-}
-.ps-snake-stage-big #psSnakeCanvas{
-  width:min(88vh,940px) !important;
-  height:min(88vh,940px) !important;
-  max-width:100% !important;
-}
-.ps-snake-wrap-big{
-  grid-template-columns:.56fr 1.44fr !important;
-}
-.ps-snake-caption::before{
-  content:"Tembok tembus: kanan muncul kiri, bawah muncul atas. ";
-  font-weight:950;
-  color:#22d3ee;
-}
-.ps-review-bubble-pop{
-  position:fixed;
-  right:148px;
-  bottom:36px;
-  z-index:2147483646;
-  width:min(410px,calc(100vw - 28px));
-  padding:16px;
-  border-radius:24px 24px 6px 24px;
-  background:
-    radial-gradient(circle at top left, rgba(34,211,238,.18), transparent 30%),
-    rgba(255,255,255,.97);
-  border:1px solid #dbeafe;
-  box-shadow:0 26px 70px rgba(15,23,42,.24);
-  color:#102544;
-  animation:psReviewBubbleIn .32s ease;
-}
-.ps-review-bubble-pop::after{
-  content:"";
-  position:absolute;
-  right:-10px;
-  bottom:34px;
-  width:20px;
-  height:20px;
-  background:rgba(255,255,255,.97);
-  border-right:1px solid #dbeafe;
-  border-bottom:1px solid #dbeafe;
-  transform:rotate(-45deg);
-}
-.ps-review-bubble-pop.closing{opacity:0;transform:translateY(12px) scale(.96);transition:.22s ease}
-.ps-review-bubble-close{
-  position:absolute;
-  right:-8px;
-  top:-8px;
-  width:30px;
-  height:30px;
-  border-radius:999px;
-  background:#102544;
-  color:#fff;
-  font-weight:950;
-  box-shadow:0 10px 20px rgba(15,23,42,.22);
-}
-.ps-review-bubble-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.ps-review-bubble-head span{display:inline-flex;border-radius:999px;background:#dbeafe;color:#1d4ed8;padding:7px 10px;font-size:11px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
-.ps-review-bubble-head b{font-size:12px;color:#92400e}
-.ps-review-main{padding:12px;border-radius:18px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;line-height:1.55;font-weight:800}
-.ps-review-main small{display:block;margin-top:8px;color:#64748b;font-weight:850}
-.ps-review-mini-list{display:grid;gap:6px;margin-top:10px;max-height:120px;overflow:auto}
-.ps-review-mini-list div{padding:9px 10px;border-radius:14px;background:#f8fbff;border:1px solid #e2e8f0;color:#334155;font-size:12px;line-height:1.45}
-@keyframes psReviewBubbleIn{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
-@media(max-width:1100px){
-  .ps-snake-wrap-big{grid-template-columns:1fr !important}
-  .ps-snake-stage-big{min-height:700px !important}
-  .ps-review-bubble-pop{right:18px;bottom:150px}
-}
-
-/* =========================================================
-   FIX V9 - final user revisions
-   ========================================================= */
-.ps-rush-drop strong,
-.ps-rush-method-card strong{
-  font-size:18px !important;
-  line-height:1.18 !important;
-  letter-spacing:-.01em !important;
-}
-.ps-rush-drop{
-  min-height:108px !important;
-  grid-template-columns:42px 1fr !important;
-  padding:16px !important;
-}
-.ps-rush-icon{font-size:28px !important}
-.ps-rush-key{width:38px !important;height:38px !important;font-size:18px !important}
-.ps-rush-method-card{min-height:174px !important}
-.ps-rush-method-card span{font-size:12px !important}
-
-/* Bonus level 4: PPK dan PANJI turun ke tanah, bukan melayang di langit */
-.ps-bonus3d-player{
-  bottom:calc(30px + (var(--player-step,0) % 2) * 8px) !important;
-  transform:translateY(0) scale(.92) !important;
-}
-.ps-bonus3d-companion{
-  bottom:calc(24px + (var(--player-step,0) % 2) * 8px) !important;
-  transform:translateY(0) scale(.92) !important;
-}
-.ps-bonus3d-player::after{bottom:-12px !important}
-.ps-bonus3d-road{bottom:24px !important;height:70px !important}
-.ps-bonus3d-fullscreen .ps-bonus3d-map{
-  top:270px !important;
-  bottom:80px !important;
-}
-.ps-bonus3d-scene{
-  overflow:hidden !important;
-}
-
-/* Snake: arena dimaksimalkan, frame canvas dihilangkan */
-.ps-snake-wrap-big{
-  grid-template-columns:.46fr 1.54fr !important;
-  gap:18px !important;
-}
-.ps-snake-stage-big{
-  min-height:calc(100vh - 180px) !important;
-  padding:10px !important;
-  align-content:stretch !important;
-  justify-content:center !important;
-}
-.ps-snake-stage-big #psSnakeCanvas{
-  width:min(100%, calc(100vh - 220px)) !important;
-  height:min(100%, calc(100vh - 220px)) !important;
-  max-width:none !important;
-  border:0 !important;
-  border-radius:18px !important;
-  box-shadow:0 18px 54px rgba(0,0,0,.34) !important;
-}
-.ps-snake-caption{
-  margin-top:8px !important;
-}
-.ps-snake-info{padding:18px !important}
-.ps-snake-info h3{font-size:34px !important}
-
-/* Review bubble dibuat banyak, lucu, melayang */
-.ps-review-bubble-pop.ps-review-bubble-float{
-  right:calc(118px + (var(--review-i,0) * 72px)) !important;
-  bottom:calc(34px + (var(--review-i,0) * 58px)) !important;
-  width:min(350px,calc(100vw - 28px)) !important;
-  animation:psReviewFly 4s ease-in-out infinite var(--review-delay,0s), psReviewBubbleIn .32s ease !important;
-}
-.ps-review-bubble-pop.ps-review-bubble-float:nth-of-type(even){
-  border-radius:24px 24px 24px 6px !important;
-}
-.ps-review-bubble-pop.ps-review-bubble-float .ps-review-main{
-  font-size:13px !important;
-}
-.ps-review-bubble-head span{
-  background:linear-gradient(135deg,#dbeafe,#dcfce7) !important;
-}
-@keyframes psReviewFly{
-  0%,100%{transform:translate(0,0) rotate(-.8deg)}
-  33%{transform:translate(-8px,-10px) rotate(.8deg)}
-  66%{transform:translate(8px,-4px) rotate(-.3deg)}
-}
-@media(max-width:1100px){
-  .ps-snake-wrap-big{grid-template-columns:1fr !important}
-  .ps-snake-stage-big{min-height:760px !important}
-  .ps-snake-stage-big #psSnakeCanvas{width:min(92vw,760px) !important;height:min(92vw,760px) !important}
-  .ps-review-bubble-pop.ps-review-bubble-float{right:18px !important;bottom:calc(150px + (var(--review-i,0) * 62px)) !important}
-}
-
-/* =========================================================
-   FIX V10 - bubble review pisah, karakter bonus turun, snake full arena
-   ========================================================= */
-/* Review bubble: jangan numpuk. Disebar ke kiri/kanan/atas dengan animasi melayang. */
-.ps-review-bubble-pop.ps-review-bubble-float{
-  width:min(330px, calc(100vw - 32px)) !important;
-  bottom:auto !important;
-  right:auto !important;
-  left:auto !important;
-  top:auto !important;
-  z-index:2147483646 !important;
-  animation:psReviewFloatSeparate 4.6s ease-in-out infinite var(--review-delay,0s), psReviewBubbleIn .32s ease !important;
-}
-.ps-review-bubble-pop.review-pos-0{left:24px !important;top:84px !important}
-.ps-review-bubble-pop.review-pos-1{right:28px !important;top:96px !important}
-.ps-review-bubble-pop.review-pos-2{left:42px !important;bottom:92px !important}
-.ps-review-bubble-pop.review-pos-3{right:44px !important;bottom:96px !important}
-.ps-review-bubble-pop.review-pos-4{left:50% !important;top:64px !important;transform:translateX(-50%) !important}
-.ps-review-bubble-pop.review-pos-5{left:50% !important;bottom:86px !important;transform:translateX(-50%) !important}
-.ps-review-bubble-pop.review-pos-0::after,
-.ps-review-bubble-pop.review-pos-2::after{right:auto !important;left:26px !important;transform:rotate(45deg) !important}
-.ps-review-bubble-pop.review-pos-1::after,
-.ps-review-bubble-pop.review-pos-3::after{right:26px !important}
-.ps-review-bubble-pop.review-pos-4::after,
-.ps-review-bubble-pop.review-pos-5::after{left:50% !important;right:auto !important;transform:translateX(-50%) rotate(45deg) !important}
-@keyframes psReviewFloatSeparate{
-  0%,100%{translate:0 0;rotate:-.5deg}
-  35%{translate:10px -12px;rotate:.8deg}
-  70%{translate:-8px -5px;rotate:-.2deg}
-}
-@media(max-width:900px){
-  .ps-review-bubble-pop.review-pos-0,
-  .ps-review-bubble-pop.review-pos-1,
-  .ps-review-bubble-pop.review-pos-2,
-  .ps-review-bubble-pop.review-pos-3,
-  .ps-review-bubble-pop.review-pos-4,
-  .ps-review-bubble-pop.review-pos-5{
-    left:14px !important;
-    right:14px !important;
-    top:auto !important;
-    bottom:calc(88px + (var(--review-i,0) * 118px)) !important;
-    width:auto !important;
-    transform:none !important;
-  }
-}
-
-/* Bonus level 4: PPK & PANJI benar-benar turun ke ground, bukan di awan */
-.ps-bonus3d-scene > .ps-bonus3d-player{
-  top:auto !important;
-  bottom:4px !important;
-  left:calc(10% + (var(--player-step,0) * 18%)) !important;
-  transform:translateY(0) scale(.78) !important;
-  animation:psWorldBobLow 2.1s ease-in-out infinite !important;
-  z-index:8 !important;
-}
-.ps-bonus3d-scene > .ps-bonus3d-companion{
-  top:auto !important;
-  bottom:0 !important;
-  left:calc(18% + (var(--player-step,0) * 18%)) !important;
-  transform:translateY(0) scale(.76) !important;
-  animation:psWorldBobLow 2.1s ease-in-out infinite .3s !important;
-  z-index:9 !important;
-}
-.ps-bonus3d-scene > .ps-bonus3d-player::after,
-.ps-bonus3d-scene > .ps-bonus3d-companion::after{
-  bottom:-10px !important;
-}
-.ps-bonus3d-road{
-  bottom:0 !important;
-  height:60px !important;
-  opacity:.95 !important;
-}
-.ps-bonus3d-fullscreen .ps-bonus3d-map{
-  top:245px !important;
-  bottom:145px !important;
-}
-@keyframes psWorldBobLow{0%,100%{translate:0 0}50%{translate:0 -4px}}
-
-/* Snake: jangan kecil di tengah. Canvas dipaksa memenuhi area stage. */
-.ps-snake-wrap-big{
-  grid-template-columns:360px minmax(760px,1fr) !important;
-  align-items:stretch !important;
-  gap:16px !important;
-}
-.ps-snake-stage-big{
-  min-height:760px !important;
-  height:calc(100vh - 160px) !important;
-  padding:0 !important;
-  border-radius:30px !important;
-  overflow:hidden !important;
-  display:grid !important;
-  grid-template-rows:1fr auto !important;
-  align-items:stretch !important;
-  justify-items:stretch !important;
-}
-.ps-snake-stage-big #psSnakeCanvas{
-  width:100% !important;
-  height:100% !important;
-  min-height:0 !important;
-  max-width:none !important;
-  max-height:none !important;
-  border:0 !important;
-  border-radius:0 !important;
-  box-shadow:none !important;
-  display:block !important;
-  background:#071a2e !important;
-}
-.ps-snake-stage-big .ps-snake-caption{
-  margin:0 !important;
-  padding:12px 14px !important;
-  background:rgba(6,17,31,.88) !important;
-  color:#fff !important;
-  text-align:center !important;
-}
-@media(max-width:1200px){
-  .ps-snake-wrap-big{grid-template-columns:1fr !important}
-  .ps-snake-stage-big{height:72vh !important;min-height:620px !important}
-}
-
-/* =========================================================
-   FIX V11 - review bubble endpoint OK, snake tip ganggu arena, PPK/PANJI grounded
-   ========================================================= */
-/* Bubble review sengaja disebar, bukan ditumpuk di kanan bawah */
-.ps-review-bubble-pop.ps-review-bubble-float{
-  width:min(310px, calc(100vw - 34px)) !important;
-  max-width:310px !important;
-  z-index:2147483646 !important;
-  animation:psReviewFloatV11 5.2s ease-in-out infinite var(--review-delay,0s), psReviewBubbleIn .28s ease !important;
-}
-.ps-review-bubble-pop.review-pos-0{left:26px !important;top:82px !important;right:auto !important;bottom:auto !important;}
-.ps-review-bubble-pop.review-pos-1{right:32px !important;top:82px !important;left:auto !important;bottom:auto !important;}
-.ps-review-bubble-pop.review-pos-2{left:34px !important;top:310px !important;right:auto !important;bottom:auto !important;}
-.ps-review-bubble-pop.review-pos-3{right:38px !important;top:330px !important;left:auto !important;bottom:auto !important;}
-.ps-review-bubble-pop.review-pos-4{left:50% !important;top:42px !important;right:auto !important;bottom:auto !important;transform:translateX(-50%) !important;}
-.ps-review-bubble-pop.review-pos-5{left:50% !important;top:560px !important;right:auto !important;bottom:auto !important;transform:translateX(-50%) !important;}
-.ps-review-bubble-pop.review-pos-6{left:22px !important;bottom:70px !important;right:auto !important;top:auto !important;}
-.ps-review-bubble-pop.review-pos-7{right:24px !important;bottom:76px !important;left:auto !important;top:auto !important;}
-@keyframes psReviewFloatV11{
-  0%,100%{translate:0 0;rotate:-.5deg}
-  25%{translate:10px -14px;rotate:.7deg}
-  55%{translate:-8px -8px;rotate:-.3deg}
-  80%{translate:6px 4px;rotate:.4deg}
-}
-
-/* Bonus level 4: karakter dipaksa di ground, bukan ikut langit/map */
-.ps-bonus3d-scene > .ps-bonus3d-player{
-  top:calc(100% - 132px) !important;
-  bottom:auto !important;
-  left:calc(11% + (var(--player-step,0) * 18%)) !important;
-  transform:scale(.82) !important;
-  z-index:20 !important;
-}
-.ps-bonus3d-scene > .ps-bonus3d-companion{
-  top:calc(100% - 112px) !important;
-  bottom:auto !important;
-  left:calc(19% + (var(--player-step,0) * 18%)) !important;
-  transform:scale(.80) !important;
-  z-index:21 !important;
-}
-.ps-bonus3d-scene > .ps-bonus3d-player::after,
-.ps-bonus3d-scene > .ps-bonus3d-companion::after{bottom:-8px !important;}
-.ps-bonus3d-road{bottom:22px !important;height:86px !important;z-index:3 !important;}
-
-/* Snake: arena full satu frame kanan, canvas mengisi semua stage */
-.ps-snake-wrap-big{
-  grid-template-columns:340px minmax(820px,1fr) !important;
-  gap:16px !important;
-  align-items:stretch !important;
-}
-.ps-snake-stage-big{
-  position:relative !important;
-  height:calc(100vh - 150px) !important;
-  min-height:760px !important;
-  padding:0 !important;
-  overflow:hidden !important;
-  display:grid !important;
-  grid-template-rows:minmax(0,1fr) auto !important;
-  border-radius:30px !important;
-}
-.ps-snake-stage-big #psSnakeCanvas{
-  width:100% !important;
-  height:100% !important;
-  min-width:100% !important;
-  min-height:100% !important;
-  max-width:none !important;
-  max-height:none !important;
-  border:0 !important;
-  border-radius:0 !important;
-  box-shadow:none !important;
-  object-fit:fill !important;
-}
-.ps-snake-arena-tip{
-  position:absolute;
-  left:var(--tip-x, 28%);
-  top:var(--tip-y, 18%);
-  max-width:360px;
-  padding:12px 14px;
-  border-radius:18px 18px 18px 6px;
-  background:rgba(255,247,237,.95);
-  border:2px solid #fed7aa;
-  color:#9a3412;
-  font-size:13px;
-  line-height:1.45;
-  font-weight:850;
-  box-shadow:0 18px 36px rgba(15,23,42,.22);
-  pointer-events:none;
-  animation:psSnakeTipDrift 2.2s ease-in-out infinite;
-  z-index:5;
-}
-.ps-snake-arena-tip::after{
-  content:"";
-  position:absolute;
-  left:20px;
-  bottom:-9px;
-  width:16px;
-  height:16px;
-  background:rgba(255,247,237,.95);
-  border-right:2px solid #fed7aa;
-  border-bottom:2px solid #fed7aa;
-  transform:rotate(45deg);
-}
-@keyframes psSnakeTipDrift{0%,100%{translate:0 0}50%{translate:0 -8px}}
-@media(max-width:1200px){
-  .ps-snake-wrap-big{grid-template-columns:1fr !important;}
-  .ps-snake-stage-big{height:78vh !important;min-height:680px !important;}
-  .ps-review-bubble-pop.review-pos-0,
-  .ps-review-bubble-pop.review-pos-1,
-  .ps-review-bubble-pop.review-pos-2,
-  .ps-review-bubble-pop.review-pos-3,
-  .ps-review-bubble-pop.review-pos-4,
-  .ps-review-bubble-pop.review-pos-5,
-  .ps-review-bubble-pop.review-pos-6,
-  .ps-review-bubble-pop.review-pos-7{
-    left:16px !important;
-    right:16px !important;
-    top:auto !important;
-    bottom:calc(92px + (var(--review-i,0) * 110px)) !important;
-    width:auto !important;
-    max-width:none !important;
-    transform:none !important;
-  }
-}
-
-/* =========================================================
-   FIX V12 - Layout soal lebih dekat dengan jawaban
-   ========================================================= */
-.ps-ready-card > .ps-result-hero:first-child{
-  display:none !important;
-}
-
-.ps-question-panel{
-  margin:10px 0 16px !important;
-  padding:18px 20px !important;
-  border-radius:22px !important;
-  border:2px solid #bfdbfe !important;
-  background:
-    radial-gradient(circle at top left, rgba(37,99,235,.12), transparent 34%),
-    linear-gradient(180deg,#f8fbff 0%,#ffffff 100%) !important;
-  box-shadow:0 14px 30px rgba(15,23,42,.06) !important;
-}
-
-.ps-question-label{
-  display:inline-flex !important;
-  min-height:28px !important;
-  align-items:center !important;
-  padding:0 11px !important;
-  border-radius:999px !important;
-  background:#dbeafe !important;
-  color:#123a72 !important;
-  font-size:12px !important;
-  font-weight:950 !important;
-  letter-spacing:.08em !important;
-  text-transform:uppercase !important;
-  margin-bottom:10px !important;
-}
-
-.ps-question-main h2{
-  margin:0 !important;
-  color:#102544 !important;
-  font-size:30px !important;
-  line-height:1.18 !important;
-  letter-spacing:-.03em !important;
-  font-weight:950 !important;
-}
-
-.ps-question-main p{
-  margin:8px 0 0 !important;
-  color:#334155 !important;
-  font-size:18px !important;
-  line-height:1.55 !important;
-  font-weight:800 !important;
-}
-
-.ps-question-meta{
-  display:flex !important;
-  flex-wrap:wrap !important;
-  gap:8px !important;
-  margin-top:12px !important;
-}
-
-.ps-question-meta span{
-  display:inline-flex !important;
-  align-items:center !important;
-  min-height:28px !important;
-  padding:0 10px !important;
-  border-radius:999px !important;
-  background:#eef4fb !important;
-  border:1px solid #dbeafe !important;
-  color:#475569 !important;
-  font-size:12px !important;
-  font-weight:900 !important;
-}
-
-.ps-helper-row-compact{
-  align-items:center !important;
-  margin-top:2px !important;
-  margin-bottom:10px !important;
-}
-
-.ps-helper-actions{
-  display:flex !important;
-  align-items:center !important;
-  justify-content:flex-end !important;
-  gap:10px !important;
-  flex-wrap:wrap !important;
-}
-
-.ps-level-time-compact{
-  width:150px !important;
-  min-height:46px !important;
-  padding:8px 11px !important;
-  border-radius:16px !important;
-  background:#eff6ff !important;
-  border:1px solid #bfdbfe !important;
-}
-
-.ps-level-time-compact label{
-  display:block !important;
-  color:#64748b !important;
-  font-size:10px !important;
-  font-weight:950 !important;
-  text-transform:uppercase !important;
-  letter-spacing:.08em !important;
-  margin-bottom:2px !important;
-}
-
-.ps-level-time-compact strong{
-  display:block !important;
-  color:#102544 !important;
-  font-size:19px !important;
-  line-height:1 !important;
-  font-weight:950 !important;
-}
-
-.ps-level-time-compact.warning{
-  background:#fffbeb !important;
-  border-color:#fde68a !important;
-}
-
-.ps-level-time-compact.danger{
-  background:#fff1f2 !important;
-  border-color:#fecaca !important;
-  animation:psTimerPulse .72s ease-in-out infinite !important;
-}
-
-.ps-score-grid{
-  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-}
-
-.ps-quiz-options{
-  margin-top:12px !important;
-}
-
-.ps-quiz-option{
-  font-size:19px !important;
-  font-weight:950 !important;
-  line-height:1.45 !important;
-  min-height:96px !important;
-}
-
-.ps-rush-drop strong,
-.ps-rush-method-card strong{
-  font-size:20px !important;
-  line-height:1.18 !important;
-  font-weight:950 !important;
-}
-
-.ps-rush-drop{
-  min-height:108px !important;
-}
-
-.ps-bonus3d-soal{
-  margin:12px 0 12px !important;
-  padding:14px 16px !important;
-  border-radius:18px !important;
-  background:#eff6ff !important;
-  border:1px solid #bfdbfe !important;
-  color:#102544 !important;
-  font-size:15px !important;
-  line-height:1.6 !important;
-  font-weight:850 !important;
-}
-
-.ps-bonus3d-soal span{
-  display:block !important;
-  margin-top:6px !important;
-  color:#334155 !important;
-}
-
-@media(max-width:1100px){
-  .ps-helper-row-compact{
-    align-items:flex-start !important;
-    flex-direction:column !important;
-  }
-  .ps-helper-actions{
-    justify-content:flex-start !important;
-  }
-  .ps-score-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-  }
-}
-
-/* =========================================================
-   FIX V13 - soal dekat timer, bonus 4 lebih jelas, audio UX
-   ========================================================= */
-.ps-current-soal-pill{
-  min-height:46px !important;
-  padding:0 14px !important;
-  border-radius:16px !important;
-  background:#eef4ff !important;
-  border:1px solid #bfdbfe !important;
-  color:#123a72 !important;
-  font-size:14px !important;
-  font-weight:950 !important;
-  box-shadow:0 8px 18px rgba(37,99,235,.08) !important;
-}
-
-.ps-bonus3d-story-panel h3{
-  font-size:34px !important;
-  line-height:1.05 !important;
-  letter-spacing:-.04em !important;
-}
-
-.ps-bonus3d-soal{
-  font-size:18px !important;
-  line-height:1.72 !important;
-  padding:18px 20px !important;
-  background:
-    radial-gradient(circle at top left, rgba(37,99,235,.12), transparent 34%),
-    linear-gradient(180deg,#eff6ff 0%,#ffffff 100%) !important;
-  border:2px solid #93c5fd !important;
-}
-
-.ps-bonus3d-soal b{
-  color:#0f2f66 !important;
-  font-weight:950 !important;
-}
-
-.ps-bonus3d-soal span{
-  font-size:18px !important;
-  line-height:1.72 !important;
-  font-weight:850 !important;
-}
-
-.ps-bonus3d-panji{
-  font-size:15px !important;
-  line-height:1.65 !important;
-}
-
-.ps-snake-score-row div:nth-child(2) b{
-  font-size:22px !important;
-}
-
-@media(max-width:900px){
-  .ps-current-soal-pill{min-height:40px !important;font-size:12px !important}
-  .ps-bonus3d-soal,.ps-bonus3d-soal span{font-size:15px !important}
-}
-
-
-/* =========================================================
-   FIX V15 - review bubble selalu muncul saat menu mini game dibuka
-   ========================================================= */
-.ps-review-bubble-pop,
-.ps-review-bubble-pop.ps-review-bubble-float{
-  z-index:2147483647 !important;
-  width:min(300px, calc(100vw - 32px)) !important;
-  pointer-events:auto !important;
-}
-.ps-review-bubble-pop.review-pos-0{left:18px !important;top:72px !important;right:auto !important;bottom:auto !important;transform:none !important;}
-.ps-review-bubble-pop.review-pos-1{right:18px !important;top:72px !important;left:auto !important;bottom:auto !important;transform:none !important;}
-.ps-review-bubble-pop.review-pos-2{left:22px !important;top:255px !important;right:auto !important;bottom:auto !important;transform:none !important;}
-.ps-review-bubble-pop.review-pos-3{right:22px !important;top:255px !important;left:auto !important;bottom:auto !important;transform:none !important;}
-.ps-review-bubble-pop.review-pos-4{left:24px !important;bottom:72px !important;right:auto !important;top:auto !important;transform:none !important;}
-.ps-review-bubble-pop.review-pos-5{right:24px !important;bottom:72px !important;left:auto !important;top:auto !important;transform:none !important;}
-.ps-review-bubble-pop.review-pos-6{left:50% !important;top:30px !important;right:auto !important;bottom:auto !important;transform:translateX(-50%) !important;}
-.ps-review-bubble-pop.review-pos-7{left:50% !important;bottom:30px !important;right:auto !important;top:auto !important;transform:translateX(-50%) !important;}
-@media(max-width:1100px){
-  .ps-review-bubble-pop.review-pos-0,
-  .ps-review-bubble-pop.review-pos-1,
-  .ps-review-bubble-pop.review-pos-2,
-  .ps-review-bubble-pop.review-pos-3,
-  .ps-review-bubble-pop.review-pos-4,
-  .ps-review-bubble-pop.review-pos-5,
-  .ps-review-bubble-pop.review-pos-6,
-  .ps-review-bubble-pop.review-pos-7{
-    left:12px !important;
-    right:12px !important;
-    top:auto !important;
-    bottom:calc(30px + (var(--review-i,0) * 86px)) !important;
-    width:auto !important;
-    transform:none !important;
-  }
-}
-
-/* =========================================================
-   BONUS LEVEL 4 - KONSOLIDASI NPC / MUSUH
-   ========================================================= */
-.ps-bonus4-konsolidasi .ps-bonus3d-scene{
-  overflow:hidden;
-}
-.ps-bonus4-npc-lane,
-.ps-bonus4-enemy-lane{
-  position:absolute;
-  left:18px;
-  right:18px;
-  display:flex;
-  gap:12px;
-  justify-content:center;
-  pointer-events:none;
-}
-.ps-bonus4-npc-lane{ bottom:108px; }
-.ps-bonus4-enemy-lane{ top:22px; }
-.ps-bonus4-npc-card,
-.ps-bonus4-enemy{
-  min-width:92px;
-  padding:8px 8px 6px;
-  border-radius:18px;
-  background:rgba(255,255,255,.88);
-  border:1px solid rgba(219,234,254,.85);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:4px;
-  box-shadow:0 10px 22px rgba(15,23,42,.12);
-  animation:psBonus4Bob 2.6s ease-in-out infinite;
-  animation-delay:var(--npc-delay,0s);
-}
-.ps-bonus4-enemy{
-  background:rgba(255,241,242,.92);
-  border-color:#fecaca;
-  animation-delay:var(--enemy-delay,0s);
-}
-.ps-bonus4-npc-card img,
-.ps-bonus4-enemy img{
-  width:40px;
-  height:40px;
-  image-rendering:pixelated;
-}
-.ps-bonus4-npc-card small,
-.ps-bonus4-enemy span{
-  color:#102544;
-  font-size:10px;
-  font-weight:900;
-  text-align:center;
-  line-height:1.25;
-}
-.ps-bonus4-story-panel .ps-bonus3d-soal span{display:block;margin-top:8px;line-height:1.65}
-@keyframes psBonus4Bob{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-6px)}
-}
-
-/* =========================================================
-   BONUS LEVEL 10 - DINO RUNNER
-   ========================================================= */
-.ps-dino-wrap{
-  display:grid;
-  grid-template-columns:360px 1fr;
-  gap:16px;
-  margin-bottom:16px;
-}
-.ps-dino-info,
-.ps-dino-stage{
-  border-radius:24px;
-  border:1px solid #dbeafe;
-  background:#f8fbff;
-  padding:18px;
-}
-.ps-dino-info h3{
-  margin:10px 0 8px;
-  font-size:28px;
-  line-height:1.1;
-  color:var(--ps-text);
-  font-weight:950;
-}
-.ps-dino-info p{
-  margin:0 0 12px;
-  color:#475569;
-  line-height:1.7;
-  font-size:14px;
-}
-.ps-dino-pbj-pop{
-  padding:12px 14px;
-  border-radius:16px;
-  background:#fff7ed;
-  border:1px solid #fed7aa;
-  color:#9a3412;
-  font-size:13px;
-  line-height:1.55;
-  margin:12px 0 14px;
-}
-.ps-dino-stage{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-}
-#psDinoCanvas{
-  width:100%;
-  max-width:960px;
-  aspect-ratio:3/1;
-  border-radius:20px;
-  border:1px solid #bfdbfe;
-  background:#fff;
-  image-rendering:pixelated;
-}
-.ps-dino-caption{
-  margin-top:10px;
-  text-align:center;
-  color:#64748b;
-  font-size:12px;
-  font-weight:800;
-}
-@media (max-width: 980px){
-  .ps-dino-wrap{grid-template-columns:1fr}
-}
+(() => {
+  const AUTO_NEXT_DELAY_MS = 1800;
+  const HINT_PENALTY = 3;
+  const LEADERBOARD_API_URL = 'https://script.google.com/macros/s/AKfycbzE0c_eBIooXcKLmiMGm6o6cqtjfRsfIewmD6Hx5BCdmEYZmljquJiDOA0PJh6e9P_mOg/exec';
+  const PLAYER_STORAGE_KEY = 'procstack_player_profile_v1';
+
+  let containerRef = null;
+  let root = null;
+  let destroyed = false;
+  let toastEl = null;
+  let autoNextTimer = null;
+  let panjiIntroTimers = [];
+  let panjiTalkTimer = null;
+
+  let panjiEl = null;
+  let panjiTextEl = null;
+  let panjiEmoteEl = null;
+  let panjiBubbleEl = null;
+  let panjiHintBtn = null;
+  let panjiMiniBtn = null;
+  let panjiCharacterBtn = null;
+  let panjiCloseBtn = null;
+  let panjiUserMinimized = false;
+  let panjiIntroAlreadyShown = false;
+
+  let leaderboardModalEl = null;
+  let leaderboardRefreshTimer = null;
+  let reviewBubbleEl = null;
+  let reviewBubbleTimer = null;
+  let reviewBubbleLastShownAt = 0;
+
+  let levelTimer = null;
+  let levelTimerStartedAt = 0;
+
+  let tenderRushTimer = null;
+  let tenderRushNextTimer = null;
+  let tenderRushKeyHandler = null;
+
+  let psAudioCtx = null;
+  let psMusicTimer = null;
+  let psMusicOn = false;
+
+
+  let bonusSnakeTimer = null;
+  let bonusSnakeKeyHandler = null;
+  let bonusDinoTimer = null;
+  let bonusDinoKeyHandler = null;
+
+
+  const BONUS_ASSET_PATHS = {
+    npcMerchant: 'assets/npcs/merchant.png',
+    npcMage: 'assets/npcs/mage.png',
+    npcArcher: 'assets/npcs/archer.png',
+    npcKnight: 'assets/npcs/knight.png',
+    npcThief: 'assets/npcs/thief.png',
+    npcBlacksmith: 'assets/npcs/blacksmith.png',
+    playerRun: 'assets/player/run_strip8.png'
+  };
+
+  const BONUS_ASSETS = Object.fromEntries(Object.entries(BONUS_ASSET_PATHS).map(([key, src]) => {
+    const img = new Image();
+    img.src = src;
+    return [key, img];
+  }));
+
+  const CARD_LIBRARY = {
+    rup: {
+      id: 'rup',
+      label: 'Cek RUP',
+      icon: '📋',
+      note: 'Pastikan paket sudah ada dan sesuai perencanaan.'
+    },
+    identifikasi: {
+      id: 'identifikasi',
+      label: 'Identifikasi Kebutuhan',
+      icon: '🧠',
+      note: 'Validasi kebutuhan, volume, lokasi, dan jadwal.'
+    },
+    konsolidasi: {
+      id: 'konsolidasi',
+      label: 'Konsolidasi',
+      icon: '🧲',
+      note: 'Gabungkan kebutuhan sejenis bila tepat.'
+    },
+    reviewSpek: {
+      id: 'review-spek',
+      label: 'Review Spesifikasi',
+      icon: '🧐',
+      note: 'Cegah spesifikasi mengarah.'
+    },
+    kak: {
+      id: 'kak',
+      label: 'KAK / Spesifikasi',
+      icon: '🧩',
+      note: 'Susun kebutuhan teknis secara jelas dan adil.'
+    },
+    hps: {
+      id: 'hps',
+      label: 'HPS / Referensi Harga',
+      icon: '💰',
+      note: 'Susun harga perkiraan dengan dasar wajar.'
+    },
+    cekPdn: {
+      id: 'cek-pdn',
+      label: 'Cek PDN / TKDN',
+      icon: '🇮🇩',
+      note: 'Perhatikan produk dalam negeri dan TKDN/BMP.'
+    },
+    cekUmkk: {
+      id: 'cek-umkk',
+      label: 'Cek UMK/Koperasi',
+      icon: '🏪',
+      note: 'Perhatikan afirmasi usaha mikro, kecil, dan koperasi.'
+    },
+    cekKatalog: {
+      id: 'cek-katalog',
+      label: 'Cek e-Katalog',
+      icon: '🔎',
+      note: 'Pastikan barang/jasa tersedia dan sesuai.'
+    },
+    katalogTidakSesuai: {
+      id: 'katalog-tidak-sesuai',
+      label: 'Katalog Tidak Sesuai',
+      icon: '🛑',
+      note: 'Produk/penyedia tidak tersedia atau tidak sesuai kebutuhan.'
+    },
+    dokumentasiGagalKatalog: {
+      id: 'dokumentasi-gagal-katalog',
+      label: 'Dokumentasi Hasil Cek',
+      icon: '📝',
+      note: 'Catat bukti hasil pengecekan katalog sebelum ganti metode.'
+    },
+    evaluasiMetode: {
+      id: 'evaluasi-metode',
+      label: 'Evaluasi Metode',
+      icon: '🧭',
+      note: 'Evaluasi metode awal bila kondisi pasar tidak sesuai rencana.'
+    },
+    pilihMetode: {
+      id: 'pilih-metode',
+      label: 'Pilih Metode',
+      icon: '⚙️',
+      note: 'Tentukan metode berdasarkan nilai, jenis, dan kondisi paket.'
+    },
+    metodePl: {
+      id: 'metode-pl',
+      label: 'Pengadaan Langsung',
+      icon: '🛠️',
+      note: 'Digunakan bila nilai dan kondisi paket sesuai.'
+    },
+    metodeEpurchasing: {
+      id: 'metode-epurchasing',
+      label: 'e-Purchasing',
+      icon: '🛒',
+      note: 'Gunakan katalog bila tersedia dan sesuai.'
+    },
+    miniKompetisi: {
+      id: 'mini-kompetisi',
+      label: 'Mini Kompetisi',
+      icon: '🏁',
+      note: 'Kompetisikan penyedia katalog bila diwajibkan/tepat.'
+    },
+    tender: {
+      id: 'tender',
+      label: 'Tender',
+      icon: '🏗️',
+      note: 'Untuk paket yang membutuhkan proses pemilihan formal.'
+    },
+    seleksi: {
+      id: 'seleksi',
+      label: 'Seleksi',
+      icon: '📐',
+      note: 'Umumnya untuk jasa konsultansi.'
+    },
+    swakelola: {
+      id: 'swakelola',
+      label: 'Swakelola',
+      icon: '🤲',
+      note: 'Dipilih bila memenuhi kriteria swakelola.'
+    },
+    timPersiapan: {
+      id: 'tim-persiapan',
+      label: 'Tim Persiapan',
+      icon: '🧑‍💼',
+      note: 'Siapkan rencana, KAK, jadwal, dan kebutuhan swakelola.'
+    },
+    timPelaksana: {
+      id: 'tim-pelaksana',
+      label: 'Tim Pelaksana',
+      icon: '👷',
+      note: 'Laksanakan pekerjaan swakelola.'
+    },
+    timPengawas: {
+      id: 'tim-pengawas',
+      label: 'Tim Pengawas',
+      icon: '🕵️',
+      note: 'Awasi mutu, waktu, dan output swakelola.'
+    },
+    klarifikasi: {
+      id: 'klarifikasi',
+      label: 'Klarifikasi / Negosiasi',
+      icon: '🤝',
+      note: 'Pastikan harga, spek, dan kemampuan pelaksanaan.'
+    },
+    proses: {
+      id: 'proses',
+      label: 'Proses Pemilihan',
+      icon: '🚦',
+      note: 'Laksanakan proses sesuai metode.'
+    },
+    kontrak: {
+      id: 'kontrak',
+      label: 'SPK / Kontrak',
+      icon: '📑',
+      note: 'Ikat hasil proses secara tertulis.'
+    },
+    monitoringKontrak: {
+      id: 'monitoring-kontrak',
+      label: 'Monitoring Kontrak',
+      icon: '📡',
+      note: 'Pantau waktu, mutu, volume, dan kewajiban.'
+    },
+    uangMuka: {
+      id: 'uang-muka',
+      label: 'Uang Muka / Jaminan',
+      icon: '🧾',
+      note: 'Kelola uang muka, jaminan, dan syarat kontraktual.'
+    },
+    identifikasiPerubahan: {
+      id: 'identifikasi-perubahan',
+      label: 'Identifikasi Perubahan',
+      icon: '🔍',
+      note: 'Cek perubahan volume, waktu, spesifikasi, atau kondisi lapangan.'
+    },
+    kajiKontrak: {
+      id: 'kaji-kontrak',
+      label: 'Kaji Klausul Kontrak',
+      icon: '📖',
+      note: 'Pastikan perubahan memungkinkan secara kontraktual.'
+    },
+    justifikasiTeknis: {
+      id: 'justifikasi-teknis',
+      label: 'Justifikasi Teknis',
+      icon: '🧾',
+      note: 'Susun alasan teknis dan administrasi perubahan.'
+    },
+    negosiasiPerubahan: {
+      id: 'negosiasi-perubahan',
+      label: 'Negosiasi Perubahan',
+      icon: '🤝',
+      note: 'Bahas dampak harga, waktu, volume, dan mutu.'
+    },
+    adendumKontrak: {
+      id: 'adendum-kontrak',
+      label: 'Adendum Kontrak',
+      icon: '✍️',
+      note: 'Tuangkan perubahan kontrak secara tertulis.'
+    },
+    teguran: {
+      id: 'teguran',
+      label: 'Teguran / Evaluasi',
+      icon: '📣',
+      note: 'Dilakukan saat ada keterlambatan atau masalah.'
+    },
+    pemeriksaan: {
+      id: 'pemeriksaan',
+      label: 'Pemeriksaan Hasil',
+      icon: '🔬',
+      note: 'Cek kesesuaian sebelum diterima.'
+    },
+    bast: {
+      id: 'bast',
+      label: 'BAST',
+      icon: '📦',
+      note: 'Serah terima setelah barang/jasa sesuai.'
+    },
+    pembayaran: {
+      id: 'pembayaran',
+      label: 'Pembayaran',
+      icon: '💳',
+      note: 'Dilakukan sesuai dokumen pendukung.'
+    },
+    realisasi: {
+      id: 'realisasi',
+      label: 'Catat Realisasi',
+      icon: '✅',
+      note: 'Pastikan realisasi tercatat.'
+    },
+
+    kontrakAwal: {
+      id: 'kontrak-awal',
+      label: 'Kontrak Dulu',
+      icon: '🚨',
+      note: 'Jebakan: lompat proses.',
+      type: 'trap'
+    },
+    pecahPaket: {
+      id: 'pecah-paket',
+      label: 'Pecah Paket',
+      icon: '💣',
+      note: 'Jebakan: rawan menghindari metode.',
+      type: 'trap'
+    },
+    spekMengarah: {
+      id: 'spek-mengarah',
+      label: 'Spek Mengarah',
+      icon: '🚫',
+      note: 'Jebakan: persaingan tidak sehat.',
+      type: 'trap'
+    },
+    abaikanKatalog: {
+      id: 'abaikan-katalog',
+      label: 'Abaikan Katalog',
+      icon: '⚠️',
+      note: 'Jebakan: tidak cek kanal tersedia.',
+      type: 'trap'
+    },
+    lanjutEpurchasingPaksa: {
+      id: 'lanjut-epurchasing-paksa',
+      label: 'Paksa e-Purchasing',
+      icon: '🚧',
+      note: 'Jebakan: tetap memaksa katalog padahal tidak sesuai.',
+      type: 'trap'
+    },
+    gantiMetodeTanpaBukti: {
+      id: 'ganti-metode-tanpa-bukti',
+      label: 'Ganti Metode Tanpa Bukti',
+      icon: '⚡',
+      note: 'Jebakan: perubahan metode tanpa dokumentasi hasil cek.',
+      type: 'trap'
+    },
+    lewatiRup: {
+      id: 'lewati-rup',
+      label: 'Lewati RUP',
+      icon: '⛔',
+      note: 'Jebakan: proses tanpa cek perencanaan.',
+      type: 'trap'
+    },
+    bastTanpaCek: {
+      id: 'bast-tanpa-cek',
+      label: 'BAST Tanpa Pemeriksaan',
+      icon: '📦',
+      note: 'Jebakan: menerima tanpa verifikasi.',
+      type: 'trap'
+    },
+    bayarDulu: {
+      id: 'bayar-dulu',
+      label: 'Bayar Dulu',
+      icon: '💸',
+      note: 'Jebakan: pembayaran sebelum bukti memadai.',
+      type: 'trap'
+    },
+    tundaDokumen: {
+      id: 'tunda-dokumen',
+      label: 'Tunda Dokumen',
+      icon: '🧨',
+      note: 'Jebakan: risiko administrasi meningkat.',
+      type: 'trap'
+    },
+    metodeAsalCepat: {
+      id: 'metode-asal-cepat',
+      label: 'Metode Asal Cepat',
+      icon: '🏃',
+      note: 'Jebakan: cepat belum tentu tepat.',
+      type: 'trap'
+    },
+    realisasiLupa: {
+      id: 'realisasi-lupa',
+      label: 'Lupakan Realisasi',
+      icon: '🕳️',
+      note: 'Jebakan: monitoring bolong.',
+      type: 'trap'
+    },
+    adendumTanpaDasar: {
+      id: 'adendum-tanpa-dasar',
+      label: 'Adendum Tanpa Dasar',
+      icon: '🔥',
+      note: 'Jebakan: perubahan kontrak tanpa kajian/justifikasi.',
+      type: 'trap'
+    },
+    bayarSebelumAdendum: {
+      id: 'bayar-sebelum-adendum',
+      label: 'Bayar Sebelum Adendum',
+      icon: '💸',
+      note: 'Jebakan: pembayaran sebelum perubahan kontrak tertib.',
+      type: 'trap'
+    },
+    swakelolaTanpaTim: {
+      id: 'swakelola-tanpa-tim',
+      label: 'Swakelola Tanpa Tim',
+      icon: '🙈',
+      note: 'Jebakan: tim swakelola tidak dibentuk jelas.',
+      type: 'trap'
+    },
+    abaikanPdn: {
+      id: 'abaikan-pdn',
+      label: 'Abaikan PDN',
+      icon: '🚫',
+      note: 'Jebakan: tidak memperhatikan afirmasi PDN/TKDN.',
+      type: 'trap'
+    }
+  };
+
+  function card(key) {
+    const item = CARD_LIBRARY[key];
+
+    if (!item) return null;
+
+    return {
+      ...item,
+      type: item.type || 'action'
+    };
+  }
+
+  const CHALLENGE_RAW = [
+    {
+      type: 'pipeline',
+      title: 'Soal 1 — Susun Pipeline Dasar Pengadaan',
+      caseTitle: 'Belanja ATK Kantor',
+      desc: 'OPD akan melakukan belanja ATK kantor senilai Rp45 juta. Susun alur pengadaan paling aman dari awal sampai realisasi.',
+      budget: 'Rp45.000.000',
+      difficulty: 'Level 1 - Pemula',
+      ideal: ['rup', 'kak', 'hps', 'metodePl', 'proses', 'kontrak', 'bast', 'realisasi'],
+      traps: ['kontrakAwal', 'lewatiRup', 'bayarDulu'],
+      explanation: 'Alur dasar dimulai dari cek RUP, penyusunan KAK/spesifikasi, HPS, penentuan metode, proses pengadaan, kontrak, BAST, lalu realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 2 — Ruang Lingkup PBJ',
+      caseTitle: 'Konsep Dasar PBJ',
+      desc: 'Jawab pertanyaan berikut berdasarkan konsep dasar PBJ Pemerintah.',
+      question: 'PBJ Pemerintah dimulai dari tahap apa sampai tahap apa?',
+      options: [
+        'Identifikasi kebutuhan sampai kontrak',
+        'Perencanaan sampai pembayaran',
+        'Identifikasi kebutuhan sampai serah terima hasil pekerjaan',
+        'Penyusunan HPS sampai serah terima'
+      ],
+      answer: 2,
+      hint: 'Fokus pada ruang lingkup PBJ yang paling lengkap, bukan yang berhenti di kontrak.',
+      explanation: 'PBJ Pemerintah adalah proses dari identifikasi kebutuhan sampai dengan serah terima hasil pekerjaan.'
+    },
+    {
+      type: 'tenderRush',
+      title: 'Soal 3 — Tender Rush: Pilih Jalur Metode',
+      caseTitle: 'Arcade Metode Pengadaan',
+      desc: 'Paket akan muncul satu per satu. Masukkan paket ke jalur metode yang paling tepat sebelum waktu habis.',
+      budget: 'Simulasi cepat',
+      difficulty: 'Level 2 - Arcade',
+      timeLimit: 10,
+      packages: [
+        {
+          title: 'Belanja Laptop Pelayanan Publik',
+          type: 'Barang',
+          pagu: 350000000,
+          clue: 'Barang tersedia di e-Katalog dan perlu memperhatikan PDN/TKDN.',
+          correct: 'ekatalog',
+          explanation: 'Laptop yang tersedia dan sesuai di e-Katalog lebih aman diarahkan ke e-Purchasing. Jangan asal masuk Pengadaan Langsung karena nilainya besar dan kanal katalog tersedia.'
+        },
+        {
+          title: 'Belanja ATK Kegiatan Kantor',
+          type: 'Barang',
+          pagu: 45000000,
+          clue: 'Nilai kecil, kebutuhan sederhana, dan tidak kompleks.',
+          correct: 'pengadaanLangsung',
+          explanation: 'Paket kecil dan sederhana dapat menggunakan Pengadaan Langsung sepanjang sesuai batas nilai, tidak dipecah, dan administrasinya tertib.'
+        },
+        {
+          title: 'Rehabilitasi Gedung Pelayanan',
+          type: 'Pekerjaan Konstruksi',
+          pagu: 760000000,
+          clue: 'Pekerjaan konstruksi bernilai besar dan butuh proses formal.',
+          correct: 'tenderSeleksi',
+          explanation: 'Pekerjaan konstruksi bernilai besar tidak tepat dipaksa menjadi Pengadaan Langsung. Gunakan Tender/Seleksi atau mekanisme yang sesuai.'
+        },
+        {
+          title: 'Pelatihan Internal Pegawai oleh Tim OPD',
+          type: 'Jasa Lainnya',
+          pagu: 95000000,
+          clue: 'Kegiatan dilaksanakan sendiri dengan tim persiapan, pelaksana, dan pengawas.',
+          correct: 'swakelola',
+          explanation: 'Jika kegiatan memenuhi kriteria dan dilaksanakan sendiri/bersama pihak yang sesuai, Swakelola bisa dipilih dengan tim dan pertanggungjawaban yang jelas.'
+        },
+        {
+          title: 'Pembayaran Listrik Kantor',
+          type: 'Jasa Lainnya',
+          pagu: 300000000,
+          clue: 'Layanan utilitas rutin/tertentu.',
+          correct: 'dikecualikan',
+          explanation: 'Pembayaran utilitas tertentu dapat masuk kategori dikecualikan, tetapi tetap perlu dasar, bukti, dan pencatatan yang tertib.'
+        }
+      ],
+      explanation: 'Tender Rush melatih refleks membaca jenis paket, pagu, ketersediaan katalog, dan kondisi pelaksanaan sebelum memilih metode.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 4 — Tujuan PBJ',
+      caseTitle: 'Laptop TKDN + BMP 42%',
+      desc: 'PPK membeli laptop melalui katalog elektronik dengan TKDN + BMP 42%.',
+      question: 'Tujuan PBJ yang paling didukung oleh kondisi tersebut adalah?',
+      options: [
+        'Menghasilkan barang sesuai nilai uang',
+        'Meningkatkan penggunaan produk dalam negeri',
+        'Meningkatkan peran konsultan perencana',
+        'Mengurangi jumlah paket pengadaan'
+      ],
+      answer: 1,
+      hint: 'Kata kunci utama ada pada TKDN dan BMP.',
+      explanation: 'TKDN/BMP menunjukkan keberpihakan pada produk dalam negeri.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 5 — Susun Pipeline Konsolidasi',
+      caseTitle: 'Komputer Beberapa Bidang',
+      desc: 'Beberapa bidang mengusulkan komputer dengan kebutuhan sejenis. Total nilai Rp650 juta.',
+      budget: 'Rp650.000.000',
+      difficulty: 'Level 3 - Menengah',
+      ideal: ['rup', 'identifikasi', 'konsolidasi', 'kak', 'hps', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
+      traps: ['pecahPaket', 'metodePl', 'metodeAsalCepat', 'kontrakAwal'],
+      explanation: 'Kebutuhan sejenis perlu diidentifikasi dan dapat dikonsolidasikan agar tidak terjadi pemecahan paket yang tidak wajar.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 6 — Pemaketan',
+      caseTitle: 'Strategi Pemaketan PBJ',
+      desc: 'Jawab pertanyaan tentang dasar pemaketan barang/jasa.',
+      question: 'Pemaketan barang/jasa dilakukan dengan mempertimbangkan apa?',
+      options: [
+        'Keluaran, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran',
+        'Keinginan bidang, kecepatan proses, dan kemudahan administrasi',
+        'Jumlah penyedia yang dikenal PPK',
+        'Nilai paket agar selalu bisa pengadaan langsung'
+      ],
+      answer: 0,
+      hint: 'Pilih jawaban yang paling objektif dan menyangkut kebutuhan + kondisi pasar.',
+      explanation: 'Pemaketan perlu mempertimbangkan output, volume, ketersediaan, kemampuan pelaku usaha, dan anggaran.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 7 — Susun Pipeline Spek Mengarah',
+      caseTitle: 'Laptop dengan Spek Terlalu Spesifik',
+      desc: 'Spesifikasi awal mengarah ke merek tertentu. Susun langkah korektif sebelum proses.',
+      budget: 'Rp420.000.000',
+      difficulty: 'Level 4 - Menengah',
+      ideal: ['rup', 'reviewSpek', 'kak', 'hps', 'cekPdn', 'cekKatalog', 'metodeEpurchasing', 'klarifikasi', 'kontrak', 'bast', 'realisasi'],
+      traps: ['spekMengarah', 'kontrakAwal', 'abaikanKatalog', 'metodeAsalCepat'],
+      explanation: 'Jika spesifikasi mengarah, lakukan review spek dulu agar kebutuhan teknis lebih fair sebelum lanjut HPS dan metode.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 8 — Spesifikasi Teknis',
+      caseTitle: 'Fungsi Spesifikasi',
+      desc: 'Jawab pertanyaan tentang fungsi spesifikasi teknis dalam PBJ.',
+      question: 'Salah satu fungsi spesifikasi teknis adalah?',
+      options: [
+        'Menentukan pemenang sebelum proses',
+        'Memberikan informasi kebutuhan kepada pelaku usaha',
+        'Mengunci merek tertentu agar barang sesuai selera',
+        'Menghindari persaingan agar proses cepat'
+      ],
+      answer: 1,
+      hint: 'Spesifikasi teknis seharusnya menjelaskan kebutuhan, bukan mengunci penyedia.',
+      explanation: 'Spesifikasi teknis harus memberi informasi kebutuhan kepada pelaku usaha.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 9 — Susun Pipeline Jasa Konsultansi',
+      caseTitle: 'Kajian Teknis Perencanaan',
+      desc: 'OPD akan menyusun kajian teknis perencanaan dengan nilai Rp280 juta.',
+      budget: 'Rp280.000.000',
+      difficulty: 'Level 5 - Menengah',
+      ideal: ['rup', 'identifikasi', 'kak', 'hps', 'seleksi', 'proses', 'kontrak', 'monitoringKontrak', 'bast', 'realisasi'],
+      traps: ['metodeEpurchasing', 'metodePl', 'kontrakAwal', 'abaikanKatalog'],
+      explanation: 'Jasa konsultansi menggunakan pendekatan KAK, HPS, seleksi, proses, kontrak, monitoring, BAST, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 10 — Jenis Pengadaan',
+      caseTitle: 'Kajian Teknis / Studi Kelayakan',
+      desc: 'Jawab pertanyaan tentang jenis pengadaan.',
+      question: 'Penyusunan studi kelayakan/kajian teknis termasuk jenis pengadaan apa?',
+      options: [
+        'Barang',
+        'Pekerjaan konstruksi',
+        'Jasa lainnya',
+        'Jasa konsultansi'
+      ],
+      answer: 3,
+      hint: 'Perhatikan sifat pekerjaannya: kajian/studi berbasis keahlian.',
+      explanation: 'Kajian teknis/studi kelayakan merupakan jasa profesional berbasis keahlian, sehingga termasuk jasa konsultansi.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 11 — Susun Pipeline Konstruksi Ringan',
+      caseTitle: 'Rehabilitasi Ruang Pelayanan',
+      desc: 'Pekerjaan konstruksi ringan dengan nilai Rp760 juta membutuhkan proses formal dan pemeriksaan hasil.',
+      budget: 'Rp760.000.000',
+      difficulty: 'Level 6 - Sulit',
+      ideal: ['rup', 'identifikasi', 'kak', 'hps', 'tender', 'proses', 'kontrak', 'monitoringKontrak', 'pemeriksaan', 'bast', 'realisasi'],
+      traps: ['metodePl', 'kontrakAwal', 'bastTanpaCek', 'bayarDulu'],
+      explanation: 'Pekerjaan konstruksi membutuhkan dokumen teknis, HPS, pemilihan, kontrak, monitoring, pemeriksaan hasil, BAST, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 12 — Prinsip PBJ',
+      caseTitle: 'Barang Tidak Sesuai',
+      desc: 'Barang/pekerjaan tidak sesuai spesifikasi sehingga tidak dapat digunakan.',
+      question: 'Prinsip PBJ yang tidak terpenuhi adalah?',
+      options: [
+        'Efisien',
+        'Efektif',
+        'Transparan',
+        'Akuntabel'
+      ],
+      answer: 1,
+      hint: 'Kalau hasilnya tidak sesuai kebutuhan, prinsip yang gagal adalah terkait tercapainya tujuan.',
+      explanation: 'Efektif berarti barang/jasa harus sesuai kebutuhan dan tujuan.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 13 — Susun Pipeline Swakelola',
+      caseTitle: 'Pelatihan Internal Pegawai',
+      desc: 'OPD akan melaksanakan kegiatan pelatihan internal pegawai. Susun alur yang sesuai untuk skema swakelola.',
+      budget: 'Rp95.000.000',
+      difficulty: 'Level 7 - Menengah',
+      ideal: ['rup', 'identifikasi', 'kak', 'hps', 'timPersiapan', 'timPelaksana', 'timPengawas', 'swakelola', 'bast', 'realisasi'],
+      traps: ['metodeEpurchasing', 'tender', 'kontrakAwal', 'swakelolaTanpaTim'],
+      explanation: 'Swakelola tetap perlu perencanaan, identifikasi kebutuhan, KAK, anggaran/HPS, tim persiapan/pelaksana/pengawas, pelaksanaan, BAST, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 14 — Swakelola',
+      caseTitle: 'Kriteria Swakelola',
+      desc: 'Jawab pertanyaan tentang penggunaan swakelola.',
+      question: 'Ruang lingkup pedoman swakelola meliputi apa?',
+      options: [
+        'Perencanaan, persiapan, pelaksanaan, pengawasan, dan serah terima hasil pekerjaan',
+        'Tender, seleksi, katalog, dan kontrak',
+        'Perencanaan, tender, evaluasi harga, dan pembayaran',
+        'KAK, HPS, sanggah, kontrak, dan pembayaran'
+      ],
+      answer: 0,
+      hint: 'Swakelola tidak hanya pelaksanaan; ada persiapan, pengawasan, dan serah terima.',
+      explanation: 'Ruang lingkup swakelola mencakup perencanaan pengadaan melalui swakelola, persiapan, pelaksanaan, pengawasan, dan serah terima hasil pekerjaan.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 15 — Susun Pipeline Penyedia Terlambat',
+      caseTitle: 'Penyedia Terlambat Mengirim Barang',
+      desc: 'Kontrak sudah berjalan, namun penyedia terlambat mengirim barang. Jangan langsung BAST atau bayar.',
+      budget: 'Rp190.000.000',
+      difficulty: 'Level 8 - Sulit',
+      ideal: ['kontrak', 'monitoringKontrak', 'teguran', 'pemeriksaan', 'bast', 'pembayaran', 'realisasi'],
+      traps: ['bastTanpaCek', 'bayarDulu', 'realisasiLupa'],
+      explanation: 'Saat kontrak bermasalah, lakukan monitoring kontrak, teguran/evaluasi, pemeriksaan hasil, BAST jika sesuai, pembayaran, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 16 — Aspek Hukum Kontrak',
+      caseTitle: 'Sengketa Pelaksanaan Kontrak',
+      desc: 'PPK dan penyedia berselisih dalam pelaksanaan kontrak.',
+      question: 'Perselisihan PPK dan penyedia dalam pelaksanaan kontrak terutama termasuk aspek hukum apa?',
+      options: [
+        'Hukum pidana',
+        'Hukum perdata',
+        'Hukum persaingan usaha',
+        'Hukum tata negara'
+      ],
+      answer: 1,
+      hint: 'Perhatikan hubungan antara PPK dan penyedia dalam kontrak.',
+      explanation: 'Hubungan PPK dan penyedia dalam pelaksanaan kontrak pada dasarnya adalah hubungan perdata.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 17 — Susun Pipeline Ganti Metode dari e-Purchasing',
+      caseTitle: 'e-Purchasing Tidak Bisa Dilanjutkan',
+      desc: 'Paket awalnya direncanakan e-Purchasing, tetapi setelah dicek tidak ada produk/penyedia yang sesuai di katalog. Susun langkah paling aman sebelum mengganti metode.',
+      budget: 'Rp480.000.000',
+      difficulty: 'Level 9 - Sulit',
+      ideal: [
+        'rup',
+        'kak',
+        'hps',
+        'cekPdn',
+        'cekKatalog',
+        'katalogTidakSesuai',
+        'dokumentasiGagalKatalog',
+        'evaluasiMetode',
+        'pilihMetode',
+        'proses',
+        'kontrak',
+        'bast',
+        'realisasi'
+      ],
+      traps: [
+        'lanjutEpurchasingPaksa',
+        'gantiMetodeTanpaBukti',
+        'kontrakAwal',
+        'metodeAsalCepat'
+      ],
+      explanation: 'Jika rencana awal e-Purchasing tidak bisa dilakukan karena tidak ada produk/penyedia sesuai di katalog, PPK perlu mendokumentasikan hasil pengecekan, mengevaluasi metode, lalu memilih metode lain yang sesuai nilai, jenis, dan kondisi paket.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 18 — Perubahan Metode dari e-Purchasing',
+      caseTitle: 'Tidak Ada Penyedia di Katalog',
+      desc: 'Rencana awal paket adalah e-Purchasing, namun hasil cek katalog menunjukkan produk/penyedia tidak sesuai kebutuhan.',
+      question: 'Langkah paling aman sebelum mengganti metode dari e-Purchasing adalah?',
+      options: [
+        'Langsung tunjuk penyedia yang dikenal agar cepat',
+        'Tetap memaksa e-Purchasing walaupun produk tidak sesuai',
+        'Dokumentasikan hasil cek katalog, evaluasi metode, lalu pilih metode yang sesuai',
+        'Pecah paket agar bisa memakai metode yang lebih sederhana'
+      ],
+      answer: 2,
+      hint: 'Jangan lompat ganti metode. Harus ada dasar dan dokumentasinya dulu.',
+      explanation: 'Perubahan metode harus didasarkan pada hasil cek dan dokumentasi yang jelas. Setelah itu baru dilakukan evaluasi dan pemilihan metode yang sesuai.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 19 — Susun Pipeline Adendum Kontrak',
+      caseTitle: 'Perubahan Volume dan Waktu Pelaksanaan',
+      desc: 'Kontrak sedang berjalan. Terdapat kebutuhan perubahan volume dan penyesuaian waktu pelaksanaan. Susun alur adendum kontrak yang tertib.',
+      budget: 'Nilai kontrak berjalan',
+      difficulty: 'Level 10 - Expert',
+      ideal: [
+        'kontrak',
+        'monitoringKontrak',
+        'identifikasiPerubahan',
+        'kajiKontrak',
+        'justifikasiTeknis',
+        'negosiasiPerubahan',
+        'adendumKontrak',
+        'pemeriksaan',
+        'bast',
+        'pembayaran',
+        'realisasi'
+      ],
+      traps: [
+        'adendumTanpaDasar',
+        'bayarSebelumAdendum',
+        'bastTanpaCek',
+        'realisasiLupa'
+      ],
+      explanation: 'Adendum kontrak harus didahului identifikasi perubahan, kajian klausul kontrak, justifikasi teknis/administratif, dan negosiasi dampak perubahan. Setelah adendum tertib, pelaksanaan dapat dilanjutkan sampai pemeriksaan, BAST, pembayaran, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 20 — Adendum Kontrak',
+      caseTitle: 'Perubahan Kontrak Berjalan',
+      desc: 'Dalam pelaksanaan kontrak ditemukan kebutuhan perubahan volume dan waktu.',
+      question: 'Apa yang paling tepat dilakukan sebelum membuat adendum kontrak?',
+      options: [
+        'Membayar dulu agar penyedia tetap bekerja',
+        'Membuat justifikasi dan memastikan perubahan sesuai ketentuan/klausul kontrak',
+        'Langsung BAST agar pekerjaan cepat selesai',
+        'Membiarkan perubahan terjadi tanpa dokumen'
+      ],
+      answer: 1,
+      hint: 'Adendum butuh dasar, bukan sekadar kesepakatan lisan.',
+      explanation: 'Adendum kontrak membutuhkan dasar yang jelas, termasuk kajian kontrak dan justifikasi perubahan. Perubahan tidak boleh berjalan tanpa dasar dan dokumen yang tertib.'
+    },
+    {
+      type: 'pipeline',
+      title: 'Soal 21 — Katalog Konstruksi dengan Mini Kompetisi',
+      caseTitle: 'Produk Konstruksi di Katalog Elektronik',
+      desc: 'OPD akan membeli produk sektor konstruksi melalui katalog elektronik. Susun alur yang lebih aman dengan memperhatikan kewajiban mini kompetisi.',
+      budget: 'Rp1.200.000.000',
+      difficulty: 'Level 11 - Expert',
+      ideal: [
+        'rup',
+        'identifikasi',
+        'kak',
+        'hps',
+        'cekPdn',
+        'cekKatalog',
+        'miniKompetisi',
+        'klarifikasi',
+        'kontrak',
+        'monitoringKontrak',
+        'pemeriksaan',
+        'bast',
+        'realisasi'
+      ],
+      traps: [
+        'abaikanKatalog',
+        'kontrakAwal',
+        'metodeAsalCepat',
+        'bayarDulu'
+      ],
+      explanation: 'Untuk produk sektor konstruksi di katalog, perlu memperhatikan tata kelola katalog, persaingan sehat, mini kompetisi bila diwajibkan, kontrak, monitoring, pemeriksaan, BAST, dan realisasi.'
+    },
+    {
+      type: 'quiz',
+      title: 'Soal 22 — Afirmasi Belanja',
+      caseTitle: 'Belanja Melalui Katalog',
+      desc: 'Dalam belanja katalog, pemerintah mendorong afirmasi tertentu.',
+      question: 'Afirmasi belanja melalui e-Purchasing terutama diarahkan untuk mendukung apa?',
+      options: [
+        'Produk dalam negeri serta usaha mikro, kecil, dan koperasi',
+        'Penyedia yang paling dekat dengan kantor',
+        'Barang impor karena lebih cepat',
+        'Pemilihan penyedia tanpa kompetisi'
+      ],
+      answer: 0,
+      hint: 'Ingat kata kunci PDN, UMK, dan koperasi.',
+      explanation: 'Afirmasi belanja melalui e-Purchasing diarahkan untuk mendukung produk dalam negeri serta usaha mikro, kecil, dan koperasi.'
+    }
+  ];
+
+
+  function getTenderRushTimeLimitByLevel(levelNo) {
+    if (levelNo <= 3) return 10;
+    if (levelNo <= 6) return 8;
+    if (levelNo <= 9) return 7;
+    if (levelNo <= 12) return 6;
+    return 5;
+  }
+
+  function getTenderRushFailLimitByLevel(levelNo) {
+    if (levelNo <= 3) return 5;
+    if (levelNo <= 6) return 3;
+    if (levelNo <= 9) return 2;
+    return 1;
+  }
+
+  function getCurrentLevelNumber() {
+    return Math.max(1, Number(GAME_STATE.index || 0) + 1);
+  }
+
+  function cloneTenderRushChallenge(template, levelNo, variantIndex) {
+    const variants = [
+      {
+        title: `Level ${levelNo} — Tender Rush: Pilih Jalur Metode`,
+        caseTitle: 'Arcade Metode Pengadaan',
+        difficulty: `Level ${levelNo} - Arcade`,
+        packages: template.packages
+      },
+      {
+        title: `Level ${levelNo} — Tender Rush: Paket Makin Cepat`,
+        caseTitle: 'Arcade Pagu dan Metode',
+        difficulty: `Level ${levelNo} - Arcade+`,
+        packages: [
+          { title: 'Belanja Kendaraan Operasional Katalog', type: 'Barang', pagu: 650000000, clue: 'Barang pabrikan dan tersedia di katalog elektronik.', correct: 'ekatalog', explanation: 'Jika kendaraan tersedia dan sesuai di katalog, e-Purchasing lebih tepat daripada memaksa metode manual.' },
+          { title: 'Konsumsi Rapat Koordinasi Kecil', type: 'Jasa Lainnya', pagu: 12000000, clue: 'Nilai kecil, sederhana, dan tidak kompleks.', correct: 'pengadaanLangsung', explanation: 'Konsumsi bernilai kecil dapat menggunakan Pengadaan Langsung sepanjang sesuai batas nilai dan administrasi tertib.' },
+          { title: 'Jasa Konsultan DED Gedung', type: 'Jasa Konsultansi', pagu: 420000000, clue: 'Membutuhkan keahlian profesional dan evaluasi teknis.', correct: 'tenderSeleksi', explanation: 'Jasa konsultansi dengan nilai dan kompleksitas tertentu lebih tepat melalui Seleksi, bukan Pengadaan Langsung.' },
+          { title: 'Pelatihan Internal oleh Tim OPD', type: 'Jasa Lainnya', pagu: 90000000, clue: 'Dikerjakan sendiri dengan tim pelaksana dan pengawas.', correct: 'swakelola', explanation: 'Kegiatan yang dilaksanakan sendiri dapat menggunakan Swakelola jika tim, rencana, dan pertanggungjawabannya jelas.' },
+          { title: 'Pembayaran Air dan Listrik Kantor', type: 'Jasa Lainnya', pagu: 240000000, clue: 'Layanan utilitas rutin/tertentu.', correct: 'dikecualikan', explanation: 'Utilitas tertentu dapat dikecualikan sesuai dasar ketentuan, tetapi tetap wajib tertib bukti dan pencatatan.' }
+        ]
+      },
+      {
+        title: `Level ${levelNo} — Tender Rush: Risiko Akhir Tahun`,
+        caseTitle: 'Arcade Risiko Metode',
+        difficulty: `Level ${levelNo} - Sulit`,
+        packages: [
+          { title: 'Laptop Pelayanan Publik TKDN Tersedia', type: 'Barang', pagu: 480000000, clue: 'Ada produk katalog dan perlu afirmasi PDN/TKDN.', correct: 'ekatalog', explanation: 'Katalog yang tersedia dan sesuai mendukung e-Purchasing serta afirmasi PDN/TKDN.' },
+          { title: 'Souvenir Kegiatan Sosialisasi', type: 'Barang', pagu: 35000000, clue: 'Nilai kecil, sederhana, tidak dipecah dari kebutuhan besar.', correct: 'pengadaanLangsung', explanation: 'Nilai kecil dan sederhana dapat masuk Pengadaan Langsung jika tidak digunakan untuk memecah paket.' },
+          { title: 'Pemeliharaan Jalan Lingkungan', type: 'Pekerjaan Konstruksi', pagu: 900000000, clue: 'Konstruksi nilai besar, perlu proses formal.', correct: 'tenderSeleksi', explanation: 'Konstruksi bernilai besar tidak cocok dipaksa ke Pengadaan Langsung. Jalur formal lebih aman.' },
+          { title: 'Kajian Data oleh Perguruan Tinggi Negeri', type: 'Jasa Konsultansi', pagu: 250000000, clue: 'Dilaksanakan bersama instansi/perguruan tinggi.', correct: 'swakelola', explanation: 'Kolaborasi dengan instansi/perguruan tinggi dapat masuk Swakelola jika memenuhi ketentuan dan struktur tim jelas.' },
+          { title: 'Layanan Pos/Pengiriman Dokumen Resmi', type: 'Jasa Lainnya', pagu: 70000000, clue: 'Layanan tertentu yang memiliki karakter khusus.', correct: 'dikecualikan', explanation: 'Layanan tertentu bisa dikecualikan, namun dasar dan pencatatan tetap wajib rapi.' }
+        ]
+      }
+    ];
+
+    const selected = variants[variantIndex % variants.length];
+
+    return {
+      ...template,
+      ...selected,
+      type: 'tenderRush',
+      desc: 'Paket akan muncul satu per satu. Masukkan paket ke jalur metode yang paling tepat sebelum waktu habis. Batas salah makin ketat di level tinggi.',
+      budget: 'Simulasi cepat',
+      timeLimit: getTenderRushTimeLimitByLevel(levelNo),
+      explanation: 'Tender Rush melatih refleks membaca jenis paket, pagu, ketersediaan katalog, dan kondisi pelaksanaan sebelum memilih metode.'
+    };
+  }
+
+  function expandChallengeFlow(rawList) {
+    const rushTemplate = rawList.find(item => item.type === 'tenderRush');
+    const baseList = rawList.filter(item => item.type !== 'tenderRush');
+    const rushLevels = new Set([3, 6, 9, 12, 15]);
+    const expanded = [];
+    let baseIndex = 0;
+    let rushIndex = 0;
+    let levelNo = 1;
+
+    while (baseIndex < baseList.length || (rushTemplate && rushLevels.has(levelNo))) {
+      if (rushTemplate && rushLevels.has(levelNo)) {
+        expanded.push(cloneTenderRushChallenge(rushTemplate, levelNo, rushIndex));
+        rushIndex += 1;
+      } else if (baseIndex < baseList.length) {
+        expanded.push(baseList[baseIndex]);
+        baseIndex += 1;
+      }
+
+      levelNo += 1;
+
+      if (levelNo > baseList.length + rushLevels.size + 8) break;
+    }
+
+    return expanded;
+  }
+
+  function buildChallenge(raw) {
+    if (raw.type === 'quiz' || raw.type === 'tenderRush' || raw.type === 'bonusOpenWorld' || raw.type === 'bonusSnake' || raw.type === 'bonusDino') {
+      return raw;
+    }
+
+    const idealCards = raw.ideal.map(key => card(key)).filter(Boolean);
+    const trapCards = (raw.traps || []).map(key => card(key)).filter(Boolean);
+
+    return {
+      ...raw,
+      idealIds: idealCards.map(item => item.id),
+      cards: [...idealCards, ...trapCards]
+    };
+  }
+
+
+  const BONUS_LEVEL_4_OPENWORLD = {
+    type: 'bonusOpenWorld',
+    title: 'Level 4 — Bonus 3D: PANJI Konsolidasi Quest',
+    caseTitle: 'PPK Terjebak di Dunia Konsolidasi 3D',
+    desc: 'Bonus level naratif. Kamu ditemani PANJI sebagai ahli pengadaan. Pilihanmu di recruit team, data, pasar, dan evaluasi akan menentukan poin analisa pengadaan.',
+    budget: 'Bonus Level 4',
+    difficulty: 'Bonus 3D Narrative',
+    explanation: 'Bonus ini melatih analisa konsolidasi: tim yang tepat, item sejenis, market sounding, dan evaluasi berbasis data.'
+  };
+
+  const BONUS_LEVEL_8_SNAKE = {
+    type: 'bonusSnake',
+    title: 'Level 8 — Bonus Santuy: PANJI Star Snake',
+    caseTitle: 'Snake Bintang Semangat',
+    desc: 'Bonus refreshing. Gerakkan ular PANJI, ambil bintang, hindari jebakan revisi. Skor bonus tetap masuk nilai akhir.',
+    budget: 'Bonus Level 8',
+    difficulty: 'Mood Booster',
+    explanation: 'Bonus Snake melatih fokus cepat: ambil item baik, hindari jebakan, dan tetap jaga mood sebelum lanjut analisa PBJ.'
+  };
+
+
+  const BONUS_LEVEL_10_DINO = {
+    type: 'bonusDino',
+    title: 'Level 10 — Bonus Dino Run: Kejar Paket Aman',
+    caseTitle: 'Runner 2D Anti Revisi',
+    desc: 'Bonus level 10. Lari, lompat, dan hindari gangguan seperti Revisi Dadakan, Spek Mengarah, dan Data Ganda. Karakter memakai sprite yang kamu kirim.',
+    budget: 'Bonus Level 10',
+    difficulty: 'Runner 2D',
+    explanation: 'Bonus Dino melatih fokus dan timing. Satu lompatan yang salah bisa bikin progres tersandung seperti paket yang terlalu buru-buru.'
+  };
+
+  function buildMainChallengeFlow() {
+    const rushTemplate = CHALLENGE_RAW.find(item => item.type === 'tenderRush');
+    const miniCompetitionPipeline = CHALLENGE_RAW[20];
+    const miniCompetitionQuiz = CHALLENGE_RAW[21];
+    const list = [
+      CHALLENGE_RAW[0],
+      CHALLENGE_RAW[1],
+      rushTemplate ? cloneTenderRushChallenge(rushTemplate, 3, 0) : CHALLENGE_RAW[2],
+      BONUS_LEVEL_4_OPENWORLD,
+      CHALLENGE_RAW[3],
+      CHALLENGE_RAW[4],
+      CHALLENGE_RAW[5],
+      BONUS_LEVEL_8_SNAKE,
+      CHALLENGE_RAW[6],
+      CHALLENGE_RAW[7],
+      BONUS_LEVEL_10_DINO,
+      rushTemplate ? cloneTenderRushChallenge(rushTemplate, 12, 1) : CHALLENGE_RAW[2],
+      miniCompetitionPipeline,
+      miniCompetitionQuiz
+    ].filter(Boolean);
+
+    return list;
+  }
+
+  const CHALLENGES = buildMainChallengeFlow().map(buildChallenge);
+
+  const TENDER_RUSH_METHODS = {
+    ekatalog: {
+      key: '1',
+      label: 'e-Katalog',
+      short: 'Katalog',
+      icon: '🛒',
+      hint: 'Tekan 1 untuk barang/jasa yang tersedia dan sesuai di katalog elektronik.'
+    },
+    pengadaanLangsung: {
+      key: '2',
+      label: 'Pengadaan Langsung',
+      short: 'PL',
+      icon: '🛠️',
+      hint: 'Tekan 2 untuk paket kecil/sederhana yang memenuhi batas nilai dan tidak dipecah.'
+    },
+    tenderSeleksi: {
+      key: '3',
+      label: 'Tender/Seleksi',
+      short: 'Tender',
+      icon: '🏗️',
+      hint: 'Tekan 3 untuk paket besar/kompleks atau jasa konsultansi yang perlu proses formal.'
+    },
+    swakelola: {
+      key: '4',
+      label: 'Swakelola',
+      short: 'Swakelola',
+      icon: '🤲',
+      hint: 'Tekan 4 untuk pekerjaan yang dilaksanakan sendiri/bersama sesuai kriteria swakelola.'
+    },
+    dikecualikan: {
+      key: '5',
+      label: 'Dikecualikan',
+      short: 'Dikecualikan',
+      icon: '⚖️',
+      hint: 'Tekan 5 untuk pengadaan yang punya dasar pengecualian, tetap tertib dan tercatat.'
+    }
+  };
+
+  function formatCurrency(value) {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0
+    }).format(Number(value || 0));
+  }
+
+  const GAME_STATE = {
+    order: [],
+    index: 0,
+    current: null,
+    stage: 'ready',
+    placed: [],
+    shuffledCards: [],
+    selectedCardId: null,
+    answered: false,
+    selectedAnswer: null,
+    score: 0,
+    risk: 0,
+    wrong: 0,
+    correct: 0,
+    progress: 0,
+    logs: [],
+    finished: false,
+    hintUsed: false,
+    hasSeenIntro: false,
+    runId: '',
+    gameStartedAt: 0,
+    scoreSubmitted: false,
+    tenderRush: null,
+    levelTimeLeft: 0,
+    levelTimeLimit: 0,
+    stoppedReason: '',
+    stoppedLevel: 0,
+    pipelineTutorialSeen: false
+  };
+
+  const PLAYER_STATE = {
+    nama: '',
+    instansi: '',
+    leaderboard: [],
+    loadingLeaderboard: false,
+    savingScore: false,
+    lastSaveMessage: '',
+    feedback: ''
+  };
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function readStoredPlayer() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY) || '{}');
+      PLAYER_STATE.nama = String(saved.nama || '').trim();
+      PLAYER_STATE.instansi = String(saved.instansi || '').trim();
+      PLAYER_STATE.feedback = String(saved.feedback || '').trim();
+    } catch (error) {
+      PLAYER_STATE.nama = '';
+      PLAYER_STATE.instansi = '';
+      PLAYER_STATE.feedback = '';
+    }
+  }
+
+  function hasPlayerProfile() {
+    return Boolean(String(PLAYER_STATE.nama || '').trim() && String(PLAYER_STATE.instansi || '').trim());
+  }
+
+  function savePlayerProfile(nama, instansi) {
+    PLAYER_STATE.nama = String(nama || '').trim();
+    PLAYER_STATE.instansi = String(instansi || '').trim();
+
+    localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify({
+      nama: PLAYER_STATE.nama,
+      instansi: PLAYER_STATE.instansi,
+      feedback: PLAYER_STATE.feedback || '',
+      updatedAt: new Date().toISOString()
+    }));
+  }
+
+  function getCurrentResultSummary() {
+    const maxScore = calculateMaxScore();
+    const percent = maxScore > 0 ? Math.round((GAME_STATE.score / maxScore) * 100) : 0;
+    const totalSoal = CHALLENGES.length;
+    const benar = Math.max(0, Math.min(totalSoal, Number(GAME_STATE.correct || 0)));
+    const salah = Math.max(0, Number(GAME_STATE.wrong || 0));
+    const durasiDetik = GAME_STATE.gameStartedAt
+      ? Math.max(0, Math.round((Date.now() - GAME_STATE.gameStartedAt) / 1000))
+      : 0;
+
+    const levelDicapai = GAME_STATE.stoppedLevel || Math.min(CHALLENGES.length, GAME_STATE.index + 1);
+    const levelSelesai = GAME_STATE.stoppedReason ? Math.max(0, levelDicapai - 1) : (GAME_STATE.finished ? CHALLENGES.length : Math.max(0, levelDicapai - 1));
+
+    return {
+      maxScore,
+      percent,
+      totalSoal,
+      benar,
+      salah,
+      durasiDetik,
+      skor: GAME_STATE.score,
+      risiko: GAME_STATE.risk,
+      levelDicapai,
+      levelSelesai
+    };
+  }
+
+  function formatDuration(seconds) {
+    const total = Math.max(0, Number(seconds || 0));
+    const minutes = Math.floor(total / 60);
+    const rest = total % 60;
+
+    if (minutes <= 0) return `${rest} detik`;
+    return `${minutes} menit ${String(rest).padStart(2, '0')} detik`;
+  }
+
+  async function fetchLeaderboard() {
+    if (!LEADERBOARD_API_URL) return [];
+
+    PLAYER_STATE.loadingLeaderboard = true;
+    renderLeaderboardModalContent();
+
+    try {
+      const response = await fetch(`${LEADERBOARD_API_URL}?action=leaderboard&v=${Date.now()}`, {
+        method: 'GET',
+        cache: 'no-store'
+      });
+
+      const json = await response.json();
+      const rows = Array.isArray(json) ? json : Array.isArray(json.leaderboard) ? json.leaderboard : [];
+      PLAYER_STATE.leaderboard = sortLeaderboardRows(rows);
+      return PLAYER_STATE.leaderboard;
+    } catch (error) {
+      PLAYER_STATE.lastSaveMessage = `Leaderboard belum bisa dimuat: ${error.message || error}`;
+      return [];
+    } finally {
+      PLAYER_STATE.loadingLeaderboard = false;
+      renderLeaderboardModalContent();
+    }
+  }
+
+
+  async function fetchReviewRowsForBubble() {
+    if (!LEADERBOARD_API_URL) return [];
+    try {
+      const response = await fetch(`${LEADERBOARD_API_URL}?action=reviews&v=${Date.now()}`, {
+        method: 'GET',
+        cache: 'no-store'
+      });
+      const json = await response.json();
+      const rows = Array.isArray(json)
+        ? json
+        : Array.isArray(json.reviews)
+          ? json.reviews
+          : Array.isArray(json.leaderboard)
+            ? json.leaderboard
+            : [];
+      return rows
+        .filter(row => row && getRowReview(row))
+        .slice(0, 8);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  async function showReviewBubbleOnMenuOpen(options = {}) {
+    if (destroyed) return;
+
+    const now = Date.now();
+    if (!options.force && now - reviewBubbleLastShownAt < 3500) return;
+    reviewBubbleLastShownAt = now;
+
+    document.querySelectorAll('.ps-review-bubble-pop').forEach(el => el.remove());
+    if (reviewBubbleTimer) {
+      clearTimeout(reviewBubbleTimer);
+      reviewBubbleTimer = null;
+    }
+
+    const rows = await fetchReviewRowsForBubble();
+    if (destroyed || !rows.length) return;
+    const emojis = ['😄','🔥','⭐','💬','🚀','🧠','🎮','🙌','😂','✨'];
+    const pickedRows = rows.slice(0, Math.min(8, rows.length));
+    const created = [];
+
+    pickedRows.forEach((row, index) => {
+      const bubble = document.createElement('div');
+      bubble.className = `ps-review-bubble-pop ps-review-bubble-float review-pos-${index % 8}`;
+      bubble.style.setProperty('--review-i', String(index));
+      bubble.style.setProperty('--review-delay', `${index * 0.18}s`);
+      bubble.style.setProperty('--review-rand', String((index * 37) % 19));
+      bubble.innerHTML = `
+        <button type="button" class="ps-review-bubble-close" aria-label="Tutup">×</button>
+        <div class="ps-review-bubble-head">
+          <span>${emojis[index % emojis.length]} Review Pemain</span>
+          <b>PANJI baca...</b>
+        </div>
+        <div class="ps-review-main">
+          “${escapeHtml(getRowReview(row))}” ${emojis[(index + 3) % emojis.length]}
+          <small>${escapeHtml(row.nama || 'Pemain')} · ${escapeHtml(row.instansi || 'Instansi')}</small>
+        </div>
+      `;
+      document.body.appendChild(bubble);
+      created.push(bubble);
+
+      const closeOne = () => {
+        bubble.classList.add('closing');
+        setTimeout(() => bubble.remove(), 240);
+      };
+      bubble.querySelector('.ps-review-bubble-close')?.addEventListener('click', closeOne);
+      setTimeout(closeOne, 9000 + (index * 900));
+    });
+
+    reviewBubbleEl = created[0] || null;
+    showPanji('Ini review dari pemain lain. Aku munculin kayak bubble biar suasananya hidup. Baca sebentar, siapa tahu ada pengalaman yang nyambung sama kamu 😄', 'happy');
+    reviewBubbleTimer = setTimeout(() => {
+      created.forEach(bubble => {
+        if (bubble && bubble.parentNode) {
+          bubble.classList.add('closing');
+          setTimeout(() => bubble.remove(), 240);
+        }
+      });
+      reviewBubbleEl = null;
+    }, 12000);
+  }
+
+  async function submitFinalScoreToLeaderboard() {
+    if (GAME_STATE.scoreSubmitted || PLAYER_STATE.savingScore) return;
+
+    if (!hasPlayerProfile()) {
+      PLAYER_STATE.lastSaveMessage = 'Isi nama dan instansi dulu agar skor bisa masuk leaderboard.';
+      openLeaderboardModal('player', true);
+      return;
+    }
+
+    PLAYER_STATE.savingScore = true;
+    PLAYER_STATE.lastSaveMessage = 'Menyimpan skor ke leaderboard...';
+    renderLeaderboardModalContent();
+
+    const result = getCurrentResultSummary();
+    const payload = {
+      nama: PLAYER_STATE.nama,
+      instansi: PLAYER_STATE.instansi,
+      skor: result.skor,
+      benar: result.benar,
+      salah: result.salah,
+      risiko: result.risiko,
+      total_soal: result.totalSoal,
+      level_dicapai: result.levelDicapai,
+      level_selesai: result.levelSelesai,
+      durasi_detik: result.durasiDetik,
+      analisa_panji: getFinalPanjiAnalysisText(result),
+      review: PLAYER_STATE.feedback || '',
+      pengalaman_main: PLAYER_STATE.feedback || ''
+    };
+
+    try {
+      const response = await fetch(LEADERBOARD_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const json = await response.json();
+
+      if (!json.ok) {
+        throw new Error(json.message || 'Skor gagal disimpan.');
+      }
+
+      GAME_STATE.scoreSubmitted = true;
+      PLAYER_STATE.lastSaveMessage = 'Skor berhasil disimpan ke leaderboard.';
+      PLAYER_STATE.leaderboard = Array.isArray(json.leaderboard) ? json.leaderboard : PLAYER_STATE.leaderboard;
+
+      if (!PLAYER_STATE.leaderboard.length) {
+        await fetchLeaderboard();
+      }
+    } catch (error) {
+      PLAYER_STATE.lastSaveMessage = `Skor belum tersimpan: ${error.message || error}`;
+    } finally {
+      PLAYER_STATE.savingScore = false;
+      renderLeaderboardModalContent();
+    }
+  }
+
+  function ensureLeaderboardModal() {
+    if (leaderboardModalEl && document.body.contains(leaderboardModalEl)) return leaderboardModalEl;
+
+    leaderboardModalEl = document.createElement('div');
+    leaderboardModalEl.id = 'procstackLeaderboardModal';
+    leaderboardModalEl.className = 'ps-leaderboard-modal ps-hidden';
+    leaderboardModalEl.innerHTML = `
+      <div class="ps-leaderboard-backdrop" data-leaderboard-close></div>
+      <div class="ps-leaderboard-panel">
+        <button type="button" class="ps-leaderboard-close" data-leaderboard-close aria-label="Tutup">×</button>
+        <div class="ps-leaderboard-content" id="psLeaderboardContent"></div>
+      </div>
+    `;
+
+    document.body.appendChild(leaderboardModalEl);
+
+    leaderboardModalEl.querySelectorAll('[data-leaderboard-close]').forEach(button => {
+      button.addEventListener('click', () => {
+        closeLeaderboardModal();
+      });
+    });
+
+    return leaderboardModalEl;
+  }
+
+  function attachPanjiToLeaderboardModal() {
+    if (!leaderboardModalEl) return;
+
+    const panel = leaderboardModalEl.querySelector('.ps-leaderboard-panel');
+    const panji = document.querySelector('.panji-assistant');
+
+    if (!panel || !panji) return;
+
+    const rect = panel.getBoundingClientRect();
+
+    const right = Math.max(10, window.innerWidth - rect.right - 8);
+    const bottom = Math.max(10, window.innerHeight - rect.bottom + 10);
+
+    panji.classList.add('panji-leaderboard-mode');
+    panji.style.setProperty('--panji-lb-right', `${right}px`);
+    panji.style.setProperty('--panji-lb-bottom', `${bottom}px`);
+  }
+
+  function detachPanjiFromLeaderboardModal() {
+    const panji = document.querySelector('.panji-assistant');
+
+    if (!panji) return;
+
+    panji.classList.remove('panji-leaderboard-mode');
+    panji.style.removeProperty('--panji-lb-right');
+    panji.style.removeProperty('--panji-lb-bottom');
+  }
+
+  function openLeaderboardModal(tab = 'player', force = false) {
+    ensureLeaderboardModal();
+    leaderboardModalEl.dataset.activeTab = tab;
+    leaderboardModalEl.dataset.force = force ? 'true' : 'false';
+    leaderboardModalEl.classList.remove('ps-hidden');
+    renderLeaderboardModalContent();
+
+    if (panjiEl) {
+      panjiEl.classList.toggle('panji-result-mode', GAME_STATE.stage === 'result' || GAME_STATE.finished);
+    }
+
+    setTimeout(() => {
+      attachPanjiToLeaderboardModal();
+
+      if (typeof showPanji === 'function') {
+        if (GAME_STATE.stage === 'result' || GAME_STATE.finished) {
+          const reaction = getPanjiFinalReaction();
+          panjiUserMinimized = false;
+
+          if (panjiEl) {
+            panjiEl.classList.remove('panji-hidden', 'panji-minimized');
+          }
+
+          showPanji(reaction.text, reaction.mood);
+
+          if (panjiEl) {
+            panjiEl.classList.remove('panji-celebrate', 'panji-cry');
+            void panjiEl.offsetWidth;
+            panjiEl.classList.add(reaction.anim);
+          }
+        } else {
+          showPanji(
+            'Halo! PANJI di sini. Isi dulu nama dan instansi kamu ya. Setelah selesai main, skor otomatis masuk leaderboard.',
+            'happy'
+          );
+        }
+
+        setTimeout(attachPanjiToLeaderboardModal, 80);
+        setTimeout(attachPanjiToLeaderboardModal, 250);
+        setTimeout(attachPanjiToLeaderboardModal, 600);
+      }
+    }, 120);
+
+    setTimeout(() => {
+      if (!destroyed) showReviewBubbleOnMenuOpen({ force: true });
+    }, 520);
+
+    if (tab === 'leaderboard' || !PLAYER_STATE.leaderboard.length) {
+      fetchLeaderboard();
+    }
+  }
+
+  function closeLeaderboardModal() {
+    if (!leaderboardModalEl) return;
+    leaderboardModalEl.classList.add('ps-hidden');
+    if (panjiEl) panjiEl.classList.remove('panji-result-mode');
+    detachPanjiFromLeaderboardModal();
+  }
+
+  function getLeaderboardPanjiMood(result) {
+    const score = Number(result && result.percent || 0);
+    const risk = Number(result && result.risiko || 0);
+
+    if (score >= 75 && risk <= 45) return 'happy';
+    if (score < 55 || risk >= 80) return 'sad';
+    return 'thinking';
+  }
+
+  function getLeaderboardPanjiNarrative(result) {
+    const mood = getLeaderboardPanjiMood(result);
+    const levelText = 'Level ' + result.levelDicapai + '/' + result.totalSoal;
+
+    const analysis = getFinalPanjiAnalysisText(result);
+
+    if (mood === 'happy') {
+      return 'Mantap! Kamu sampai ' + levelText + ' dengan skor ' + result.skor + '. ' + analysis;
+    }
+
+    if (mood === 'sad') {
+      return 'Yah, hasilnya masih perlu dibenerin. Kamu sampai ' + levelText + ' dengan skor ' + result.skor + '. ' + analysis;
+    }
+
+    return 'Lumayan, kamu sampai ' + levelText + ' dengan skor ' + result.skor + '. ' + analysis;
+  }
+
+  function renderLeaderboardModalContent() {
+    if (!leaderboardModalEl || leaderboardModalEl.classList.contains('ps-hidden')) return;
+
+    const content = leaderboardModalEl.querySelector('#psLeaderboardContent');
+    if (!content) return;
+
+    const activeTab = leaderboardModalEl.dataset.activeTab || 'player';
+    const result = getCurrentResultSummary();
+    const isResult = GAME_STATE.stage === 'result' || GAME_STATE.finished;
+
+    content.innerHTML = `
+      <div class="ps-lb-hero">
+        <div>
+          <div class="ps-lb-kicker">Procurement Mini Game</div>
+          <h3>${isResult ? 'Nilai Akhir & Leaderboard' : 'Masuk Pemain'}</h3>
+          <p>${isResult ? 'Skor selesai main otomatis dikirim ke Google Sheet dan ditampilkan di leaderboard.' : 'Isi nama dan instansi dulu. Setelah selesai main, skor otomatis masuk leaderboard.'}</p>
+        </div>
+        ${isResult ? `<div class="ps-lb-score"><span>Nilai</span><b>${result.percent}%</b></div>` : ''}
+      </div>
+
+      <div class="ps-lb-tabs">
+        <button type="button" class="${activeTab === 'player' ? 'active' : ''}" data-lb-tab="player">Masuk Pemain</button>
+        <button type="button" class="${activeTab === 'leaderboard' ? 'active' : ''}" data-lb-tab="leaderboard">Leaderboard</button>
+      </div>
+
+      ${isResult ? `
+        <div class="ps-lb-summary">
+          <div><span>Pemain</span><b>${escapeHtml(PLAYER_STATE.nama || '-')}</b></div>
+          <div><span>Instansi</span><b>${escapeHtml(PLAYER_STATE.instansi || '-')}</b></div>
+          <div><span>Skor</span><b>${result.skor}/${result.maxScore}</b></div>
+          <div><span>Benar</span><b>${result.benar}/${result.totalSoal}</b></div>
+          <div><span>Salah</span><b>${result.salah}</b></div>
+          <div><span>Risiko</span><b>${result.risiko}</b></div>
+          <div><span>Level Dicapai</span><b>${result.levelDicapai}/${result.totalSoal}</b></div>
+          <div><span>Durasi</span><b>${formatDuration(result.durasiDetik)}</b></div>
+        </div>
+      ` : ''}
+
+      ${isResult && activeTab === 'player' ? renderResultFeedbackBox() : ''}
+
+      <div class="ps-lb-message ${PLAYER_STATE.lastSaveMessage ? '' : 'empty'}">
+        ${escapeHtml(PLAYER_STATE.lastSaveMessage || 'Data pemain disimpan di browser ini dan skor akhir disimpan ke Google Sheet.')}
+      </div>
+
+      ${activeTab === 'player' ? renderPlayerTab() : renderLeaderboardTab()}
+    `;
+
+    content.querySelectorAll('[data-lb-tab]').forEach(button => {
+      button.addEventListener('click', () => {
+        leaderboardModalEl.dataset.activeTab = button.dataset.lbTab;
+        renderLeaderboardModalContent();
+
+        if (button.dataset.lbTab === 'leaderboard') {
+          fetchLeaderboard();
+        }
+      });
+    });
+
+    const form = content.querySelector('#psPlayerForm');
+    if (form) {
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const nama = form.querySelector('[name="nama"]')?.value || '';
+        const instansi = form.querySelector('[name="instansi"]')?.value || '';
+        const feedback = form.querySelector('[name="feedback"]')?.value || PLAYER_STATE.feedback || '';
+
+        if (!String(nama).trim() || !String(instansi).trim()) {
+          PLAYER_STATE.lastSaveMessage = 'Nama dan instansi wajib diisi.';
+          renderLeaderboardModalContent();
+          return;
+        }
+
+        PLAYER_STATE.feedback = String(feedback || '').trim();
+        savePlayerProfile(nama, instansi);
+        PLAYER_STATE.lastSaveMessage = 'Data pemain tersimpan. Silakan lanjut main.';
+
+        if (GAME_STATE.stage === 'result' || GAME_STATE.finished) {
+          PLAYER_STATE.lastSaveMessage = 'Nama pemain tersimpan. Sekarang tulis pengalaman mainmu di kotak bawah, lalu kirim ke leaderboard.';
+          renderLeaderboardModalContent();
+        } else {
+          closeLeaderboardModal();
+
+          if (!GAME_STATE.current || GAME_STATE.stage === 'ready') {
+            showPanji('Data pemain sudah tersimpan. Sekarang PANJI mulai perkenalan dulu, lalu kita masuk ke soal pertama.', 'happy');
+            setTimeout(() => {
+              if (!destroyed) startGame();
+            }, 650);
+          } else {
+            showPanjiHowToPlayAfterPlayerSaved();
+          }
+        }
+
+        renderLeaderboardModalContent();
+      });
+    }
+
+    const feedbackForm = content.querySelector('#psFinalFeedbackForm');
+    if (feedbackForm) {
+      feedbackForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const feedback = feedbackForm.querySelector('[name="finalFeedback"]')?.value || '';
+        PLAYER_STATE.feedback = String(feedback || '').trim();
+        localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify({
+          nama: PLAYER_STATE.nama,
+          instansi: PLAYER_STATE.instansi,
+          feedback: PLAYER_STATE.feedback,
+          updatedAt: new Date().toISOString()
+        }));
+
+        if (!hasPlayerProfile()) {
+          PLAYER_STATE.lastSaveMessage = 'Isi nama dan instansi dulu di tab Masuk Pemain, baru pengalaman main bisa masuk ke sheet.';
+          leaderboardModalEl.dataset.activeTab = 'player';
+          renderLeaderboardModalContent();
+          return;
+        }
+
+        PLAYER_STATE.lastSaveMessage = 'Pengalaman main disimpan. Skor sedang dikirim ke leaderboard...';
+        submitFinalScoreToLeaderboard();
+        closeLeaderboardModal();
+        showToast('Pengalaman tersimpan. Makasih!', 'ok');
+      });
+    }
+
+    const refreshBtn = content.querySelector('#psRefreshLeaderboard');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => fetchLeaderboard());
+    }
+  }
+
+  function renderResultFeedbackBox() {
+    return `
+      <form class="ps-final-feedback-box" id="psFinalFeedbackForm">
+        <div>
+          <strong>Ceritain pengalaman mainmu</strong>
+          <p>Nanti masuk ke sheet bareng nama, skor, risiko, dan analisa PANJI. Bisa dipakai buat munculin bubble testimoni di halaman game.</p>
+        </div>
+        <textarea name="finalFeedback" rows="3" placeholder="Contoh: level snake lucu, tapi evaluator battle bikin mikir.">${escapeHtml(PLAYER_STATE.feedback || '')}</textarea>
+        <button type="submit" class="ps-btn ps-btn-primary">Kirim Skor & Pengalaman</button>
+      </form>
+    `;
+  }
+
+  function renderPlayerTab() {
+    return `
+      <form class="ps-player-form" id="psPlayerForm">
+        <label>
+          <span>Nama Pemain</span>
+          <input type="text" name="nama" value="${escapeHtml(PLAYER_STATE.nama)}" placeholder="Contoh: Benni Ramadhan" autocomplete="name" required>
+        </label>
+        <label>
+          <span>Instansi / OPD</span>
+          <input type="text" name="instansi" value="${escapeHtml(PLAYER_STATE.instansi)}" placeholder="Contoh: UKPBJ Kota Bogor" required>
+        </label>
+        <button type="submit" class="ps-btn ps-btn-primary">Simpan & Mulai</button>
+      </form>
+    `;
+  }
+
+  function renderLeaderboardTab() {
+    const rows = PLAYER_STATE.leaderboard || [];
+
+    return `
+      <div class="ps-lb-toolbar">
+        <strong>Top Leaderboard</strong>
+        <button type="button" class="ps-btn ps-btn-soft" id="psRefreshLeaderboard" ${PLAYER_STATE.loadingLeaderboard ? 'disabled' : ''}>
+          ${PLAYER_STATE.loadingLeaderboard ? 'Memuat...' : 'Refresh'}
+        </button>
+      </div>
+
+      <div class="ps-lb-list">
+        ${rows.length ? rows.map(renderLeaderboardRow).join('') : `
+          <div class="ps-lb-empty">
+            ${PLAYER_STATE.loadingLeaderboard ? 'Memuat leaderboard...' : 'Belum ada skor tersimpan.'}
+          </div>
+        `}
+      </div>
+    `;
+  }
+
+  function getRowLevelValue(row) {
+    return Number(row.level_dicapai || row.level || row.level_tercapai || row.levelReached || row.total_level || row.total_soal || row.benar || 0);
+  }
+
+  function sortLeaderboardRows(rows) {
+    return [...(rows || [])].sort((a, b) => {
+      const scoreDiff = Number(b.skor || 0) - Number(a.skor || 0);
+      if (scoreDiff !== 0) return scoreDiff;
+      const levelDiff = getRowLevelValue(b) - getRowLevelValue(a);
+      if (levelDiff !== 0) return levelDiff;
+      return Number(a.risiko || 0) - Number(b.risiko || 0);
+    }).map((row, index) => ({ ...row, rank: index + 1 }));
+  }
+
+  function getRowReview(row) {
+    return String(row.review || row.pengalaman_main || row.feedback || row.masukan || '').trim();
+  }
+
+  function renderLeaderboardRow(row) {
+    const rank = Number(row.rank || 0);
+    const reviewText = getRowReview(row);
+    const isMine = hasPlayerProfile()
+      && String(row.nama || '').trim().toLowerCase() === PLAYER_STATE.nama.toLowerCase()
+      && String(row.instansi || '').trim().toLowerCase() === PLAYER_STATE.instansi.toLowerCase();
+
+    return `
+      <div class="ps-lb-row ${isMine ? 'mine' : ''}">
+        <div class="ps-lb-rank">${rank || '-'}</div>
+        <div class="ps-lb-main">
+          <b>${escapeHtml(row.nama || '-')}</b>
+          <span>${escapeHtml(row.instansi || '-')}</span>
+        </div>
+        <div class="ps-lb-meta">
+          <b>${Number(row.skor || 0).toLocaleString('id-ID')}</b>
+          <span>Level ${getRowLevelValue(row) || '-'} · ${Number(row.benar || 0)}/${Number(row.total_soal || 0)} benar · Risiko ${Number(row.risiko || 0)}</span>
+          ${reviewText ? `<em class="ps-lb-feedback">“${escapeHtml(reviewText)}”</em>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function shuffleArray(items) {
+    const result = [...items];
+
+    for (let i = result.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+
+    return result;
+  }
+
+
+  function prepareQuizRuntimeOptions(challenge) {
+    const options = Array.isArray(challenge && challenge.options) ? challenge.options : [];
+    const mapped = options.map((text, originalIndex) => ({ text, originalIndex }));
+    let shuffled = shuffleArray(mapped);
+
+    if (mapped.length > 1) {
+      let guard = 0;
+      while (shuffled.findIndex(item => item.originalIndex === challenge.answer) === challenge.answer && guard < 10) {
+        shuffled = shuffleArray(mapped);
+        guard += 1;
+      }
+    }
+
+    challenge.runtimeOptions = shuffled;
+    challenge.runtimeAnswer = shuffled.findIndex(item => item.originalIndex === challenge.answer);
+
+    if (challenge.runtimeAnswer < 0) {
+      challenge.runtimeOptions = mapped;
+      challenge.runtimeAnswer = Number(challenge.answer || 0);
+    }
+  }
+
+  function resetPanjiVisualState() {
+    if (!panjiEl) return;
+
+    panjiEl.classList.remove(
+      'panji-happy',
+      'panji-sad',
+      'panji-thinking',
+      'panji-intro',
+      'panji-talking',
+      'panji-celebrate',
+      'panji-cry',
+      'panji-result-mode'
+    );
+
+    panjiEl.classList.add('panji-thinking');
+
+    if (panjiEmoteEl) {
+      panjiEmoteEl.textContent = '🤔';
+    }
+  }
+
+  function setPanjiMoodOnly(mood = 'thinking') {
+    if (!panjiEl) return;
+
+    panjiEl.classList.remove(
+      'panji-happy',
+      'panji-sad',
+      'panji-thinking',
+      'panji-talking',
+      'panji-celebrate',
+      'panji-cry'
+    );
+
+    panjiEl.classList.add(`panji-${mood}`);
+
+    if (panjiEmoteEl) {
+      panjiEmoteEl.textContent =
+        mood === 'happy'
+          ? '😄'
+          : mood === 'sad'
+            ? '😭'
+            : '🤔';
+    }
+  }
+
+  function getCurrentChallenge() {
+    return GAME_STATE.current;
+  }
+
+  function getPlacedCount() {
+    return GAME_STATE.placed.filter(Boolean).length;
+  }
+
+
+  function getActiveTenderRushPackage(challenge) {
+    const rush = GAME_STATE.tenderRush;
+    const list = rush && Array.isArray(rush.packages)
+      ? rush.packages
+      : Array.isArray(challenge && challenge.packages)
+        ? challenge.packages
+        : [];
+
+    return list[(rush && Number(rush.currentIndex || 0)) || 0] || null;
+  }
+
+  function prepareTenderRushRandomPackages(challenge) {
+    const allPackages = Array.isArray(challenge && challenge.packages) ? challenge.packages : [];
+    if (!allPackages.length) return [];
+
+    const count = Math.min(Number(challenge.packageCount || allPackages.length || 5), allPackages.length);
+    const methodOrder = ['ekatalog', 'pengadaanLangsung', 'tenderSeleksi', 'swakelola', 'dikecualikan'];
+
+    function scorePattern(list) {
+      let score = 0;
+      for (let i = 0; i < list.length; i += 1) {
+        const expectedForward = methodOrder[i % methodOrder.length];
+        const expectedReverse = methodOrder[(methodOrder.length - 1 - i) % methodOrder.length];
+        if (list[i].correct === expectedForward) score += 2;
+        if (list[i].correct === expectedReverse) score += 2;
+        if (i > 0 && list[i].correct === list[i - 1].correct) score += 1;
+      }
+      return score;
+    }
+
+    let best = shuffleArray(allPackages).slice(0, count);
+    let bestScore = scorePattern(best);
+
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const candidate = shuffleArray(allPackages).slice(0, count);
+      const candidateScore = scorePattern(candidate);
+      if (candidateScore < bestScore) {
+        best = candidate;
+        bestScore = candidateScore;
+      }
+    }
+
+    return best.map((item, index) => ({
+      ...item,
+      rushId: `rush-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`
+    }));
+  }
+
+  function getPanjiCurrentGuideMessage() {
+    const challenge = getCurrentChallenge();
+
+    if (!challenge) {
+      return 'Hi.. aku balik lagi. Isi dulu nama pemain dan instansi atau OPD kamu, lalu kita mulai latihan PBJ bareng-bareng.';
+    }
+
+    if (challenge.type === 'pipeline') {
+      const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
+
+      if (nextEmpty < 0) {
+        return 'Hi.. aku balik lagi. Pipeline soal ini sudah selesai. Kamu tinggal klik lanjut untuk masuk ke soal berikutnya.';
+      }
+
+      const expectedId = challenge.idealIds?.[nextEmpty];
+      const expectedCard = challenge.cards?.find(item => item.id === expectedId);
+
+      if (expectedCard) {
+        return `Hi.. aku balik lagi. Sekarang kamu ada di soal Pipeline. Fokus isi slot nomor ${nextEmpty + 1}. Cari kartu "${expectedCard.label}", lalu susun dari kiri ke kanan. Jangan pilih kartu jebakan.`;
+      }
+
+      return 'Hi.. aku balik lagi. Sekarang kamu ada di soal Pipeline. Susun tahapan PBJ dari kiri ke kanan secara tertib.';
+    }
+
+    if (challenge.type === 'quiz') {
+      return `Hi.. aku balik lagi. Sekarang kamu ada di soal ABCD. Baca kasus "${challenge.caseTitle}" pelan-pelan, lalu pilih jawaban yang paling sesuai prinsip PBJ.`;
+    }
+
+    if (challenge.type === 'tenderRush') {
+      const pkg = getActiveTenderRushPackage(challenge);
+      if (pkg) {
+        const correctMethod = TENDER_RUSH_METHODS[pkg.correct];
+        return `Hi.. aku balik lagi. Ini Tender Rush. Paket aktifnya "${pkg.title}". Perhatikan petunjuknya: ${pkg.clue} Kalau butuh arahan, jalur yang paling aman adalah ${correctMethod ? correctMethod.key + ' - ' + correctMethod.label : 'metode yang sesuai kondisi paket'}.`;
+      }
+
+      return 'Hi.. aku balik lagi. Sekarang kamu ada di Tender Rush. Baca paket yang jatuh, lalu tekan 1 untuk e-Katalog, 2 untuk Pengadaan Langsung, 3 untuk Tender/Seleksi, 4 untuk Swakelola, atau 5 untuk Dikecualikan.';
+    }
+
+    if (challenge.type === 'bonusOpenWorld') {
+      return 'Hi.. aku balik lagi. Ini bonus level 4. Kamu masuk dunia 3D konsolidasi. Cek map quest, pilih tim, rapikan item, datangi pasar, lalu evaluasi. Semua keputusanmu masuk poin analisa pengadaan.';
+    }
+
+    if (challenge.type === 'bonusSnake') {
+      return 'Hi.. aku balik lagi. Ini bonus level 8: PANJI Star Snake. Ambil bintang sebanyak mungkin, hindari revisi dan berkas numpuk. Ini buat refreshing tapi tetap masuk skor akhir.';
+    }
+
+    if (challenge.type === 'bonusDino') {
+      return 'Hi.. aku balik lagi. Ini bonus level 10. Konsepnya runner 2D ala dino, tapi isinya dunia PBJ. Lompat pakai karakter kamu, hindari revisi, spek mengarah, dan data ganda.';
+    }
+
+    return 'Hi.. aku balik lagi. Lanjutkan permainan dengan membaca kasus dan memilih langkah PBJ yang paling aman.';
+  }
+
+  function getPanjiFinalReaction() {
+    const result = getCurrentResultSummary();
+    const percent = result.maxScore > 0 ? Math.round((result.skor / result.maxScore) * 100) : 0;
+    const levelDicapai = Math.max(1, Number(result.levelDicapai || GAME_STATE.index + 1 || 1));
+    const totalLevel = CHALLENGES.length;
+
+    if (percent >= 80 && GAME_STATE.risk <= 35) {
+      return {
+        mood: 'happy',
+        anim: 'panji-celebrate',
+        text: `Yeay! Mantap banget. Kamu mencapai level ${levelDicapai}/${totalLevel} dengan skor ${result.skor}. Alur PBJ kamu sudah rapi dan risikonya cukup terkendali. Kalau mau ngejar ranking lebih tinggi, klik tombol "Main Lagi dari Soal 1".`
+      };
+    }
+
+    if (percent >= 55) {
+      return {
+        mood: 'thinking',
+        anim: 'panji-celebrate',
+        text: `Lumayan! Kamu mencapai level ${levelDicapai}/${totalLevel} dengan skor ${result.skor}. Tapi masih ada beberapa bagian yang perlu dirapikan. Coba ulangi lagi, perhatikan urutan pipeline, batas metode, dan jangan buru-buru saat Tender Rush. Klik "Main Lagi dari Soal 1" untuk coba lagi.`
+      };
+    }
+
+    return {
+      mood: 'sad',
+      anim: 'panji-cry',
+      text: `Aduh, PANJI sedih nih. Kamu baru mencapai level ${levelDicapai}/${totalLevel} dengan skor ${result.skor}. Tidak apa-apa, ini latihan. Coba main lagi dari awal, baca kasus lebih pelan, dan jangan asal pilih metode. Klik "Main Lagi dari Soal 1" ya.`
+    };
+  }
+
+  function clearTenderRushTimers() {
+    if (tenderRushTimer) {
+      clearInterval(tenderRushTimer);
+      tenderRushTimer = null;
+    }
+
+    if (tenderRushNextTimer) {
+      clearTimeout(tenderRushNextTimer);
+      tenderRushNextTimer = null;
+    }
+  }
+
+  function enableTenderRushKeyboard() {
+    disableTenderRushKeyboard();
+
+    tenderRushKeyHandler = event => {
+      const activeTag = String(document.activeElement && document.activeElement.tagName || '').toLowerCase();
+      if (['input', 'textarea', 'select'].includes(activeTag)) return;
+
+      const map = {
+        1: 'ekatalog',
+        2: 'pengadaanLangsung',
+        3: 'tenderSeleksi',
+        4: 'swakelola',
+        5: 'dikecualikan'
+      };
+
+      const method = map[event.key];
+      if (!method) return;
+
+      const challenge = getCurrentChallenge();
+      if (!challenge || challenge.type !== 'tenderRush') return;
+
+      event.preventDefault();
+      answerTenderRush(method);
+    };
+
+    document.addEventListener('keydown', tenderRushKeyHandler);
+  }
+
+  function disableTenderRushKeyboard() {
+    if (!tenderRushKeyHandler) return;
+    document.removeEventListener('keydown', tenderRushKeyHandler);
+    tenderRushKeyHandler = null;
+  }
+
+
+  function getDefaultLevelTime(challenge) {
+    if (!challenge || challenge.type === 'tenderRush') return 0;
+
+    const levelNo = getCurrentLevelNumber();
+    const base = challenge.type === 'quiz'
+      ? Number(challenge.timeLimit || 45)
+      : Number(challenge.timeLimit || 90);
+
+    if (levelNo <= 3) return base;
+
+    const reduction = (levelNo - 3) * (challenge.type === 'quiz' ? 3 : 5);
+    const minimum = challenge.type === 'quiz' ? 20 : 45;
+
+    return Math.max(minimum, base - reduction);
+  }
+
+  function clearLevelTimer() {
+    if (levelTimer) {
+      clearInterval(levelTimer);
+      levelTimer = null;
+    }
+  }
+
+  function startLevelTimer(challenge) {
+    clearLevelTimer();
+
+    const limit = getDefaultLevelTime(challenge);
+    GAME_STATE.levelTimeLimit = limit;
+    GAME_STATE.levelTimeLeft = limit;
+    levelTimerStartedAt = Date.now();
+    GAME_STATE.countdownWarned = {};
+
+    if (!limit || GAME_STATE.stage === 'ready' || GAME_STATE.stage === 'result') {
+      updateLevelTimerUi();
+      return;
+    }
+
+    updateLevelTimerUi();
+
+    levelTimer = setInterval(() => {
+      if (destroyed || GAME_STATE.finished) return;
+
+      const activeChallenge = getCurrentChallenge();
+      if (!activeChallenge || activeChallenge.type === 'tenderRush') return;
+
+      GAME_STATE.levelTimeLeft = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0) - 1);
+      updateLevelTimerUi();
+
+      if ((GAME_STATE.levelTimeLeft === 10 || GAME_STATE.levelTimeLeft === 5) && !GAME_STATE.countdownWarned[GAME_STATE.levelTimeLeft]) {
+        GAME_STATE.countdownWarned[GAME_STATE.levelTimeLeft] = true;
+        showPanji('Waktu tinggal ' + GAME_STATE.levelTimeLeft + ' detik. Jangan panik, baca soal yang dekat dengan jawaban, lalu pilih yang paling aman.', 'alert');
+        showToast('Waktu tinggal ' + GAME_STATE.levelTimeLeft + ' detik!', 'bad');
+      }
+
+      if (GAME_STATE.levelTimeLeft <= 0) {
+        stopGameEarly('time');
+      }
+    }, 1000);
+  }
+
+  function updateLevelTimerUi() {
+    const text = root && root.querySelector('#psLevelTimeText');
+    const bar = root && root.querySelector('#psLevelTimeBar');
+    const wrap = root && root.querySelector('.ps-level-time-card');
+    const left = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0));
+    const limit = Math.max(1, Number(GAME_STATE.levelTimeLimit || 1));
+    const percent = Math.max(0, Math.min(100, (left / limit) * 100));
+
+    if (text) text.textContent = left ? `${left}s` : '-';
+    if (bar) bar.style.width = percent + '%';
+
+    if (wrap) {
+      wrap.classList.toggle('danger', left > 0 && left <= 10);
+      wrap.classList.toggle('warning', left > 10 && left <= 25);
+    }
+  }
+
+  function applyLevelTimePenalty(seconds, reasonText = 'Kesalahan') {
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || challenge.type === 'tenderRush') return;
+    if (!GAME_STATE.levelTimeLimit || GAME_STATE.stage === 'result' || GAME_STATE.finished) return;
+
+    const penalty = Math.max(1, Number(seconds || 0));
+    GAME_STATE.levelTimeLeft = Math.max(0, Number(GAME_STATE.levelTimeLeft || 0) - penalty);
+    addLog('bad', reasonText + ': waktu berkurang', 'Waktu level berkurang ' + penalty + ' detik karena pilihan belum tepat.');
+    showToast('Waktu -' + penalty + ' detik', 'bad');
+    updateLevelTimerUi();
+
+    if (GAME_STATE.levelTimeLeft <= 0) {
+      stopGameEarly('time');
+    }
+  }
+
+
+  function applyLevelTimeBonus(seconds, reasonText = 'Bonus waktu') {
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || challenge.type === 'tenderRush') return;
+    if (!GAME_STATE.levelTimeLimit || GAME_STATE.stage === 'result' || GAME_STATE.finished) return;
+
+    const bonus = Math.max(1, Number(seconds || 0));
+    GAME_STATE.levelTimeLeft = Math.min(
+      Number(GAME_STATE.levelTimeLimit || 0),
+      Number(GAME_STATE.levelTimeLeft || 0) + bonus
+    );
+
+    addLog('ok', reasonText, 'Waktu level bertambah ' + bonus + ' detik karena jawaban/urutan benar.');
+    showToast('Waktu +' + bonus + ' detik', 'ok');
+    updateLevelTimerUi();
+  }
+
+  function stopGameEarly(reason = 'time') {
+    if (GAME_STATE.finished || GAME_STATE.stage === 'result') return;
+
+    clearAutoNextTimer();
+    clearLevelTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+    clearBonusSnakeTimers();
+    clearBonusDinoTimers();
+    clearPanjiIntroTimers();
+
+    GAME_STATE.finished = true;
+    GAME_STATE.stage = 'result';
+    GAME_STATE.stoppedReason = reason;
+    GAME_STATE.stoppedLevel = GAME_STATE.index + 1;
+    GAME_STATE.progress = 100;
+
+    if (reason === 'rushFailed') {
+      addLog('bad', 'Tender Rush gagal melewati batas', 'Permainan berhenti karena jumlah salah/timeout sudah melewati batas level Tender Rush ini.');
+      showToast('Tender Rush gagal melewati batas. Skor akhir ditampilkan.', 'bad');
+      showPanji('Tender Rush gagal melewati batas level ini. Game berhenti dulu ya. Skor akhir dan level terakhir sudah muncul. Coba ulangi dan baca petunjuk paket lebih cepat.', 'sad');
+    } else {
+      addLog('bad', 'Waktu level habis', `Permainan berhenti di level ${GAME_STATE.stoppedLevel}.`);
+      showToast('Waktu habis. Skor akhir ditampilkan.', 'bad');
+      showPanji(`Waktu level habis. Kamu berhenti di level ${GAME_STATE.stoppedLevel} dengan skor ${GAME_STATE.score}.`, 'sad');
+    }
+
+    renderGame();
+    openLeaderboardModal('player', true);
+  }
+
+  function clearAutoNextTimer() {
+    if (autoNextTimer) {
+      clearTimeout(autoNextTimer);
+      autoNextTimer = null;
+    }
+  }
+
+  function clearPanjiIntroTimers() {
+    panjiIntroTimers.forEach(timer => clearTimeout(timer));
+    panjiIntroTimers = [];
+  }
+
+  function clearPanjiTalkTimer() {
+    if (panjiTalkTimer) {
+      clearTimeout(panjiTalkTimer);
+      panjiTalkTimer = null;
+    }
+  }
+
+  function scheduleAutoNext(message, delay = AUTO_NEXT_DELAY_MS) {
+    clearAutoNextTimer();
+
+    if (message) {
+      showToast(message, 'info');
+    }
+
+    autoNextTimer = setTimeout(() => {
+      autoNextTimer = null;
+
+      if (destroyed) return;
+
+      nextChallenge();
+    }, delay);
+  }
+
+  function calculateMaxScore() {
+    return CHALLENGES.reduce((total, challenge) => {
+      if (challenge.type === 'pipeline') {
+        return total + (challenge.idealIds.length * 10) + 20;
+      }
+
+      if (challenge.type === 'tenderRush') {
+        return total + ((challenge.packages || []).length * 10) + 20;
+      }
+
+      if (challenge.type === 'bonusOpenWorld') {
+        return total + 140;
+      }
+
+      if (challenge.type === 'bonusSnake') {
+        return total + 120;
+      }
+
+      if (challenge.type === 'bonusDino') {
+        return total + 140;
+      }
+
+      return total + 20;
+    }, 0);
+  }
+
+  function getResultGrade(percent) {
+    if (percent >= 90 && GAME_STATE.risk <= 20) {
+      return {
+        label: 'Sangat Baik',
+        icon: '🏆',
+        text: 'Pemahaman alur PBJ sudah kuat. Risiko rendah dan keputusan relatif aman.'
+      };
+    }
+
+    if (percent >= 75) {
+      return {
+        label: 'Baik',
+        icon: '🥇',
+        text: 'Pemahaman sudah baik, tetapi masih ada beberapa risiko yang perlu dikurangi.'
+      };
+    }
+
+    if (percent >= 60) {
+      return {
+        label: 'Cukup',
+        icon: '🥈',
+        text: 'Dasar sudah mulai terbentuk, namun perlu latihan ulang pada studi kasus yang salah.'
+      };
+    }
+
+    return {
+      label: 'Perlu Pembinaan',
+      icon: '📚',
+      text: 'Disarankan mengulang dari awal agar alur dan prinsip PBJ lebih kuat.'
+    };
+  }
+
+  function addLog(type, title, text) {
+    GAME_STATE.logs.unshift({ type, title, text });
+    GAME_STATE.logs = GAME_STATE.logs.slice(0, 8);
+  }
+
+  function ensureGameAudio() {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      if (!psAudioCtx) psAudioCtx = new AudioContextClass();
+      if (psAudioCtx.state === 'suspended') psAudioCtx.resume();
+      return psAudioCtx;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function playTone(freq, duration, type = 'sine', gainValue = 0.035) {
+    const ctx = ensureGameAudio();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(gainValue, ctx.currentTime + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration + 0.02);
+  }
+
+  function playSfx(type = 'info') {
+    if (type === 'ok' || type === 'success') {
+      playTone(660, 0.09, 'triangle', 0.04);
+      setTimeout(() => playTone(880, 0.12, 'triangle', 0.035), 70);
+      return;
+    }
+    if (type === 'bad' || type === 'wrong') {
+      playTone(190, 0.13, 'sawtooth', 0.035);
+      setTimeout(() => playTone(130, 0.16, 'sawtooth', 0.025), 80);
+      return;
+    }
+    playTone(420, 0.08, 'sine', 0.025);
+  }
+
+  function startGameMusic() {
+    if (psMusicOn) return;
+    psMusicOn = true;
+
+    // Musik retro happy ringan, dibuat dari WebAudio supaya tidak perlu file mp3.
+    // Browser baru akan mengizinkan suara setelah user klik/tekan tombol.
+    const melody = [523, 659, 784, 659, 698, 880, 784, 659, 587, 698, 784, 988, 880, 784, 659, 523];
+    const bass = [131, 131, 196, 196, 147, 147, 196, 196];
+    let beat = 0;
+
+    const playBeat = () => {
+      if (destroyed || !psMusicOn) return;
+      if (document.hidden) return;
+
+      const m = melody[beat % melody.length];
+      const b = bass[Math.floor(beat / 2) % bass.length];
+
+      playTone(m, 0.10, beat % 4 === 0 ? 'square' : 'triangle', 0.018);
+      if (beat % 2 === 0) playTone(b, 0.14, 'sine', 0.010);
+      if (beat % 8 === 6) setTimeout(() => playTone(m * 1.25, 0.07, 'triangle', 0.010), 95);
+
+      beat += 1;
+    };
+
+    playBeat();
+    psMusicTimer = setInterval(playBeat, 360);
+  }
+
+  function showToast(message, type = 'info') {
+    if (!message) return;
+    startGameMusic();
+    playSfx(type);
+
+    if (!toastEl) {
+      toastEl = document.createElement('div');
+      toastEl.className = 'ps-toast';
+      document.body.appendChild(toastEl);
+    }
+
+    toastEl.textContent = message;
+    toastEl.className = `ps-toast ${type}`;
+
+    requestAnimationFrame(() => {
+      if (toastEl) {
+        toastEl.classList.add('show');
+      }
+    });
+
+    clearTimeout(toastEl._hideTimer);
+    toastEl._hideTimer = setTimeout(() => {
+      if (toastEl) {
+        toastEl.classList.remove('show');
+      }
+    }, 1800);
+  }
+
+  function flashScreen(type) {
+    let flash = document.getElementById('psScreenFlash');
+
+    if (!flash) {
+      flash = document.createElement('div');
+      flash.id = 'psScreenFlash';
+      flash.className = 'ps-screen-flash';
+      document.body.appendChild(flash);
+    }
+
+    flash.className = `ps-screen-flash ${type}`;
+
+    setTimeout(() => {
+      flash.className = 'ps-screen-flash';
+    }, 360);
+  }
+
+  function popScore(target, text, type = 'info') {
+    if (!target || !target.getBoundingClientRect) return;
+
+    const rect = target.getBoundingClientRect();
+    const el = document.createElement('div');
+
+    el.className = `ps-floating-score ${type}`;
+    el.textContent = text;
+    el.style.left = `${rect.left + Math.min(80, rect.width / 2)}px`;
+    el.style.top = `${rect.top + 8}px`;
+
+    document.body.appendChild(el);
+
+    setTimeout(() => el.remove(), 850);
+  }
+
+  function spawnConfetti() {
+    const colors = ['#2563eb', '#22d3ee', '#16a34a', '#f59e0b', '#ef4444'];
+    const centerX = window.innerWidth / 2;
+    const startY = 90;
+
+    for (let i = 0; i < 36; i += 1) {
+      const piece = document.createElement('div');
+      piece.className = 'ps-confetti';
+      piece.style.left = `${centerX + (Math.random() * 520 - 260)}px`;
+      piece.style.top = `${startY + Math.random() * 40}px`;
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDelay = `${Math.random() * .18}s`;
+
+      document.body.appendChild(piece);
+
+      setTimeout(() => piece.remove(), 1100);
+    }
+  }
+
+  function ensurePanjiMarkup(scope) {
+    const oldPanji = document.getElementById('panjiAssistant');
+
+    if (oldPanji) {
+      panjiEl = oldPanji;
+      return;
+    }
+
+    const panji = document.createElement('div');
+    panji.id = 'panjiAssistant';
+    panji.className = 'panji-assistant';
+    panji.innerHTML = `
+      <div class="panji-bubble" id="panjiBubble">
+        <button type="button" class="panji-close" id="panjiClose" aria-label="Tutup PANJI">×</button>
+        <div class="panji-bubble-top">
+          <div class="panji-name">PANJI • PENGADAAN JITU</div>
+          <div class="panji-emote" id="panjiEmote">🤔</div>
+        </div>
+        <div class="panji-text" id="panjiText">
+          Halo, aku PANJI.
+        </div>
+        <div class="panji-actions">
+          <button type="button" id="panjiHintBtn">Tanya PANJI</button>
+          <button type="button" id="panjiMiniBtn">Minimize</button>
+        </div>
+      </div>
+
+      <button type="button" class="panji-character" id="panjiCharacter" aria-label="PANJI">
+        <div class="panji-glow"></div>
+        <div class="panji-head">
+          <div class="panji-hat">PBJ</div>
+          <div class="panji-eye panji-eye-left"></div>
+          <div class="panji-eye panji-eye-right"></div>
+          <div class="panji-mouth"></div>
+        </div>
+        <div class="panji-body">
+          <div class="panji-badge">PJ</div>
+        </div>
+        <div class="panji-hand panji-hand-left"></div>
+        <div class="panji-hand panji-hand-right"></div>
+      </button>
+    `;
+
+    document.body.appendChild(panji);
+  }
+
+  function initPanji(scope) {
+    ensurePanjiMarkup(scope);
+
+    panjiEl = document.querySelector('#panjiAssistant');
+    panjiTextEl = document.querySelector('#panjiText');
+    panjiEmoteEl = document.querySelector('#panjiEmote');
+    panjiBubbleEl = document.querySelector('#panjiBubble');
+    panjiHintBtn = document.querySelector('#panjiHintBtn');
+    panjiMiniBtn = document.querySelector('#panjiMiniBtn');
+    panjiCharacterBtn = document.querySelector('#panjiCharacter');
+    panjiCloseBtn = document.querySelector('#panjiClose');
+
+    if (!panjiEl || !panjiTextEl) return;
+
+    if (panjiHintBtn) {
+      panjiHintBtn.addEventListener('click', () => {
+        if (panjiEl && panjiEl.classList.contains('panji-result-mode')) return;
+        requestHintFromPanji();
+      });
+    }
+
+    if (panjiMiniBtn) {
+      panjiMiniBtn.addEventListener('click', () => {
+        panjiUserMinimized = true;
+        panjiEl.classList.add('panji-minimized');
+      });
+    }
+
+    if (panjiCharacterBtn) {
+      panjiCharacterBtn.addEventListener('click', () => {
+        panjiEl.classList.remove('panji-hidden');
+
+        if (panjiUserMinimized || panjiEl.classList.contains('panji-minimized')) {
+          panjiUserMinimized = false;
+          panjiEl.classList.remove('panji-minimized');
+          showPanji(getPanjiCurrentGuideMessage(), 'thinking');
+          return;
+        }
+
+        panjiUserMinimized = true;
+        panjiEl.classList.add('panji-minimized');
+      });
+    }
+
+    if (panjiCloseBtn) {
+      panjiCloseBtn.addEventListener('click', () => {
+        panjiUserMinimized = true;
+        panjiEl.classList.add('panji-hidden');
+      });
+    }
+
+    forceShowPanji();
+    initPanjiAutoPosition();
+  }
+
+  function forceShowPanji() {
+    if (!panjiEl) return;
+
+    if (panjiEl.parentElement !== document.body) {
+      document.body.appendChild(panjiEl);
+    }
+
+    panjiEl.classList.remove('panji-hidden');
+    panjiEl.classList.remove('panji-minimized');
+
+    panjiEl.style.position = 'fixed';
+    panjiEl.style.right = '26px';
+    panjiEl.style.bottom = 'var(--panji-bottom, 34px)';
+    panjiEl.style.top = 'auto';
+    panjiEl.style.left = 'auto';
+    panjiEl.style.zIndex = '2147483647';
+    panjiEl.style.opacity = '1';
+    panjiEl.style.visibility = 'visible';
+    panjiEl.style.display = 'flex';
+    panjiEl.style.transform = 'none';
+  }
+
+  function updatePanjiAutoBottom() {
+    if (!panjiEl) return;
+
+    const baseBottom = window.innerWidth <= 900 ? 76 : 34;
+    const maxBottom = window.innerWidth <= 900 ? 240 : 340;
+    const gap = 18;
+    let nextBottom = baseBottom;
+
+    const logBox = document.querySelector('.ps-log-box');
+
+    if (logBox) {
+      const logRect = logBox.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const panjiRect = panjiEl.getBoundingClientRect();
+      const panjiHeight = panjiRect.height || 220;
+      const logVisible = logRect.top < viewportHeight && logRect.bottom > 0;
+
+      if (logVisible) {
+        const panjiNormalTop = viewportHeight - baseBottom - panjiHeight;
+        const overlap = logRect.bottom - panjiNormalTop;
+
+        if (overlap > 0 && logRect.top < viewportHeight - 60) {
+          nextBottom = baseBottom + overlap + gap;
+        }
+      }
+    }
+
+    nextBottom = Math.max(baseBottom, Math.min(maxBottom, Math.round(nextBottom)));
+    panjiEl.style.setProperty('--panji-bottom', nextBottom + 'px');
+  }
+
+  function initPanjiAutoPosition() {
+    if (!panjiEl) return;
+
+    if (typeof panjiEl._panjiAutoPositionDestroy === 'function') {
+      panjiEl._panjiAutoPositionDestroy();
+      panjiEl._panjiAutoPositionDestroy = null;
+    }
+
+    let ticking = false;
+
+    const requestUpdate = () => {
+      if (ticking) return;
+
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        ticking = false;
+        updatePanjiAutoBottom();
+      });
+    };
+
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+
+    panjiEl._panjiAutoPositionDestroy = () => {
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
+    };
+
+    requestUpdate();
+  }
+
+  function showPanji(message, mood = 'thinking') {
+    if (!panjiEl || !panjiTextEl) return;
+
+    if (panjiUserMinimized || panjiEl.classList.contains('panji-minimized')) {
+      setPanjiMoodOnly(mood);
+      return;
+    }
+
+    forceShowPanji();
+    clearPanjiTalkTimer();
+
+    panjiEl.classList.remove('panji-hidden');
+    panjiEl.classList.remove('panji-minimized');
+
+    panjiEl.classList.remove(
+      'panji-happy',
+      'panji-sad',
+      'panji-thinking',
+      'panji-intro',
+      'panji-talking',
+      'panji-celebrate',
+      'panji-cry'
+    );
+
+    void panjiEl.offsetWidth;
+
+    panjiEl.classList.add(`panji-${mood}`);
+    panjiEl.classList.add('panji-talking');
+
+    if (panjiEmoteEl) {
+      panjiEmoteEl.textContent =
+        mood === 'happy'
+          ? '😄'
+          : mood === 'sad'
+            ? '😭'
+            : '🤔';
+    }
+
+    panjiTextEl.textContent = message;
+
+    if (panjiBubbleEl) {
+      panjiBubbleEl.classList.remove('burst');
+      void panjiBubbleEl.offsetWidth;
+      panjiBubbleEl.classList.add('burst');
+    }
+
+    const talkDuration = Math.min(
+      6200,
+      Math.max(1300, String(message || '').length * 34)
+    );
+
+    panjiTalkTimer = setTimeout(() => {
+      if (!panjiEl) return;
+
+      panjiEl.classList.remove('panji-talking');
+      panjiTalkTimer = null;
+    }, talkDuration);
+  }
+
+  function showPanjiIntro() {
+    clearPanjiIntroTimers();
+
+    showPanji(
+      'Halo! Perkenalkan, aku PANJI.',
+      'happy'
+    );
+
+    if (panjiEl) {
+      panjiEl.classList.remove('panji-intro');
+      void panjiEl.offsetWidth;
+      panjiEl.classList.add('panji-intro');
+    }
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        'PANJI itu singkatan dari Pengadaan Jitu. Tugas aku nemenin kamu belajar alur PBJ, mulai dari identifikasi kebutuhan, RUP, KAK, HPS, metode, kontrak, BAST, sampai realisasi.',
+        'thinking'
+      );
+    }, 1700));
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        `Kalau kamu bingung, klik tombol "Tanya PANJI". Aku kasih hint, tapi skor kamu berkurang ${HINT_PENALTY} poin. Jadi pakai bantuanku seperlunya aja.`,
+        'thinking'
+      );
+    }, 4500));
+
+    panjiIntroTimers.push(setTimeout(() => {
+      if (destroyed) return;
+
+      showPanji(
+        'Yuk mulai. Jangan cuma cepat, yang penting tertib, ada dasar, ada bukti, dan risikonya rendah.',
+        'happy'
+      );
+    }, 7200));
+  }
+
+  function getHintMessage(challenge) {
+    if (!challenge) {
+      return 'Fokus susun langkah paling tertib ya.';
+    }
+
+    if (challenge.type === 'pipeline') {
+      const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
+      const expectedId = challenge.idealIds[nextEmpty];
+      const expectedCard = challenge.cards.find(item => item.id === expectedId);
+
+      if (!expectedCard) {
+        return 'Pipeline hampir selesai. Cek lagi urutan dari kiri ke kanan.';
+      }
+
+      if (nextEmpty === 0) {
+        return `Hint PANJI: untuk posisi pertama, fokus cari kartu "${expectedCard.label}". Biasanya alur aman dimulai dari dasar perencanaan atau kondisi kontrak yang sedang berjalan.`;
+      }
+
+      const prev = GAME_STATE.placed[nextEmpty - 1];
+
+      if (prev) {
+        return `Hint PANJI: setelah "${prev.label}", langkah yang lebih aman untuk posisi berikutnya adalah "${expectedCard.label}". Jangan lompat ke tahap akhir sebelum dasarnya siap.`;
+      }
+
+      return `Hint PANJI: fokus cari kartu "${expectedCard.label}" untuk posisi ${nextEmpty + 1}.`;
+    }
+
+    if (challenge.type === 'tenderRush') {
+      const pkg = getActiveTenderRushPackage(challenge);
+
+      if (pkg) {
+        const correctMethod = TENDER_RUSH_METHODS[pkg.correct];
+        return `Hint PANJI: paket aktif adalah "${pkg.title}". Petunjuknya: ${pkg.clue} Jadi jalur paling aman adalah ${correctMethod ? correctMethod.key + ' - ' + correctMethod.label : 'metode yang sesuai'}. Alasannya: ${pkg.explanation}`;
+      }
+
+      return 'Hint PANJI: di Tender Rush, lihat 4 kata kunci dulu: pagu, jenis pekerjaan, apakah tersedia katalog, dan apakah pekerjaannya bisa diswakelolakan. Shortcut-nya: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan.';
+    }
+
+    if (challenge.type === 'bonusOpenWorld') {
+      return 'Hint PANJI: jangan kejar cepat. Di bonus ini lihat alurnya: pilih tim yang bisa analisa, samakan item yang benar-benar sejenis, market sounding ke semua toko, lalu evaluasi berdasarkan data.';
+    }
+
+    if (challenge.type === 'bonusSnake') {
+      return 'Hint PANJI: di Snake, jangan rakus. Putar arah pelan-pelan, ambil bintang yang aman dulu, dan hindari nabrak jebakan revisi.';
+    }
+
+    if (challenge.type === 'bonusDino') {
+      return 'Hint PANJI: simpan lompatan untuk rintangan dekat. Jangan spam. Fokus ke tempo lari, bukan panik.';
+    }
+
+    if (challenge.hint) {
+      return `Hint PANJI: ${challenge.hint}`;
+    }
+
+    return 'Baca kata kunci soal dan pilih jawaban yang paling sesuai prinsip PBJ: efektif, efisien, transparan, terbuka, bersaing, adil, dan akuntabel.';
+  }
+
+  function requestHintFromPanji() {
+    clearPanjiIntroTimers();
+
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || GAME_STATE.finished) return;
+
+    if (GAME_STATE.hintUsed) {
+      showPanji('Untuk soal ini kamu sudah pakai hint dari PANJI ya. Coba lanjutkan dulu dengan logika alur PBJ.', 'thinking');
+      showToast('Hint soal ini sudah dipakai.', 'info');
+      return;
+    }
+
+    GAME_STATE.hintUsed = true;
+    GAME_STATE.score = Math.max(0, GAME_STATE.score - HINT_PENALTY);
+
+    addLog('info', 'Hint PANJI dipakai', `Kamu memakai bantuan PANJI. Skor berkurang ${HINT_PENALTY} poin.`);
+
+    showPanji(getHintMessage(challenge), 'thinking');
+    showToast(`Hint dipakai. Skor -${HINT_PENALTY}.`, 'info');
+
+    if (panjiCharacterBtn) {
+      popScore(panjiCharacterBtn, `-${HINT_PENALTY}`, 'info');
+    }
+
+    renderGame();
+  }
+
+  function panjiForChallenge(challenge) {
+    if (!challenge) return;
+
+    clearPanjiIntroTimers();
+
+    if (challenge.type === 'pipeline') {
+      showPanji(
+        'Ini soal pipeline. Susun kartu dari kiri ke kanan secara tertib. Aku akan jelasin setiap langkah benar supaya kamu paham, bukan cuma hafal.',
+        'thinking'
+      );
+      return;
+    }
+
+    if (challenge.type === 'tenderRush') {
+      showPanji(
+        'Ini Tender Rush. Kontrolnya: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan. Paket baru turun setelah klik Mulai.',
+        'thinking'
+      );
+      return;
+    }
+
+    if (challenge.type === 'bonusOpenWorld') {
+      showPanji(
+        'Bonus level 4 dimulai. Aku tetap kelihatan di sini, jadi kamu nggak kehilangan arahan. Cek map quest 3D, pilihanmu akan memengaruhi poin analisa akhir.',
+        'thinking'
+      );
+      return;
+    }
+
+    if (challenge.type === 'bonusSnake') {
+      showPanji(
+        'Bonus level 8: PANJI Star Snake. Ambil bintang, hindari jebakan. Santai, ini buat refreshing sebelum lanjut level akhir.',
+        'happy'
+      );
+      return;
+    }
+
+    if (challenge.type === 'bonusDino') {
+      showPanji(
+        'Bonus level 10 dimulai. Ini runner 2D ala dino. Karaktermu lari terus, tugasmu lompatin gangguan pengadaan sampai target aman tercapai.',
+        'happy'
+      );
+      return;
+    }
+
+    showPanji(
+      'Ini soal ABCD. Baca kata kuncinya pelan-pelan. Pilih jawaban yang paling sesuai prinsip dan tahapan PBJ, bukan yang sekadar paling cepat.',
+      'thinking'
+    );
+  }
+
+  function startGame() {
+    clearAutoNextTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+    clearBonusSnakeTimers();
+    clearBonusDinoTimers();
+    clearPanjiIntroTimers();
+
+    GAME_STATE.order = CHALLENGES.map((_, index) => index);
+    GAME_STATE.index = 0;
+    GAME_STATE.score = 0;
+    GAME_STATE.risk = 0;
+    GAME_STATE.wrong = 0;
+    GAME_STATE.correct = 0;
+    GAME_STATE.finished = false;
+    GAME_STATE.runId = 'run-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+    GAME_STATE.gameStartedAt = Date.now();
+    GAME_STATE.scoreSubmitted = false;
+    GAME_STATE.hasSeenIntro = false;
+    GAME_STATE.levelTimeLeft = 0;
+    GAME_STATE.levelTimeLimit = 0;
+    GAME_STATE.stoppedReason = '';
+    GAME_STATE.stoppedLevel = 0;
+    GAME_STATE.pipelineCombo = 0;
+
+    resetPanjiVisualState();
+    panjiUserMinimized = false;
+
+    if (!panjiIntroAlreadyShown) {
+      showPanjiIntro();
+      panjiIntroAlreadyShown = true;
+    } else {
+      showPanji('Game dimulai ulang dari Soal 1. Aku langsung bantu kalau kamu butuh arahan, tanpa perkenalan lagi.', 'thinking');
+    }
+
+    loadChallenge();
+  }
+
+  function loadChallenge() {
+    clearAutoNextTimer();
+    clearLevelTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+    clearBonusSnakeTimers();
+    clearBonusDinoTimers();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+
+    const challengeIndex = GAME_STATE.order[GAME_STATE.index];
+    const challenge = CHALLENGES[challengeIndex];
+
+    GAME_STATE.current = challenge;
+    GAME_STATE.selectedCardId = null;
+    GAME_STATE.answered = false;
+    GAME_STATE.selectedAnswer = null;
+    GAME_STATE.logs = [];
+    GAME_STATE.finished = false;
+    GAME_STATE.hintUsed = false;
+
+    if (challenge.type === 'pipeline') {
+      GAME_STATE.stage = 'pipeline';
+      GAME_STATE.placed = Array(challenge.idealIds.length).fill(null);
+      GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
+      GAME_STATE.tenderRush = null;
+      GAME_STATE.progress = 0;
+      GAME_STATE.pipelineCombo = 0;
+
+      addLog(
+        'info',
+        'Challenge pipeline dimulai',
+        'Susun kartu dari kiri ke kanan. Kartu jebakan akan menaikkan risiko.'
+      );
+    } else if (challenge.type === 'tenderRush') {
+      GAME_STATE.stage = 'tenderRush';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.progress = 0;
+      GAME_STATE.tenderRush = {
+        started: false,
+        currentIndex: 0,
+        timeLeft: Number(challenge.timeLimit || 8),
+        locked: false,
+        lastResult: null,
+        correctCount: 0,
+        wrongCount: 0,
+        packages: prepareTenderRushRandomPackages(challenge)
+      };
+
+      addLog(
+        'info',
+        'Challenge Tender Rush dimulai',
+        'Baca tutorial PANJI dulu, lalu pilih jalur metode dengan tombol 1 sampai 5.'
+      );
+    } else if (challenge.type === 'bonusOpenWorld') {
+      GAME_STATE.stage = 'bonusOpenWorld';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.tenderRush = null;
+      GAME_STATE.progress = 0;
+      GAME_STATE.bonusOpenWorld = createBonusOpenWorldState();
+
+      addLog(
+        'info',
+        'Bonus Level 4 dimulai',
+        'PPK masuk dunia 3D konsolidasi bersama PANJI. Selesaikan semua quest di map bonus.'
+      );
+    } else if (challenge.type === 'bonusSnake') {
+      GAME_STATE.stage = 'bonusSnake';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.tenderRush = null;
+      GAME_STATE.progress = 0;
+      GAME_STATE.bonusSnake = createBonusSnakeState();
+
+      addLog(
+        'info',
+        'Bonus Level 8 dimulai',
+        'Main Snake, ambil bintang, dan hindari jebakan. Poin bonus masuk nilai akhir.'
+      );
+    } else if (challenge.type === 'bonusDino') {
+      GAME_STATE.stage = 'bonusDino';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.tenderRush = null;
+      GAME_STATE.progress = 0;
+      GAME_STATE.bonusDino = createBonusDinoState();
+
+      addLog(
+        'info',
+        'Bonus Level 10 dimulai',
+        'Runner 2D dimulai. Lompat pakai karakter utama dan hindari gangguan pengadaan.'
+      );
+    } else {
+      GAME_STATE.stage = 'quiz';
+      GAME_STATE.placed = [];
+      GAME_STATE.shuffledCards = [];
+      GAME_STATE.tenderRush = null;
+      GAME_STATE.progress = 100;
+      prepareQuizRuntimeOptions(challenge);
+
+      addLog(
+        'info',
+        'Challenge ABCD dimulai',
+        'Pilih jawaban yang paling tepat.'
+      );
+    }
+
+    renderGame();
+
+    const pauseForPipelineTutorial = challenge.type === 'pipeline' && !GAME_STATE.pipelineTutorialSeen && getCurrentLevelNumber() === 1;
+    if (challenge.type !== 'tenderRush' && challenge.type !== 'bonusOpenWorld' && challenge.type !== 'bonusSnake' && challenge.type !== 'bonusDino' && !pauseForPipelineTutorial) {
+      startLevelTimer(challenge);
+    } else if (pauseForPipelineTutorial) {
+      GAME_STATE.levelTimeLimit = getDefaultLevelTime(challenge);
+      GAME_STATE.levelTimeLeft = GAME_STATE.levelTimeLimit;
+      updateLevelTimerUi();
+      addLog('info', 'Tutorial belum dihitung waktu', 'Santai dulu. Waktu level baru jalan setelah kamu menutup tutorial cara main pipeline.');
+    }
+
+    if (GAME_STATE.index === 0 && !GAME_STATE.hasSeenIntro) {
+      GAME_STATE.hasSeenIntro = true;
+    } else {
+      panjiForChallenge(challenge);
+    }
+  }
+
+  function finishGame() {
+    clearAutoNextTimer();
+    clearLevelTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+    clearPanjiIntroTimers();
+
+    GAME_STATE.finished = true;
+    GAME_STATE.stage = 'result';
+    GAME_STATE.current = null;
+    GAME_STATE.progress = 100;
+
+    renderGame();
+    spawnConfetti();
+    const finalResult = getCurrentResultSummary();
+    showPanji(getLeaderboardPanjiNarrative(finalResult), getLeaderboardPanjiMood(finalResult));
+    showToast('Semua soal selesai. Hasil akhir ditampilkan.', 'ok');
+    openLeaderboardModal('player', true);
+  }
+
+  function nextChallenge() {
+    clearAutoNextTimer();
+    clearLevelTimer();
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+    clearBonusSnakeTimers();
+
+    if (GAME_STATE.index < GAME_STATE.order.length - 1) {
+      GAME_STATE.index += 1;
+      loadChallenge();
+      return;
+    }
+
+    finishGame();
+  }
+
+  function canGoNext() {
+    const challenge = getCurrentChallenge();
+
+    if (!challenge) return false;
+    if (challenge.type === 'pipeline') return GAME_STATE.progress === 100;
+    if (challenge.type === 'tenderRush') return GAME_STATE.progress === 100;
+    if (challenge.type === 'bonusOpenWorld') return GAME_STATE.progress === 100;
+    if (challenge.type === 'bonusSnake') return GAME_STATE.progress === 100;
+    if (challenge.type === 'bonusDino') return GAME_STATE.progress === 100;
+    return GAME_STATE.answered;
+  }
+
+  function getChallengeTypeLabel(type) {
+    if (type === 'pipeline') return 'Pipeline';
+    if (type === 'tenderRush') return 'Tender Rush';
+    if (type === 'bonusOpenWorld') return 'Bonus 3D';
+    if (type === 'bonusSnake') return 'Bonus Snake';
+    if (type === 'bonusDino') return 'Bonus Dino';
+    return 'ABCD';
+  }
+
+  function getChallengeTypeName(type) {
+    if (type === 'pipeline') return 'Susun Pipeline';
+    if (type === 'tenderRush') return 'Arcade Metode';
+    if (type === 'bonusOpenWorld') return 'Open World Bonus';
+    if (type === 'bonusSnake') return 'Snake Bintang';
+    if (type === 'bonusDino') return 'Dino Runner';
+    return 'Pilihan ABCD';
+  }
+
+  function renderChallengeBody(challenge) {
+    if (challenge.type === 'pipeline') return renderPipelineChallenge(challenge);
+    if (challenge.type === 'tenderRush') return renderTenderRushChallenge(challenge);
+    if (challenge.type === 'bonusOpenWorld') return renderBonusOpenWorldChallenge(challenge);
+    if (challenge.type === 'bonusSnake') return renderBonusSnakeChallenge(challenge);
+    if (challenge.type === 'bonusDino') return renderBonusDinoChallenge(challenge);
+    return renderQuizChallenge(challenge);
+  }
+
+
+  function renderReadyScreen() {
+    if (!root) return;
+
+    root.innerHTML = `
+      <section class="ps-card ps-ready-card">
+
+        <div class="ps-result-note">
+          <strong>Alur game:</strong><br>
+          Soal akan bercampur: susun pipeline, pilihan ABCD, dan Tender Rush. Tender Rush memakai tombol 1 sampai 5 untuk memilih metode pengadaan dengan cepat.
+        </div>
+
+        <div class="ps-buttons">
+          <button type="button" class="ps-btn ps-btn-primary" id="btnOpenPlayerModal">
+            Isi Nama & Instansi
+          </button>
+        </div>
+      </section>
+    `;
+
+    const btn = root.querySelector('#btnOpenPlayerModal');
+    if (btn) {
+      btn.addEventListener('click', () => openLeaderboardModal('player', true));
+    }
+
+    requestAnimationFrame(updatePanjiAutoBottom);
+  }
+
+  function getDisplayChallengeTitle(challenge) {
+    const levelNo = GAME_STATE.index + 1;
+    const rawTitle = String(challenge && challenge.title ? challenge.title : 'Challenge');
+    if (/^(Soal|Level)\s*\d+/i.test(rawTitle)) {
+      return rawTitle.replace(/^(Soal|Level)\s*\d+\s*[—-]?\s*/i, 'Level ' + levelNo + ' — ');
+    }
+    return 'Level ' + levelNo + ' — ' + rawTitle;
+  }
+
+  function renderGame() {
+    if (!root) return;
+
+    if (GAME_STATE.stage === 'result') {
+      root.innerHTML = renderResultScreen();
+      bindResultEvents();
+      requestAnimationFrame(updatePanjiAutoBottom);
+      return;
+    }
+
+    const challenge = getCurrentChallenge();
+
+    root.innerHTML = `
+      <section class="ps-card">
+        <div class="ps-card-head">
+          <div>
+            <h3>${escapeHtml(getDisplayChallengeTitle(challenge))}</h3>
+            <p>${escapeHtml(challenge.desc)}</p>
+          </div>
+
+          <div class="ps-pill-row">
+            <div class="ps-pill ${challenge.type === 'pipeline' ? 'green' : challenge.type === 'tenderRush' ? 'rush' : ''}">
+              ${getChallengeTypeLabel(challenge.type)}
+            </div>
+            ${GAME_STATE.selectedCardId ? '<div class="ps-pill warn">Kartu dipilih</div>' : ''}
+            ${GAME_STATE.hintUsed ? '<div class="ps-pill warn">Hint PANJI dipakai</div>' : ''}
+          </div>
+        </div>
+
+        <div class="ps-score-grid">
+          <div class="ps-score-card">
+            <label>Progress</label>
+            <strong>${GAME_STATE.progress}%</strong>
+          </div>
+          <div class="ps-score-card">
+            <label>Skor</label>
+            <strong>${GAME_STATE.score}</strong>
+          </div>
+          <div class="ps-score-card">
+            <label>Risiko</label>
+            <strong>${GAME_STATE.risk}</strong>
+          </div>
+          <div class="ps-score-card">
+            <label>Salah</label>
+            <strong>${GAME_STATE.wrong}</strong>
+          </div>
+        </div>
+
+        <div class="ps-progress-track">
+          <div class="ps-progress-bar" style="width:${GAME_STATE.progress}%"></div>
+        </div>
+
+        <div class="ps-helper-row ps-helper-row-compact">
+          <div class="ps-helper-note">
+            <b>PANJI siap bantu.</b> Kalau bingung, tanya PANJI. Hint mengurangi skor <b>${HINT_PENALTY}</b> poin.
+          </div>
+          <div class="ps-helper-actions">
+            <div class="ps-pill ps-current-soal-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
+            <div class="ps-level-time-card ps-level-time-compact">
+              <label>Waktu</label>
+              <strong id="psLevelTimeText">${(challenge.type === 'tenderRush' || challenge.type === 'bonusOpenWorld' || challenge.type === 'bonusSnake' || challenge.type === 'bonusDino') ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
+              <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
+            </div>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnPanjiHint">
+              Tanya PANJI (-${HINT_PENALTY})
+            </button>
+          </div>
+        </div>
+
+        ${renderChallengeBody(challenge)}
+
+        ${renderLogs()}
+
+        <div class="ps-buttons">
+          <button type="button" class="ps-btn ps-btn-soft" id="btnRestartGame">Mulai Ulang dari Soal 1</button>
+          ${
+            challenge.type === 'pipeline' || challenge.type === 'tenderRush'
+              ? '<button type="button" class="ps-btn ps-btn-soft" id="btnResetChallenge">Reset Soal Ini</button>'
+              : ''
+          }
+          <button type="button" class="ps-btn ps-btn-primary" id="btnNextChallenge" ${canGoNext() ? '' : 'disabled'}>
+            Lanjut Soal Berikutnya
+          </button>
+        </div>
+      </section>
+    `;
+
+    bindGameEvents();
+    requestAnimationFrame(updatePanjiAutoBottom);
+  }
+
+
+  function renderQuestionPanel(challenge, mainQuestion = '') {
+    const typeName = getChallengeTypeName(challenge.type);
+    const title = challenge.type === 'bonusOpenWorld'
+      ? 'SOAL BONUS 4 / MISI 3D'
+      : challenge.type === 'bonusSnake'
+        ? 'SOAL BONUS 8 / SNAKE'
+        : challenge.type === 'bonusDino'
+          ? 'SOAL BONUS 10 / DINO RUN'
+          : 'SOAL / PERTANYAAN';
+    const detail = mainQuestion || challenge.question || challenge.desc || '';
+    const meta = [];
+    if (challenge.budget) meta.push('Pagu/Nilai: ' + challenge.budget);
+    if (challenge.difficulty) meta.push(challenge.difficulty);
+    meta.push(typeName);
+
+    return `
+      <div class="ps-question-panel">
+        <div class="ps-question-label">${title}</div>
+        <div class="ps-question-main">
+          <h2>${escapeHtml(challenge.caseTitle || getDisplayChallengeTitle(challenge))}</h2>
+          <p>${escapeHtml(detail)}</p>
+        </div>
+        <div class="ps-question-meta">
+          ${meta.map(item => `<span>${escapeHtml(item)}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPipelineChallenge(challenge) {
+    const placedIds = new Set(GAME_STATE.placed.filter(Boolean).map(item => item.id));
+    const showPipelineTutorial = !GAME_STATE.pipelineTutorialSeen && getCurrentLevelNumber() === 1;
+
+    return `
+      ${showPipelineTutorial ? `
+        <div class="ps-pipeline-tutorial">
+          <div class="ps-tutorial-panji">PANJI</div>
+          <div>
+            <h4>Pelan-pelan dulu, ini cara main pipeline.</h4>
+            <ol>
+              <li><b>Baca panel SOAL / PERTANYAAN</b>: posisinya tepat di atas slot, jadi kamu tidak perlu bolak-balik lihat jauh ke atas.</li>
+              <li><b>Baca tujuan pipeline</b>: susun kartu proses dari kiri ke kanan.</li>
+              <li><b>Cara meletakkan kartu</b>: drag kartu ke slot, atau klik kartu lalu klik slot biru.</li>
+              <li><b>Jangan asal taruh</b>: slot harus diisi urut dari kiri. Kartu jebakan bikin risiko naik.</li>
+              <li><b>Butuh arahan?</b> klik tombol <b>Tanya PANJI</b> untuk hint, tapi skor berkurang sedikit.</li>
+            </ol>
+            <button type="button" class="ps-btn ps-btn-primary" id="btnClosePipelineTutorial">Oke, saya paham</button>
+          </div>
+        </div>
+      ` : ''}
+      ${renderQuestionPanel(challenge)}
+      <div class="ps-pipeline">
+        ${challenge.idealIds.map((_, index) => renderSlot(index)).join('')}
+      </div>
+
+      <div class="ps-card-head">
+        <div>
+          <h3>Atur Urutan Kartu dari Tahapan yang Benar</h3>
+          <p>Baca soal di atas, lalu susun kartu proses dari kiri ke kanan. Drag kartu ke slot, atau klik kartu lalu klik slot biru.</p>
+        </div>
+        <button type="button" class="ps-btn ps-btn-soft" id="btnShuffleCards">
+          Acak Kartu
+        </button>
+      </div>
+
+      <div class="ps-bank">
+        ${GAME_STATE.shuffledCards.map(item => renderPipelineCard(item, placedIds.has(item.id))).join('')}
+      </div>
+
+      ${
+        GAME_STATE.progress === 100
+          ? `
+            <div class="ps-explanation">
+              <strong>Pipeline selesai:</strong><br>
+              ${escapeHtml(challenge.explanation)}
+            </div>
+          `
+          : ''
+      }
+    `;
+  }
+
+  function renderSlot(index) {
+    const placed = GAME_STATE.placed[index];
+    const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
+    const isReady = GAME_STATE.selectedCardId && !placed && index === nextEmpty;
+
+    if (placed) {
+      return `
+        <div class="ps-slot correct" data-slot-index="${index}">
+          <div class="ps-slot-number">${index + 1}</div>
+          ${renderPipelineCard(placed, false, true)}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="ps-slot ${isReady ? 'click-ready' : ''}" data-slot-index="${index}">
+        <div class="ps-slot-number">${index + 1}</div>
+        <div class="ps-slot-placeholder">
+          ${isReady ? 'Klik untuk pasang kartu' : `Slot ${index + 1}`}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPipelineCard(item, used = false, locked = false) {
+    const selected = GAME_STATE.selectedCardId === item.id ? 'selected' : '';
+    const trapClass = item.type === 'trap' ? 'trap-card' : '';
+
+    return `
+      <div
+        class="ps-action-card ${used ? 'used' : ''} ${locked ? 'correct-card' : ''} ${selected} ${trapClass}"
+        draggable="${used || locked || GAME_STATE.progress === 100 ? 'false' : 'true'}"
+        data-card-id="${escapeHtml(item.id)}"
+      >
+        <div class="ps-card-icon">${item.icon}</div>
+        <strong>${escapeHtml(item.label)}</strong>
+        <span>${escapeHtml(item.note)}</span>
+      </div>
+    `;
+  }
+
+  function renderTenderRushChallenge(challenge) {
+    const rush = GAME_STATE.tenderRush || {
+      started: false,
+      currentIndex: 0,
+      timeLeft: Number(challenge.timeLimit || 8),
+      lastResult: null,
+      correctCount: 0,
+      wrongCount: 0
+    };
+
+    const rushPackages = Array.isArray(rush.packages) && rush.packages.length ? rush.packages : (challenge.packages || []);
+    const total = rushPackages.length;
+    const currentPackage = rushPackages[rush.currentIndex];
+
+    if (!currentPackage && rush.started && GAME_STATE.progress < 100) {
+      GAME_STATE.progress = 100;
+    }
+
+    const percentTime = Math.max(0, Math.min(100, (Number(rush.timeLeft || 0) / Number(challenge.timeLimit || 8)) * 100));
+
+    if (!rush.started) {
+      return `
+        ${renderQuestionPanel(challenge)}
+        <div class="ps-rush-tutorial">
+          <div class="ps-rush-tutorial-main">
+            <div class="ps-rush-kicker">Tutorial PANJI dulu</div>
+            <h3>Jalur Metode Tender Rush</h3>
+            <p>
+              Di soal ini paket akan muncul satu per satu seperti arcade. Tugas kamu memilih jalur metode yang paling tepat
+              sebelum waktu habis. Baca <b>pagu</b>, <b>jenis paket</b>, <b>ketersediaan katalog</b>, dan <b>kondisi pelaksanaan</b>.
+              Di level ini batas salah/miss adalah <b>${getTenderRushFailLimitByLevel(getCurrentLevelNumber())} kali</b>; kalau melewati batas, game langsung berhenti.
+            </p>
+          </div>
+          <div class="ps-rush-method-grid">
+            ${Object.values(TENDER_RUSH_METHODS).map(method => `
+              <div class="ps-rush-method-card">
+                <div class="ps-rush-method-key">${method.key}</div>
+                <div class="ps-rush-method-icon">${method.icon}</div>
+                <strong>${escapeHtml(method.label)}</strong>
+                <span>${escapeHtml(method.hint)}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="ps-buttons">
+            <button type="button" class="ps-btn ps-btn-primary" id="btnStartTenderRush">Saya Paham, Mulai Tender Rush</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!currentPackage && GAME_STATE.progress === 100) {
+      return `
+        ${renderQuestionPanel(challenge)}
+        <div class="ps-rush-finished">
+          <h3>🏁 Tender Rush selesai</h3>
+          <p>${escapeHtml(challenge.explanation)}</p>
+          <div class="ps-rush-summary">
+            <div><label>Benar</label><strong>${rush.correctCount || 0}</strong></div>
+            <div><label>Salah/Miss</label><strong>${rush.wrongCount || 0}</strong></div>
+            <div><label>Total Paket</label><strong>${total}</strong></div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      ${renderQuestionPanel(challenge)}
+      <div class="ps-rush-arena">
+        <div class="ps-rush-hud">
+          <div><label>Paket</label><strong>${Math.min(rush.currentIndex + 1, total)} / ${total}</strong></div>
+          <div><label>Waktu</label><strong id="psRushTimeText">${rush.timeLeft}</strong></div>
+          <div><label>Benar</label><strong>${rush.correctCount || 0}</strong></div>
+          <div><label>Salah</label><strong>${rush.wrongCount || 0} / ${getTenderRushFailLimitByLevel(getCurrentLevelNumber())}</strong></div>
+        </div>
+
+        <div class="ps-rush-time-track">
+          <div class="ps-rush-time-bar" id="psRushTimeBar" style="width:${percentTime}%"></div>
+        </div>
+
+        <div class="ps-rush-fall-lane">
+          <div class="ps-rush-package ${rush.lastResult ? (rush.lastResult.correct ? 'correct' : 'wrong') : ''}" style="--rush-duration:${Number(challenge.timeLimit || 8)}s">
+            <div class="ps-rush-package-top">
+              <span>${escapeHtml(currentPackage.type)}</span>
+              <b>${formatCurrency(currentPackage.pagu)}</b>
+            </div>
+            <h3>${escapeHtml(currentPackage.title)}</h3>
+            <p>${escapeHtml(currentPackage.clue)}</p>
+          </div>
+        </div>
+
+        ${rush.lastResult ? `
+          <div class="ps-rush-result ${rush.lastResult.correct ? 'ok' : 'bad'}">
+            <strong>${rush.lastResult.correct ? 'Benar!' : 'Belum tepat.'}</strong>
+            ${escapeHtml(rush.lastResult.message)}
+          </div>
+        ` : ''}
+
+        <div class="ps-rush-drop-grid">
+          ${Object.entries(TENDER_RUSH_METHODS).map(([id, method]) => `
+            <button type="button" class="ps-rush-drop" data-rush-method="${id}" ${rush.locked ? 'disabled' : ''}>
+              <span class="ps-rush-key">${method.key}</span>
+              <span class="ps-rush-icon">${method.icon}</span>
+              <strong>${escapeHtml(method.label)}</strong>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+
+  
+  function createBonusOpenWorldState() {
+    const nodes = [
+      {
+        id: 'mcsp',
+        title: 'Bangun Tim & Mandat',
+        icon: '🏛️',
+        desc: 'Mulai dari dorongan indikator tata kelola, lalu pilih tim inti yang paling siap buat bantu konsolidasi Kota Bogor.',
+        story: 'PANJI mengajak PPK masuk ke plaza bonus level 4. Portal hanya terbuka kalau misi konsolidasi diselesaikan dengan benar. Tahap pertama: bentuk tim yang bukan cuma cepat, tapi bisa baca data, pasar, dan implementasi katalog.',
+        enemy: 'Musuh pertama: rapat tanpa arah dan tim asal tunjuk.',
+        choices: [
+          { id: 'tim-aman', text: 'Bentuk tim berisi analis data, evaluator, dan monitoring implementasi', good: true, panji: 'Ini aman. Konsolidasi butuh orang yang bisa membaca data kebutuhan sampai pelaksanaan.' },
+          { id: 'tim-asal', text: 'Pilih siapa pun yang sedang kosong agar cepat', good: false, panji: 'Cepat belum tentu aman. Tim yang tidak pas bikin keputusan awal gampang goyah.' },
+          { id: 'mandat-jelas', text: 'Pastikan mandat dan peran tiap orang jelas sejak awal', good: true, panji: 'Bagus. Payung kerja dan pembagian peran bikin alur konsolidasi lebih tertib.' },
+          { id: 'toko-langganan', text: 'Masukkan orang yang dekat dengan toko langganan supaya enak nanti', good: false, panji: 'Jebakan. Kedekatan tidak boleh menggantikan dasar evaluasi dan persaingan sehat.' }
+        ]
+      },
+      {
+        id: 'data',
+        title: 'Rapikan Barang Sejenis',
+        icon: '🧾',
+        desc: 'Baca kebutuhan OPD dan samakan item yang benar-benar sejenis seperti HVS, tinta printer, dan ballpoint.',
+        story: 'Data OPD datang dengan nama yang berantakan. Ada HVS A4 70 gsm, kertas A4 70 gram, pulpen gel, bolpoin gel, dan item lain yang kelihatannya mirip. Kalau salah gabung, paket konsolidasi bisa kacau dari awal.',
+        enemy: 'Musuh kedua: Data Ganda dan Nama Barang Acak.',
+        choices: [
+          { id: 'hvs-ballpoint', text: 'Kelompokkan HVS, tinta printer, dan ballpoint per keluarga barang, bukan dicampur semua', good: true, panji: 'Betul. Keluarga barang harus dibaca per kelompok agar spesifikasi dan HPS tetap masuk akal.' },
+          { id: 'campur-total', text: 'Gabungkan semua ATK dan semua elektronik kecil jadi satu paket besar', good: false, panji: 'Terlalu dipaksa. Konsolidasi mencari kesamaan, bukan menggabung semua hal tanpa logika.' },
+          { id: 'samakan-nama', text: 'Samakan istilah yang beda tapi spesifikasinya sama, misalnya pulpen gel dan bolpoin gel', good: true, panji: 'Nah, itu inti analisa kebutuhan sejenis.' },
+          { id: 'ikuti-ketik', text: 'Anggap nama barang yang beda berarti pasti barangnya beda', good: false, panji: 'Belum tentu. Perlu dibaca lagi volume, ukuran, gramasi, dan jenisnya.' }
+        ]
+      },
+      {
+        id: 'pasar',
+        title: 'Market Sounding Kota Bogor',
+        icon: '🏪',
+        desc: 'Datangi penyedia, cek harga, stok, akun Katalog V6, distribusi, dan kesiapan pasar.',
+        story: 'PPK dan PANJI masuk ke pasar penyedia. Di kanan kiri ada merchant, blacksmith, mage, dan archer yang mewakili penyedia berbeda. Tugasmu bukan memilih pemenang, tapi membaca kondisi pasar dengan kepala dingin.',
+        enemy: 'Musuh ketiga: Harga Liar, stok semu, dan janji manis tanpa bukti.',
+        choices: [
+          { id: 'pasar-v6', text: 'Pilih penyedia yang harganya masuk akal, akun Katalog V6 siap, dan distribusi ke OPD jelas', good: true, panji: 'Bagus. Harga murah penting, tapi kesiapan implementasi juga wajib dicek.' },
+          { id: 'murah-saja', text: 'Ambil yang paling murah walau belum siap katalog', good: false, panji: 'Murah belum cukup. Kalau implementasi macet, OPD nanti yang repot.' },
+          { id: 'tiga-pembanding', text: 'Catat minimal tiga pembanding harga dan kesiapan pasar', good: true, panji: 'Ini sehat. Market sounding butuh pembanding, bukan satu suara.' },
+          { id: 'langganan', text: 'Cukup tanya toko langganan karena sudah paling dikenal', good: false, panji: 'Kebiasaan bukan dasar evaluasi pasar.' }
+        ]
+      },
+      {
+        id: 'tantangan',
+        title: 'Lawan Tantangan Konsolidasi',
+        icon: '⚔️',
+        desc: 'Saat alur mulai jalan, muncul gangguan: data kebutuhan belum rapi, pembentukan harga, katalog, sampai komitmen pimpinan.',
+        story: 'Tiba-tiba gerombolan knight dan thief muncul membawa tujuh tantangan konsolidasi: data kebutuhan, pasar dan proses bisnis, pembentukan harga, kepastian anggaran dan pembelian, skema pemilihan penyedia, penggunaan katalog, dan kesiapan SDM/pimpinan.',
+        enemy: 'Musuh keempat: Pasukan Tantangan Konsolidasi.',
+        choices: [
+          { id: 'ceklist-tantangan', text: 'Hadapi satu per satu: rapikan data, baca pasar, bentuk harga, siapkan katalog, dan jaga komitmen pimpinan', good: true, panji: 'Benar. Tantangan tidak hilang dengan feeling. Harus diurai satu-satu.' },
+          { id: 'skip-tantangan', text: 'Lewati saja tantangannya, yang penting paket cepat tayang', good: false, panji: 'Ini jebakan besar. Paket yang cepat tapi rapuh akan bermasalah saat dipakai.' },
+          { id: 'monitoring-opd', text: 'Siapkan monitoring implementasi OPD sejak sebelum katalog tayang', good: true, panji: 'Mantap. Konsolidasi berhasil kalau dipakai bersama, bukan cuma bagus di slide.' },
+          { id: 'andalkan-untung', text: 'Biarkan nanti jalan sendiri kalau sudah diumumkan', good: false, panji: 'Tanpa pengawalan, konsolidasi gampang mandek.' }
+        ]
+      },
+      {
+        id: 'evaluasi',
+        title: 'Evaluasi Akhir & Portal Pulang',
+        icon: '🌍',
+        desc: 'Portal akan terbuka kalau keputusanmu cukup aman untuk membawa konsolidasi sampai implementasi.',
+        story: 'Semua keputusan diuji terakhir kali. PANJI menatap portal dan bertanya: apakah kamu benar-benar membawa alur dari mandat, data, pasar, sampai tantangan implementasi dengan tertib?',
+        enemy: 'Boss akhir: Spek Mengarah Prime dan Lord Feeling Mepet.',
+        choices: [
+          { id: 'bukti-lengkap', text: 'Kembali ke data kebutuhan, hasil market sounding, dan kesiapan implementasi sebelum menyimpulkan', good: true, panji: 'Ini jawaban paling aman. Semua keputusan harus bisa dijelaskan dengan bukti.' },
+          { id: 'feeling-cepat', text: 'Pilih yang menurut perasaan paling praktis karena waktunya mepet', good: false, panji: 'Feeling boleh buat waspada, tapi keputusan resmi tidak boleh berdiri di atas feeling saja.' },
+          { id: 'cek-opd', text: 'Pastikan hasil konsolidasi nanti benar-benar bisa dipakai OPD melalui katalog/e-purchasing', good: true, panji: 'Pas. Ending konsolidasi ada pada implementasi, bukan sekadar penetapan.' },
+          { id: 'harga-saja', text: 'Yang penting harga paling murah meski alur lain belum siap', good: false, panji: 'Harga penting, tapi bukan satu-satunya ukuran keamanan proses.' }
+        ]
+      }
+    ];
+
+    return {
+      activeNode: 'mcsp',
+      completed: {},
+      decisions: {},
+      nodes,
+      bonusScore: 0
+    };
+  }
+
+  function getBonusOpenWorldState() {
+    if (!GAME_STATE.bonusOpenWorld) {
+      GAME_STATE.bonusOpenWorld = createBonusOpenWorldState();
+    }
+    return GAME_STATE.bonusOpenWorld;
+  }
+
+  function renderBonusOpenWorldChallenge() {
+    const bonus = getBonusOpenWorldState();
+    const order = bonus.nodes.map(node => node.id);
+    const active = bonus.nodes.find(node => node.id === bonus.activeNode) || bonus.nodes[0];
+    const completedCount = Object.keys(bonus.completed).length;
+    const activeIndex = order.indexOf(active.id);
+    const shuffledChoices = shuffleArray(active.choices || []);
+    const npcStrip = [
+      ['merchant', 'Merchant Pasar'],
+      ['blacksmith', 'Toko Peralatan'],
+      ['mage', 'Analis Harga'],
+      ['archer', 'Kurir Distribusi']
+    ];
+    const enemyStrip = [
+      ['knight', 'Data Ganda'],
+      ['thief', 'Spek Mengarah']
+    ];
+
+    return `
+      <div class="ps-bonus3d-fullscreen ps-bonus4-konsolidasi">
+        <div class="ps-bonus3d-scene ps-bonus4-scene">
+          <div class="ps-bonus3d-sky"></div>
+          <div class="ps-bonus3d-cloud c1"></div>
+          <div class="ps-bonus3d-cloud c2"></div>
+          <div class="ps-bonus3d-mountain m1"></div>
+          <div class="ps-bonus3d-mountain m2"></div>
+          <div class="ps-bonus3d-road"></div>
+          <div class="ps-bonus3d-portal ${GAME_STATE.progress >= 100 ? 'open' : ''}">PORTAL PULANG</div>
+          <div class="ps-bonus3d-player" style="--player-step:${activeIndex}"><span>PPK</span></div>
+          <div class="ps-bonus3d-companion" style="--player-step:${activeIndex}"><span>PANJI</span></div>
+
+          <div class="ps-bonus4-npc-lane">
+            ${npcStrip.map(([key, label], idx) => `
+              <div class="ps-bonus4-npc-card" style="--npc-delay:${idx * .4}s">
+                <img src="${BONUS_ASSET_PATHS['npc' + key.charAt(0).toUpperCase() + key.slice(1)] || ''}" alt="${escapeHtml(label)}">
+                <small>${escapeHtml(label)}</small>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="ps-bonus4-enemy-lane">
+            ${enemyStrip.map(([key, label], idx) => `
+              <div class="ps-bonus4-enemy" style="--enemy-delay:${idx * .35}s">
+                <img src="${BONUS_ASSET_PATHS['npc' + key.charAt(0).toUpperCase() + key.slice(1)] || ''}" alt="${escapeHtml(label)}">
+                <span>${escapeHtml(label)}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="ps-bonus3d-map openworld-map ps-bonus4-map">
+            ${bonus.nodes.map((node, index) => {
+              const isDone = Boolean(bonus.completed[node.id]);
+              const isActive = bonus.activeNode === node.id;
+              const isLocked = index > completedCount;
+              return `
+                <button type="button" class="ps-bonus3d-node ${isActive ? 'active' : ''} ${isDone ? 'done' : ''} ${isLocked ? 'locked' : ''}" data-bonus-node="${node.id}" style="--i:${index}">
+                  <span class="ps-bonus3d-orb">${isDone ? '✅' : isLocked ? '🔒' : node.icon}</span>
+                  <b>${escapeHtml(node.title)}</b>
+                  <small>${isDone ? '✓ Sudah beres' : isLocked ? 'Terkunci' : isActive ? 'Quest aktif' : 'Berikutnya'}</small>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="ps-bonus3d-panel ps-bonus3d-story-panel ps-bonus4-story-panel">
+          <div class="ps-bonus3d-kicker">Bonus Level 4 • Kota Konsolidasi</div>
+          <h3>${escapeHtml(active.title)}</h3>
+          <div class="ps-bonus3d-soal">
+            <b>Cerita:</b> ${escapeHtml(active.story)}<br>
+            <span><b>Tugas kamu:</b> ${escapeHtml(active.desc)}</span><br>
+            <span><b>Gangguan:</b> ${escapeHtml(active.enemy)}</span>
+          </div>
+          <div class="ps-bonus3d-panji">
+            <b>PANJI:</b> Ini bonus level 4 khusus konsep proyekmu. Aku tetap mengawal di sini. Pilihan aman bikin portal cepat terbuka, pilihan sembrono bikin risiko naik.
+          </div>
+
+          <div class="ps-bonus3d-choices">
+            ${shuffledChoices.map(choice => `
+              <button type="button" class="ps-bonus3d-choice" data-bonus-choice="${active.id}::${choice.id}">
+                ${escapeHtml(choice.text)}
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="ps-bonus3d-status">
+            <span>Quest: <b>${activeIndex + 1}/${bonus.nodes.length}</b></span>
+            <span>NPC & musuh aktif: <b>${npcStrip.length + enemyStrip.length}</b></span>
+            <span>Bonus poin: <b>${bonus.bonusScore}</b></span>
+          </div>
+        </div>
+      </div>
+
+      ${GAME_STATE.progress >= 100 ? `
+        <div class="ps-explanation">
+          <strong>Bonus Level 4 selesai:</strong><br>
+          Kamu berhasil membawa Konsolidasi Kota Bogor dari pembentukan tim sampai evaluasi implementasi. NPC, pasar, dan musuh sudah kamu lewati, dan poin bonus ikut masuk skor akhir.
+        </div>
+      ` : ''}
+    `;
+  }
+
+  function answerBonusOpenWorld(payload, buttonEl) {
+    const bonus = getBonusOpenWorldState();
+    const [nodeId, choiceId] = String(payload || '').split('::');
+    const node = bonus.nodes.find(item => item.id === nodeId);
+    const choice = node && node.choices.find(item => item.id === choiceId);
+    if (!node || !choice || bonus.completed[nodeId]) return;
+
+    bonus.completed[nodeId] = true;
+    bonus.decisions[nodeId] = choice;
+
+    if (choice.good) {
+      GAME_STATE.score += 35;
+      GAME_STATE.correct += 1;
+      bonus.bonusScore += 35;
+      addLog('ok', `${node.title} aman`, choice.panji);
+      showToast('Pilihan bonus aman. +35', 'ok');
+      showPanji(choice.panji, 'happy');
+      flashScreen('ok');
+      popScore(buttonEl || document.body, '+35', 'ok');
+      spawnConfetti();
+    } else {
+      GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
+      GAME_STATE.risk += 8;
+      GAME_STATE.wrong += 1;
+      bonus.bonusScore = Math.max(0, bonus.bonusScore - 5);
+      addLog('bad', `${node.title} rawan`, choice.panji);
+      showToast('Jebakan bonus. Risiko +8', 'bad');
+      showPanji(choice.panji, 'sad');
+      flashScreen('bad');
+      popScore(buttonEl || document.body, '+8 Risiko', 'bad');
+    }
+
+    const completedCount = Object.keys(bonus.completed).length;
+    GAME_STATE.progress = Math.round((completedCount / bonus.nodes.length) * 100);
+
+    const nextNode = bonus.nodes.find(item => !bonus.completed[item.id]);
+    const finishedAll = !nextNode;
+    if (nextNode) {
+      bonus.activeNode = nextNode.id;
+    } else {
+      GAME_STATE.progress = 100;
+      GAME_STATE.score += 20;
+      addLog('ok', 'Bonus level 4 selesai', 'Poin analisa dari bonus open world sudah masuk nilai akhir.');
+      showPanji('Seluruh tantangan bonus level 4 beres. Portal Kota Konsolidasi terbuka, dan semua keputusanmu ikut dihitung.', 'happy');
+      showToast('Portal 3D terbuka. Bonus +' + bonus.bonusScore, 'ok');
+    }
+
+    renderGame();
+    if (finishedAll) {
+      setTimeout(() => showBonusOpenWorldCompletePopup(bonus), 80);
+    }
+  }
+
+
+  function showBonusOpenWorldCompletePopup(bonus) {
+
+    if (document.getElementById('psBonus4FinishPopup')) return;
+    const goodCount = Object.values(bonus.decisions || {}).filter(item => item && item.good).length;
+    const total = bonus.nodes.length;
+    const analysis = goodCount >= 3
+      ? 'Gaya analisamu lumayan aman. Kamu sudah mulai balik ke data, cek pasar, dan tidak terlalu gampang kepancing pilihan murah-cepat.'
+      : 'Gaya analisamu masih rawan. Kamu beberapa kali tergoda pilihan cepat atau murah tanpa cukup bukti. Di PBJ, itu bisa bikin risiko naik.';
+    const overlay = document.createElement('div');
+    overlay.id = 'psBonus4FinishPopup';
+    overlay.className = 'ps-bonus4-finish-popup';
+    overlay.innerHTML = `
+      <div class="ps-bonus4-finish-card">
+        <div class="ps-bonus4-finish-orb">🌍</div>
+        <h2>Portal Dunia 3D Terbuka!</h2>
+        <p><b>Poin Bonus:</b> ${Number(bonus.bonusScore || 0)} · <b>Keputusan aman:</b> ${goodCount}/${total}</p>
+        <div class="ps-bonus4-panji-note"><b>PANJI:</b> ${escapeHtml(analysis)} Konsolidasi berhasil diselesaikan, jadi kamu bisa keluar dari dunia 3D.</div>
+        <small>Otomatis lanjut ke level berikutnya...</small>
+        <button type="button" class="ps-btn ps-btn-primary" id="btnBonus4GoNext">Lanjut sekarang</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const go = () => {
+      overlay.remove();
+      if (getCurrentChallenge() && getCurrentChallenge().type === 'bonusOpenWorld' && GAME_STATE.progress === 100) {
+        nextChallenge();
+      }
+    };
+    document.getElementById('btnBonus4GoNext')?.addEventListener('click', go);
+    setTimeout(go, 4200);
+  }
+
+  function createBonusSnakeState() {
+    return {
+      running: false,
+      finished: false,
+      briefed: false,
+      score: 0,
+      target: 12,
+      hearts: 1,
+      grid: 18,
+      snake: [{x:8,y:9},{x:7,y:9},{x:6,y:9}],
+      dir: {x:1,y:0},
+      nextDir: {x:1,y:0},
+      star: {x:13,y:9},
+      obstacles: [{x:3,y:3},{x:14,y:4},{x:6,y:14},{x:15,y:14},{x:10,y:6}],
+      ticks: 0,
+      activeTip: 'Kisi-kisi: di PBJ jangan cuma kejar cepat. Cek dulu RUP, kebutuhan, harga, katalog, dan bukti proses.'
+    };
+  }
+
+  function getBonusSnakeState() {
+    if (!GAME_STATE.bonusSnake) GAME_STATE.bonusSnake = createBonusSnakeState();
+    return GAME_STATE.bonusSnake;
+  }
+
+  function renderBonusSnakeChallenge() {
+    const snake = getBonusSnakeState();
+    return `
+      <div class="ps-snake-wrap ps-snake-wrap-big">
+        <div class="ps-snake-info">
+          <div class="ps-bonus3d-kicker">Bonus Level 8 • Mood Booster</div>
+          <h3>PANJI Star Snake</h3>
+          <p>Ambil bintang sebanyak mungkin. Tembus tembok boleh: kanan tembus ke kiri, bawah tembus ke atas. Yang bahaya itu badan sendiri dan jebakan revisi. Pakai tap HP / klik mouse di area game buat belokin ular. Keyboard WASD/arrow tetap bisa. Bonus ini boleh diulang, atau dilewati kalau mau lanjut level berikutnya.</p>
+          <div class="ps-snake-score-row">
+            <div><label>Bintang</label><b>${snake.score}/${snake.target}</b></div>
+            <div><label>Hati</label><b>${'❤️'.repeat(Math.max(0, snake.hearts || 0)) || '0'}</b></div>
+            <div><label>Bonus</label><b>${Math.min(120, snake.score * 10)}</b></div>
+          </div>
+          <div class="ps-bonus3d-panji">
+            <b>PANJI:</b> Ini level santai. Fokus ambil ⭐ Bintang Semangat, jangan rakus, dan hindari 🧾 Revisi. Kamu cuma punya 1 hati. Sekali nabrak, bonus selesai dan langsung lanjut ke level berikutnya.
+          </div>
+          <div class="ps-snake-pbj-pop">
+            <b>Popup kisi-kisi PBJ:</b> ${escapeHtml(snake.activeTip || 'Jangan asal ambil keputusan. Cek data, harga, katalog, dan bukti proses.')}
+          </div>
+          ${!snake.briefed && !snake.running && !snake.finished ? `
+            <div class="ps-snake-brief-modal">
+              <b>Sebelum mulai, baca cepat:</b> ambil bintang sambil tetap baca kisi-kisi PBJ. Ini melatih multitasking: mata lihat arena, otak tetap ingat prinsip PBJ. Jangan rakus, jangan tabrak revisi.
+              <button type="button" class="ps-btn ps-btn-primary" id="btnSnakeBriefStart">Paham, mulai Snake</button>
+            </div>
+          ` : ''}
+          <div class="ps-buttons">
+            <button type="button" class="ps-btn ps-btn-primary" id="btnStartSnake" ${snake.running ? 'disabled' : ''}>${snake.finished ? 'Main Lagi Snake' : 'Mulai Snake'}</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnResetSnake">Ulangi Level Bonus</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnSkipSnake">Lewati Level Bonus</button>
+          </div>
+        </div>
+        <div class="ps-snake-stage ps-snake-stage-big">
+          <canvas id="psSnakeCanvas" width="960" height="960" aria-label="PANJI Star Snake"></canvas>
+          <div class="ps-snake-arena-tip" style="--tip-x:${22 + ((snake.score * 17) % 58)}%;--tip-y:${16 + ((snake.score * 23) % 54)}%">
+            <b>PANJI nyeletuk:</b> ${escapeHtml(snake.activeTip || 'Jangan asal klik. Tetap baca kisi-kisi PBJ sambil main.')}
+          </div>
+          <div class="ps-snake-caption">⭐ Bintang = poin · 🧾 Revisi = jebakan · Tap/Klik = belok · WASD/Arrow juga bisa</div>
+        </div>
+      </div>
+      ${snake.finished ? `
+        <div class="ps-explanation"><strong>Bonus Snake selesai:</strong><br>Kamu mendapat ${snake.score} bintang. Poin bonus masuk skor akhir. Klik <b>Main Lagi Snake</b> kalau mau memperbaiki skor, atau <b>Lanjut Soal Berikutnya</b>.</div>
+      ` : ''}
+    `;
+  }
+
+  function renderQuizChallenge(challenge) {
+    const options = Array.isArray(challenge.runtimeOptions) && challenge.runtimeOptions.length
+      ? challenge.runtimeOptions
+      : (challenge.options || []).map((text, originalIndex) => ({ text, originalIndex }));
+    const correctRuntimeIndex = Number.isInteger(challenge.runtimeAnswer) ? challenge.runtimeAnswer : Number(challenge.answer || 0);
+
+    return `
+      ${renderQuestionPanel(challenge, challenge.question)}
+
+      <div class="ps-quiz-options">
+        ${options.map((option, index) => {
+          let cls = '';
+
+          if (GAME_STATE.answered) {
+            if (index === correctRuntimeIndex) cls = 'correct';
+            else if (index === GAME_STATE.selectedAnswer) cls = 'wrong';
+          }
+
+          return `
+            <button
+              type="button"
+              class="ps-quiz-option ${cls}"
+              data-answer-index="${index}"
+              ${GAME_STATE.answered ? 'disabled' : ''}
+            >
+              ${String.fromCharCode(65 + index)}. ${escapeHtml(option.text)}
+            </button>
+          `;
+        }).join('')}
+      </div>
+
+      ${
+        GAME_STATE.answered
+          ? `
+            <div class="ps-explanation">
+              <strong>Pembahasan:</strong><br>
+              ${escapeHtml(challenge.explanation)}
+            </div>
+          `
+          : ''
+      }
+    `;
+  }
+
+  function renderLogs() {
+    if (!GAME_STATE.logs.length) return '';
+
+    return `
+      <div class="ps-log-box">
+        <strong>Log Pembelajaran</strong>
+        <div class="ps-log-list">
+          ${GAME_STATE.logs.map(item => `
+            <div class="ps-log-item">
+              <div class="ps-log-icon ${item.type}">
+                ${item.type === 'ok' ? '✓' : item.type === 'bad' ? '!' : 'i'}
+              </div>
+              <div>
+                <div class="ps-log-title">${escapeHtml(item.title)}</div>
+                <div class="ps-log-sub">${escapeHtml(item.text)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderResultScreen() {
+    const maxScore = calculateMaxScore();
+    const percent = maxScore > 0 ? Math.round((GAME_STATE.score / maxScore) * 100) : 0;
+    const grade = getResultGrade(percent);
+    const totalQuestions = CHALLENGES.length;
+    const riskLabel = GAME_STATE.risk <= 20
+      ? 'Rendah'
+      : GAME_STATE.risk <= 60
+        ? 'Sedang'
+        : 'Tinggi';
+    const stopTitle = GAME_STATE.stoppedReason === 'rushFailed'
+      ? 'Game berhenti karena Tender Rush gagal melewati batas level.'
+      : GAME_STATE.stoppedReason === 'time'
+        ? 'Game berhenti karena waktu level habis.'
+        : '';
+
+    return `
+      <section class="ps-card">
+        <div class="ps-result-hero">
+          <h2>${grade.icon} ${grade.label}</h2>
+          <p>${escapeHtml(grade.text)}</p>
+        </div>
+
+        <div class="ps-result-grid">
+          <div class="ps-result-card">
+            <label>Nilai Akhir</label>
+            <strong>${percent}%</strong>
+          </div>
+
+          <div class="ps-result-card">
+            <label>Skor</label>
+            <strong>${GAME_STATE.score}/${maxScore}</strong>
+          </div>
+
+          <div class="ps-result-card">
+            <label>Risiko</label>
+            <strong>${GAME_STATE.risk}</strong>
+          </div>
+
+          <div class="ps-result-card">
+            <label>Salah</label>
+            <strong>${GAME_STATE.wrong}</strong>
+          </div>
+
+          <div class="ps-result-card">
+            <label>Level Dicapai</label>
+            <strong>${getCurrentResultSummary().levelDicapai}/${totalQuestions}</strong>
+          </div>
+        </div>
+
+        ${stopTitle ? `
+          <div class="ps-result-note ps-result-stop-note">
+            <strong>${escapeHtml(stopTitle)}</strong><br>
+            Kamu mencapai <strong>Level ${GAME_STATE.stoppedLevel || (GAME_STATE.index + 1)}</strong> dengan skor <strong>${GAME_STATE.score}</strong> dan risiko <strong>${GAME_STATE.risk}</strong>.
+          </div>
+        ` : ''}
+
+        <div class="ps-result-note">
+          <strong>Ringkasan:</strong><br>
+          Kamu sudah menyelesaikan ${totalQuestions} soal/challenge. Level risiko kamu saat ini:
+          <strong>${riskLabel}</strong>. Ingat, terlalu sering memakai hint dari PANJI memang membantu,
+          tetapi mengurangi skor.
+        </div>
+
+        <div class="ps-result-note">
+          <strong>Analisa PANJI:</strong><br>
+          ${escapeHtml(getFinalPanjiAnalysisText(getCurrentResultSummary()))}
+        </div>
+
+        <div class="ps-result-note">
+          <strong>Catatan pembelajaran:</strong><br>
+          Dalam praktik PBJ, keputusan tidak cukup hanya cepat. Harus ada alur yang tertib, bukti yang jelas,
+          pemilihan metode yang sesuai, serta dokumentasi saat terjadi perubahan kondisi seperti katalog tidak tersedia
+          atau kontrak perlu diadendum.
+        </div>
+<div class="ps-buttons">
+          <button type="button" class="ps-btn ps-btn-primary" id="btnPlayAgain">
+            Main Lagi dari Soal 1
+          </button>
+          <button type="button" class="ps-btn ps-btn-soft" id="btnOpenLeaderboard">
+            Lihat Leaderboard
+          </button>
+        </div>
+      </section>
+    `;
+  }
+
+  function bindResultEvents() {
+    const btnPlayAgain = root.querySelector('#btnPlayAgain');
+    const btnOpenLeaderboard = root.querySelector('#btnOpenLeaderboard');
+    const btnSaveFeedback = root.querySelector('#btnSaveFeedback');
+
+    if (btnPlayAgain) {
+      btnPlayAgain.addEventListener('click', () => {
+        clearAutoNextTimer();
+        startGame();
+      });
+    }
+
+    if (btnOpenLeaderboard) {
+      btnOpenLeaderboard.addEventListener('click', () => {
+        openLeaderboardModal('leaderboard', true);
+      });
+    }
+
+    if (btnSaveFeedback) {
+      btnSaveFeedback.addEventListener('click', () => {
+        const box = root.querySelector('#psFinalFeedback');
+        PLAYER_STATE.feedback = String(box ? box.value || '' : '').trim();
+        savePlayerProfile(PLAYER_STATE.nama, PLAYER_STATE.instansi);
+        showToast('Masukan disimpan. Terima kasih!', 'ok');
+        showPanji('Makasih masukannya. Aku catat buat pengembangan game PBJ berikutnya.', 'happy');
+      });
+    }
+  }
+
+
+
+  function createBonusDinoState() {
+    return {
+      running: false,
+      finished: false,
+      briefed: false,
+      score: 0,
+      target: 1800,
+      distance: 0,
+      speed: 8,
+      gravity: 1.05,
+      jumpPower: 15.5,
+      heroY: 0,
+      heroV: 0,
+      frame: 0,
+      tick: 0,
+      floor: 0,
+      obstacles: [],
+      activeTip: 'Lompati revisi, spek mengarah, dan data ganda. Timing lebih penting daripada panik.',
+      hearts: 1,
+      spawnCooldown: 40,
+      bestScore: 0
+    };
+  }
+
+  function getBonusDinoState() {
+    if (!GAME_STATE.bonusDino) GAME_STATE.bonusDino = createBonusDinoState();
+    return GAME_STATE.bonusDino;
+  }
+
+  function renderBonusDinoChallenge() {
+    const dino = getBonusDinoState();
+    return `
+      <div class="ps-dino-wrap">
+        <div class="ps-dino-info">
+          <div class="ps-bonus3d-kicker">Bonus Level 10 • Dino Runner</div>
+          <h3>PANJI Dino Run: Kejar Paket Aman</h3>
+          <p>Ini bonus level 10. Konsepnya runner 2D ala dino, tapi temanya PBJ. Karakter utama pakai sprite yang kamu kirim. Tekan <b>Space</b>, <b>W</b>, <b>Arrow Up</b>, atau klik area game untuk lompat.</p>
+          <div class="ps-snake-score-row">
+            <div><label>Jarak Aman</label><b>${Math.floor(dino.distance)} / ${dino.target}</b></div>
+            <div><label>Hati</label><b>${'❤️'.repeat(Math.max(0, dino.hearts || 0)) || '0'}</b></div>
+            <div><label>Bonus</label><b>${dino.score}</b></div>
+          </div>
+          <div class="ps-bonus3d-panji"><b>PANJI:</b> Ini bonus dino buat level 10. Musuhnya bukan monster random, tapi gangguan pengadaan: <b>Revisi Dadakan</b>, <b>Data Ganda</b>, dan <b>Spek Mengarah</b>. Satu tabrakan, bonus selesai.</div>
+          <div class="ps-dino-pbj-pop"><b>Popup kisi-kisi:</b> ${escapeHtml(dino.activeTip)}</div>
+          <div class="ps-buttons">
+            <button type="button" class="ps-btn ps-btn-primary" id="btnStartDino">${dino.finished ? 'Main Lagi Bonus Dino' : 'Mulai Bonus Dino'}</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnResetDino">Reset Bonus Dino</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnSkipDino">Lewati Bonus</button>
+          </div>
+        </div>
+        <div class="ps-dino-stage">
+          <canvas id="psDinoCanvas" width="960" height="320" aria-label="PANJI Dino Run"></canvas>
+          <div class="ps-dino-caption">Jump = Space / W / Arrow Up / Klik • Runner 2D khusus bonus level 10</div>
+        </div>
+      </div>
+      ${dino.finished ? `<div class="ps-explanation"><strong>Bonus Dino selesai:</strong><br>Kamu menempuh ${Math.floor(dino.distance)} jarak aman dan mendapat bonus ${dino.score}. Klik <b>Main Lagi Bonus Dino</b> kalau mau memperbaiki skor, atau lanjut ke level berikutnya.</div>` : ''}
+    `;
+  }
+
+  function clearBonusDinoTimers() {
+    if (bonusDinoTimer) {
+      clearInterval(bonusDinoTimer);
+      bonusDinoTimer = null;
+    }
+    if (bonusDinoKeyHandler) {
+      document.removeEventListener('keydown', bonusDinoKeyHandler);
+      bonusDinoKeyHandler = null;
+    }
+  }
+
+  function jumpBonusDino() {
+    const dino = getBonusDinoState();
+    if (!dino.running || dino.finished) return;
+    if (dino.heroY <= 0.01) {
+      dino.heroV = dino.jumpPower;
+      playSfx('info');
+    }
+  }
+
+  function randomDinoTip() {
+    return shuffleArray([
+      'Jangan terlalu sering lompat. Simpan untuk rintangan yang dekat.',
+      'Kayak PBJ, timing lebih aman daripada panik.',
+      'Data Ganda dan Revisi Dadakan itu kecil, tapi bahaya kalau telat baca.',
+      'Spek Mengarah lebih tinggi. Lompatnya harus pas.'
+    ])[0];
+  }
+
+  function drawBonusDino() {
+    const canvas = root && root.querySelector('#psDinoCanvas');
+    const dino = getBonusDinoState();
+    if (!canvas || !dino) return;
+    const c = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    c.clearRect(0,0,w,h);
+    // sky + hills
+    const g = c.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#dff3ff');
+    g.addColorStop(1,'#f8fdff');
+    c.fillStyle = g;
+    c.fillRect(0,0,w,h);
+    c.fillStyle = '#d7ead2'; c.fillRect(0,h-78,w,78);
+    c.fillStyle = '#8bbd73'; c.fillRect(0,h-60,w,60);
+    c.fillStyle = '#6d9d54'; c.fillRect(0,h-46,w,46);
+    c.strokeStyle = '#335b2f'; c.lineWidth = 4;
+    c.beginPath(); c.moveTo(0,h-46); c.lineTo(w,h-46); c.stroke();
+    c.fillStyle = '#173127'; c.font = 'bold 18px Arial'; c.fillText('Jarak ' + Math.floor(dino.distance) + ' / ' + dino.target, 18, 28);
+    c.fillText('Bonus ' + dino.score, w - 160, 28);
+    c.fillText('❤️'.repeat(Math.max(0, dino.hearts || 0)), w/2 - 20, 28);
+    // obstacles
+    dino.obstacles.forEach(obs => {
+      if (obs.kind === 'revisi') {
+        c.fillStyle = '#dc2626'; c.fillRect(obs.x, h-46-obs.h, obs.w, obs.h);
+        c.fillStyle = '#fff'; c.font = 'bold 14px Arial'; c.fillText('REV', obs.x+6, h-46-obs.h+20);
+      } else if (obs.kind === 'data') {
+        c.fillStyle = '#2563eb'; c.beginPath(); c.arc(obs.x+obs.w/2, h-46-obs.h/2, obs.w/2, 0, Math.PI*2); c.fill();
+        c.fillStyle = '#fff'; c.font = 'bold 12px Arial'; c.fillText('DG', obs.x+5, h-46-obs.h/2+4);
+      } else {
+        c.fillStyle = '#7c2d12'; c.beginPath(); c.moveTo(obs.x, h-46); c.lineTo(obs.x+obs.w/2, h-46-obs.h); c.lineTo(obs.x+obs.w, h-46); c.closePath(); c.fill();
+        c.fillStyle = '#fff'; c.font = 'bold 11px Arial'; c.fillText('SM', obs.x+4, h-46-obs.h/2+4);
+      }
+    });
+    // hero
+    const sprite = BONUS_ASSETS.playerRun;
+    const heroX = 120;
+    const heroYpx = h - 46 - 82 - dino.heroY;
+    if (sprite && sprite.complete && sprite.naturalWidth) {
+      const frameW = sprite.naturalWidth / 8;
+      const frame = dino.frame % 8;
+      c.drawImage(sprite, frame*frameW, 0, frameW, sprite.naturalHeight, heroX, heroYpx, 92, 82);
+    } else {
+      c.fillStyle = '#123a72'; c.fillRect(heroX+20, heroYpx+18, 32, 52);
+      c.fillStyle = '#f0c7a4'; c.beginPath(); c.arc(heroX+36, heroYpx+18, 14, 0, Math.PI*2); c.fill();
+    }
+  }
+
+  function finishBonusDino(message, crashed = false) {
+    const dino = getBonusDinoState();
+    if (dino.finished) return;
+    dino.running = false;
+    dino.finished = true;
+    clearBonusDinoTimers();
+    if (crashed) {
+      dino.score = Math.max(0, Math.floor(dino.distance / 12));
+      GAME_STATE.score += dino.score;
+      GAME_STATE.risk += 8;
+      GAME_STATE.wrong += 1;
+      GAME_STATE.progress = 100;
+      addLog('bad', 'Bonus Dino selesai karena tabrakan', message);
+      showPanji(message, 'sad');
+      showToast('Bonus Dino selesai. +' + dino.score, 'info');
+      renderGame();
+      setTimeout(() => { const current = getCurrentChallenge(); if (current && current.type === 'bonusDino') nextChallenge(); }, 2400);
+      return;
+    }
+    dino.score = Math.max(dino.score, 140);
+    GAME_STATE.score += dino.score;
+    GAME_STATE.correct += 1;
+    GAME_STATE.progress = 100;
+    addLog('ok', 'Bonus Dino selesai', message);
+    showPanji(message, 'happy');
+    showToast('Bonus Dino clear! +' + dino.score, 'ok');
+    spawnConfetti();
+    renderGame();
+    setTimeout(() => { const current = getCurrentChallenge(); if (current && current.type === 'bonusDino') nextChallenge(); }, 2600);
+  }
+
+  function tickBonusDino() {
+    const dino = getBonusDinoState();
+    if (!dino.running || dino.finished) return;
+    dino.tick += 1;
+    dino.distance += dino.speed;
+    dino.frame = (dino.frame + 1) % 8;
+    dino.heroY += dino.heroV;
+    dino.heroV -= dino.gravity;
+    if (dino.heroY < 0) { dino.heroY = 0; dino.heroV = 0; }
+
+    dino.spawnCooldown -= 1;
+    if (dino.spawnCooldown <= 0) {
+      const kind = shuffleArray(['revisi','data','spek'])[0];
+      const meta = kind === 'revisi' ? {w:28,h:46} : kind === 'data' ? {w:34,h:34} : {w:38,h:58};
+      dino.obstacles.push({x: 980, kind, ...meta});
+      dino.spawnCooldown = 28 + Math.floor(Math.random()*24);
+      dino.activeTip = randomDinoTip();
+    }
+
+    dino.obstacles.forEach(obs => { obs.x -= dino.speed + 4; });
+    dino.obstacles = dino.obstacles.filter(obs => obs.x + obs.w > -20);
+
+    const heroRect = {x: 138, y: 320 - 46 - 82 - dino.heroY + 10, w: 52, h: 70};
+    for (const obs of dino.obstacles) {
+      const obsRect = {x: obs.x, y: 320 - 46 - obs.h, w: obs.w, h: obs.h};
+      if (heroRect.x < obsRect.x + obsRect.w && heroRect.x + heroRect.w > obsRect.x && heroRect.y < obsRect.y + obsRect.h && heroRect.y + heroRect.h > obsRect.y) {
+        dino.hearts = 0;
+        drawBonusDino();
+        finishBonusDino('Aduh, kamu nabrak ' + (obs.kind === 'revisi' ? 'Revisi Dadakan' : obs.kind === 'data' ? 'Data Ganda' : 'Spek Mengarah') + '. Bonus dino selesai, tapi poin lari aman tetap masuk.', true);
+        return;
+      }
+    }
+
+    GAME_STATE.progress = Math.min(99, Math.round((dino.distance / dino.target) * 100));
+    drawBonusDino();
+    if (dino.distance >= dino.target) {
+      finishBonusDino('Mantap! Kamu berhasil membawa karakter utama menembus runner 2D sampai garis aman. Bonus level 10 clear.', false);
+    }
+  }
+
+  function startBonusDinoGame() {
+    let dino = getBonusDinoState();
+    if (dino.running) return;
+    if (dino.finished) {
+      GAME_STATE.bonusDino = createBonusDinoState();
+      renderGame();
+      dino = getBonusDinoState();
+    }
+    clearBonusDinoTimers();
+    dino.running = true;
+    dino.finished = false;
+    showPanji('Gas! Ini bonus dino level 10. Lompatin gangguan pengadaan dan jaga ritme larimu.', 'happy');
+    bonusDinoKeyHandler = event => {
+      const key = String(event.key || '').toLowerCase();
+      if (['arrowup','w',' '].includes(key)) {
+        jumpBonusDino();
+        event.preventDefault();
+      }
+    };
+    document.addEventListener('keydown', bonusDinoKeyHandler);
+    bonusDinoTimer = setInterval(tickBonusDino, 90);
+    drawBonusDino();
+  }
+
+  function resetBonusDino() {
+    clearBonusDinoTimers();
+    GAME_STATE.bonusDino = createBonusDinoState();
+    GAME_STATE.progress = 0;
+    renderGame();
+    showPanji('Bonus Dino direset. Kalau sudah siap, mulai lagi dari awal.', 'thinking');
+  }
+
+  function skipBonusDino() {
+    clearBonusDinoTimers();
+    const dino = getBonusDinoState();
+    dino.finished = true;
+    dino.running = false;
+    GAME_STATE.progress = 100;
+    addLog('info', 'Bonus Dino dilewati', 'Kamu memilih skip bonus level 10 dan lanjut ke soal berikutnya.');
+    renderGame();
+    setTimeout(() => nextChallenge(), 200);
+  }
+
+  function maybeStartSnakeFromAnyInput(event) {
+
+    const challenge = getCurrentChallenge && getCurrentChallenge();
+    if (!challenge || challenge.type !== 'bonusSnake') return;
+    const snake = getBonusSnakeState();
+    if (!snake || snake.running || snake.finished) return;
+    if (!snake.briefed) snake.briefed = true;
+    startBonusSnakeGame();
+    if (event) event.preventDefault && event.preventDefault();
+  }
+
+  function clearBonusSnakeTimers() {
+    if (bonusSnakeTimer) {
+      clearInterval(bonusSnakeTimer);
+      bonusSnakeTimer = null;
+    }
+    if (bonusSnakeKeyHandler) {
+      document.removeEventListener('keydown', bonusSnakeKeyHandler);
+      bonusSnakeKeyHandler = null;
+    }
+  }
+
+  function setSnakeDirection(dx, dy) {
+    const snake = getBonusSnakeState();
+    if (!snake || !snake.running || snake.finished) return;
+    if (snake.dir.x === -dx && snake.dir.y === -dy) return;
+    snake.nextDir = {x: dx, y: dy};
+  }
+
+  function steerSnakeFromPointer(event) {
+    const canvas = root && root.querySelector('#psSnakeCanvas');
+    const snake = getBonusSnakeState();
+    if (!canvas || !snake || snake.finished) return;
+
+    if (!snake.running) {
+      snake.briefed = true;
+      startBonusSnakeGame();
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const point = event.touches && event.touches[0] ? event.touches[0] : event;
+    const head = snake.snake[0];
+    const cellW = rect.width / snake.grid;
+    const cellH = rect.height / snake.grid;
+    const headX = rect.left + ((head.x + 0.5) * cellW);
+    const headY = rect.top + ((head.y + 0.5) * cellH);
+    const dx = point.clientX - headX;
+    const dy = point.clientY - headY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      setSnakeDirection(dx > 0 ? 1 : -1, 0);
+    } else {
+      setSnakeDirection(0, dy > 0 ? 1 : -1);
+    }
+
+    if (event) event.preventDefault && event.preventDefault();
+  }
+
+  function drawBonusSnake() {
+    const canvas = root && root.querySelector('#psSnakeCanvas');
+    if (!canvas) return;
+    const snake = getBonusSnakeState();
+    const c = canvas.getContext('2d');
+
+    const cssW = Math.max(320, Math.floor(canvas.clientWidth || 960));
+    const cssH = Math.max(320, Math.floor(canvas.clientHeight || 720));
+    if (canvas.width !== cssW || canvas.height !== cssH) {
+      canvas.width = cssW;
+      canvas.height = cssH;
+    }
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const cellW = w / snake.grid;
+    const cellH = h / snake.grid;
+    const radius = Math.max(8, Math.min(cellW, cellH) * .22);
+
+    c.clearRect(0, 0, w, h);
+    const g = c.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, '#071a2e');
+    g.addColorStop(.55, '#123a72');
+    g.addColorStop(1, '#06111f');
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, h);
+
+    for (let x = 0; x < snake.grid; x += 1) {
+      for (let y = 0; y < snake.grid; y += 1) {
+        c.fillStyle = (x + y) % 2 === 0 ? 'rgba(255,255,255,.045)' : 'rgba(255,255,255,.018)';
+        c.fillRect(x * cellW, y * cellH, cellW, cellH);
+      }
+    }
+
+    c.fillStyle = 'rgba(255,255,255,.96)';
+    c.font = 'bold 22px Arial';
+    c.fillText('❤️'.repeat(Math.max(0, snake.hearts || 0)), 18, 34);
+    c.font = 'bold 18px Arial';
+    c.fillText('⭐ ' + snake.score + '/' + snake.target, Math.max(18, w - 130), 34);
+
+    snake.obstacles.forEach(o => {
+      c.fillStyle = '#dc2626';
+      c.beginPath();
+      c.roundRect(o.x * cellW + 5, o.y * cellH + 5, cellW - 10, cellH - 10, radius);
+      c.fill();
+      c.font = `${Math.max(20, Math.min(cellW, cellH) * .56)}px Arial`;
+      c.fillText('🧾', o.x * cellW + cellW * .24, o.y * cellH + cellH * .68);
+    });
+
+    c.font = `${Math.max(22, Math.min(cellW, cellH) * .62)}px Arial`;
+    c.fillText('⭐', snake.star.x * cellW + cellW * .20, snake.star.y * cellH + cellH * .70);
+
+    snake.snake.forEach((part, index) => {
+      c.fillStyle = index === 0 ? '#f59e0b' : '#22d3ee';
+      c.beginPath();
+      c.roundRect(part.x * cellW + 4, part.y * cellH + 4, cellW - 8, cellH - 8, radius);
+      c.fill();
+      if (index === 0) {
+        c.fillStyle = '#111827';
+        c.font = `bold ${Math.max(12, Math.min(cellW, cellH) * .33)}px Arial`;
+        c.fillText('P', part.x * cellW + cellW * .36, part.y * cellH + cellH * .62);
+      }
+    });
+  }
+
+  function randomSnakeCell(snake) {
+    let guard = 0;
+    while (guard < 300) {
+      const cell = { x: Math.floor(Math.random() * snake.grid), y: Math.floor(Math.random() * snake.grid) };
+      const occupied = snake.snake.some(p => p.x === cell.x && p.y === cell.y) || snake.obstacles.some(o => o.x === cell.x && o.y === cell.y);
+      if (!occupied) return cell;
+      guard += 1;
+    }
+    return {x:1,y:1};
+  }
+
+  function startBonusSnakeGame() {
+    let snake = getBonusSnakeState();
+    if (snake.running) return;
+    if (snake.finished) {
+      GAME_STATE.bonusSnake = createBonusSnakeState();
+      GAME_STATE.progress = 0;
+      snake = getBonusSnakeState();
+      renderGame();
+    }
+    clearBonusSnakeTimers();
+    snake.running = true;
+    playSfx('ok');
+    showPanji('Gas! Tap atau klik area game buat belokin ular. Ambil bintang, jangan tabrak revisi. Tembok bisa ditembus. Skor bonus tetap dihitung.', 'happy');
+
+    bonusSnakeKeyHandler = event => {
+      const key = event.key.toLowerCase();
+      if ((key === 'arrowup' || key === 'w') && snake.dir.y !== 1) snake.nextDir = {x:0,y:-1};
+      if ((key === 'arrowdown' || key === 's') && snake.dir.y !== -1) snake.nextDir = {x:0,y:1};
+      if ((key === 'arrowleft' || key === 'a') && snake.dir.x !== 1) snake.nextDir = {x:-1,y:0};
+      if ((key === 'arrowright' || key === 'd') && snake.dir.x !== -1) snake.nextDir = {x:1,y:0};
+    };
+    document.addEventListener('keydown', bonusSnakeKeyHandler);
+
+    bonusSnakeTimer = setInterval(tickBonusSnake, 230);
+    drawBonusSnake();
+  }
+
+  function finishBonusSnake(message, crashed = false) {
+    const snake = getBonusSnakeState();
+    if (snake.finished) return;
+    snake.running = false;
+    snake.finished = true;
+    clearBonusSnakeTimers();
+    const bonus = Math.min(120, snake.score * 10);
+    GAME_STATE.score += bonus;
+    if (crashed) {
+      GAME_STATE.risk += 6;
+      GAME_STATE.wrong += 1;
+      addLog('bad', 'Snake selesai karena tabrakan', message + ' Bonus tetap dihitung dari bintang yang sempat kamu ambil.');
+      showPanji(message + ' Hati habis, tapi santai. Ini bonus, jadi aku langsung bantu lanjut ke level berikutnya.', 'sad');
+      setTimeout(() => {
+        const current = getCurrentChallenge && getCurrentChallenge();
+        if (current && current.type === 'bonusSnake' && GAME_STATE.progress === 100) nextChallenge();
+      }, 2400);
+    } else {
+      GAME_STATE.correct += 1;
+      addLog('ok', 'Snake selesai', message);
+      showPanji(message, 'happy');
+      spawnConfetti();
+    }
+    GAME_STATE.progress = 100;
+    renderGame();
+  }
+
+  function getSnakePbjTip(score) {
+    const tips = [
+      'Kisi-kisi: Perencanaan dulu. Jangan langsung belanja kalau kebutuhan, volume, lokasi, dan jadwal belum kebaca.',
+      'Kisi-kisi: Di Katalog V6 alurnya cari produk, isi detail pesanan, negosiasi, buat pesanan/kontrak, pembayaran, pengiriman, BAST, baru review.',
+      'Kisi-kisi: e-Purchasing tetap perlu cek spek, stok, ongkir, total harga, PDN/TKDN, dan bukti proses. Jangan cuma lihat harga item.',
+      'Kisi-kisi: Negosiasi di katalog itu bukan asal minta murah. Yang dicari harga wajar, stok jelas, pengiriman masuk akal, dan bukti rapi.',
+      'Kisi-kisi: Mini kompetisi konstruksi dipakai supaya penyedia katalog punya kesempatan yang sama dan prosesnya lebih kompetitif.',
+      'Kisi-kisi: Sebelum tetapkan penyedia, cek lagi kebenaran produk, kualifikasi, dan kesesuaian penawaran. Jangan modal percaya.',
+      'Kisi-kisi: Swakelola juga ada tahapan. Ada perencanaan, persiapan, pelaksanaan, pengawasan, serah terima, dan pembayaran.',
+      'Kisi-kisi: Kontrak jangan cuma dibuat lalu ditinggal. Pantau waktu, mutu, volume, perubahan, dan bukti serah terimanya.',
+      'Kisi-kisi: BAST jangan asal tanda tangan. Pastikan barang atau pekerjaan sudah sesuai, lengkap, dan bisa dipakai.',
+      'Kisi-kisi: Percepatan PBJ boleh, tapi jangan nabrak prinsip efisien, efektif, transparan, dan akuntabel.',
+      'Kisi-kisi: Kalau rencana awal katalog gagal, dokumentasikan hasil cek dulu. Baru evaluasi metode, jangan langsung lompat.',
+      'Kisi-kisi: Risiko naik kalau kamu memilih karena biasa, karena cepat, atau karena murah doang. Balik lagi ke data.'
+    ];
+    return tips[Math.abs(Number(score || 0)) % tips.length];
+  }
+
+  function tickBonusSnake() {
+    const snake = getBonusSnakeState();
+    if (!snake.running || snake.finished) return;
+    snake.dir = snake.nextDir;
+    const head = snake.snake[0];
+    const next = {
+      x: (head.x + snake.dir.x + snake.grid) % snake.grid,
+      y: (head.y + snake.dir.y + snake.grid) % snake.grid
+    };
+
+    const hitSelf = snake.snake.some(p => p.x === next.x && p.y === next.y);
+    const hitObs = snake.obstacles.some(o => o.x === next.x && o.y === next.y);
+    if (hitSelf || hitObs) {
+      snake.hearts = Math.max(0, Number(snake.hearts || 0) - 1);
+      addLog('bad', 'Snake kena jebakan', 'PANJI nabrak revisi. Hati tersisa ' + snake.hearts + '.');
+      showToast('Aduh nabrak! Hati -1', 'bad');
+      playSfx('bad');
+      showPanji(snake.hearts > 0 ? 'Aduh, kena revisi. Masih ada hati. Kita lanjut pelan-pelan ya.' : 'Hati habis. Tidak apa-apa, level bonus selesai dan kita lanjut.', snake.hearts > 0 ? 'thinking' : 'sad');
+      if (snake.hearts <= 0) {
+        finishBonusSnake('Hati PANJI habis karena terlalu sering nabrak revisi.', true);
+        return;
+      }
+      snake.snake = [{x:8,y:9},{x:7,y:9},{x:6,y:9}];
+      snake.dir = {x:1,y:0};
+      snake.nextDir = {x:1,y:0};
+      drawBonusSnake();
+      return;
+    }
+
+    snake.snake.unshift(next);
+    if (next.x === snake.star.x && next.y === snake.star.y) {
+      snake.score += 1;
+      snake.star = randomSnakeCell(snake);
+      snake.activeTip = getSnakePbjTip(snake.score);
+      showToast('Bintang semangat +1', 'ok');
+      playSfx('ok');
+      showPanji(snake.activeTip.replace('Kisi-kisi:', 'Kisi-kisi PBJ:'), 'talking');
+      if (snake.score >= snake.target) {
+        finishBonusSnake('Mantap! Semua bintang semangat terkumpul. Mood naik, lanjut analisa PBJ.', false);
+        return;
+      }
+      renderGame();
+      setTimeout(drawBonusSnake, 0);
+      return;
+    }
+    snake.snake.pop();
+    snake.ticks += 1;
+    drawBonusSnake();
+  }
+
+  function skipBonusSnake() {
+    clearBonusSnakeTimers();
+    const snake = getBonusSnakeState();
+    if (!snake.finished) {
+      snake.running = false;
+      snake.finished = true;
+      GAME_STATE.progress = 100;
+      addLog('info', 'Bonus Snake dilewati', 'User memilih melewati bonus level 8. Skor bonus tidak ditambahkan, tapi game tetap bisa lanjut.');
+      showPanji('Oke, level bonus dilewati. Tidak apa-apa, kita lanjut ke level berikutnya.', 'thinking');
+      showToast('Bonus level dilewati', 'info');
+      renderGame();
+    }
+  }
+
+  function resetBonusSnake() {
+    clearBonusSnakeTimers();
+    GAME_STATE.bonusSnake = createBonusSnakeState();
+    GAME_STATE.progress = 0;
+    renderGame();
+    showPanji('Snake direset. Coba ambil bintang dengan lebih santai.', 'thinking');
+  }
+
+  function getFinalPanjiAnalysisText(result) {
+    const percent = result.maxScore > 0 ? Math.round((result.skor / result.maxScore) * 100) : 0;
+    const risk = Number(result.risiko || 0);
+    const wrong = Number(result.salah || 0);
+    let riskReason = 'Risikonya rendah karena pilihanmu cukup tertib dan jarang kena jebakan.';
+
+    if (risk > 70) {
+      riskReason = 'Risikonya tinggi karena kamu beberapa kali kena jebakan: biasanya lompat tahap, terlalu ngejar cepat, atau kurang cek dasar sebelum ambil keputusan.';
+    } else if (risk > 45) {
+      riskReason = 'Risikonya sedang. Artinya alurmu sudah jalan, tapi masih ada keputusan yang perlu dicek ulang biar nggak jadi catatan.';
+    } else if (wrong > 0) {
+      riskReason = 'Risikonya masih aman, tapi ada beberapa salah pilih. Pelan-pelan baca kasusnya, jangan cuma lihat kata kunci.';
+    }
+
+    if (percent >= 85 && risk <= 30) return 'PANJI bilang: analisamu sudah tajam. Kamu cukup rapi baca kasus, milih metode, dan menjaga tahapan PBJ. ' + riskReason;
+    if (percent >= 70) return 'PANJI bilang: hasilmu sudah bagus. Kamu sudah paham arah besarnya, tinggal kurangi keputusan yang keburu-buru. ' + riskReason;
+    if (percent >= 55) return 'PANJI bilang: kamu sudah mulai nangkep, tapi masih perlu latihan. Fokus lagi ke RUP, KAK/HPS, katalog, kontrak, BAST, dan jangan gampang ketipu kartu jebakan. ' + riskReason;
+    return 'PANJI bilang: belum apa-apa, ini masih latihan. Jangan kejar cepat dulu. Pahami kenapa tahapan itu ada, baru ambil keputusan. ' + riskReason;
+  }
+
+
+  function startTenderRush() {
+    const challenge = getCurrentChallenge();
+    if (!challenge || challenge.type !== 'tenderRush') return;
+
+    clearPanjiIntroTimers();
+    clearLevelTimer();
+    clearTenderRushTimers();
+
+    GAME_STATE.tenderRush = {
+      started: true,
+      currentIndex: 0,
+      timeLeft: Number(challenge.timeLimit || 8),
+      locked: false,
+      lastResult: null,
+      correctCount: 0,
+      wrongCount: 0,
+      packages: prepareTenderRushRandomPackages(challenge)
+    };
+
+    enableTenderRushKeyboard();
+    beginTenderRushRound();
+    showPanji(`Mulai! Paket pertama turun. Ingat: 1 e-Katalog, 2 Pengadaan Langsung, 3 Tender/Seleksi, 4 Swakelola, 5 Dikecualikan. Batas salah level ini ${getTenderRushFailLimitByLevel(getCurrentLevelNumber())} kali.`, 'happy');
+  }
+
+  function beginTenderRushRound() {
+    const challenge = getCurrentChallenge();
+    const rush = GAME_STATE.tenderRush;
+
+    if (!challenge || challenge.type !== 'tenderRush' || !rush) return;
+
+    clearTenderRushTimers();
+
+    const rushPackages = Array.isArray(rush.packages) && rush.packages.length ? rush.packages : (challenge.packages || []);
+
+    if (rush.currentIndex >= rushPackages.length) {
+      finishTenderRush();
+      return;
+    }
+
+    rush.timeLeft = Number(challenge.timeLimit || 8);
+    rush.locked = false;
+    rush.lastResult = null;
+    GAME_STATE.progress = Math.round((rush.currentIndex / Math.max(1, rushPackages.length)) * 100);
+
+    renderGame();
+
+    tenderRushTimer = setInterval(() => {
+      if (destroyed) return;
+
+      const activeChallenge = getCurrentChallenge();
+      const activeRush = GAME_STATE.tenderRush;
+
+      if (!activeChallenge || activeChallenge.type !== 'tenderRush' || !activeRush || activeRush.locked) return;
+
+      activeRush.timeLeft -= 1;
+      updateTenderRushClock();
+
+      if (activeRush.timeLeft <= 0) {
+        answerTenderRush(null);
+      }
+    }, 1000);
+  }
+
+  function updateTenderRushClock() {
+    const challenge = getCurrentChallenge();
+    const rush = GAME_STATE.tenderRush;
+
+    if (!challenge || !rush) return;
+
+    const text = root && root.querySelector('#psRushTimeText');
+    const bar = root && root.querySelector('#psRushTimeBar');
+    const percent = Math.max(0, Math.min(100, (Number(rush.timeLeft || 0) / Number(challenge.timeLimit || 8)) * 100));
+
+    if (text) text.textContent = String(Math.max(0, rush.timeLeft));
+    if (bar) bar.style.width = percent + '%';
+  }
+
+  function answerTenderRush(methodId) {
+    const challenge = getCurrentChallenge();
+    const rush = GAME_STATE.tenderRush;
+
+    if (!challenge || challenge.type !== 'tenderRush' || !rush || !rush.started || rush.locked) return;
+
+    const rushPackages = Array.isArray(rush.packages) && rush.packages.length ? rush.packages : (challenge.packages || []);
+    const pkg = rushPackages[rush.currentIndex];
+    if (!pkg) return;
+
+    clearTenderRushTimers();
+    rush.locked = true;
+
+    const isTimeout = !methodId;
+    const isCorrect = methodId === pkg.correct;
+    const correctMethod = TENDER_RUSH_METHODS[pkg.correct];
+    const chosenMethod = methodId ? TENDER_RUSH_METHODS[methodId] : null;
+
+    if (isCorrect) {
+      GAME_STATE.score += 10;
+      rush.correctCount += 1;
+      addLog('ok', `Tender Rush benar: ${pkg.title}`, pkg.explanation);
+      showToast('Jalur benar. +10 skor.', 'ok');
+      showPanji(`Betul! ${pkg.explanation}`, 'happy');
+      flashScreen('ok');
+      spawnConfetti();
+      rush.lastResult = {
+        correct: true,
+        message: `${pkg.title} tepat masuk ${correctMethod.label}. ${pkg.explanation}`
+      };
+    } else {
+      GAME_STATE.risk += isTimeout ? 10 : 8;
+      GAME_STATE.wrong += 1;
+      GAME_STATE.score = Math.max(0, GAME_STATE.score - 4);
+      rush.wrongCount += 1;
+
+      const message = isTimeout
+        ? `Waktu habis. Seharusnya masuk ${correctMethod.label}. ${pkg.explanation}`
+        : `Kamu memilih ${chosenMethod ? chosenMethod.label : 'jalur lain'}, padahal yang lebih tepat ${correctMethod.label}. ${pkg.explanation}`;
+
+      addLog('bad', `Tender Rush belum tepat: ${pkg.title}`, message);
+      showToast(isTimeout ? 'Waktu habis. Risiko naik.' : 'Jalur belum tepat. Risiko naik.', 'bad');
+      showPanji(message, 'sad');
+      flashScreen('bad');
+      rush.lastResult = { correct: false, message };
+    }
+
+    GAME_STATE.progress = Math.round(((rush.currentIndex + 1) / Math.max(1, rushPackages.length)) * 100);
+    renderGame();
+
+    if (rush.wrongCount >= getTenderRushFailLimitByLevel(getCurrentLevelNumber())) {
+      tenderRushNextTimer = setTimeout(() => {
+        if (!destroyed) stopGameEarly('rushFailed');
+      }, 900);
+      return;
+    }
+
+    tenderRushNextTimer = setTimeout(() => {
+      if (destroyed) return;
+      rush.currentIndex += 1;
+
+      if (rush.currentIndex >= rushPackages.length) {
+        finishTenderRush();
+        return;
+      }
+
+      beginTenderRushRound();
+    }, 1650);
+  }
+
+  function finishTenderRush() {
+    const challenge = getCurrentChallenge();
+    const rush = GAME_STATE.tenderRush;
+
+    if (!challenge || challenge.type !== 'tenderRush' || !rush) return;
+
+    clearTenderRushTimers();
+    disableTenderRushKeyboard();
+
+    rush.started = true;
+    const rushPackages = Array.isArray(rush.packages) && rush.packages.length ? rush.packages : (challenge.packages || []);
+    rush.currentIndex = rushPackages.length;
+    rush.locked = true;
+    rush.lastResult = null;
+    GAME_STATE.progress = 100;
+    GAME_STATE.correct += 1;
+    GAME_STATE.score += 20;
+
+    addLog('ok', 'Tender Rush selesai', challenge.explanation);
+    renderGame();
+    showToast('Tender Rush selesai. Otomatis lanjut...', 'ok');
+    showPanji('Mantap! Tender Rush selesai. Ini melatih refleks membaca pagu, jenis paket, katalog, dan kondisi pelaksanaan sebelum memilih metode.', 'happy');
+    spawnConfetti();
+    scheduleAutoNext('Tender Rush selesai. Otomatis lanjut ke soal berikutnya...');
+  }
+
+  function bindGameEvents() {
+    root.querySelectorAll('.ps-action-card[draggable="true"]').forEach(cardEl => {
+      cardEl.addEventListener('dragstart', event => {
+        event.dataTransfer.setData('text/plain', cardEl.dataset.cardId);
+        event.dataTransfer.effectAllowed = 'move';
+        cardEl.classList.add('selected');
+      });
+
+      cardEl.addEventListener('dragend', () => {
+        cardEl.classList.remove('selected');
+      });
+
+      cardEl.addEventListener('click', () => {
+        selectCard(cardEl.dataset.cardId);
+      });
+    });
+
+    root.querySelectorAll('.ps-slot').forEach(slot => {
+      slot.addEventListener('dragover', event => {
+        event.preventDefault();
+        slot.classList.add('drag-over');
+      });
+
+      slot.addEventListener('dragleave', () => {
+        slot.classList.remove('drag-over');
+      });
+
+      slot.addEventListener('drop', event => {
+        event.preventDefault();
+        slot.classList.remove('drag-over');
+
+        const cardId = event.dataTransfer.getData('text/plain');
+        const slotIndex = Number(slot.dataset.slotIndex);
+        placeCard(cardId, slotIndex, slot);
+      });
+
+      slot.addEventListener('click', () => {
+        if (!GAME_STATE.selectedCardId) return;
+
+        const slotIndex = Number(slot.dataset.slotIndex);
+        placeCard(GAME_STATE.selectedCardId, slotIndex, slot);
+      });
+    });
+
+    root.querySelectorAll('[data-answer-index]').forEach(button => {
+      button.addEventListener('click', () => {
+        answerQuiz(Number(button.dataset.answerIndex), button);
+      });
+    });
+
+    root.querySelectorAll('[data-rush-method]').forEach(button => {
+      button.addEventListener('click', () => {
+        answerTenderRush(button.dataset.rushMethod);
+      });
+    });
+
+    const btnStartTenderRush = root.querySelector('#btnStartTenderRush');
+    if (btnStartTenderRush) {
+      btnStartTenderRush.addEventListener('click', () => {
+        startTenderRush();
+      });
+    }
+
+    root.querySelectorAll('[data-bonus-node]').forEach(button => {
+      button.addEventListener('click', () => {
+        const bonus = GAME_STATE.bonusOpenWorld;
+        if (!bonus) return;
+        const order = bonus.nodes.map(node => node.id);
+        const targetId = button.dataset.bonusNode;
+        const targetIndex = order.indexOf(targetId);
+        const completedCount = Object.keys(bonus.completed).length;
+        if (targetIndex > completedCount) {
+          showPanji('Belum bisa lompat ke quest itu. Bonus level 4 ini story line, jadi jalannya harus berurutan dulu.', 'sad');
+          showToast('Quest masih terkunci', 'bad');
+          return;
+        }
+        bonus.activeNode = targetId;
+        renderGame();
+        showPanji('Quest dipilih. Baca pilihan pelan-pelan ya, karena opsi diacak dan ada jebakan.', 'thinking');
+      });
+    });
+
+    root.querySelectorAll('[data-bonus-choice]').forEach(button => {
+      button.addEventListener('click', () => {
+        answerBonusOpenWorld(button.dataset.bonusChoice, button);
+      });
+    });
+
+    const btnSnakeBriefStart = root.querySelector('#btnSnakeBriefStart');
+    if (btnSnakeBriefStart) {
+      btnSnakeBriefStart.addEventListener('click', () => {
+        const snake = getBonusSnakeState();
+        snake.briefed = true;
+        showPanji('Kisi-kisi PBJ aku bacain juga ya: jangan cuma kejar cepat. Tetap cek RUP, kebutuhan, harga, katalog, negosiasi, dan bukti proses. Oke, Snake mulai!', 'talking');
+        startBonusSnakeGame();
+      });
+    }
+
+    const btnStartSnake = root.querySelector('#btnStartSnake');
+    if (btnStartSnake) {
+      btnStartSnake.addEventListener('click', event => {
+        const snake = getBonusSnakeState();
+        snake.briefed = true;
+        startBonusSnakeGame();
+        event.preventDefault();
+      });
+      setTimeout(drawBonusSnake, 0);
+      const snake = getBonusSnakeState();
+      if (!snake.running && !snake.finished && !snake._panjiTipShown) {
+        snake._panjiTipShown = true;
+        setTimeout(() => showPanji('Sebelum mulai Snake, aku kasih kisi-kisi PBJ ya: jangan cuma kejar cepat. Cek RUP, kebutuhan, katalog, harga, negosiasi, dan bukti proses. Klik atau tekan tombol apa saja kalau sudah siap.', 'talking'), 350);
+      }
+    }
+
+    const snakePageKeyStarter = event => {
+      const current = getCurrentChallenge && getCurrentChallenge();
+      if (!current || current.type !== 'bonusSnake') return;
+      const key = String(event.key || '').toLowerCase();
+      if (!['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(key)) return;
+      maybeStartSnakeFromAnyInput(event);
+    };
+    document.removeEventListener('keydown', snakePageKeyStarter);
+    document.addEventListener('keydown', snakePageKeyStarter, {once:true});
+
+    const snakeCanvas = root.querySelector('#psSnakeCanvas');
+    const snakeStage = root.querySelector('.ps-snake-stage');
+    const snakeInputStarter = event => {
+      const snake = getBonusSnakeState();
+      if (!snake.running && !snake.finished) {
+        maybeStartSnakeFromAnyInput(event);
+        setTimeout(() => steerSnakeFromPointer(event), 20);
+        return;
+      }
+      steerSnakeFromPointer(event);
+    };
+    if (snakeCanvas) {
+      snakeCanvas.addEventListener('pointerdown', snakeInputStarter);
+      snakeCanvas.addEventListener('touchstart', snakeInputStarter, {passive:false});
+    }
+    if (snakeStage) {
+      snakeStage.addEventListener('pointerdown', snakeInputStarter);
+    }
+
+    const btnResetSnake = root.querySelector('#btnResetSnake');
+    if (btnResetSnake) {
+      btnResetSnake.addEventListener('click', () => resetBonusSnake());
+    }
+
+    const btnSkipSnake = root.querySelector('#btnSkipSnake');
+    if (btnSkipSnake) {
+      btnSkipSnake.addEventListener('click', () => skipBonusSnake());
+    }
+
+    const btnStartDino = root.querySelector('#btnStartDino');
+    if (btnStartDino) {
+      btnStartDino.addEventListener('click', () => {
+        const dino = getBonusDinoState();
+        dino.briefed = true;
+        startBonusDinoGame();
+      });
+    }
+
+    const btnResetDino = root.querySelector('#btnResetDino');
+    if (btnResetDino) {
+      btnResetDino.addEventListener('click', () => resetBonusDino());
+    }
+
+    const btnSkipDino = root.querySelector('#btnSkipDino');
+    if (btnSkipDino) {
+      btnSkipDino.addEventListener('click', () => skipBonusDino());
+    }
+
+    const dinoCanvas = root.querySelector('#psDinoCanvas');
+    const dinoStarter = event => {
+      const current = getCurrentChallenge && getCurrentChallenge();
+      if (!current || current.type !== 'bonusDino') return;
+      const dino = getBonusDinoState();
+      if (!dino.running && !dino.finished) {
+        dino.briefed = true;
+        startBonusDinoGame();
+      } else {
+        jumpBonusDino();
+      }
+      event.preventDefault();
+    };
+    if (dinoCanvas) {
+      dinoCanvas.addEventListener('pointerdown', dinoStarter);
+      dinoCanvas.addEventListener('touchstart', dinoStarter, {passive:false});
+    }
+
+    const btnClosePipelineTutorial = root.querySelector('#btnClosePipelineTutorial');
+    if (btnClosePipelineTutorial) {
+      btnClosePipelineTutorial.addEventListener('click', () => {
+        GAME_STATE.pipelineTutorialSeen = true;
+        startLevelTimer(getCurrentChallenge());
+        renderGame();
+        showPanji('Oke, baru sekarang waktunya jalan. Baca panel SOAL di atas slot, pilih kartu, lalu taruh dari slot kiri ke kanan.', 'happy');
+      });
+    }
+
+    if (GAME_STATE.current && GAME_STATE.current.type === 'bonusSnake') {
+      setTimeout(drawBonusSnake, 0);
+    }
+
+    if (GAME_STATE.current && GAME_STATE.current.type === 'bonusDino') {
+      setTimeout(drawBonusDino, 0);
+    }
+
+    const btnNext = root.querySelector('#btnNextChallenge');
+    const btnRestart = root.querySelector('#btnRestartGame');
+    const btnReset = root.querySelector('#btnResetChallenge');
+    const btnShuffle = root.querySelector('#btnShuffleCards');
+    const btnPanjiHint = root.querySelector('#btnPanjiHint');
+
+    if (btnNext) {
+      btnNext.addEventListener('click', () => {
+        clearAutoNextTimer();
+        nextChallenge();
+      });
+    }
+
+    if (btnRestart) {
+      btnRestart.addEventListener('click', () => {
+        clearAutoNextTimer();
+        startGame();
+      });
+    }
+
+    if (btnReset) {
+      btnReset.addEventListener('click', () => {
+        clearAutoNextTimer();
+        clearTenderRushTimers();
+        disableTenderRushKeyboard();
+        loadChallenge();
+      });
+    }
+
+    if (btnShuffle) {
+      btnShuffle.addEventListener('click', () => {
+        const challenge = getCurrentChallenge();
+
+        if (!challenge || challenge.type !== 'pipeline') return;
+
+        GAME_STATE.shuffledCards = shuffleArray(challenge.cards);
+        GAME_STATE.selectedCardId = null;
+
+        renderGame();
+        showToast('Kartu diacak ulang.', 'info');
+        showPanji('Kartu sudah diacak ulang. Coba fokus lagi dari urutan yang paling awal.', 'thinking');
+      });
+    }
+
+    if (btnPanjiHint) {
+      btnPanjiHint.addEventListener('click', () => {
+        requestHintFromPanji();
+      });
+    }
+  }
+
+  function selectCard(cardId) {
+    if (GAME_STATE.progress === 100) return;
+
+    GAME_STATE.selectedCardId = GAME_STATE.selectedCardId === cardId ? null : cardId;
+
+    if (GAME_STATE.selectedCardId) {
+      const challenge = getCurrentChallenge();
+      const item = challenge.cards.find(cardItem => cardItem.id === cardId);
+      showToast(`Kartu dipilih: ${item ? item.label : cardId}. Klik slot biru.`, 'info');
+    }
+
+    renderGame();
+  }
+
+  function placeCard(cardId, slotIndex, slotEl) {
+    clearPanjiIntroTimers();
+
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || challenge.type !== 'pipeline') return;
+    if (GAME_STATE.progress === 100) return;
+
+    const expectedId = challenge.idealIds[slotIndex];
+    const item = challenge.cards.find(cardItem => cardItem.id === cardId);
+
+    if (!item) return;
+
+    const alreadyPlaced = GAME_STATE.placed.some(placedItem => placedItem && placedItem.id === cardId);
+    if (alreadyPlaced) return;
+
+    const nextEmpty = GAME_STATE.placed.findIndex(placedItem => placedItem === null);
+
+    if (slotIndex !== nextEmpty) {
+      wrongMove(cardId, `Isi pipeline dari kiri ke kanan. Slot berikutnya adalah nomor ${nextEmpty + 1}.`);
+      return;
+    }
+
+    if (cardId !== expectedId) {
+      const expected = challenge.cards.find(cardItem => cardItem.id === expectedId);
+      wrongMove(cardId, `Kamu memilih "${item.label}", posisi ini seharusnya "${expected ? expected.label : expectedId}".`);
+      return;
+    }
+
+    GAME_STATE.placed[slotIndex] = item;
+    GAME_STATE.selectedCardId = null;
+    GAME_STATE.progress = Math.round((getPlacedCount() / challenge.idealIds.length) * 100);
+    GAME_STATE.score += 10;
+    GAME_STATE.pipelineCombo = Number(GAME_STATE.pipelineCombo || 0) + 1;
+    applyLevelTimeBonus(2, 'Kartu benar: bonus waktu');
+
+    if (GAME_STATE.pipelineCombo > 1 && GAME_STATE.pipelineCombo % 3 === 0) {
+      applyLevelTimeBonus(4, 'Combo pipeline: bonus waktu');
+      showToast('Combo ' + GAME_STATE.pipelineCombo + 'x! Waktu +4 detik', 'ok');
+    }
+
+    addLog('ok', `${item.label} benar`, getCorrectMessage(item.id));
+
+    showToast(`Benar: ${item.label}`, 'ok');
+    showPanji(getPanjiReactionMessage(item.id), 'happy');
+    flashScreen('ok');
+    popScore(slotEl || document.body, '+10', 'ok');
+
+    const completed = GAME_STATE.progress === 100;
+
+    renderGame();
+    pulseSlot(slotIndex);
+
+    if (completed) {
+      clearLevelTimer();
+      GAME_STATE.score += 20;
+      GAME_STATE.correct += 1;
+      addLog('ok', 'Pipeline selesai', challenge.explanation);
+      showPanji('Mantap! Pipeline ini selesai dengan benar. Kamu sudah menyusun alur PBJ secara tertib. Kita lanjut ke soal berikutnya ya.', 'happy');
+      showToast('Pipeline benar 100%. Otomatis lanjut...', 'ok');
+      spawnConfetti();
+
+      scheduleAutoNext('Pipeline selesai. Otomatis lanjut ke soal berikutnya...');
+    }
+  }
+
+  function pulseSlot(slotIndex) {
+    requestAnimationFrame(() => {
+      const slot = root.querySelector(`.ps-slot[data-slot-index="${slotIndex}"]`);
+
+      if (!slot) return;
+
+      slot.classList.add('fx-correct');
+
+      setTimeout(() => {
+        slot.classList.remove('fx-correct');
+      }, 520);
+    });
+  }
+
+  function shakeCard(cardId) {
+    requestAnimationFrame(() => {
+      const cardEl = root.querySelector(`.ps-action-card[data-card-id="${cardId}"]`);
+
+      if (!cardEl) return;
+
+      cardEl.classList.remove('wrong');
+      void cardEl.offsetWidth;
+      cardEl.classList.add('wrong');
+
+      setTimeout(() => {
+        cardEl.classList.remove('wrong');
+      }, 360);
+    });
+  }
+
+  function wrongMove(cardId, message) {
+    clearPanjiIntroTimers();
+
+    GAME_STATE.risk += 10;
+    GAME_STATE.wrong += 1;
+    GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
+    GAME_STATE.selectedCardId = null;
+    GAME_STATE.pipelineCombo = 0;
+
+    addLog('bad', 'Urutan belum tepat', message);
+
+    showToast('Belum tepat. Risiko naik.', 'bad');
+    showPanji(getPanjiWrongMessage(cardId, message), 'sad');
+    flashScreen('bad');
+    applyLevelTimePenalty(2, 'Pipeline salah');
+
+    if (GAME_STATE.stage === 'result') return;
+
+    renderGame();
+    shakeCard(cardId);
+  }
+
+  function answerQuiz(selectedIndex, buttonEl) {
+    clearPanjiIntroTimers();
+    clearLevelTimer();
+
+    const challenge = getCurrentChallenge();
+
+    if (!challenge || challenge.type !== 'quiz') return;
+    if (GAME_STATE.answered) return;
+
+    GAME_STATE.selectedAnswer = selectedIndex;
+    GAME_STATE.answered = true;
+
+    const correctAnswerIndex = Number.isInteger(challenge.runtimeAnswer) ? challenge.runtimeAnswer : Number(challenge.answer || 0);
+
+    if (selectedIndex === correctAnswerIndex) {
+      GAME_STATE.score += 20;
+      GAME_STATE.correct += 1;
+
+      addLog('ok', 'Jawaban benar', challenge.explanation);
+
+      showToast('Jawaban benar. Otomatis lanjut...', 'ok');
+      showPanji(`Jawabanmu benar! ${challenge.explanation}`, 'happy');
+      flashScreen('ok');
+      popScore(buttonEl || document.body, '+20', 'ok');
+      spawnConfetti();
+
+      renderGame();
+      scheduleAutoNext('Jawaban benar. Otomatis lanjut ke soal berikutnya...');
+    } else {
+      GAME_STATE.risk += 8;
+      GAME_STATE.wrong += 1;
+      GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
+
+      addLog('bad', 'Jawaban belum tepat', challenge.explanation);
+
+      showToast('Jawaban belum tepat. Otomatis lanjut setelah pembahasan.', 'bad');
+      showPanji(`Yah, belum tepat. Cek pembahasan ini ya: ${challenge.explanation}`, 'sad');
+      flashScreen('bad');
+      popScore(buttonEl || document.body, '+8 Risiko', 'bad');
+      applyLevelTimePenalty(10, 'ABCD salah');
+
+      if (GAME_STATE.stage === 'result') return;
+
+      renderGame();
+      scheduleAutoNext('Pembahasan terbuka. Otomatis lanjut ke soal berikutnya...', 2500);
+    }
+  }
+
+  function getCorrectMessage(cardId) {
+    const messages = {
+      rup: 'RUP menjadi pintu awal untuk memastikan paket, jadwal, pagu, metode, dan satker.',
+      identifikasi: 'Identifikasi kebutuhan mencegah paket tidak relevan, dobel, atau tidak sesuai prioritas.',
+      konsolidasi: 'Konsolidasi membantu mengelola kebutuhan sejenis agar tidak terpecah tanpa alasan.',
+      kak: 'KAK/spesifikasi harus berbasis kebutuhan dan tidak mengarah.',
+      'review-spek': 'Review spesifikasi penting agar persaingan sehat.',
+      hps: 'HPS/referensi harga menjadi dasar kewajaran biaya.',
+      'cek-pdn': 'PDN/TKDN perlu diperhatikan untuk mendukung produk dalam negeri.',
+      'cek-umkk': 'UMK/Koperasi perlu diperhatikan dalam afirmasi belanja pemerintah.',
+      'cek-katalog': 'Cek katalog membantu menentukan apakah e-Purchasing dapat digunakan.',
+      'katalog-tidak-sesuai': 'Jika katalog tidak menyediakan produk/penyedia sesuai, kondisi itu harus dicatat.',
+      'dokumentasi-gagal-katalog': 'Dokumentasi hasil cek katalog menjadi dasar perubahan metode.',
+      'evaluasi-metode': 'Evaluasi metode diperlukan agar metode baru sesuai nilai, jenis, dan kondisi paket.',
+      'pilih-metode': 'Metode dipilih setelah kebutuhan, nilai, jadwal, dan pasar dipahami.',
+      'metode-pl': 'Pengadaan Langsung tepat bila nilai dan kondisi paket sesuai.',
+      'metode-epurchasing': 'e-Purchasing tepat jika tersedia di katalog dan sesuai kebutuhan.',
+      'mini-kompetisi': 'Mini kompetisi mendukung transparansi dan persaingan sehat pada katalog tertentu.',
+      tender: 'Tender dipakai saat karakter paket membutuhkan proses pemilihan formal.',
+      seleksi: 'Seleksi relevan untuk jasa konsultansi.',
+      swakelola: 'Swakelola dapat dipilih jika memenuhi kriteria.',
+      'tim-persiapan': 'Tim persiapan penting dalam penyelenggaraan swakelola.',
+      'tim-pelaksana': 'Tim pelaksana menjalankan pekerjaan swakelola.',
+      'tim-pengawas': 'Tim pengawas memastikan swakelola terkendali.',
+      klarifikasi: 'Klarifikasi/negosiasi memastikan harga, spesifikasi, dan kemampuan pelaksanaan.',
+      proses: 'Proses pemilihan dilakukan setelah dokumen dan metode siap.',
+      kontrak: 'Kontrak/SPK menjadi dasar pelaksanaan setelah proses pengadaan.',
+      'monitoring-kontrak': 'Monitoring kontrak mengendalikan waktu, mutu, volume, dan kewajiban penyedia.',
+      'uang-muka': 'Uang muka, jaminan, dan syarat kontrak perlu dikelola tertib.',
+      'identifikasi-perubahan': 'Perubahan kontrak harus diawali identifikasi kondisi perubahan.',
+      'kaji-kontrak': 'Klausul kontrak perlu dikaji sebelum adendum.',
+      'justifikasi-teknis': 'Justifikasi teknis menjadi dasar perubahan kontrak.',
+      'negosiasi-perubahan': 'Negosiasi perubahan membahas dampak harga, waktu, dan volume.',
+      'adendum-kontrak': 'Adendum dituangkan secara tertulis sebelum perubahan dilaksanakan lebih lanjut.',
+      teguran: 'Teguran/evaluasi diperlukan saat penyedia terlambat atau bermasalah.',
+      pemeriksaan: 'Pemeriksaan hasil mencegah barang/jasa tidak sesuai langsung diterima.',
+      bast: 'BAST dilakukan setelah hasil diperiksa dan sesuai.',
+      pembayaran: 'Pembayaran dilakukan setelah dokumen pendukung memadai.',
+      realisasi: 'Pencatatan realisasi memastikan data monitoring tidak bolong.'
+    };
+
+    return messages[cardId] || 'Langkah ini benar pada posisi pipeline saat ini.';
+  }
+
+  function getPanjiReactionMessage(cardId) {
+    const messages = {
+      rup:
+        'Betul. Cek RUP dulu di SiRUP untuk memastikan paket sudah diumumkan, pagu, metode, jadwal, dan satkernya sesuai sebelum proses lanjut. Dari RUP ini kita tahu prosesnya tidak loncat dari perencanaan.',
+
+      identifikasi:
+        'Betul. Identifikasi kebutuhan itu pondasi awal. PPK perlu memastikan barang atau jasa memang dibutuhkan, volumenya jelas, lokasinya jelas, waktunya masuk akal, dan tidak dobel dengan paket lain.',
+
+      konsolidasi:
+        'Betul. Kalau kebutuhannya sejenis, pikirkan konsolidasi dulu. Ini bisa membantu efisiensi, menguatkan posisi belanja pemerintah, dan mencegah paket dipecah-pecah tanpa alasan yang kuat.',
+
+      'review-spek':
+        'Betul. Spesifikasi perlu direview supaya tidak mengarah ke merek atau penyedia tertentu. Spek harus menjelaskan kebutuhan dan standar kinerja, bukan mengunci calon pemenang.',
+
+      kak:
+        'Betul. KAK atau spesifikasi menjelaskan kebutuhan secara teknis, ruang lingkup, output, jadwal, lokasi, dan standar yang harus dipenuhi. KAK yang rapi bikin proses berikutnya lebih aman.',
+
+      hps:
+        'Betul. Setelah KAK jelas, HPS atau referensi harga disusun sebagai dasar kewajaran harga. Jangan asal ambil angka tanpa survei, pembanding, katalog, pasar, atau dasar yang masuk akal.',
+
+      'cek-pdn':
+        'Betul. Cek PDN dan TKDN penting untuk mendukung penggunaan produk dalam negeri. Kalau produk dalam negeri tersedia dan sesuai, jangan langsung lari ke produk impor.',
+
+      'cek-umkk':
+        'Betul. Afirmasi UMK dan koperasi perlu diperhatikan. Belanja pemerintah bukan cuma mengejar barang cepat datang, tapi juga mendorong pelaku usaha kecil dan koperasi bila sesuai.',
+
+      'cek-katalog':
+        'Betul. Cek e-Katalog dulu untuk melihat apakah barang atau jasa tersedia, spesifikasinya sesuai, penyedianya ada, harganya wajar, TKDN-nya cocok, dan proses e-Purchasing bisa dipertanggungjawabkan.',
+
+      'katalog-tidak-sesuai':
+        'Betul. Kalau katalog tidak menyediakan produk atau penyedia yang sesuai, kondisi itu harus dicatat. Jangan memaksakan e-Purchasing kalau barangnya tidak cocok dengan kebutuhan.',
+
+      'dokumentasi-gagal-katalog':
+        'Betul. Dokumentasi hasil cek katalog penting sebagai bukti kenapa metode awal tidak bisa dilanjutkan. Simpan dasar pengecekan agar perubahan metode tidak terlihat asal-asalan.',
+
+      'evaluasi-metode':
+        'Betul. Setelah ada bukti katalog tidak sesuai, metode perlu dievaluasi ulang berdasarkan nilai paket, jenis pengadaan, kondisi pasar, ketersediaan penyedia, dan ketentuan yang berlaku.',
+
+      'pilih-metode':
+        'Betul. Metode dipilih setelah kebutuhan, HPS, kondisi pasar, jenis pengadaan, dan nilai paket jelas. Jangan pilih metode hanya karena paling cepat atau paling gampang.',
+
+      'metode-pl':
+        'Betul. Pengadaan Langsung bisa dipakai kalau nilai dan kondisinya sesuai. Kalau nilainya melewati batas atau paketnya kompleks, jangan dipaksa jadi Pengadaan Langsung.',
+
+      'metode-epurchasing':
+        'Betul. e-Purchasing tepat kalau barang atau jasa tersedia di katalog, spesifikasinya sesuai, penyedianya ada, dan prosesnya bisa dipertanggungjawabkan.',
+
+      'mini-kompetisi':
+        'Betul. Mini kompetisi dipakai untuk memberi kesempatan yang sama kepada penyedia katalog dan menjaga persaingan sehat, terutama pada sektor yang mewajibkan mekanisme tersebut.',
+
+      tender:
+        'Betul. Tender dipakai untuk paket yang memerlukan proses pemilihan formal dan kompetitif, terutama jika nilai atau karakter pekerjaannya tidak cocok dengan metode sederhana.',
+
+      seleksi:
+        'Betul. Untuk jasa konsultansi, metode seleksi sering digunakan karena yang dinilai bukan cuma harga, tapi juga kualitas keahlian, pengalaman, dan pendekatan teknis.',
+
+      swakelola:
+        'Betul. Swakelola digunakan kalau kegiatan memenuhi kriteria swakelola. Tetap harus ada perencanaan, KAK, anggaran, pelaksanaan, pengawasan, dan pertanggungjawaban.',
+
+      'tim-persiapan':
+        'Betul. Dalam swakelola, tim persiapan penting untuk menyusun sasaran, rencana kegiatan, KAK, jadwal, dan kebutuhan pelaksanaan secara jelas.',
+
+      'tim-pelaksana':
+        'Betul. Tim pelaksana menjalankan pekerjaan swakelola. Jadi tidak cukup cuma niat swakelola, pelaksananya harus jelas.',
+
+      'tim-pengawas':
+        'Betul. Tim pengawas menjaga agar pelaksanaan swakelola sesuai rencana, mutu, waktu, dan output yang sudah ditetapkan.',
+
+      klarifikasi:
+        'Betul. Klarifikasi atau negosiasi memastikan harga, spesifikasi, jadwal, dan kemampuan pelaksanaan benar-benar masuk akal sebelum kontrak dilakukan.',
+
+      proses:
+        'Betul. Proses pemilihan dilakukan setelah dokumen dan metode siap. Jangan lompat ke kontrak sebelum proses pemilihannya tertib dan bisa dipertanggungjawabkan.',
+
+      kontrak:
+        'Betul. Kontrak atau SPK menjadi dasar pelaksanaan pekerjaan. Ini dilakukan setelah proses pengadaan selesai dan penyedia atau pelaksana sudah ditetapkan.',
+
+      'monitoring-kontrak':
+        'Betul. Setelah kontrak berjalan, PPK wajib memantau waktu, mutu, volume, progres, dan kewajiban penyedia. Jangan baru sadar bermasalah saat mau BAST.',
+
+      'uang-muka':
+        'Betul. Kalau ada uang muka atau jaminan, pengelolaannya harus sesuai ketentuan kontrak. Ini bagian penting dari pengendalian risiko pelaksanaan.',
+
+      teguran:
+        'Betul. Kalau penyedia terlambat atau tidak sesuai, lakukan teguran atau evaluasi. Masalah kontrak harus dikendalikan, bukan dibiarkan sampai akhir.',
+
+      pemeriksaan:
+        'Betul. Pemeriksaan hasil dilakukan sebelum BAST. Barang atau pekerjaan harus dicek dulu kesesuaiannya dengan kontrak, spesifikasi, volume, dan kualitas.',
+
+      bast:
+        'Betul. BAST dilakukan setelah hasil pekerjaan atau barang sesuai. Jangan BAST kalau barang belum diperiksa, belum lengkap, atau masih bermasalah.',
+
+      pembayaran:
+        'Betul. Pembayaran dilakukan setelah dokumen pendukung lengkap, prestasi pekerjaan sesuai, dan proses serah terima tertib.',
+
+      realisasi:
+        'Betul. Realisasi harus dicatat supaya data monitoring tidak bolong, termasuk untuk evaluasi, laporan, dan pemantauan kinerja pengadaan.',
+
+      'identifikasi-perubahan':
+        'Betul. Kalau ada perubahan kontrak, mulai dari identifikasi dulu: apa yang berubah, kenapa berubah, dan dampaknya ke volume, waktu, mutu, atau biaya.',
+
+      'kaji-kontrak':
+        'Betul. Sebelum adendum, klausul kontrak harus dikaji. Tidak semua perubahan bisa langsung ditulis jadi adendum tanpa dasar kontraktual.',
+
+      'justifikasi-teknis':
+        'Betul. Justifikasi teknis menjelaskan alasan perubahan secara tertib. Ini penting supaya adendum tidak terlihat asal mengubah kontrak.',
+
+      'negosiasi-perubahan':
+        'Betul. Perubahan kontrak perlu dibahas dampaknya, termasuk harga, waktu, volume, mutu, dan risiko. Jangan sampai perubahan merugikan atau tidak jelas dasarnya.',
+
+      'adendum-kontrak':
+        'Betul. Adendum kontrak menuangkan perubahan secara tertulis. Setelah itu pelaksanaan lanjut sesuai perubahan yang sudah disepakati.'
+    };
+
+    return messages[cardId] || 'Betul. Langkah itu sudah tepat di posisi pipeline ini. Lanjutkan dengan urutan yang tertib dan jangan lompat proses.';
+  }
+
+  function getPanjiWrongMessage(cardId, fallbackMessage) {
+    const messages = {
+      'kontrak-awal':
+        'Aduh, jangan kontrak dulu. Kontrak atau SPK baru aman setelah dokumen siap, metode jelas, proses pemilihan selesai, dan penyedia sudah ditetapkan.',
+
+      'pecah-paket':
+        'Waduh, hati-hati. Pecah paket tanpa alasan kuat bisa dianggap menghindari metode yang seharusnya. Kalau kebutuhan sejenis, pikirkan konsolidasi.',
+
+      'spek-mengarah':
+        'Jangan pakai spek mengarah. Spesifikasi harus menjelaskan kebutuhan, bukan mengunci merek atau penyedia tertentu.',
+
+      'abaikan-katalog':
+        'Jangan abaikan katalog. Untuk barang atau jasa yang berpotensi tersedia di e-Katalog, cek dulu kesesuaian produk, penyedia, harga, TKDN, dan kebutuhan.',
+
+      'lanjut-epurchasing-paksa':
+        'Jangan memaksa e-Purchasing kalau produk atau penyedia di katalog tidak sesuai kebutuhan. Dokumentasikan hasil cek dulu, baru evaluasi metode.',
+
+      'ganti-metode-tanpa-bukti':
+        'Jangan ganti metode tanpa bukti. Perubahan metode harus punya dasar, misalnya hasil cek katalog tidak sesuai dan dokumentasi pendukungnya jelas.',
+
+      'lewati-rup':
+        'Jangan lewati RUP. RUP di SiRUP adalah pintu awal untuk memastikan paket memang sudah direncanakan dan diumumkan.',
+
+      'bast-tanpa-cek':
+        'Jangan BAST tanpa pemeriksaan. Barang atau pekerjaan harus dicek dulu kesesuaiannya dengan kontrak, volume, spesifikasi, dan kualitas.',
+
+      'bayar-dulu':
+        'Jangan bayar dulu. Pembayaran harus menunggu prestasi pekerjaan, dokumen pendukung, dan serah terima yang tertib.',
+
+      'tunda-dokumen':
+        'Jangan tunda dokumen. Dalam PBJ, bukti dan administrasi itu bagian dari akuntabilitas, bukan pelengkap belakangan.',
+
+      'metode-asal-cepat':
+        'Jangan pilih metode hanya karena cepat. Metode harus sesuai nilai paket, jenis pengadaan, kondisi pasar, dan ketentuan.',
+
+      'realisasi-lupa':
+        'Jangan lupa catat realisasi. Kalau realisasi tidak dicatat, monitoring dan laporan kinerja pengadaan jadi bolong.',
+
+      'adendum-tanpa-dasar':
+        'Jangan membuat adendum tanpa dasar. Perubahan kontrak harus diawali identifikasi, kajian klausul, justifikasi teknis, dan kesepakatan yang tertib.',
+
+      'bayar-sebelum-adendum':
+        'Jangan bayar sebelum perubahan kontrak tertib. Kalau ada perubahan volume, waktu, atau nilai, rapikan dasar dan adendumnya dulu.',
+
+      'swakelola-tanpa-tim':
+        'Jangan swakelola tanpa tim yang jelas. Swakelola perlu tim persiapan, tim pelaksana, dan tim pengawas agar peran dan kontrolnya tertib.',
+
+      'abaikan-pdn':
+        'Jangan abaikan PDN/TKDN. Afirmasi produk dalam negeri menjadi bagian penting dalam kebijakan PBJ dan belanja katalog.'
+    };
+
+    return messages[cardId] || `Aduh, belum tepat. ${fallbackMessage}`;
+  }
+
+  window.__moduleInit = function ({ container }) {
+    destroyed = false;
+    containerRef = container;
+    root = container.querySelector('#procstackRoot');
+
+    if (!root) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'procstack-shell';
+      wrapper.innerHTML = `
+        <section class="procstack-hero">
+          <div class="procstack-kicker">TRAXPBJ Academy • Interactive PBJ Challenge</div>
+          <h2>Procurement Stacker</h2>
+          <p>
+            Susun pipeline pengadaan, jawab studi kasus, dan belajar alur PBJ bersama PANJI.
+            Game ini melatih logika tahapan: perencanaan, pemilihan, kontrak, serah terima, dan realisasi.
+          </p>
+        </section>
+
+        <section class="procstack-game-card">
+          <div id="procstackRoot"></div>
+        </section>
+      `;
+
+      container.appendChild(wrapper);
+      root = container.querySelector('#procstackRoot');
+    }
+
+    readStoredPlayer();
+    ensureLeaderboardModal();
+    fetchLeaderboard();
+    initPanji(container);
+    setTimeout(() => showReviewBubbleOnMenuOpen({ force: true }), 1200);
+
+    GAME_STATE.stage = 'ready';
+    GAME_STATE.current = null;
+    renderReadyScreen();
+    showPanji('Halo, perkenalkan. Aku PANJI, Pengadaan Jitu. Sebelum main, isi dulu nama pemain dan instansi atau OPD kamu ya.', 'happy');
+
+    setTimeout(() => {
+      if (!destroyed) {
+        openLeaderboardModal('player', true);
+      }
+    }, 650);
+
+    leaderboardRefreshTimer = setInterval(() => {
+      if (!destroyed && leaderboardModalEl && !leaderboardModalEl.classList.contains('ps-hidden')) {
+        fetchLeaderboard();
+      }
+    }, 60000);
+
+    return function destroy() {
+      destroyed = true;
+
+      clearAutoNextTimer();
+      clearLevelTimer();
+      clearTenderRushTimers();
+      disableTenderRushKeyboard();
+      clearBonusSnakeTimers();
+      clearBonusDinoTimers();
+      clearPanjiIntroTimers();
+      clearPanjiTalkTimer();
+
+      if (leaderboardRefreshTimer) {
+        clearInterval(leaderboardRefreshTimer);
+        leaderboardRefreshTimer = null;
+      }
+
+      if (reviewBubbleTimer) {
+        clearTimeout(reviewBubbleTimer);
+        reviewBubbleTimer = null;
+      }
+
+      if (reviewBubbleEl) {
+        reviewBubbleEl.remove();
+        reviewBubbleEl = null;
+      }
+
+      if (leaderboardModalEl) {
+        leaderboardModalEl.remove();
+        leaderboardModalEl = null;
+      }
+
+      if (psMusicTimer) {
+        clearInterval(psMusicTimer);
+        psMusicTimer = null;
+        psMusicOn = false;
+      }
+
+      if (toastEl) {
+        toastEl.remove();
+        toastEl = null;
+      }
+
+      const flash = document.getElementById('psScreenFlash');
+
+      if (flash) {
+        flash.remove();
+      }
+
+      document.querySelectorAll('.ps-confetti, .ps-floating-score').forEach(el => {
+        el.remove();
+      });
+
+      if (panjiEl) {
+        if (typeof panjiEl._panjiAutoPositionDestroy === 'function') {
+          panjiEl._panjiAutoPositionDestroy();
+          panjiEl._panjiAutoPositionDestroy = null;
+        }
+
+        panjiEl.remove();
+        panjiEl = null;
+        panjiTextEl = null;
+        panjiEmoteEl = null;
+        panjiBubbleEl = null;
+        panjiHintBtn = null;
+        panjiMiniBtn = null;
+        panjiCharacterBtn = null;
+        panjiCloseBtn = null;
+      }
+
+      containerRef = null;
+      root = null;
+    };
+  };
+
+  document.addEventListener('click', () => startGameMusic(), { once: true });
+  document.addEventListener('keydown', () => startGameMusic(), { once: true });
+
+})();
