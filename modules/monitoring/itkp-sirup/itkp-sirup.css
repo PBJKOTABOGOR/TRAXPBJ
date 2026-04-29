@@ -51,9 +51,17 @@
   gap:16px;
   padding:18px 16px;
   border-radius:24px;
-  background:rgba(255,255,255,.84);
-  border:1px solid rgba(255,255,255,.7);
-  box-shadow:var(--shadow-sm);
+  background:linear-gradient(135deg,#123a72 0%,#245a9b 62%,#2f9a8f 100%);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 16px 34px rgba(18,58,114,.16);
+}
+
+.itkp-sirup-page .hero-title{
+  color:#ffffff;
+}
+
+.itkp-sirup-page .hero-subtitle{
+  color:rgba(255,255,255,.86);
 }
 
 .itkp-sirup-page .hero-left{
@@ -65,12 +73,10 @@
   font-size:20px;
   line-height:1.2;
   font-weight:900;
-  color:var(--navy);
 }
 
 .itkp-sirup-page .hero-subtitle{
   margin:8px 0 0;
-  color:var(--muted);
   font-size:13px;
   line-height:1.6;
 }
@@ -809,4 +815,49 @@
   font-size:12px;
   font-weight:700;
   background:#fbfdff;
+}
+
+
+.itkp-sirup-page .table-sort-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:none;
+  background:transparent;
+  color:#ffffff;
+  font:inherit;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+  padding:0;
+}
+
+.itkp-sirup-page .table-sort-btn .sort-indicator{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:18px;
+  height:18px;
+  border-radius:999px;
+  background:rgba(255,255,255,.14);
+  font-size:11px;
+  line-height:1;
+}
+
+.itkp-sirup-page .table-sort-btn.active .sort-indicator{
+  background:rgba(255,255,255,.28);
+}
+
+.itkp-sirup-page .opd-modal{
+  align-items:flex-start;
+  padding:56px 20px 20px;
+}
+
+.itkp-sirup-page .opd-modal-card{
+  margin:0 auto;
+  max-height:calc(100vh - 76px);
+}
+
+.itkp-sirup-page .insight-card{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
 }
