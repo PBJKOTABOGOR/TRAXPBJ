@@ -61,8 +61,7 @@ textarea{
   flex-shrink:0;
   position:sticky;
   top:10px;
-  height:auto;
-  min-height:calc(100vh - 20px);
+  height:calc(100vh - 20px);
   padding:10px;
   background:rgba(255,255,255,.82);
   border:1px solid rgba(255,255,255,.65);
@@ -75,7 +74,7 @@ textarea{
     padding .25s ease,
     background .25s ease,
     box-shadow .25s ease;
-  overflow:visible;
+  overflow:hidden;
   z-index:100;
   display:flex;
   flex-direction:column;
@@ -318,7 +317,7 @@ textarea{
 }
 
 .sidebar-help{
-  margin-top:16px;
+  margin-top:auto;
   flex-shrink:0;
   padding:16px;
   border-radius:20px;
@@ -839,8 +838,7 @@ textarea{
     position:fixed;
     left:10px;
     top:10px;
-    height:auto;
-  min-height:calc(100vh - 20px);
+    height:calc(100vh - 20px);
     transform:translateX(-120%);
     transition:transform .25s ease;
   }
@@ -2452,4 +2450,79 @@ textarea{
 .small-metric small{
   font-size:13px;
   font-weight:400;
+}
+
+
+/* ================================
+   Searchable Satker Combobox
+   ================================ */
+.satker-combobox{
+  position:relative;
+}
+
+.satker-combobox-top{
+  display:grid;
+  grid-template-columns:1fr 44px;
+  gap:8px;
+}
+
+.satker-search{
+  padding-right:14px;
+}
+
+.satker-combobox-toggle{
+  min-height:44px;
+  border:1px solid #cfe0f3;
+  border-radius:14px;
+  background:#fff;
+  color:#123a72;
+  font-size:20px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.satker-dropdown{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  right:0;
+  max-height:320px;
+  overflow:auto;
+  padding:8px;
+  border-radius:16px;
+  background:#fff;
+  border:1px solid #dbeafe;
+  box-shadow:0 16px 34px rgba(15,23,42,.12);
+  display:none;
+  z-index:30;
+}
+
+.satker-combobox.is-open .satker-dropdown{
+  display:block;
+}
+
+.satker-option{
+  width:100%;
+  border:none;
+  background:#fff;
+  color:#102544;
+  text-align:left;
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:800;
+}
+
+.satker-option:hover,
+.satker-option.is-active{
+  background:#eff6ff;
+  color:#123a72;
+}
+
+.satker-dropdown.is-empty::before{
+  content:"Data tidak ditemukan";
+  display:block;
+  padding:12px;
+  color:#64748b;
+  font-weight:700;
 }
