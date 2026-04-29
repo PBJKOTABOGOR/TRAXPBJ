@@ -2451,3 +2451,45 @@ textarea{
   font-size:13px;
   font-weight:400;
 }
+
+/* Revision v5 - bar muncul dan detail indikator dibalik sesuai pembacaan capaian */
+.small-metric-track{
+  height:9px !important;
+  background:#dfe8f3 !important;
+  border-radius:999px !important;
+  overflow:hidden !important;
+}
+.small-metric-bar{
+  display:block !important;
+  height:100% !important;
+  border-radius:999px !important;
+  opacity:1 !important;
+  box-shadow:0 0 10px rgba(15,23,42,.08) !important;
+}
+.small-metric-bar--danger{background:linear-gradient(90deg,#ef4444,#dc2626) !important;}
+.small-metric-bar--warning{background:linear-gradient(90deg,#f59e0b,#facc15) !important;}
+.small-metric-bar--success{background:linear-gradient(90deg,#22c55e,#14b8a6) !important;}
+.dim-progress-wrap .bar{
+  min-height:9px !important;
+  height:9px !important;
+  background:#e7edf5 !important;
+  border-radius:999px !important;
+  overflow:hidden !important;
+}
+.dim-progress-fill{
+  display:block !important;
+  height:100% !important;
+  border-radius:999px !important;
+  opacity:1 !important;
+}
+.dim-progress-fill--danger{background:linear-gradient(90deg,#ef4444,#dc2626) !important;}
+.dim-progress-fill--warning{background:linear-gradient(90deg,#f59e0b,#facc15) !important;}
+.dim-progress-fill--success{background:linear-gradient(90deg,#22c55e,#14b8a6) !important;}
+.dim-detail-text,
+.dim-detail-link{
+  font-size:13px !important;
+  font-weight:900 !important;
+  color:#123a72 !important;
+  line-height:1.25 !important;
+}
+@media (max-width:900px){.dim-progress-wrap .bar{width:100% !important;}}
