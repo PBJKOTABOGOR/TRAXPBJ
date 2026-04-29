@@ -561,7 +561,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'blue',
         route: 'monitoring-sirup',
         hint: 'Klik untuk buka Monitoring SiRUP',
-        detailText: formatCompactPair(totalKomitmenSirup, totalRupSirup),
+        detailText: formatCompactPair(totalRupSirup, totalKomitmenSirup),
         detailHref: 'https://datastudio.google.com/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2'
       },
       {
@@ -580,7 +580,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'purple',
         route: 'monitoring-ekatalog',
         hint: 'Klik untuk buka Monitoring eKatalog',
-        detailText: formatPlainPair(paketAktifEpurchasing, paketSelesaiEpurchasing)
+        detailText: formatPlainPair(paketSelesaiEpurchasing, paketAktifEpurchasing)
       },
       {
         name: 'e-Tendering',
@@ -589,7 +589,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'orange',
         route: 'monitoring-etendering',
         hint: 'Klik untuk buka Monitoring eTendering',
-        detailText: formatPlainPair(paketTerumumkanTender, paketSelesaiTender)
+        detailText: formatPlainPair(paketSelesaiTender, paketTerumumkanTender)
       },
       {
         name: 'e-Kontrak',
@@ -598,7 +598,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'green',
         route: 'monitoring-ekontrak',
         hint: 'Klik untuk buka Monitoring eKontrak',
-        detailText: formatPlainPair(totalPaketAktifKontrak, totalPaketSelesaiKontrak)
+        detailText: formatPlainPair(totalPaketSelesaiKontrak, totalPaketAktifKontrak)
       },
       {
         name: 'Non eTendering / Non ePurchasing',
@@ -607,7 +607,7 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
         accent: 'red',
         route: 'monitoring-nontender',
         hint: 'Klik untuk buka Monitoring Non eTendering',
-        detailText: formatCompactPair(totalPaguNonTender, totalRealisasiNonTender)
+        detailText: formatCompactPair(totalRealisasiNonTender, totalPaguNonTender)
       }
     ]
   };
@@ -1084,7 +1084,7 @@ function renderSmallMetric(label, value, desc, percent = 0) {
       <span>${escapeHtml(label)}</span>
       <small>${escapeHtml(desc)}</small>
       <div class="small-metric-percent">${percent.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</div>
-      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:${Math.max(0, Math.min(100, percent))}%"></span></div>
+      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:${Math.max(0, Math.min(100, percent))}%; min-width:${percent > 0 ? '18px' : '0'}"></span></div>
     </div>
   `;
 }
