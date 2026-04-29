@@ -84,7 +84,15 @@
       insightLowOpd: qs('insightLowOpd'),
       insightLowNote: qs('insightLowNote'),
       insightMetode: qs('insightMetode'),
-      insightMetodeNote: qs('insightMetodeNote')
+      insightMetodeNote: qs('insightMetodeNote'),
+      btnShowTopOpd: qs('btnShowTopOpd'),
+      btnShowLowOpd: qs('btnShowLowOpd'),
+      opdModal: qs('opdModal'),
+      opdModalTitle: qs('opdModalTitle'),
+      opdModalSubtitle: qs('opdModalSubtitle'),
+      opdModalMeta: qs('opdModalMeta'),
+      opdModalList: qs('opdModalList'),
+      btnCloseOpdModal: qs('btnCloseOpdModal')
     };
   }
 
@@ -401,6 +409,57 @@
     }
   }
 
+
+  function getInsightLists() {
+    const opdNilai10 = [...APP_STATE.filteredScore]
+      .filter(row => Number(row.nilai_itkp || 0) >= 10)
+      .sort((a, b) => String(a.satuan_kerja || '').localeCompare(String(b.satuan_kerja || ''), 'id'));
+
+    const opdDiBawah10 = [...APP_STATE.filteredScore]
+      .filter(row => Number(row.nilai_itkp || 0) < 10)
+      .sort((a, b) => {
+        if (Number(a.nilai_itkp || 0) !== Number(b.nilai_itkp || 0)) {
+          return Number(a.nilai_itkp || 0) - Number(b.nilai_itkp || 0);
+        }
+        return String(a.satuan_kerja || '').localeCompare(String(b.satuan_kerja || ''), 'id');
+      });
+
+    return { opdNilai10, opdDiBawah10 };
+  }
+
+  function openOpdModal(title, subtitle, items) {
+    if (!EL.opdModal) return;
+
+    const safeItems = Array.isArray(items) ? items : [];
+    safeSetText(EL.opdModalTitle, title || 'Daftar OPD');
+    safeSetText(EL.opdModalSubtitle, subtitle || '');
+    safeSetText(EL.opdModalMeta, `${formatNumber(safeItems.length)} OPD`);
+
+    if (EL.opdModalList) {
+      if (!safeItems.length) {
+        EL.opdModalList.innerHTML = '<div class="opd-list-empty">Belum ada data OPD.</div>';
+      } else {
+        EL.opdModalList.innerHTML = safeItems.map((item, index) => `
+          <div class="opd-list-item">
+            <span class="opd-list-number">${index + 1}</span>
+            <div class="opd-list-main">
+              <b>${escapeHtml(item.satuan_kerja || '-')}</b>
+              <small>Nilai ITKP ${formatDecimal(item.nilai_itkp)} | Prosentase ${formatPercent(item.prosentase)}%</small>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    EL.opdModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOpdModal() {
+    if (EL.opdModal) EL.opdModal.hidden = true;
+    document.body.style.overflow = '';
+  }
+
   function renderStats(filteredRaw, filteredScore) {
     const jumlahOpd = filteredScore.length;
     const jumlahPaket = filteredRaw.length;
@@ -436,6 +495,8 @@
       safeSetText(EL.insightLowNote, 'Belum ada data');
       safeSetText(EL.insightMetode, '-');
       safeSetText(EL.insightMetodeNote, 'Belum ada data');
+      if (EL.btnShowTopOpd) EL.btnShowTopOpd.disabled = true;
+      if (EL.btnShowLowOpd) EL.btnShowLowOpd.disabled = true;
       return;
     }
 
@@ -455,31 +516,26 @@
       safeSetText(EL.insightMetodeNote, 'Belum ada data');
     }
 
-    const uniqueItkp = [...new Set(filteredScore.map(x => Number(x.nilai_itkp || 0)))];
-    const uniquePersen = [...new Set(filteredScore.map(x => Number(x.prosentase || 0)))];
+    const { opdNilai10, opdDiBawah10 } = getInsightLists();
 
-    if (uniqueItkp.length === 1 && uniquePersen.length === 1) {
-      safeSetText(EL.insightTopOpd, 'Semua OPD Setara');
-      safeSetText(EL.insightTopNote, `Nilai ITKP ${formatDecimal(uniqueItkp[0])} | ${formatPercent(uniquePersen[0])}%`);
-
-      safeSetText(EL.insightLowOpd, 'Semua OPD Setara');
-      safeSetText(EL.insightLowNote, `Nilai ITKP ${formatDecimal(uniqueItkp[0])} | ${formatPercent(uniquePersen[0])}%`);
-      return;
+    safeSetText(EL.insightTopOpd, `${formatNumber(opdNilai10.length)} OPD`);
+    if (opdNilai10.length) {
+      const persenRata10 = sum(opdNilai10.map(row => Number(row.prosentase || 0))) / opdNilai10.length;
+      safeSetText(EL.insightTopNote, `Sudah mencapai nilai ITKP 10 | Rata-rata prosentase ${formatPercent(persenRata10)}%`);
+    } else {
+      safeSetText(EL.insightTopNote, 'Belum ada OPD yang mencapai nilai ITKP 10');
     }
 
-    const sortedByItkp = [...filteredScore].sort((a, b) => {
-      if (b.nilai_itkp !== a.nilai_itkp) return b.nilai_itkp - a.nilai_itkp;
-      return b.prosentase - a.prosentase;
-    });
+    safeSetText(EL.insightLowOpd, `${formatNumber(opdDiBawah10.length)} OPD`);
+    if (opdDiBawah10.length) {
+      const persenRataBawah10 = sum(opdDiBawah10.map(row => Number(row.prosentase || 0))) / opdDiBawah10.length;
+      safeSetText(EL.insightLowNote, `Masih di bawah nilai ITKP 10 | Rata-rata prosentase ${formatPercent(persenRataBawah10)}%`);
+    } else {
+      safeSetText(EL.insightLowNote, 'Seluruh OPD sudah mencapai nilai ITKP 10');
+    }
 
-    const top = sortedByItkp[0];
-    const low = sortedByItkp[sortedByItkp.length - 1];
-
-    safeSetText(EL.insightTopOpd, top.satuan_kerja);
-    safeSetText(EL.insightTopNote, `Nilai ITKP ${formatDecimal(top.nilai_itkp)} | ${formatPercent(top.prosentase)}%`);
-
-    safeSetText(EL.insightLowOpd, low.satuan_kerja);
-    safeSetText(EL.insightLowNote, `Nilai ITKP ${formatDecimal(low.nilai_itkp)} | ${formatPercent(low.prosentase)}%`);
+    if (EL.btnShowTopOpd) EL.btnShowTopOpd.disabled = opdNilai10.length === 0;
+    if (EL.btnShowLowOpd) EL.btnShowLowOpd.disabled = opdDiBawah10.length === 0;
   }
 
   function renderRekapTable(rows) {
@@ -1168,6 +1224,37 @@
     on(EL.btnRefresh, 'click', () => {
       initMonitoringSirup();
     });
+
+    on(EL.btnShowTopOpd, 'click', () => {
+      const { opdNilai10 } = getInsightLists();
+      openOpdModal(
+        'Daftar OPD Nilai ITKP 10',
+        'Daftar OPD yang sudah mencapai nilai ITKP 10 pada filter aktif.',
+        opdNilai10
+      );
+    });
+
+    on(EL.btnShowLowOpd, 'click', () => {
+      const { opdDiBawah10 } = getInsightLists();
+      openOpdModal(
+        'Daftar OPD Di Bawah Nilai 10',
+        'Daftar OPD yang masih di bawah nilai ITKP 10 pada filter aktif.',
+        opdDiBawah10
+      );
+    });
+
+    on(EL.btnCloseOpdModal, 'click', closeOpdModal);
+    on(EL.opdModal, 'click', event => {
+      if (event.target === EL.opdModal) {
+        closeOpdModal();
+      }
+    });
+
+    on(document, 'keydown', event => {
+      if (event.key === 'Escape') {
+        closeOpdModal();
+      }
+    });
   }
 
   function initModule() {
@@ -1204,6 +1291,8 @@
         window.removeEventListener('resize', cleanupResizeHandler);
         cleanupResizeHandler = null;
       }
+
+      closeOpdModal();
     };
   }
 
