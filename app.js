@@ -41,26 +41,26 @@ const APP_ROUTES = {
     js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
   },
 
-  'monitoring-nontender': {
-    title: 'Non eTendering/Non ePurchasing',
-    subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
-    type: 'module',
-    html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
-    css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
-    js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
-  },
+'monitoring-nontender': {
+  title: 'Non eTendering/Non ePurchasing',
+  subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
+  type: 'module',
+  html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
+  css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
+  js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
+},
 
-  'rapor-pbj': {
-    title: 'Rapor PBJ',
-    subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
-    type: 'module',
-    html: 'modules/rapor-pbj/rapor-pbj.html',
-    css: 'modules/rapor-pbj/rapor-pbj.css',
-    js: 'modules/rapor-pbj/rapor-pbj.js',
-    externalScripts: [
-      'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
-    ]
-  },
+'rapor-pbj': {
+  title: 'Rapor PBJ',
+  subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
+  type: 'module',
+  html: 'modules/rapor-pbj/rapor-pbj.html',
+  css: 'modules/rapor-pbj/rapor-pbj.css',
+  js: 'modules/rapor-pbj/rapor-pbj.js',
+  externalScripts: [
+    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+  ]
+},
 
   'monitoring-perencanaan': {
     title: 'Monitoring Realisasi',
@@ -301,6 +301,36 @@ function formatMoney(value) {
   return `Rp ${formatNumber(number)}`;
 }
 
+function formatCompactMetric(value) {
+  const number = toNumber(value);
+  if (number >= 1_000_000_000_000) return `${(number / 1_000_000_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} T`;
+  if (number >= 1_000_000_000) return `${(number / 1_000_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} M`;
+  if (number >= 1_000_000) return `${(number / 1_000_000).toLocaleString('id-ID', { maximumFractionDigits: 2 })} Jt`;
+  return formatNumber(number);
+}
+
+function formatCompactPair(leftValue, rightValue) {
+  return `${formatCompactMetric(leftValue)} / ${formatCompactMetric(rightValue)}`;
+}
+
+function formatPlainPair(leftValue, rightValue) {
+  return `${formatNumber(leftValue)} / ${formatNumber(rightValue)}`;
+}
+
+function getToneByPercent(percent) {
+  const value = Math.max(0, Math.min(100, toNumber(percent)));
+  if (value < 50) return 'danger';
+  if (value < 80) return 'warning';
+  return 'success';
+}
+
+function getToneColor(percent) {
+  const tone = getToneByPercent(percent);
+  if (tone === 'danger') return '#dc2626';
+  if (tone === 'warning') return '#f59e0b';
+  return '#16a34a';
+}
+
 function formatPercent(value) {
   const number = toNumber(value);
   return `${number.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
@@ -308,18 +338,6 @@ function formatPercent(value) {
 
 function formatScore(value) {
   return toNumber(value).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function formatCompactMetric(value, kind = 'number', fallbackMax = 0) {
-  if (kind === 'money') return formatMoney(value);
-  if (kind === 'score-ratio') return `${formatNumber(value)} / ${formatNumber(fallbackMax)}`;
-  return formatNumber(value);
-}
-
-function percentOf(part, total) {
-  const t = toNumber(total);
-  if (t <= 0) return 0;
-  return (toNumber(part) / t) * 100;
 }
 
 function parseCsv(text) {
@@ -516,83 +534,80 @@ function getItkpScore(row) {
 }
 
 function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
-  const name = getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']) || fallbackName;
+  const sourceRow = row || {};
+  const name = getField(sourceRow, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']) || fallbackName;
+
+  const totalKomitmenSirup = getField(sourceRow, ['Total Komitmen (SIRUP)', 'Total Komitmen Sirup']);
+  const totalRupSirup = getField(sourceRow, ['Total RUP Diumumkan (SIRUP)', 'Total RUP Diumumkan Sirup']);
+  const paketAktifEpurchasing = getField(sourceRow, ['Paket Aktif(ePurchasing)', 'Paket Aktif (ePurchasing)', 'Paket Aktif epurchasing']);
+  const paketSelesaiEpurchasing = getField(sourceRow, ['Paket Selesai (ePurchasing)', 'Paket Selesai ePurchasing']);
+  const paketTerumumkanTender = getField(sourceRow, ['Paket Terumumkan (etendering)', 'Paket Terumumkan etendering']);
+  const paketSelesaiTender = getField(sourceRow, ['Paket Selesai (etendering)', 'Paket Selesai etendering']);
+  const totalPaketAktifKontrak = getField(sourceRow, ['Total Paket Aktif (ekontrak)', 'Total Paket Aktif ekontrak']);
+  const totalPaketSelesaiKontrak = getField(sourceRow, ['Total Paket Selesai (ekontrak)', 'Total Paket Selesai ekontrak']);
+  const totalPaguNonTender = getField(sourceRow, ['Total Pagu (Non etendering & Non ePurchasing)', 'Total Pagu Non etendering & Non ePurchasing', 'Total Pagu']);
+  const totalRealisasiNonTender = getField(sourceRow, ['Total Realisasi (Non etendering & Non ePurchasing)', 'Total Realisasi Non etendering & Non ePurchasing', 'Total Realisasi']);
+  const tokoDaringValue = toNumber(getField(sourceRow, ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)', 'Toko Daring']));
 
   return {
     name,
-    __sourceRow: row || {},
-    score: getItkpScore(row || {}),
+    __sourceRow: sourceRow,
+    score: getItkpScore(sourceRow),
     dimensions: [
       {
         name: 'SiRUP',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 10 (point) (SIRUP)', 'SIRUP'])),
+        value: toNumber(getField(sourceRow, ['Nilai ITKP - skor maksimal 10 (point) (SIRUP)', 'SIRUP'])),
         max: 10,
         accent: 'blue',
         route: 'monitoring-sirup',
         hint: 'Klik untuk buka Monitoring SiRUP',
-        detailMetrics: [
-          { label: 'Total Komitmen', value: getField(row || {}, ['Total Komitmen (SIRUP)', 'Total Komitmen']), kind: 'money' },
-          { label: 'Total RUP Diumumkan', value: getField(row || {}, ['Total RUP Diumumkan (SIRUP)', 'Total RUP Diumumkan']), kind: 'money' }
-        ]
+        detailText: formatCompactPair(totalKomitmenSirup, totalRupSirup),
+        detailHref: 'https://datastudio.google.com/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2'
       },
       {
         name: 'Toko Daring',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)', 'Toko Daring'])),
+        value: tokoDaringValue,
         max: 1,
         accent: 'teal',
         route: 'monitoring-ekatalog',
         hint: 'Klik untuk buka Monitoring eKatalog/Toko Daring',
-        detailMetrics: [
-          { label: 'Capaian', value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)', 'Toko Daring'])), kind: 'score-ratio', max: 1 }
-        ]
+        detailText: `${tokoDaringValue.toLocaleString('id-ID', { maximumFractionDigits: 0 })} / 1`
       },
       {
         name: 'e-Purchasing',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 4 (point) (Epurchasing)', 'Epurchasing', 'ePurchasing'])),
+        value: toNumber(getField(sourceRow, ['Nilai ITKP - skor maksimal 4 (point) (Epurchasing)', 'Epurchasing', 'ePurchasing'])),
         max: 4,
         accent: 'purple',
         route: 'monitoring-ekatalog',
         hint: 'Klik untuk buka Monitoring eKatalog',
-        detailMetrics: [
-          { label: 'Paket Aktif', value: getField(row || {}, ['Paket Aktif(ePurchasing)', 'Paket Aktif (ePurchasing)', 'Paket Aktif']), kind: 'number' },
-          { label: 'Paket Selesai', value: getField(row || {}, ['Paket Selesai (ePurchasing)', 'Paket Selesai(ePurchasing)', 'Paket Selesai']), kind: 'number' }
-        ]
+        detailText: formatPlainPair(paketAktifEpurchasing, paketSelesaiEpurchasing)
       },
       {
         name: 'e-Tendering',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (etendering)', 'eTendering'])),
+        value: toNumber(getField(sourceRow, ['Nilai ITKP - skor maksimal 5 (point) (etendering)', 'eTendering'])),
         max: 5,
         accent: 'orange',
         route: 'monitoring-etendering',
         hint: 'Klik untuk buka Monitoring eTendering',
-        detailMetrics: [
-          { label: 'Paket Terumumkan', value: getField(row || {}, ['Paket Terumumkan (etendering)', 'Paket Terumumkan']), kind: 'number' },
-          { label: 'Paket Selesai', value: getField(row || {}, ['Paket Selesai (etendering)', 'Paket Selesai']), kind: 'number' }
-        ]
+        detailText: formatPlainPair(paketTerumumkanTender, paketSelesaiTender)
       },
       {
         name: 'e-Kontrak',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (ekontrak)', 'eKontrak'])),
+        value: toNumber(getField(sourceRow, ['Nilai ITKP - skor maksimal 5 (point) (ekontrak)', 'eKontrak'])),
         max: 5,
         accent: 'green',
         route: 'monitoring-ekontrak',
         hint: 'Klik untuk buka Monitoring eKontrak',
-        detailMetrics: [
-          { label: 'Paket Aktif', value: getField(row || {}, ['Total Paket Aktif (ekontrak)', 'Total Paket Aktif']), kind: 'number' },
-          { label: 'Paket Selesai', value: getField(row || {}, ['Total Paket Selesai (ekontrak)', 'Total Paket Selesai']), kind: 'number' }
-        ]
+        detailText: formatPlainPair(totalPaketAktifKontrak, totalPaketSelesaiKontrak)
       },
       {
         name: 'Non eTendering / Non ePurchasing',
-        value: toNumber(getField(row || {}, ['Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)', 'Non etendering', 'Non ePurchasing', 'Non Tender'])),
+        value: toNumber(getField(sourceRow, ['Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)', 'Non etendering', 'Non ePurchasing', 'Non Tender'])),
         max: 5,
         accent: 'red',
         route: 'monitoring-nontender',
         hint: 'Klik untuk buka Monitoring Non eTendering',
-        detailMetrics: [
-          { label: 'Total Pagu', value: getField(row || {}, ['Total Pagu', 'Total Pagu (non etendering & non epurchasing)']), kind: 'money' },
-          { label: 'Total Realisasi', value: getField(row || {}, ['Total Realisasi', 'Total Realisasi (non etendering & non epurchasing)']), kind: 'money' }
-        ]
+        detailText: formatCompactPair(totalPaguNonTender, totalRealisasiNonTender)
       }
     ]
   };
@@ -723,7 +738,7 @@ function renderDashboardSkeleton() {
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-glow"></div>
-      <div class="hero-kicker">UKPBJ · Kota Bogor</div>
+      <div class="hero-kicker">SIPPBJ · Kota Bogor Procurement Dashboard</div>
       <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
       <p>Menarik data dari FIX ITKP OPD, D_PERENCANAAN, dan D_REALISASI untuk merangkum profil ITKP, perencanaan, realisasi, metode pengadaan, OPD dominan, serta indikator progress pengadaan.</p>
 
@@ -810,7 +825,7 @@ function renderDashboardReady(data) {
 
       <div class="hero-topline">
         <div>
-          <div class="hero-kicker">SIPPBJ · Sistem Informasi Pelaporan Pengadaan Barang Jasa</div>
+          <div class="hero-kicker">SIPPBJ · Kota Bogor Procurement Dashboard</div>
           <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
           <p>Ringkasan interaktif dari ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD/Sub OPD berdasarkan data Google Sheet yang tersedia.</p>
         </div>
@@ -823,9 +838,9 @@ function renderDashboardReady(data) {
 
       <div class="stats-grid dashboard-kpi-grid">
         ${renderKpiCard('Skor ITKP Kota Bogor', formatScore(data.itkpOverall), 'Mengambil baris agregat PEMERINTAH KOTA BOGOR, tidak dihitung ulang dari OPD', '📊')}
-        ${renderKpiCard('Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾', `${formatPercent(percentOf(data.totalPagu, data.totalPagu || 1))}`, 100)}
-        ${renderKpiCard('Realisasi Pagu', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰', `${formatPercent(data.realisasiPersen)}`, data.realisasiPersen)}
-        ${renderKpiCard('Realisasi Paket', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses · ${scopeLabel}`, '📦', `${formatPercent(percentOf(data.selesaiCount, data.totalPaketRealisasi))} selesai`, percentOf(data.selesaiCount, data.totalPaketRealisasi))}
+        ${renderKpiCard('Pagu Perencanaan', formatMoney(data.totalPagu), `${formatNumber(data.totalPaketRup)} paket · ${scopeLabel}`, '🧾')}
+        ${renderKpiCard('Realisasi', formatMoney(data.totalRealisasi), `${formatPercent(data.realisasiPersen)} dari pagu · ${scopeLabel}`, '💰')}
+        ${renderKpiCard('Paket Realisasi', formatNumber(data.totalPaketRealisasi), `${formatNumber(data.selesaiCount)} selesai · ${formatNumber(data.processCount)} proses · ${scopeLabel}`, '📦')}
       </div>
 
       <div class="hero-actions">
@@ -833,14 +848,6 @@ function renderDashboardReady(data) {
         <button class="lux-button lux-button--ghost" type="button" data-quick="monitoring-sirup">Buka ITKP SiRUP</button>
         <button class="lux-button lux-button--ghost" type="button" data-quick="monitoring-perencanaan">Buka Monitoring Realisasi</button>
       </div>
-    </section>
-
-
-    <section class="quick-grid quick-grid--top">
-      ${renderQuickCard('📊', 'linear-gradient(135deg,#2665df,#3a8bff)', 'ITKP - SiRUP', 'Lihat monitoring indikator ITKP dari modul SiRUP.', 'monitoring-sirup')}
-      ${renderQuickCard('🛒', 'linear-gradient(135deg,#123a72,#2f9a8f)', 'ITKP - eKatalog', 'Pantau pemanfaatan transaksi katalog.', 'monitoring-ekatalog')}
-      ${renderQuickCard('📦', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Monitoring Realisasi', 'Pantau progress realisasi paket perangkat daerah.', 'monitoring-perencanaan')}
-      ${renderQuickCard('🗓️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
     </section>
 
     <section class="dashboard-grid dashboard-grid--main">
@@ -866,7 +873,7 @@ function renderDashboardReady(data) {
 
         <div class="itkp-radar-layout">
           <div class="score-orbit">
-            <div class="score-ring" style="--score:${Math.min(100, (selectedProfile.score / 30) * 100)}">
+            <div class="score-ring score-ring--${getToneByPercent((selectedProfile.score / 30) * 100)}" style="--score:${Math.min(100, (selectedProfile.score / 30) * 100)}; --score-color:${getToneColor((selectedProfile.score / 30) * 100)}">
               <div class="score-core">
                 <span>${escapeHtml(selectedProfile.name === 'PEMERINTAH KOTA BOGOR' ? 'ITKP KOTA' : 'ITKP OPD')}</span>
                 <b>${formatScore(selectedProfile.score)}</b>
@@ -901,15 +908,26 @@ function renderDashboardReady(data) {
             <b>${formatMoney(data.totalRealisasi)}</b>
           </div>
           <div class="progress-track progress-track--tall">
-            <div class="progress-bar" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
+            <div class="progress-bar progress-bar--${getToneByPercent(data.realisasiPersen)}" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
           </div>
           <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi pada D_REALISASI dibanding nilai pagu pada D_PERENCANAAN.</p>
         </div>
 
         <div class="status-mini-grid">
-          ${renderSmallMetric('BAST Terisi', data.bastCount, 'Dokumen/referensi BAST', data.totalPaketRealisasi)}
-          ${renderSmallMetric('Selesai', data.selesaiCount, 'Status paket selesai', data.totalPaketRealisasi)}
-          ${renderSmallMetric('Proses', data.processCount, 'Masih berjalan/proses', data.totalPaketRealisasi)}
+          ${renderSmallMetric('BAST Terisi', data.bastCount, 'Dokumen/referensi BAST', data.totalPaketRealisasi ? (data.bastCount / data.totalPaketRealisasi) * 100 : 0)}
+          ${renderSmallMetric('Selesai', data.selesaiCount, 'Status paket selesai', data.totalPaketRealisasi ? (data.selesaiCount / data.totalPaketRealisasi) * 100 : 0)}
+          ${renderSmallMetric('Proses', data.processCount, 'Masih berjalan/proses', data.totalPaketRealisasi ? (data.processCount / data.totalPaketRealisasi) * 100 : 0)}
+        </div>
+
+        <div class="dashboard-card-links">
+          <div class="dashboard-card-links-title">Akses Cepat</div>
+          <div class="quick-grid quick-grid--compact">
+            ${renderQuickCard('📊', 'linear-gradient(135deg,#2665df,#3a8bff)', 'ITKP - SiRUP', 'Lihat monitoring indikator ITKP dari modul SiRUP.', 'monitoring-sirup')}
+            ${renderQuickCard('🛒', 'linear-gradient(135deg,#123a72,#2f9a8f)', 'ITKP - eKatalog', 'Pantau pemanfaatan transaksi katalog.', 'monitoring-ekatalog')}
+            ${renderQuickCard('📦', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Monitoring Realisasi', 'Pantau progress realisasi paket perangkat daerah.', 'monitoring-perencanaan')}
+            ${renderQuickCard('🗓️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
+            ${renderQuickCard('📈', 'linear-gradient(135deg,#0f766e,#22c55e)', 'Looker Studio ITKP', 'Buka dashboard indikator pemanfaatan sistem di Looker Studio.', '', 'https://datastudio.google.com/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2')}
+          </div>
         </div>
       </div>
     </section>
@@ -1031,46 +1049,40 @@ function bindDashboardEvents() {
     });
   }
 
-  contentArea.querySelectorAll('[data-quick], [data-route]').forEach((item) => {
+  contentArea.querySelectorAll('[data-quick], [data-route], [data-external]').forEach((item) => {
     item.addEventListener('click', () => {
+      const externalUrl = item.dataset.external;
+      if (externalUrl) {
+        window.open(externalUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
       const route = item.dataset.quick || item.dataset.route;
       if (route) loadPage(route);
     });
   });
 }
 
-function renderKpiCard(label, value, desc, icon, badge = '', progress = null) {
-  const showProgress = progress !== null && progress !== undefined;
-  const clamped = showProgress ? Math.max(0, Math.min(100, toNumber(progress))) : 0;
-
+function renderKpiCard(label, value, desc, icon) {
   return `
     <div class="stat-card stat-card--lux">
       <div class="stat-icon">${icon}</div>
       <div class="label">${escapeHtml(label)}</div>
       <div class="value">${escapeHtml(value)}</div>
       <div class="desc">${escapeHtml(desc)}</div>
-      ${badge ? `<div class="stat-inline-note">${escapeHtml(badge)}</div>` : ''}
-      ${showProgress ? `
-        <div class="stat-progress-mini">
-          <span style="width:${clamped}%"></span>
-        </div>
-      ` : ''}
     </div>
   `;
 }
 
-function renderSmallMetric(label, value, desc, total = 0) {
-  const pct = percentOf(value, total);
-
+function renderSmallMetric(label, value, desc, percent = 0) {
+  const tone = getToneByPercent(percent);
   return `
-    <div class="small-metric">
+    <div class="small-metric small-metric--${tone}">
       <b>${formatNumber(value)}</b>
       <span>${escapeHtml(label)}</span>
       <small>${escapeHtml(desc)}</small>
-      <div class="small-metric-foot">
-        <strong>${formatPercent(pct)}</strong>
-        <div class="small-metric-bar"><i style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>
-      </div>
+      <div class="small-metric-percent">${percent.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</div>
+      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:${Math.min(100, Math.max(0, percent))}%"></span></div>
     </div>
   `;
 }
@@ -1078,24 +1090,28 @@ function renderSmallMetric(label, value, desc, total = 0) {
 function renderDimension(item) {
   const percent = item.max > 0 ? Math.min(100, (toNumber(item.value) / item.max) * 100) : 0;
   const route = item.route || '';
-  const metrics = Array.isArray(item.detailMetrics) ? item.detailMetrics.filter((metric) => toNumber(metric.value) > 0) : [];
-  const detailText = metrics.length
-    ? metrics.map((metric) => formatCompactMetric(metric.value, metric.kind || 'number', metric.max || item.max || 0)).join(' / ')
+  const tone = getToneByPercent(percent);
+  const detailText = String(item.detailText || '').trim();
+  const detailHref = String(item.detailHref || '').trim();
+  const detailHtml = detailText
+    ? detailHref
+      ? `<a class="dim-detail-link" href="${escapeHtml(detailHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(detailText)}</a>`
+      : `<span class="dim-detail-text">${escapeHtml(detailText)}</span>`
     : '';
 
   return `
-    <button class="dim-row dim-row--${escapeHtml(item.accent || 'blue')} dim-row--button" type="button" data-route="${escapeHtml(route)}" title="${escapeHtml(item.hint || 'Klik untuk membuka modul monitoring')}">
-      <div class="dim-row-main">
-        <div class="dim-name">
-          <span>${escapeHtml(item.name)}</span>
-          <small>${escapeHtml(item.hint || 'Buka detail')}</small>
-        </div>
-        <div class="bar">
-          <span style="width:${percent}%"></span>
-        </div>
-        <div class="dim-value">${toNumber(item.value).toLocaleString('id-ID', { maximumFractionDigits: 2 })}/${item.max}</div>
+    <button class="dim-row dim-row--${escapeHtml(item.accent || 'blue')} dim-row--button dim-row--${tone}" type="button" data-route="${escapeHtml(route)}" title="${escapeHtml(item.hint || 'Klik untuk membuka modul monitoring')}">
+      <div class="dim-name">
+        <span>${escapeHtml(item.name)}</span>
+        <small>${escapeHtml(item.hint || 'Buka detail')}</small>
       </div>
-      ${detailText ? `<div class="dim-detail-strip">${escapeHtml(detailText)}</div>` : ''}
+      <div class="dim-progress-wrap">
+        <div class="bar">
+          <span class="dim-progress-fill dim-progress-fill--${tone}" style="width:${percent}%"></span>
+        </div>
+        ${detailHtml ? `<div class="dim-detail">${detailHtml}</div>` : ''}
+      </div>
+      <div class="dim-value">${toNumber(item.value).toLocaleString('id-ID', { maximumFractionDigits: 2 })}/${item.max}</div>
     </button>
   `;
 }
@@ -1175,9 +1191,13 @@ function renderActivity(color, icon, title, text, time) {
   `;
 }
 
-function renderQuickCard(icon, bg, title, text, route) {
+function renderQuickCard(icon, bg, title, text, route, externalUrl = '') {
+  const dataAttrs = externalUrl
+    ? `data-external="${escapeHtml(externalUrl)}"`
+    : `data-quick="${escapeHtml(route)}"`;
+
   return `
-    <button class="quick-card" type="button" data-quick="${escapeHtml(route)}">
+    <button class="quick-card" type="button" ${dataAttrs}>
       <div class="quick-icon" style="background:${bg}">${icon}</div>
 
       <div>
@@ -1197,7 +1217,7 @@ function renderIframePage(page) {
   contentArea.innerHTML = `
     <section class="embed-card ${isSimNontender ? 'embed-card--simppk' : ''}">
       <h3>${escapeHtml(page.title)}</h3>
-      <div class="page-note">Simulasi Pencatatan Non Tender.</div>
+      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
 
       <div class="embed-frame-wrap ${isSimNontender ? 'embed-frame-wrap--simppk' : ''}">
         <iframe
