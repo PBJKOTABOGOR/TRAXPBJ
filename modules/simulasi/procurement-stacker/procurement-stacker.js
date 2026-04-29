@@ -44,6 +44,8 @@
   let bonusSnakeTimer = null;
   let bonusSnakeKeyHandler = null;
 
+  let bonusOpenWorldTimer = null;
+
   const CARD_LIBRARY = {
     rup: {
       id: 'rup',
@@ -900,12 +902,12 @@
 
   const BONUS_LEVEL_4_OPENWORLD = {
     type: 'bonusOpenWorld',
-    title: 'Level 4 — Bonus City Building: Kota Konsolidasi',
-    caseTitle: 'Bangun Kota Konsolidasi Kota Bogor',
-    desc: 'Bonus level city building. Bangun distrik proses konsolidasi dengan urutan yang benar, pilih keputusan yang paling aman, dan bantu PANJI menyelesaikan Kota Konsolidasi.',
+    title: 'Level 4 — Bonus Tower Defense: Pertahankan Kota Konsolidasi',
+    caseTitle: 'PANJI Defense — Konsolidasi ATK Kota Bogor',
+    desc: 'Bonus level tower defense. Bangun pertahanan proses konsolidasi agar gangguan data, harga, penyedia, dan katalog tidak merusak jalur e-Purchasing.',
     budget: 'Bonus Level 4',
-    difficulty: 'Bonus City Building',
-    explanation: 'Bonus ini melatih alur konsolidasi dari identifikasi kebutuhan sampai e-Purchasing lewat mini city building yang lebih runtut dan edukatif.'
+    difficulty: 'Bonus Tower Defense',
+    explanation: 'Bonus ini melatih alur konsolidasi: identifikasi kebutuhan, market sounding, KAK/HPS, kontrak payung, katalog, dan pengendalian risiko.'
   };
 
   const BONUS_LEVEL_8_SNAKE = {
@@ -1805,7 +1807,7 @@
     }
 
     if (challenge.type === 'bonusOpenWorld') {
-      return 'Hi.. aku balik lagi. Ini bonus level 4. Sekarang kamu bangun Kota Konsolidasi. Susun distrik dari identifikasi kebutuhan sampai e-Purchasing. Jangan kebalik urutannya ya.';
+      return 'Hi.. aku balik lagi. Ini bonus level 4 versi tower defense. Pilih menara proses yang tepat, pasang di jalur, lalu tahan gangguan data, harga, penyedia, dan katalog sampai e-Purchasing aman.';
     }
 
     if (challenge.type === 'bonusSnake') {
@@ -1853,6 +1855,13 @@
     if (tenderRushNextTimer) {
       clearTimeout(tenderRushNextTimer);
       tenderRushNextTimer = null;
+    }
+  }
+
+  function clearBonusOpenWorldTimers() {
+    if (bonusOpenWorldTimer) {
+      clearInterval(bonusOpenWorldTimer);
+      bonusOpenWorldTimer = null;
     }
   }
 
@@ -2011,6 +2020,7 @@
     clearTenderRushTimers();
     disableTenderRushKeyboard();
     clearBonusSnakeTimers();
+    clearBonusOpenWorldTimers();
     clearPanjiIntroTimers();
 
     GAME_STATE.finished = true;
@@ -2602,7 +2612,7 @@
     }
 
     if (challenge.type === 'bonusOpenWorld') {
-      return 'Hint PANJI: bangun kotanya pelan tapi tepat. Mulai dari data kebutuhan, lanjut baca pasar, siapkan tim dan dokumen, baru masuk pemilihan, kontrak payung, katalog, lalu e-Purchasing.';
+      return 'Hint PANJI: jangan kejar cepat. Di bonus ini lihat alurnya: pilih tim yang bisa analisa, samakan item yang benar-benar sejenis, market sounding ke semua toko, lalu evaluasi berdasarkan data.';
     }
 
     if (challenge.type === 'bonusSnake') {
@@ -2692,6 +2702,7 @@
     clearTenderRushTimers();
     disableTenderRushKeyboard();
     clearBonusSnakeTimers();
+    clearBonusOpenWorldTimers();
     clearPanjiIntroTimers();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
@@ -2730,6 +2741,7 @@
     clearTenderRushTimers();
     disableTenderRushKeyboard();
     clearBonusSnakeTimers();
+    clearBonusOpenWorldTimers();
     clearTenderRushTimers();
     disableTenderRushKeyboard();
 
@@ -2789,7 +2801,7 @@
       addLog(
         'info',
         'Bonus Level 4 dimulai',
-        'PPK masuk Bonus Level 4: Kota Konsolidasi. Bangun tiap distrik sesuai urutan alur sampai kota siap dipakai OPD.'
+        'Bangun menara proses konsolidasi dan tahan gangguan sampai jalur e-Purchasing tetap aman.'
       );
     } else if (challenge.type === 'bonusSnake') {
       GAME_STATE.stage = 'bonusSnake';
@@ -2888,7 +2900,7 @@
   function getChallengeTypeLabel(type) {
     if (type === 'pipeline') return 'Pipeline';
     if (type === 'tenderRush') return 'Tender Rush';
-    if (type === 'bonusOpenWorld') return 'Bonus City';
+    if (type === 'bonusOpenWorld') return 'Bonus Tower Defense';
     if (type === 'bonusSnake') return 'Bonus Snake';
     return 'ABCD';
   }
@@ -2896,7 +2908,7 @@
   function getChallengeTypeName(type) {
     if (type === 'pipeline') return 'Susun Pipeline';
     if (type === 'tenderRush') return 'Arcade Metode';
-    if (type === 'bonusOpenWorld') return 'City Building';
+    if (type === 'bonusOpenWorld') return 'Tower Defense Bonus';
     if (type === 'bonusSnake') return 'Snake Bintang';
     return 'Pilihan ABCD';
   }
@@ -3041,7 +3053,7 @@
   function renderQuestionPanel(challenge, mainQuestion = '') {
     const typeName = getChallengeTypeName(challenge.type);
     const title = challenge.type === 'bonusOpenWorld'
-      ? 'SOAL BONUS 4 / CITY BUILDING'
+      ? 'SOAL BONUS 4 / TOWER DEFENSE'
       : challenge.type === 'bonusSnake'
         ? 'SOAL BONUS 8 / SNAKE'
         : 'SOAL / PERTANYAAN';
@@ -3270,104 +3282,81 @@
   }
 
 
+
   function createBonusOpenWorldState() {
-    const nodes = [
-      {
-        id: 'identifikasi',
-        title: 'Balai Identifikasi Kebutuhan',
-        icon: '📋',
-        desc: 'Bangun tahap awal dengan analisis data SiRUP dan konfirmasi kebutuhan OPD.',
-        choices: [
-          { id: 'sirup-opd', text: 'Mulai dari analisis data SiRUP lalu minta dan konfirmasi data kebutuhan OPD', good: true, panji: 'Pas. Kota konsolidasi harus dibangun dari data kebutuhan yang nyata dulu.' },
-          { id: 'kontrak-dulu', text: 'Lewati data, langsung pikirkan kontrak payung biar cepat', good: false, panji: 'Waduh, kebalik. Tanpa data kebutuhan, pondasi kotanya langsung rapuh.' },
-          { id: 'barang-campur', text: 'Campur semua kebutuhan tanpa lihat kesamaan barang', good: false, panji: 'Kalau begini, distrik awalmu kacau. Konsolidasi harus mulai dari kebutuhan yang bisa dibaca polanya.' }
-        ]
-      },
-      {
-        id: 'pasar',
-        title: 'Gedung Pendalaman Pasar',
-        icon: '🏪',
-        desc: 'Setelah data terkumpul, baca kondisi pasar dan proses bisnis penyedia.',
-        choices: [
-          { id: 'market-sounding', text: 'Lakukan pembahasan dengan pasar/produsen dan market sounding untuk cek pasokan, distribusi, dan harga', good: true, panji: 'Nah ini sehat. Sebelum bangunan kota naik, kamu baca pasarnya dulu.' },
-          { id: 'langganan', text: 'Pilih toko langganan saja tanpa cek pasar pembanding', good: false, panji: 'Kota konsolidasi tidak boleh dibangun dari kebiasaan saja. Harus ada pembacaan pasar.' },
-          { id: 'pemenang-dulu', text: 'Tentukan pemenang saat market sounding', good: false, panji: 'Jangan. Market sounding itu bukan penetapan pemenang.' }
-        ]
-      },
-      {
-        id: 'tim',
-        title: 'Kantor Tim Konsolidasi',
-        icon: '🏛️',
-        desc: 'Siapkan payung hukum dan bentuk tim konsolidasi agar kota punya pengelola yang jelas.',
-        choices: [
-          { id: 'tim-payung', text: 'Siapkan payung hukum lalu tetapkan tim konsolidasi dengan peran yang jelas', good: true, panji: 'Mantap. Distrik ketiga berdiri rapi karena tim dan dasar kerjanya sudah jelas.' },
-          { id: 'asal-jalan', text: 'Jalankan konsolidasi dulu, tim dan dasar hukumnya belakangan', good: false, panji: 'Ini jebakan. Kota bisa berdiri miring kalau dibangun tanpa dasar.' },
-          { id: 'orang-dekat', text: 'Isi tim berdasarkan kedekatan, bukan kebutuhan peran', good: false, panji: 'Bukan begitu. Tim harus dibentuk karena fungsi, bukan karena kedekatan.' }
-        ]
-      },
-      {
-        id: 'dokumen',
-        title: 'Studio KAK & HPS',
-        icon: '🧾',
-        desc: 'Bangun ruang dokumen teknis: KAK, spesifikasi, HPS/referensi harga, dan rancangan kontrak payung.',
-        choices: [
-          { id: 'kak-hps', text: 'Susun KAK, spesifikasi, HPS/referensi harga, lalu rancangan kontrak payung', good: true, panji: 'Bagus. Sekarang kotamu punya gambar teknis dan hitungan harga yang masuk akal.' },
-          { id: 'harga-ngira', text: 'Lewati KAK, cukup pakai harga kira-kira dan langsung proses', good: false, panji: 'Tidak aman. Tanpa KAK dan HPS, bangunan ini cuma tempelan.' },
-          { id: 'spesifikasi-mengarah', text: 'Bikin spesifikasi sempit biar penyedianya gampang ditebak', good: false, panji: 'Jangan bikin lorong sempit seperti itu. Spesifikasi harus adil dan bisa dipertanggungjawabkan.' }
-        ]
-      },
-      {
-        id: 'pemilihan',
-        title: 'Arena Pemilihan Penyedia',
-        icon: '🏁',
-        desc: 'Laksanakan proses pemilihan penyedia secara tertib sesuai dokumen dan jadwal.',
-        choices: [
-          { id: 'urut-pemilihan', text: 'Jalankan pengumuman, pendaftaran, penjelasan bila perlu, pemasukan penawaran, evaluasi/klarifikasi/negosiasi, lalu umumkan hasil', good: true, panji: 'Yes. Arena pemilihan berdiri sesuai jalurnya, bukan asal loncat.' },
-          { id: 'unjuk-pemenang', text: 'Tunjuk penyedia dulu, baru dokumennya menyusul', good: false, panji: 'Wah, ini bikin kotamu goyang. Pemilihan harus tertib tahapannya.' },
-          { id: 'harga-saja', text: 'Cukup lihat harga termurah tanpa cek kelengkapan dan kesiapan', good: false, panji: 'Murah doang belum tentu aman. Tetap cek administrasi, kesiapan, dan penjelasannya.' }
-        ]
-      },
-      {
-        id: 'kontrak',
-        title: 'Kantor Kontrak Payung',
-        icon: '✍️',
-        desc: 'Finalisasi dan tanda tangani kontrak payung agar hasil pemilihan terikat resmi.',
-        choices: [
-          { id: 'final-kontrak', text: 'Finalisasi lalu tanda tangani kontrak payung dengan penyedia terpilih', good: true, panji: 'Sip. Sekarang kota konsolidasi punya ikatan resmi untuk dipakai bersama.' },
-          { id: 'transaksi-dulu', text: 'Biarkan OPD belanja dulu, kontraknya nanti saja', good: false, panji: 'Jangan dibalik. Kontrak payung adalah jembatan resminya.' },
-          { id: 'lisan', text: 'Cukup sepakat lisan, tidak perlu pengikatan yang jelas', good: false, panji: 'Tidak aman. Kota administrasi harus tertib, bukan serba lisan.' }
-        ]
-      },
-      {
-        id: 'katalog',
-        title: 'Menara Katalog Elektronik',
-        icon: '🛒',
-        desc: 'Tayangkan produk hasil konsolidasi di Katalog Elektronik.',
-        choices: [
-          { id: 'tayang-katalog', text: 'Cantumkan produk hasil konsolidasi ke Katalog Elektronik agar OPD punya jalur belanja yang sama', good: true, panji: 'Mantap. Menara katalog menyala, berarti kotamu sudah bisa diakses OPD.' },
-          { id: 'offline', text: 'Biarkan hasil konsolidasi tetap offline dan manual saja', good: false, panji: 'Sayang sekali. Kalau tidak tayang, manfaat konsolidasinya bocor.' },
-          { id: 'khusus-satu-opd', text: 'Tayangkan hanya untuk satu OPD tertentu', good: false, panji: 'Ini kota konsolidasi, bukan gang privat. Jalurnya harus bisa dipakai bersama.' }
-        ]
-      },
-      {
-        id: 'epurchasing',
-        title: 'Plaza e-Purchasing',
-        icon: '🏙️',
-        desc: 'Pastikan OPD benar-benar memakai hasil konsolidasi melalui e-Purchasing.',
-        choices: [
-          { id: 'opd-transaksi', text: 'Pantau agar PP/PPK melakukan e-Purchasing dan progres belanjanya terlihat', good: true, panji: 'Finish! Plaza kota hidup karena hasil konsolidasi benar-benar dipakai, bukan cuma jadi dokumen.' },
-          { id: 'cukup-dokumen', text: 'Yang penting dokumen selesai, transaksi belakangan saja', good: false, panji: 'Belum selesai kalau OPD belum belanja lewat jalur yang sudah dibangun.' },
-          { id: 'bebas-sendiri', text: 'Biarkan tiap OPD kembali belanja sendiri-sendiri', good: false, panji: 'Kalau begitu, kota konsolidasinya kosong. Tujuan efisiensi dan standarisasi jadi hilang.' }
-        ]
-      }
+    const waves = [
+      [
+        { lane: 0, hp: 5, speed: 0.42, reward: 14, icon: '📄', name: 'Data belum sinkron', tag: 'Data' },
+        { lane: 2, hp: 5, speed: 0.42, reward: 14, icon: '📄', name: 'Data belum sinkron', tag: 'Data' }
+      ],
+      [
+        { lane: 1, hp: 7, speed: 0.46, reward: 16, icon: '💸', name: 'Harga liar', tag: 'Harga' },
+        { lane: 3, hp: 7, speed: 0.46, reward: 16, icon: '💸', name: 'Harga liar', tag: 'Harga' }
+      ],
+      [
+        { lane: 0, hp: 9, speed: 0.48, reward: 18, icon: '🏪', name: 'Penyedia belum siap', tag: 'Pasar' },
+        { lane: 2, hp: 9, speed: 0.48, reward: 18, icon: '🏪', name: 'Penyedia belum siap', tag: 'Pasar' },
+        { lane: 3, hp: 7, speed: 0.50, reward: 16, icon: '⚙️', name: 'SOP belum rapi', tag: 'Proses' }
+      ],
+      [
+        { lane: 1, hp: 11, speed: 0.50, reward: 20, icon: '🛒', name: 'Katalog macet', tag: 'Katalog' },
+        { lane: 2, hp: 10, speed: 0.52, reward: 20, icon: '🧾', name: 'KAK/HPS lemah', tag: 'Dokumen' },
+        { lane: 0, hp: 9, speed: 0.54, reward: 18, icon: '🧠', name: 'Komitmen pimpinan lemah', tag: 'SDM' }
+      ]
     ];
 
     return {
-      activeNode: 'identifikasi',
-      completed: {},
-      decisions: {},
-      nodes,
-      bonusScore: 0
+      phase: 'build',
+      selectedTower: 'data',
+      hp: 12,
+      money: 180,
+      waveIndex: 0,
+      maxWaves: waves.length,
+      waves,
+      enemies: [],
+      slots: Array.from({ length: 4 }, (_, lane) => Array.from({ length: 4 }, (_, col) => ({ lane, col, tower: null }))),
+      bonusScore: 0,
+      ticks: 0,
+      finished: false,
+      summary: 'Kota konsolidasi masih tenang. Pasang menara proses dulu sebelum gelombang masalah masuk.',
+      towerTypes: {
+        data: {
+          id: 'data',
+          icon: '📊',
+          label: 'Data Kebutuhan',
+          cost: 45,
+          damage: 2,
+          range: 2,
+          desc: 'Nahan data kebutuhan yang berantakan.'
+        },
+        pasar: {
+          id: 'pasar',
+          icon: '🏪',
+          label: 'Market Sounding',
+          cost: 60,
+          damage: 3,
+          range: 2,
+          desc: 'Ngebaca harga, stok, dan kesiapan penyedia.'
+        },
+        dokumen: {
+          id: 'dokumen',
+          icon: '🧾',
+          label: 'KAK / HPS',
+          cost: 70,
+          damage: 4,
+          range: 1,
+          desc: 'Dokumen teknis kuat, serangan lebih sakit.'
+        },
+        katalog: {
+          id: 'katalog',
+          icon: '🛒',
+          label: 'Katalog & Monitoring',
+          cost: 80,
+          damage: 2,
+          range: 3,
+          desc: 'Jaga implementasi katalog dan progres OPD.'
+        }
+      }
     };
   }
 
@@ -3378,173 +3367,287 @@
     return GAME_STATE.bonusOpenWorld;
   }
 
+  function getBonusOpenWorldTowerList() {
+    const bonus = getBonusOpenWorldState();
+    return Object.values(bonus.towerTypes || {});
+  }
+
+  function getBonusOpenWorldSlot(bonus, lane, col) {
+    return bonus && bonus.slots && bonus.slots[lane] ? bonus.slots[lane][col] : null;
+  }
+
+  function finishBonusOpenWorld(success, text) {
+    const bonus = getBonusOpenWorldState();
+    clearBonusOpenWorldTimers();
+    bonus.finished = true;
+    bonus.phase = success ? 'finished' : 'failed';
+    bonus.summary = text;
+
+    if (success) {
+      GAME_STATE.progress = 100;
+      GAME_STATE.score += 20 + Math.max(0, bonus.bonusScore);
+      GAME_STATE.correct += 1;
+      addLog('ok', 'Bonus level 4 selesai', 'Jalur konsolidasi berhasil dipertahankan sampai e-Purchasing aman.');
+      showPanji('Mantap. Kota konsolidasi aman. Data, pasar, dokumen, kontrak payung, katalog, sampai e-Purchasing berhasil kita jaga.', 'happy');
+      showToast('Bonus level 4 selesai. +' + (20 + Math.max(0, bonus.bonusScore)), 'ok');
+      spawnConfetti();
+    } else {
+      GAME_STATE.risk += 10;
+      GAME_STATE.wrong += 1;
+      addLog('bad', 'Pertahanan jebol', text || 'Gangguan terlalu banyak lolos ke jalur e-Purchasing.');
+      showPanji('Aduh, pertahanan jebol. Tenang, reset level ini dulu lalu atur tower yang lebih rapi.', 'sad');
+      showToast('Pertahanan jebol. Coba atur ulang tower.', 'bad');
+    }
+
+    renderGame();
+  }
+
+  function settleBonusOpenWorldWave() {
+    const bonus = getBonusOpenWorldState();
+    if (bonus.phase !== 'running') return;
+    if (bonus.enemies.length > 0) return;
+
+    clearBonusOpenWorldTimers();
+
+    if (bonus.waveIndex >= bonus.maxWaves) {
+      finishBonusOpenWorld(true, 'Semua gelombang gangguan berhasil ditahan. Kota konsolidasi aman sampai tahap e-Purchasing.');
+      return;
+    }
+
+    bonus.phase = 'build';
+    bonus.money += 35;
+    bonus.bonusScore += 10;
+    bonus.summary = 'Gelombang selesai. Tambahan anggaran pertahanan +35. Rapikan tower lalu lanjut ke gelombang berikutnya.';
+    showPanji('Satu gelombang aman. Tambah tower kalau perlu, lalu lanjut lagi.', 'happy');
+    showToast('Gelombang aman. Dana +35', 'ok');
+    renderGame();
+  }
+
+  function tickBonusOpenWorld() {
+    const bonus = getBonusOpenWorldState();
+    if (!bonus || bonus.phase !== 'running' || bonus.finished) return;
+
+    bonus.ticks += 1;
+
+    bonus.enemies.forEach(enemy => {
+      enemy.progress += enemy.speed;
+    });
+
+    bonus.slots.forEach((laneSlots, laneIndex) => {
+      laneSlots.forEach(slot => {
+        if (!slot.tower) return;
+        const tower = bonus.towerTypes[slot.tower];
+        if (!tower) return;
+        const target = bonus.enemies.find(enemy => enemy.lane === laneIndex && enemy.progress >= Math.max(0, slot.col - 0.2) && enemy.progress <= slot.col + tower.range + 0.45);
+        if (!target) return;
+        target.hp -= tower.damage;
+        bonus.bonusScore += 1;
+      });
+    });
+
+    const survivors = [];
+    bonus.enemies.forEach(enemy => {
+      if (enemy.hp <= 0) {
+        bonus.money += enemy.reward;
+        bonus.bonusScore += 4;
+        return;
+      }
+      if (enemy.progress >= 4.7) {
+        bonus.hp -= 1;
+        GAME_STATE.risk += 2;
+        bonus.summary = enemy.name + ' lolos ke jalur akhir. Pertahanan kota goyang.';
+        return;
+      }
+      survivors.push(enemy);
+    });
+    bonus.enemies = survivors;
+
+    if (bonus.hp <= 0) {
+      finishBonusOpenWorld(false, 'HP kota habis. Data, harga, dan implementasi katalog kebobolan.');
+      return;
+    }
+
+    if (!bonus.enemies.length) {
+      settleBonusOpenWorldWave();
+      return;
+    }
+
+    renderGame();
+  }
+
+  function startBonusOpenWorldWave() {
+    const bonus = getBonusOpenWorldState();
+    if (!bonus || bonus.phase === 'running' || bonus.finished) return;
+    if (bonus.waveIndex >= bonus.maxWaves) {
+      finishBonusOpenWorld(true, 'Semua gelombang sudah beres.');
+      return;
+    }
+
+    clearBonusOpenWorldTimers();
+    const template = bonus.waves[bonus.waveIndex] || [];
+    bonus.enemies = template.map((enemy, index) => ({
+      ...enemy,
+      id: bonus.waveIndex + '-' + index + '-' + Date.now(),
+      progress: -0.65 * index,
+      maxHp: enemy.hp
+    }));
+    bonus.waveIndex += 1;
+    bonus.phase = 'running';
+    bonus.summary = 'Gelombang ' + bonus.waveIndex + ' mulai. Jaga agar gangguan tidak masuk ke e-Purchasing.';
+    showPanji('Gelombang ' + bonus.waveIndex + ' mulai. Perhatikan lane yang rame, lalu pasang tower secukupnya.', 'alert');
+    bonusOpenWorldTimer = setInterval(tickBonusOpenWorld, 850);
+    renderGame();
+  }
+
+  function resetBonusOpenWorld() {
+    clearBonusOpenWorldTimers();
+    GAME_STATE.bonusOpenWorld = createBonusOpenWorldState();
+    GAME_STATE.progress = 0;
+    renderGame();
+    showPanji('Bonus tower defense direset. Sekarang atur tower dari awal ya.', 'thinking');
+    showToast('Bonus level 4 direset', 'info');
+  }
+
+  function selectBonusOpenWorldTower(towerId) {
+    const bonus = getBonusOpenWorldState();
+    if (!bonus || bonus.finished) return;
+    if (!bonus.towerTypes[towerId]) return;
+    bonus.selectedTower = towerId;
+    bonus.summary = 'Tower aktif: ' + bonus.towerTypes[towerId].label + '. Klik pad kosong untuk memasang.';
+    renderGame();
+  }
+
+  function placeBonusOpenWorldTower(payload, buttonEl) {
+    const bonus = getBonusOpenWorldState();
+    if (!bonus || bonus.phase === 'running' || bonus.finished) {
+      showToast('Tower hanya bisa dipasang saat fase build.', 'bad');
+      return;
+    }
+
+    const [laneText, colText] = String(payload || '').split(':');
+    const lane = Number(laneText);
+    const col = Number(colText);
+    const slot = getBonusOpenWorldSlot(bonus, lane, col);
+    const tower = bonus.towerTypes[bonus.selectedTower];
+
+    if (!slot || !tower) return;
+    if (slot.tower) {
+      showPanji('Slot itu sudah terisi. Kalau mau ganti, reset bonus level ini dulu ya.', 'thinking');
+      showToast('Slot sudah terisi', 'bad');
+      return;
+    }
+    if (bonus.money < tower.cost) {
+      showPanji('Dananya belum cukup buat tower itu. Pilih yang lebih murah atau tahan sampai gelombang aman.', 'sad');
+      showToast('Dana kurang', 'bad');
+      return;
+    }
+
+    slot.tower = tower.id;
+    bonus.money -= tower.cost;
+    bonus.bonusScore += 3;
+    bonus.summary = tower.label + ' dipasang di lane ' + (lane + 1) + '. Sekarang jalur makin aman.';
+    showToast(tower.label + ' terpasang', 'ok');
+    popScore(buttonEl || document.body, '-' + tower.cost, 'info');
+    renderGame();
+  }
+
   function renderBonusOpenWorldChallenge() {
     const bonus = getBonusOpenWorldState();
-    const order = bonus.nodes.map(node => node.id);
-    const active = bonus.nodes.find(node => node.id === bonus.activeNode) || bonus.nodes[0];
-    const completedCount = Object.keys(bonus.completed).length;
-    const activeIndex = order.indexOf(active.id);
-    const storyMap = {
-      identifikasi: 'Kota masih berupa lahan kosong. PANJI bilang: semua harus dimulai dari data kebutuhan. Kalau fondasinya salah, seluruh kota konsolidasi akan miring dari awal.',
-      pasar: 'Balai data sudah berdiri. Sekarang kamu harus bangun distrik pasar agar kota tidak salah membaca stok, harga, distribusi, dan kesiapan penyedia.',
-      tim: 'Data dan pasar sudah kebaca. Kota butuh kantor tim konsolidasi dan payung kerja yang jelas supaya pembangunannya tidak liar.',
-      dokumen: 'Sekarang saatnya bikin studio teknis. Di sinilah KAK, spesifikasi, HPS, dan rancangan kontrak payung digambar sebelum kota naik lebih tinggi.',
-      pemilihan: 'Kota mulai ramai. Tapi arena pemilihan harus dibangun tertib, tidak boleh loncat langsung ke hasil.',
-      kontrak: 'Setelah pemenang ditetapkan, kamu perlu membangun kantor kontrak payung. Ini yang mengikat hasil pemilihan secara resmi.',
-      katalog: 'Kontrak payung sudah jadi. Menara katalog harus dibuka supaya hasil konsolidasi punya etalase resmi untuk dipakai bersama.',
-      epurchasing: 'Satu langkah terakhir: hidupkan plaza e-Purchasing. Kota baru dianggap sukses kalau OPD benar-benar bertransaksi melalui jalur hasil konsolidasi.'
-    };
-    const shuffledChoices = shuffleArray(active.choices || []);
-
-    return `
-      <div class="ps-citybonus-wrap">
-        <div class="ps-citybonus-board">
-          <div class="ps-citybonus-topbar">
-            <div>
-              <div class="ps-citybonus-kicker">Bonus Level 4 • City Building</div>
-              <h3>Kota Konsolidasi Kota Bogor</h3>
-            </div>
-            <div class="ps-citybonus-stats">
-              <span>Distrik aktif <b>${activeIndex + 1}/${bonus.nodes.length}</b></span>
-              <span>Terbangun <b>${completedCount}/${bonus.nodes.length}</b></span>
-              <span>Bonus poin <b>${bonus.bonusScore}</b></span>
-            </div>
-          </div>
-
-          <div class="ps-citybonus-map">
-            <div class="ps-citybonus-road horizontal road-top"></div>
-            <div class="ps-citybonus-road vertical road-right"></div>
-            <div class="ps-citybonus-road horizontal road-bottom"></div>
-            <div class="ps-citybonus-road vertical road-left"></div>
-            <div class="ps-citybonus-plaza">PLAZA PANJI</div>
-
-            ${bonus.nodes.map((node, index) => {
-              const isDone = Boolean(bonus.completed[node.id]);
-              const isActive = bonus.activeNode === node.id;
-              const isLocked = index > completedCount;
+    const towers = getBonusOpenWorldTowerList();
+    const lanesHtml = bonus.slots.map((laneSlots, laneIndex) => {
+      const laneEnemies = bonus.enemies.filter(enemy => enemy.lane === laneIndex);
+      return `
+        <div class="ps-td-lane">
+          <div class="ps-td-lane-label">Lane ${laneIndex + 1}</div>
+          <div class="ps-td-track">
+            <div class="ps-td-base">e-Purchasing</div>
+            ${laneSlots.map(slot => {
+              const tower = slot.tower ? bonus.towerTypes[slot.tower] : null;
               return `
-                <button type="button" class="ps-citybonus-lot ${isActive ? 'active' : ''} ${isDone ? 'done' : ''} ${isLocked ? 'locked' : ''}" data-bonus-node="${node.id}" style="--i:${index}">
-                  <span class="ps-citybonus-lot-no">${index + 1}</span>
-                  <span class="ps-citybonus-lot-icon">${isDone ? '🏙️' : node.icon}</span>
-                  <strong>${escapeHtml(node.title)}</strong>
-                  <small>${isDone ? 'Distrik terbangun' : isLocked ? 'Belum kebuka' : isActive ? 'Bangun sekarang' : 'Berikutnya'}</small>
+                <button type="button" class="ps-td-pad ${tower ? 'filled' : ''}" data-bonus-tower-slot="${laneIndex}:${slot.col}">
+                  ${tower ? `<span class="ps-td-tower-icon">${tower.icon}</span><b>${escapeHtml(tower.label)}</b><small>Dmg ${tower.damage}</small>` : '<span class="ps-td-build">+ Pasang</span>'}
                 </button>
               `;
             }).join('')}
-          </div>
-        </div>
-
-        <div class="ps-citybonus-panel">
-          <div class="ps-citybonus-kicker">Cerita Distrik Aktif</div>
-          <h3>${escapeHtml(active.title)}</h3>
-          <div class="ps-citybonus-story">
-            <b>Alur cerita:</b> ${escapeHtml(storyMap[active.id] || active.desc)}
-          </div>
-          <div class="ps-citybonus-panji"><b>PANJI:</b> ${escapeHtml(active.desc)} Pilih keputusan yang paling aman buat membangun distrik ini.</div>
-          <div class="ps-citybonus-choices">
-            ${shuffledChoices.map(choice => `
-              <button type="button" class="ps-citybonus-choice" data-bonus-choice="${active.id}::${choice.id}">${escapeHtml(choice.text)}</button>
+            ${laneEnemies.map(enemy => `
+              <div class="ps-td-enemy" style="left:${Math.max(0, Math.min(88, enemy.progress * 20 + 4))}%">
+                <span>${enemy.icon}</span>
+                <small>${enemy.tag}</small>
+                <i style="width:${Math.max(8, Math.min(100, (enemy.hp / enemy.maxHp) * 100))}%"></i>
+              </div>
             `).join('')}
           </div>
-          <div class="ps-citybonus-footer">
-            <span><b>Tujuan:</b> bangun seluruh kota sesuai urutan alur konsolidasi.</span>
-            <span><b>Catatan:</b> salah pilih bikin risiko naik, benar pilih bikin distrik jadi.</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="ps-td-wrap">
+        <div class="ps-td-hero">
+          <div>
+            <div class="ps-bonus3d-kicker">Bonus Level 4 • Tower Defense</div>
+            <h3>Pertahankan Kota Konsolidasi</h3>
+            <p>Kota Bogor sedang menyiapkan konsolidasi ATK. Gangguan seperti data belum sinkron, harga liar, penyedia belum siap, dokumen lemah, sampai katalog macet datang per gelombang. Pasang menara proses biar jalur e-Purchasing tetap aman.</p>
+          </div>
+          <div class="ps-td-stats">
+            <div class="ps-td-stat"><label>HP Kota</label><strong>${bonus.hp}</strong></div>
+            <div class="ps-td-stat"><label>Dana</label><strong>${bonus.money}</strong></div>
+            <div class="ps-td-stat"><label>Gelombang</label><strong>${Math.min(bonus.waveIndex + (bonus.phase === 'running' ? 0 : 1), bonus.maxWaves)}/${bonus.maxWaves}</strong></div>
+            <div class="ps-td-stat"><label>Bonus Poin</label><strong>${bonus.bonusScore}</strong></div>
           </div>
         </div>
-      </div>
 
-      ${GAME_STATE.progress >= 100 ? `
-        <div class="ps-explanation">
-          <strong>Bonus Level 4 selesai:</strong><br>
-          Kota Konsolidasi sudah berdiri dari identifikasi kebutuhan sampai e-Purchasing. Bonus poin ini ikut masuk skor akhir.
+        <div class="ps-td-toolbar">
+          ${towers.map(tower => `
+            <button type="button" class="ps-td-tower-btn ${bonus.selectedTower === tower.id ? 'active' : ''}" data-bonus-select-tower="${tower.id}">
+              <span>${tower.icon}</span>
+              <b>${escapeHtml(tower.label)}</b>
+              <small>${tower.desc}</small>
+              <em>Biaya ${tower.cost}</em>
+            </button>
+          `).join('')}
         </div>
-      ` : ''}
+
+        <div class="ps-td-stage">
+          ${lanesHtml}
+        </div>
+
+        <div class="ps-td-brief">
+          <div class="ps-explanation"><strong>PANJI:</strong> ${escapeHtml(bonus.summary)}</div>
+          <div class="ps-buttons">
+            <button type="button" class="ps-btn ps-btn-primary" id="btnBonusTdStart" ${bonus.phase === 'running' || bonus.finished ? 'disabled' : ''}>${bonus.waveIndex === 0 ? 'Mulai Gelombang 1' : bonus.waveIndex >= bonus.maxWaves ? 'Selesai' : 'Mulai Gelombang ' + (bonus.waveIndex + 1)}</button>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnBonusTdReset">Reset Bonus 4</button>
+          </div>
+        </div>
+
+        ${bonus.finished ? `
+          <div class="ps-explanation">
+            <strong>${bonus.phase === 'finished' ? 'Bonus Level 4 selesai:' : 'Pertahanan jebol:'}</strong><br>
+            ${escapeHtml(bonus.summary)}
+          </div>
+        ` : ''}
+      </div>
     `;
   }
 
   function answerBonusOpenWorld(payload, buttonEl) {
-    const bonus = getBonusOpenWorldState();
-    const [nodeId, choiceId] = String(payload || '').split('::');
-    const node = bonus.nodes.find(item => item.id === nodeId);
-    const choice = node && node.choices.find(item => item.id === choiceId);
-    if (!node || !choice || bonus.completed[nodeId]) return;
-
-    bonus.completed[nodeId] = true;
-    bonus.decisions[nodeId] = choice;
-
-    if (choice.good) {
-      GAME_STATE.score += 35;
-      GAME_STATE.correct += 1;
-      bonus.bonusScore += 35;
-      addLog('ok', `${node.title} aman`, choice.panji);
-      showToast('Pilihan bonus aman. +35', 'ok');
-      showPanji(choice.panji, 'happy');
-      flashScreen('ok');
-      popScore(buttonEl || document.body, '+35', 'ok');
-      spawnConfetti();
-    } else {
-      GAME_STATE.score = Math.max(0, GAME_STATE.score - 5);
-      GAME_STATE.risk += 8;
-      GAME_STATE.wrong += 1;
-      bonus.bonusScore = Math.max(0, bonus.bonusScore - 5);
-      addLog('bad', `${node.title} rawan`, choice.panji);
-      showToast('Jebakan bonus. Risiko +8', 'bad');
-      showPanji(choice.panji, 'sad');
-      flashScreen('bad');
-      popScore(buttonEl || document.body, '+8 Risiko', 'bad');
+    if (!payload) return;
+    if (String(payload).startsWith('slot::')) {
+      placeBonusOpenWorldTower(String(payload).replace('slot::', ''), buttonEl);
+      return;
     }
-
-    const completedCount = Object.keys(bonus.completed).length;
-    GAME_STATE.progress = Math.round((completedCount / bonus.nodes.length) * 100);
-
-    const nextNode = bonus.nodes.find(item => !bonus.completed[item.id]);
-    const finishedAll = !nextNode;
-    if (nextNode) {
-      bonus.activeNode = nextNode.id;
-    } else {
-      GAME_STATE.progress = 100;
-      GAME_STATE.score += 20;
-      addLog('ok', 'Bonus level 4 selesai', 'Kota konsolidasi selesai dibangun. Poin bonusnya sudah masuk ke nilai akhir.');
-      showPanji('Seluruh distrik selesai dibangun. Aku hitung poin bonus kota konsolidasimu, lalu kita lanjut ke level berikutnya.', 'happy');
-      showToast('Kota selesai dibangun. Bonus +' + bonus.bonusScore, 'ok');
+    if (String(payload).startsWith('tower::')) {
+      selectBonusOpenWorldTower(String(payload).replace('tower::', ''));
+      return;
     }
-
-    renderGame();
-    if (finishedAll) {
-      setTimeout(() => showBonusOpenWorldCompletePopup(bonus), 80);
+    if (payload === 'start-wave') {
+      startBonusOpenWorldWave();
+      return;
     }
-  }
-
-
-  function showBonusOpenWorldCompletePopup(bonus) {
-    if (document.getElementById('psBonus4FinishPopup')) return;
-    const goodCount = Object.values(bonus.decisions || {}).filter(item => item && item.good).length;
-    const total = bonus.nodes.length;
-    const analysis = goodCount >= 6
-      ? 'Gaya analisamu sudah cukup rapi. Kamu membangun kota dari data, pasar, dokumen, sampai transaksi tanpa banyak loncat tahapan.'
-      : 'Gaya analisamu masih rawan. Beberapa distrik sempat dibangun dengan keputusan yang kurang aman. Di PBJ, kota yang fondasinya salah bisa bikin risiko ikut naik.';
-    const overlay = document.createElement('div');
-    overlay.id = 'psBonus4FinishPopup';
-    overlay.className = 'ps-bonus4-finish-popup';
-    overlay.innerHTML = `
-      <div class="ps-bonus4-finish-card">
-        <div class="ps-bonus4-finish-orb">🏙️</div>
-        <h2>Kota Konsolidasi Selesai Dibangun!</h2>
-        <p><b>Poin Bonus:</b> ${Number(bonus.bonusScore || 0)} · <b>Keputusan aman:</b> ${goodCount}/${total}</p>
-        <div class="ps-bonus4-panji-note"><b>PANJI:</b> ${escapeHtml(analysis)} Kota konsolidasi berhasil dibangun, jadi kamu bisa lanjut ke level berikutnya.</div>
-        <small>Otomatis lanjut ke level berikutnya...</small>
-        <button type="button" class="ps-btn ps-btn-primary" id="btnBonus4GoNext">Lanjut sekarang</button>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    const go = () => {
-      overlay.remove();
-      if (getCurrentChallenge() && getCurrentChallenge().type === 'bonusOpenWorld' && GAME_STATE.progress === 100) {
-        nextChallenge();
-      }
-    };
-    document.getElementById('btnBonus4GoNext')?.addEventListener('click', go);
-    setTimeout(go, 4200);
+    if (payload === 'reset-bonus') {
+      resetBonusOpenWorld();
+      return;
+    }
   }
 
   function createBonusSnakeState() {
@@ -4336,20 +4439,7 @@
 
     root.querySelectorAll('[data-bonus-node]').forEach(button => {
       button.addEventListener('click', () => {
-        const bonus = GAME_STATE.bonusOpenWorld;
-        if (!bonus) return;
-        const order = bonus.nodes.map(node => node.id);
-        const targetId = button.dataset.bonusNode;
-        const targetIndex = order.indexOf(targetId);
-        const completedCount = Object.keys(bonus.completed).length;
-        if (targetIndex > completedCount) {
-          showPanji('Belum bisa lompat ke quest itu. Bonus level 4 ini story line, jadi jalannya harus berurutan dulu.', 'sad');
-          showToast('Quest masih terkunci', 'bad');
-          return;
-        }
-        bonus.activeNode = targetId;
-        renderGame();
-        showPanji('Quest dipilih. Baca pilihan pelan-pelan ya, karena opsi diacak dan ada jebakan.', 'thinking');
+        answerBonusOpenWorld(button.dataset.bonusNode, button);
       });
     });
 
@@ -4358,6 +4448,32 @@
         answerBonusOpenWorld(button.dataset.bonusChoice, button);
       });
     });
+
+    root.querySelectorAll('[data-bonus-select-tower]').forEach(button => {
+      button.addEventListener('click', () => {
+        answerBonusOpenWorld('tower::' + button.dataset.bonusSelectTower, button);
+      });
+    });
+
+    root.querySelectorAll('[data-bonus-tower-slot]').forEach(button => {
+      button.addEventListener('click', () => {
+        answerBonusOpenWorld('slot::' + button.dataset.bonusTowerSlot, button);
+      });
+    });
+
+    const btnBonusTdStart = root.querySelector('#btnBonusTdStart');
+    if (btnBonusTdStart) {
+      btnBonusTdStart.addEventListener('click', () => {
+        answerBonusOpenWorld('start-wave', btnBonusTdStart);
+      });
+    }
+
+    const btnBonusTdReset = root.querySelector('#btnBonusTdReset');
+    if (btnBonusTdReset) {
+      btnBonusTdReset.addEventListener('click', () => {
+        answerBonusOpenWorld('reset-bonus', btnBonusTdReset);
+      });
+    }
 
     const btnSnakeBriefStart = root.querySelector('#btnSnakeBriefStart');
     if (btnSnakeBriefStart) {
