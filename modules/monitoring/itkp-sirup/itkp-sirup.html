@@ -307,8 +307,18 @@
                 <th>Swakelola</th>
                 <th>Total RUP</th>
                 <th>Total Komitmen</th>
-                <th>Prosentase</th>
-                <th>Nilai ITKP</th>
+                <th>
+                  <button type="button" class="table-sort-btn" id="btnSortPersentase">
+                    Prosentase
+                    <span class="sort-indicator">↕</span>
+                  </button>
+                </th>
+                <th>
+                  <button type="button" class="table-sort-btn" id="btnSortNilaiItkp">
+                    Nilai ITKP
+                    <span class="sort-indicator">↕</span>
+                  </button>
+                </th>
                 <th>Aksi</th>
               </tr>
             </thead>
@@ -450,6 +460,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="./itkp-sirup.js"></script>
 </body>
 </html>
