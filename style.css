@@ -158,8 +158,7 @@ textarea{
   gap:8px;
   flex:1;
   min-height:0;
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow:visible;
   padding-right:4px;
 }
 
@@ -417,7 +416,7 @@ textarea{
 .content-area{
   flex:1;
   min-width:0;
-  overflow:auto;
+  overflow:visible;
   padding:4px;
 }
 
@@ -2343,4 +2342,112 @@ textarea{
 
 .small-metric-percent{
   font-weight:950 !important;
+}
+
+
+/* Revision v4 */
+.app-shell{
+  align-items:flex-start;
+}
+
+.stat-card--lux{
+  padding:18px 18px 16px;
+}
+
+.stat-card-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.stat-card--lux .stat-icon{
+  margin-bottom:0 !important;
+  width:40px;
+  height:40px;
+  flex-shrink:0;
+}
+
+.stat-card--lux .label{
+  margin-bottom:0 !important;
+  font-size:18px !important;
+  font-weight:950 !important;
+  line-height:1.05;
+  letter-spacing:.02em !important;
+  color:#ffffff !important;
+}
+
+.stat-card--lux .value{
+  font-size:23px !important;
+  line-height:1.05;
+  margin-top:4px;
+}
+
+.stat-card--lux .desc{
+  margin-top:8px;
+  font-size:16px !important;
+  line-height:1.35 !important;
+  font-weight:400 !important;
+  color:rgba(255,255,255,.92) !important;
+}
+
+.stat-card--danger .desc,
+.stat-card--danger .label,
+.stat-card--warning .desc,
+.stat-card--warning .label,
+.stat-card--success .desc,
+.stat-card--success .label{
+  color:#fff !important;
+}
+
+.soft-pill--danger{
+  background:#fee2e2;
+  color:#b91c1c;
+  border-color:#fecaca;
+}
+
+.soft-pill--warning{
+  background:#fef3c7;
+  color:#b45309;
+  border-color:#fde68a;
+}
+
+.soft-pill--success{
+  background:#dcfce7;
+  color:#15803d;
+  border-color:#86efac;
+}
+
+.small-metric-percent{
+  margin-top:8px;
+  font-size:14px;
+  font-weight:950;
+}
+
+.small-metric-track{
+  margin-top:8px;
+  height:7px;
+  background:#dbe4ee;
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.small-metric-bar{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+}
+
+.small-metric b{
+  font-size:20px;
+}
+
+.small-metric span{
+  font-size:16px;
+  font-weight:950;
+}
+
+.small-metric small{
+  font-size:13px;
+  font-weight:400;
 }
