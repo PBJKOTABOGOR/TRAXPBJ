@@ -1084,7 +1084,7 @@ function renderSmallMetric(label, value, desc, percent = 0) {
       <span>${escapeHtml(label)}</span>
       <small>${escapeHtml(desc)}</small>
       <div class="small-metric-percent">${percent.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</div>
-      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:${Math.max(0, Math.min(100, percent))}%; min-width:${percent > 0 ? '18px' : '0'}"></span></div>
+      <div class="small-metric-track"><span class="small-metric-bar small-metric-bar--${tone}" style="width:${Math.max(0, Math.min(100, percent))}%"></span></div>
     </div>
   `;
 }
