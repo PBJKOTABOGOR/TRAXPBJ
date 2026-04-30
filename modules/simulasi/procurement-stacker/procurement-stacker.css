@@ -5667,3 +5667,97 @@
   .ps-tree-player.left{left:calc(50% - 205px) !important}
   .ps-tree-player.right{right:calc(50% - 205px) !important}
 }
+
+
+/* v8 tweaks: pipeline helper row moved under content on pipeline level + tree power boost */
+.ps-helper-row-pipeline{
+  margin-top:18px;
+  margin-bottom:6px;
+  border:1px solid #dbeafe;
+  border-radius:22px;
+  background:linear-gradient(180deg,#f8fbff 0%, #ffffff 100%);
+  padding:14px 16px;
+}
+
+.ps-tree-score-row-4{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
+.ps-tree-power-tip{
+  margin-top:12px;
+  transition:.2s ease;
+}
+
+.ps-tree-power-tip.ready{
+  border-color:#fde68a !important;
+  background:linear-gradient(180deg,#fff7d6,#fffbeb) !important;
+}
+
+.ps-tree-power-tip.active{
+  border-color:#86efac !important;
+  background:linear-gradient(180deg,#dcfce7,#ecfccb) !important;
+  box-shadow:0 12px 26px rgba(34,197,94,.14);
+}
+
+.ps-tree-power-ready{color:#b45309 !important;}
+.ps-tree-power-on{color:#15803d !important;}
+
+.ps-tree-scene.power-active{
+  box-shadow:0 0 0 3px rgba(34,197,94,.18), 0 18px 48px rgba(34,197,94,.14);
+}
+
+.ps-tree-power-badge{
+  position:absolute;
+  top:42px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:4;
+  padding:10px 16px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:#fff;
+  font-weight:900;
+  letter-spacing:.06em;
+  box-shadow:0 12px 26px rgba(34,197,94,.22);
+  animation:psTreePowerPulse .7s infinite alternate;
+}
+
+.ps-tree-power-orb{
+  position:absolute;
+  top:130px;
+  z-index:4;
+  width:96px;
+  height:96px;
+  border-radius:999px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  color:#fff;
+  background:radial-gradient(circle at 30% 30%, #fde68a, #f59e0b 62%, #d97706 100%);
+  box-shadow:0 16px 28px rgba(245,158,11,.28);
+  border:3px solid rgba(255,255,255,.76);
+  pointer-events:none;
+  animation:psTreePowerFloat 1s ease-in-out infinite alternate;
+}
+
+.ps-tree-power-orb.left{left:calc(50% - 285px);}
+.ps-tree-power-orb.right{right:calc(50% - 285px);}
+.ps-tree-power-orb span{font-size:34px;line-height:1;}
+.ps-tree-power-orb small{font-size:11px;font-weight:900;letter-spacing:.08em;}
+
+@keyframes psTreePowerPulse{
+  from{transform:translateX(-50%) scale(1);}
+  to{transform:translateX(-50%) scale(1.05);}
+}
+
+@keyframes psTreePowerFloat{
+  from{transform:translateY(0);}to{transform:translateY(-8px);}
+}
+
+@media (max-width: 860px){
+  .ps-tree-score-row-4{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .ps-tree-power-orb.left{left:12px;}
+  .ps-tree-power-orb.right{right:12px;}
+}
