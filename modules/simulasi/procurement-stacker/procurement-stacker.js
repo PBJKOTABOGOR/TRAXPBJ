@@ -1503,20 +1503,27 @@
         if (GAME_STATE.stage === 'result' || GAME_STATE.finished) {
           PLAYER_STATE.lastSaveMessage = 'Nama pemain tersimpan. Sekarang tulis pengalaman mainmu di kotak bawah, lalu kirim ke leaderboard.';
           renderLeaderboardModalContent();
-        } else {
-          closeLeaderboardModal();
-
-          if (!GAME_STATE.current || GAME_STATE.stage === 'ready') {
-            showPanji('Data pemain sudah tersimpan. Sekarang PANJI mulai perkenalan dulu, lalu kita masuk ke soal pertama.', 'happy');
-            setTimeout(() => {
-              if (!destroyed) startGame();
-            }, 650);
-          } else {
-            showPanjiHowToPlayAfterPlayerSaved();
-          }
+          return;
         }
 
-        renderLeaderboardModalContent();
+        closeLeaderboardModal();
+        leaderboardModalEl?.classList.add('ps-hidden');
+
+        if (!GAME_STATE.current || GAME_STATE.stage === 'ready') {
+          GAME_STATE.stage = 'ready';
+          GAME_STATE.finished = false;
+          showPanji('Data pemain sudah tersimpan. Sekarang PANJI mulai perkenalan dulu, lalu kita masuk ke soal pertama.', 'happy');
+          setTimeout(() => {
+            if (!destroyed) {
+              closeLeaderboardModal();
+              startGame();
+            }
+          }, 450);
+        } else {
+          showPanjiHowToPlayAfterPlayerSaved();
+        }
+
+        return;
       });
     }
 
