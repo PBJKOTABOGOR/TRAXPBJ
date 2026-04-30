@@ -1045,7 +1045,8 @@
     loadingLeaderboard: false,
     savingScore: false,
     lastSaveMessage: '',
-    feedback: ''
+    feedback: '',
+    feedbackDraft: ''
   };
 
   function escapeHtml(value) {
@@ -1435,6 +1436,11 @@
     const content = leaderboardModalEl.querySelector('#psLeaderboardContent');
     if (!content) return;
 
+    const existingFeedbackEl = content.querySelector('[name="finalFeedback"]');
+    if (existingFeedbackEl) {
+      PLAYER_STATE.feedbackDraft = existingFeedbackEl.value || PLAYER_STATE.feedbackDraft || '';
+    }
+
     const activeTab = leaderboardModalEl.dataset.activeTab || 'player';
     const result = getCurrentResultSummary();
     const isResult = GAME_STATE.stage === 'result' || GAME_STATE.finished;
@@ -1504,6 +1510,7 @@
         PLAYER_STATE.feedback = String(feedback || '').trim();
         savePlayerProfile(nama, instansi);
         PLAYER_STATE.lastSaveMessage = 'Data pemain tersimpan. Silakan lanjut main.';
+        PLAYER_STATE.feedbackDraft = PLAYER_STATE.feedbackDraft || PLAYER_STATE.feedback || '';
 
         if (GAME_STATE.stage === 'result' || GAME_STATE.finished) {
           PLAYER_STATE.lastSaveMessage = 'Nama pemain tersimpan. Sekarang tulis pengalaman mainmu di kotak bawah, lalu kirim ke leaderboard.';
@@ -1535,10 +1542,17 @@
 
     const feedbackForm = content.querySelector('#psFinalFeedbackForm');
     if (feedbackForm) {
+      const feedbackInput = feedbackForm.querySelector('[name="finalFeedback"]');
+      if (feedbackInput) {
+        feedbackInput.addEventListener('input', () => {
+          PLAYER_STATE.feedbackDraft = feedbackInput.value || '';
+        });
+      }
       feedbackForm.addEventListener('submit', event => {
         event.preventDefault();
         const feedback = feedbackForm.querySelector('[name="finalFeedback"]')?.value || '';
         PLAYER_STATE.feedback = String(feedback || '').trim();
+        PLAYER_STATE.feedbackDraft = PLAYER_STATE.feedback;
         localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify({
           nama: PLAYER_STATE.nama,
           instansi: PLAYER_STATE.instansi,
@@ -1573,7 +1587,7 @@
           <strong>Ceritain pengalaman mainmu</strong>
           <p>Nanti masuk ke sheet bareng nama, skor, risiko, dan analisa PANJI. Bisa dipakai buat munculin bubble testimoni di halaman game.</p>
         </div>
-        <textarea name="finalFeedback" rows="3" placeholder="Contoh: level snake lucu, tapi evaluator battle bikin mikir.">${escapeHtml(PLAYER_STATE.feedback || '')}</textarea>
+        <textarea name="finalFeedback" rows="3" placeholder="Contoh: level snake lucu, tapi evaluator battle bikin mikir.">${escapeHtml(PLAYER_STATE.feedbackDraft || PLAYER_STATE.feedback || '')}</textarea>
         <button type="submit" class="ps-btn ps-btn-primary">Kirim Skor & Pengalaman</button>
       </form>
     `;
