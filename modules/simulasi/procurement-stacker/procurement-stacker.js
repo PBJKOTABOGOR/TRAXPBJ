@@ -39,6 +39,8 @@
   let psAudioCtx = null;
   let psMusicTimer = null;
   let psMusicOn = false;
+  let psMusicBeatMs = 360;
+  let psMusicBeatFn = null;
 
 
   let bonusSnakeTimer = null;
@@ -2210,12 +2212,23 @@
     playTone(420, 0.08, 'sine', 0.025);
   }
 
+  function restartGameMusicTimer() {
+    if (!psMusicOn || !psMusicBeatFn) return;
+    if (psMusicTimer) clearInterval(psMusicTimer);
+    psMusicTimer = setInterval(psMusicBeatFn, psMusicBeatMs);
+  }
+
+  function setGameMusicTempo(ms = 360) {
+    const nextMs = Math.max(180, Number(ms || 360));
+    if (psMusicBeatMs === nextMs) return;
+    psMusicBeatMs = nextMs;
+    restartGameMusicTimer();
+  }
+
   function startGameMusic() {
     if (psMusicOn) return;
     psMusicOn = true;
 
-    // Musik retro happy ringan, dibuat dari WebAudio supaya tidak perlu file mp3.
-    // Browser baru akan mengizinkan suara setelah user klik/tekan tombol.
     const melody = [523, 659, 784, 659, 698, 880, 784, 659, 587, 698, 784, 988, 880, 784, 659, 523];
     const bass = [131, 131, 196, 196, 147, 147, 196, 196];
     let beat = 0;
@@ -2234,8 +2247,9 @@
       beat += 1;
     };
 
+    psMusicBeatFn = playBeat;
     playBeat();
-    psMusicTimer = setInterval(playBeat, 360);
+    restartGameMusicTimer();
   }
 
   function showToast(message, type = 'info') {
@@ -2897,6 +2911,12 @@
     }
 
     renderGame();
+
+    if (GAME_STATE.index >= 8) {
+      setGameMusicTempo(250);
+    } else {
+      setGameMusicTempo(360);
+    }
 
     const pauseForPipelineTutorial = challenge.type === 'pipeline' && !GAME_STATE.pipelineTutorialSeen && getCurrentLevelNumber() === 1;
     if (challenge.type !== 'tenderRush' && challenge.type !== 'bonusOpenWorld' && challenge.type !== 'bonusSnake' && challenge.type !== 'bonusTree' && !pauseForPipelineTutorial) {
@@ -4331,7 +4351,7 @@
       score: 0,
       hearts: 3,
       timeLeft: 25,
-      obstacleQueue: [null, 'right', null, null, 'left', null, 'right', null],
+      obstacleQueue: [null, null, 'right', null, null, 'left', null, null, 'right', null],
       activeTip: 'Klik kiri atau kanan. Kalau akar muncul di sisi tempat kamu berdiri, nyawa berkurang.',
       timerId: null
     };
@@ -4360,7 +4380,7 @@
         <div class="ps-tree-info">
           <div class="ps-bonus3d-kicker">Bonus Level 10 • Reflex Arcade</div>
           <h3>PANJI Tree Chop 2D</h3>
-          <p>Klik <b>Kiri</b> atau <b>Kanan</b> untuk menebang batang. Akar pohon akan muncul acak di salah satu sisi. Kalau kamu berdiri di sisi yang kena akar, nyawa berkurang.</p>
+          <p>Klik <b>Kiri</b> atau <b>Kanan</b> untuk menebang batang. Di keyboard pakai <b>A</b> untuk kiri dan <b>D</b> untuk kanan. Kalau di HP, cukup tap sisi kiri atau sisi kanan area game. Akar pohon akan muncul acak di salah satu sisi. Kalau kamu berdiri di sisi yang kena akar, nyawa berkurang.</p>
           <div class="ps-snake-score-row ps-tree-score-row">
             <div><label>Skor</label><b>${tree.score}</b></div>
             <div><label>Nyawa</label><b>${'❤️'.repeat(Math.max(0, tree.hearts || 0)) || '0'}</b></div>
@@ -4386,10 +4406,12 @@
                 </div>
               `).join('')}
             </div>
+            <button type="button" class="ps-tree-touch-zone left" id="btnTreeTapLeft" aria-label="Tap kiri"></button>
+            <button type="button" class="ps-tree-touch-zone right" id="btnTreeTapRight" aria-label="Tap kanan"></button>
             <div class="ps-tree-player ${tree.side} ${tree.chopFlash ? 'chop-' + tree.chopFlash : ''}"><span>PANJI</span></div><div class="ps-tree-score-pop ${tree.comboFx ? 'show' : ''}">+1</div>
             <div class="ps-tree-ground"></div>
           </div>
-          <div class="ps-snake-caption">A / ← = kiri · D / → = kanan · Waktu habis = bonus selesai</div>
+          <div class="ps-snake-caption">A / ← = kiri · D / → = kanan · HP: tap layar kiri / kanan · Waktu habis = bonus selesai</div>
         </div>
       </div>
       ${tree.finished ? `<div class="ps-explanation"><strong>Bonus Tebang Pohon selesai:</strong><br>Skor kamu ${tree.score}. Bonus masuk nilai akhir dan game lanjut otomatis.</div>` : ''}
@@ -4424,7 +4446,7 @@
     const tree = getBonusTreeState();
     tree.obstacleQueue.shift();
     const roll = Math.random();
-    tree.obstacleQueue.push(roll < 0.22 ? 'left' : roll < 0.44 ? 'right' : null);
+    tree.obstacleQueue.push(roll < 0.18 ? 'left' : roll < 0.36 ? 'right' : null);
   }
 
   function chopBonusTree(side) {
@@ -4435,6 +4457,7 @@
     tree.lastHitAt = Date.now();
     const danger = tree.obstacleQueue[0];
     playTone(side === 'left' ? 260 : 320, 0.05, 'square', 0.03);
+    setTimeout(() => { const t = getBonusTreeState(); t.chopFlash = ''; renderGame(); }, 120);
     if (danger === side) {
       tree.hearts -= 1;
       playSfx('bad');
@@ -5307,6 +5330,26 @@
     root.querySelector('#btnTreeLeft')?.addEventListener('click', () => chopBonusTree('left'));
     root.querySelector('#btnTreeRight')?.addEventListener('click', () => chopBonusTree('right'));
     root.querySelector('#btnResetTree')?.addEventListener('click', () => resetBonusTree());
+
+    root.querySelector('#btnTreeTapLeft')?.addEventListener('click', () => chopBonusTree('left'));
+    root.querySelector('#btnTreeTapRight')?.addEventListener('click', () => chopBonusTree('right'));
+
+    if (!window.__psTreeKeyBound) {
+      window.__psTreeKeyBound = event => {
+        const current = getCurrentChallenge && getCurrentChallenge();
+        if (!current || current.type !== 'bonusTree') return;
+        const key = String(event.key || '').toLowerCase();
+        if (key === 'a' || key === 'arrowleft') {
+          event.preventDefault();
+          chopBonusTree('left');
+        }
+        if (key === 'd' || key === 'arrowright') {
+          event.preventDefault();
+          chopBonusTree('right');
+        }
+      };
+      document.addEventListener('keydown', window.__psTreeKeyBound);
+    }
 
     const btnStartSnake = root.querySelector('#btnStartSnake');
     if (btnStartSnake) {
