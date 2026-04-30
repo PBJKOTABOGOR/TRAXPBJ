@@ -1513,12 +1513,8 @@
           GAME_STATE.stage = 'ready';
           GAME_STATE.finished = false;
           showPanji('Data pemain sudah tersimpan. Sekarang PANJI mulai perkenalan dulu, lalu kita masuk ke soal pertama.', 'happy');
-          setTimeout(() => {
-            if (!destroyed) {
-              closeLeaderboardModal();
-              startGame();
-            }
-          }, 450);
+          closeLeaderboardModal();
+          startGame();
         } else {
           showPanjiHowToPlayAfterPlayerSaved();
         }
