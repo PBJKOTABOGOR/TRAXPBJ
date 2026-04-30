@@ -43,6 +43,8 @@
 
   let bonusSnakeTimer = null;
   let bonusSnakeKeyHandler = null;
+  let pipelineIdleTimer = null;
+  let pipelineHintPulseTimer = null;
   let bonusZumaFrame = null;
   let bonusZumaResizeHandler = null;
   let bonusZumaKeyHandler = null;
@@ -1515,6 +1517,11 @@
           showPanji('Data pemain sudah tersimpan. Sekarang PANJI mulai perkenalan dulu, lalu kita masuk ke soal pertama.', 'happy');
           closeLeaderboardModal();
           startGame();
+          setTimeout(() => {
+            if (GAME_STATE.stage !== 'ready' && GAME_STATE.current) {
+              renderGame();
+            }
+          }, 0);
         } else {
           showPanjiHowToPlayAfterPlayerSaved();
         }
