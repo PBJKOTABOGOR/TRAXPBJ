@@ -5618,3 +5618,52 @@
   .ps-tree-player.left{left:calc(50% - 190px) !important}
   .ps-tree-player.right{right:calc(50% - 190px) !important}
 }
+
+
+/* ===== Revisi v6: Bonus 10 lebih lega seperti referensi ===== */
+.ps-tree-scene{
+  min-height:700px !important;
+}
+.ps-tree-timer-bar{top:14px !important;left:14px !important;right:14px !important;height:12px !important;}
+.ps-tree-trunk{
+  top:70px !important;
+  bottom:92px !important;
+  width:180px !important;
+}
+.ps-tree-log-row{
+  bottom:calc(var(--row) * 92px) !important;
+}
+.ps-tree-log{
+  height:82px !important;
+  border-radius:26px !important;
+}
+.ps-tree-root{
+  top:26px !important;
+  width:146px !important;
+  height:24px !important;
+}
+.ps-tree-root.left{right:138px !important}
+.ps-tree-root.right{left:138px !important}
+.ps-tree-player{
+  bottom:74px !important;
+}
+.ps-tree-player.left{left:calc(50% - 245px) !important}
+.ps-tree-player.right{right:calc(50% - 245px) !important}
+.ps-tree-touch-zone{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:38%;
+  background:transparent;
+  border:0;
+  z-index:3;
+}
+.ps-tree-touch-zone.left{left:0;}
+.ps-tree-touch-zone.right{right:0;}
+.ps-tree-touch-zone:active{background:rgba(255,255,255,.05);}
+@media(max-width:980px){
+  .ps-tree-scene{min-height:620px !important;}
+  .ps-tree-log-row{bottom:calc(var(--row) * 82px) !important;}
+  .ps-tree-player.left{left:calc(50% - 205px) !important}
+  .ps-tree-player.right{right:calc(50% - 205px) !important}
+}
