@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIPPBJ - Dashboard</title>
+  <title>SIPPBJ - Dashboard PBJ Kota Bogor</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,11 +19,13 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand-block">
         <div class="brand-left">
-          <div class="brand-logo">TP</div>
+           <div class="brand-logo brand-logo-img">
+  <img src="assets/logo-sippbj.png" alt="SIPPBJ">
+</div>
 
           <div class="brand-text">
             <h1>SIPPBJ</h1>
-            <p>Simulasi &amp; Monitoring PBJ</p>
+            <p>Dashboard Monitoring</p>
           </div>
         </div>
 
@@ -61,7 +63,7 @@
             <button class="submenu-link" type="button" data-page="monitoring-ekatalog">eKatalog</button>
             <button class="submenu-link" type="button" data-page="monitoring-etendering">eTendering</button>
             <button class="submenu-link" type="button" data-page="monitoring-ekontrak">eKontrak</button>
-            <button class="submenu-link" type="button" data-page="monitoring-nontender">Non Tender</button>
+            <button class="submenu-link" type="button" data-page="monitoring-nontender">Non eTendering / Non ePurchasing</button>
           </div>
         </div>
 
@@ -120,7 +122,8 @@
 
     <main class="content-area" id="contentArea"></main>
   </div>
-
-  <script src="app.js"></script>
+  
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
