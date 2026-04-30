@@ -1,130 +1,106 @@
-body.app-is-loading{
-  cursor:wait;
+:root{
+  --bg:#eef4fb;
+  --bg-2:#f8fbff;
+  --card:#ffffff;
+  --line:#dbe5f0;
+  --text:#122033;
+  --muted:#64748b;
+  --navy:#123a72;
+  --navy2:#245a9b;
+  --teal:#0f766e;
+  --danger:#b91c1c;
+  --warning:#9a6100;
+  --success:#16a34a;
+  --shadow-lg:0 18px 40px rgba(15,23,42,.10);
+  --shadow-sm:0 6px 18px rgba(15,23,42,.06);
+  --radius:24px;
 }
 
-body.app-is-loading .sidebar,
-body.app-is-loading .content-area{
-  user-select:none;
+*{
+  box-sizing:border-box;
 }
 
-.initial-boot-overlay{
-  position:fixed;
-  inset:0;
-  z-index:999999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-  background:linear-gradient(180deg, rgba(238,244,251,.72), rgba(232,240,251,.84));
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transition:opacity .22s ease, visibility .22s ease;
-}
-
-.initial-boot-overlay.show{
-  opacity:1;
-  visibility:visible;
-  pointer-events:auto;
-}
-
-.initial-boot-card{
-  width:min(100%, 560px);
-  border-radius:28px;
-  padding:26px 24px;
-  background:linear-gradient(135deg,#102544 0%, #123a72 48%, #245a9b 78%, #0f766e 100%);
-  border:1px solid rgba(255,255,255,.18);
-  box-shadow:0 30px 80px rgba(15,23,42,.24);
-  color:#fff;
-}
-
-.initial-boot-topline{
-  display:inline-flex;
-  align-items:center;
-  min-height:28px;
-  padding:0 12px;
-  border-radius:999px;
-  background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.16);
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:#dbeafe;
-}
-
-.initial-boot-title{
-  margin-top:16px;
-  font-size:28px;
-  line-height:1.1;
-  font-weight:950;
-  color:#fff;
-}
-
-.initial-boot-subtitle{
-  margin-top:10px;
+html{
+  margin:0;
+  padding:0;
+  min-height:100%;
+  font-family:"Inter","Segoe UI",Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top right, rgba(15,118,110,.08), transparent 28%),
+    linear-gradient(180deg,#f8fbff 0%,#eef4fb 100%);
   font-size:14px;
-  line-height:1.7;
-  color:rgba(255,255,255,.86);
 }
 
-.initial-boot-progress-row{
-  margin-top:22px;
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:12px;
-  align-items:center;
+body{
+  margin:0;
+  padding:0;
+  min-height:100%;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top right, rgba(15,118,110,.08), transparent 28%),
+    linear-gradient(180deg,#f8fbff 0%,#eef4fb 100%);
+  zoom:.75;
 }
 
-.initial-boot-progress-track{
-  height:16px;
-  border-radius:999px;
-  background:rgba(255,255,255,.16);
-  overflow:hidden;
-  box-shadow:inset 0 1px 3px rgba(15,23,42,.18);
+button,
+input,
+select,
+textarea{
+  font:inherit;
 }
 
-.initial-boot-progress-fill{
+a{
+  color:inherit;
+}
+
+img{
+  max-width:100%;
   display:block;
-  height:100%;
-  width:0%;
-  border-radius:inherit;
-  background:linear-gradient(90deg,#ffffff 0%, #9ae6ff 40%, #5eead4 100%);
-  transition:width .22s ease;
 }
 
-.initial-boot-progress-text{
-  min-width:58px;
-  text-align:right;
-  font-size:22px;
-  line-height:1;
-  font-weight:950;
-  color:#fff;
+/* =========================================================
+   APP SHELL
+   ========================================================= */
+
+.app-shell{
+  display:flex;
+  min-height:100vh;
+  gap:12px;
+  padding:10px;
+  align-items:flex-start;
 }
 
-@media (max-width:900px){
-  .initial-boot-card{
-    padding:22px 18px;
-    border-radius:24px;
-  }
-
-  .initial-boot-title{
-    font-size:24px;
-  }
-
-  .initial-boot-subtitle{
-    font-size:13px;
-  }
-
-  .initial-boot-progress-row{
-    grid-template-columns:1fr;
-  }
-
-  .initial-boot-progress-text{
-    min-width:0;
-    text-align:left;
-    font-size:20px;
-  }
+.app-shell .sidebar{
+  width:252px;
+  flex-shrink:0;
+  position:sticky;
+  top:10px;
+  min-height:calc(100vh - 20px);
+  height:auto;
+  align-self:flex-start;
+  padding:10px;
+  background:rgba(255,255,255,.82);
+  border:1px solid rgba(255,255,255,.65);
+  box-shadow:0 18px 50px rgba(15,23,42,.08);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border-radius:26px;
+  transition:
+    width .25s ease,
+    padding .25s ease,
+    background .25s ease,
+    box-shadow .25s ease;
+  overflow:visible;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
 }
+
+.app-shell .sidebar.collapsed{
+  width:78px;
+  padding:10px 8px;
+}
+
+.brand-block{
+  display
