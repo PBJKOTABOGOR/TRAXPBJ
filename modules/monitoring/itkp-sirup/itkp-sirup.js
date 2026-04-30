@@ -829,7 +829,9 @@
       return;
     }
 
-    const safeFilename = String(filename || 'export-data.xlsx').replace(/\.csv$/i, '.xlsx').replace(/\.xls$/i, '.xlsx');
+    const safeFilename = String(filename || 'export-data.xlsx')
+      .replace(/\.csv$/i, '.xlsx')
+      .replace(/\.xls$/i, '.xlsx');
 
     const cleanRows = rows.map(row => {
       const obj = {};
@@ -889,7 +891,11 @@
       return;
     }
 
-    const safeName = APP_STATE.selectedOpd.toLowerCase().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
+    const safeName = APP_STATE.selectedOpd
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/gi, '_')
+      .replace(/^_+|_+$/g, '');
+
     exportRows(APP_STATE.selectedRawRows, `detail_paket_${safeName}.xlsx`);
   }
 
@@ -952,38 +958,73 @@
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
-  function sum(arr) { return arr.reduce((acc, val) => acc + Number(val || 0), 0); }
-  function uniqueSorted(arr) { return [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')); }
-  function formatNumber(value) { return Number(value || 0).toLocaleString('id-ID'); }
-  function formatTableNumber(value) { return Number(value || 0).toLocaleString('id-ID'); }
-  function formatCurrency(value) { return 'Rp' + Number(value || 0).toLocaleString('id-ID'); }
+  function sum(arr) {
+    return arr.reduce((acc, val) => acc + Number(val || 0), 0);
+  }
+
+  function uniqueSorted(arr) {
+    return [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
+  }
+
+  function formatNumber(value) {
+    return Number(value || 0).toLocaleString('id-ID');
+  }
+
+  function formatTableNumber(value) {
+    return Number(value || 0).toLocaleString('id-ID');
+  }
+
+  function formatCurrency(value) {
+    return 'Rp' + Number(value || 0).toLocaleString('id-ID');
+  }
 
   function formatShortCurrency(value) {
     const num = Number(value || 0);
 
     if (num >= 1_000_000_000_000) {
-      return 'Rp' + (num / 1_000_000_000_000).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' T';
+      return 'Rp' + (num / 1_000_000_000_000).toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      }) + ' T';
     }
+
     if (num >= 1_000_000_000) {
-      return 'Rp' + (num / 1_000_000_000).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' M';
+      return 'Rp' + (num / 1_000_000_000).toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      }) + ' M';
     }
+
     if (num >= 1_000_000) {
-      return 'Rp' + (num / 1_000_000).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' Jt';
+      return 'Rp' + (num / 1_000_000).toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      }) + ' Jt';
     }
 
     return 'Rp' + num.toLocaleString('id-ID');
   }
 
   function formatPercent(value) {
-    return Number(value || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return Number(value || 0).toLocaleString('id-ID', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   }
 
   function formatDecimal(value) {
-    return Number(value || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return Number(value || 0).toLocaleString('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
   }
 
   function normalizeOpdName(value) {
-    return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .replace(/[^\w\s]/g, '');
   }
 
   function escapeHtml(value) {
@@ -993,6 +1034,10 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value);
   }
 
   async function initMonitoringSirup() {
@@ -1045,7 +1090,10 @@
       APP_STATE.detailPage = 1;
 
       if (APP_STATE.selectedOpd) {
-        const stillExists = APP_STATE.scoreSirup.some(row => normalizeOpdName(row.satuan_kerja) === normalizeOpdName(APP_STATE.selectedOpd));
+        const stillExists = APP_STATE.scoreSirup.some(row =>
+          normalizeOpdName(row.satuan_kerja) === normalizeOpdName(APP_STATE.selectedOpd)
+        );
+
         if (!stillExists) {
           APP_STATE.selectedOpd = '';
           APP_STATE.selectedRawRows = [];
@@ -1104,9 +1152,11 @@
     on(EL.btnShowItkp10, 'click', () => openModal('itkp10'));
     on(EL.btnShowBelow10, 'click', () => openModal('below10'));
     on(EL.btnCloseModal, 'click', closeModal);
+
     on(EL.opdModal, 'click', event => {
       if (event.target === EL.opdModal) closeModal();
     });
+
     on(document, 'keydown', event => {
       if (event.key === 'Escape') closeModal();
     });
@@ -1117,7 +1167,11 @@
     APP_STATE.initialized = false;
 
     listeners.splice(0).forEach(off => {
-      try { off(); } catch (err) { console.warn('Gagal melepas listener lama:', err); }
+      try {
+        off();
+      } catch (err) {
+        console.warn('Gagal melepas listener lama:', err);
+      }
     });
 
     EL = getElements();
@@ -1128,7 +1182,11 @@
       APP_STATE.destroyed = true;
 
       listeners.splice(0).forEach(off => {
-        try { off(); } catch (err) { console.warn('Gagal cleanup listener:', err); }
+        try {
+          off();
+        } catch (err) {
+          console.warn('Gagal cleanup listener:', err);
+        }
       });
 
       APP_STATE.initialized = false;
