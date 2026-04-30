@@ -949,7 +949,8 @@
       CHALLENGE_RAW[6],
       BONUS_LEVEL_10_TREE,
       CHALLENGE_RAW[7],
-      rushTemplate ? cloneTenderRushChallenge(rushTemplate, 11, 1) : CHALLENGE_RAW[2],
+      CHALLENGE_RAW[8],
+      rushTemplate ? cloneTenderRushChallenge(rushTemplate, 12, 1) : CHALLENGE_RAW[2],
       miniCompetitionPipeline,
       miniCompetitionQuiz
     ].filter(Boolean);
@@ -1514,7 +1515,7 @@
         if (!GAME_STATE.current || GAME_STATE.stage === 'ready') {
           GAME_STATE.stage = 'ready';
           GAME_STATE.finished = false;
-          showPanji('Data pemain sudah tersimpan. Sekarang PANJI mulai perkenalan dulu, lalu kita masuk ke soal pertama.', 'happy');
+          showPanji('Data pemain sudah tersimpan. Sekarang PANJI mulai perkenalan dulu, lalu kita masuk ke soal pertama. Kalau aku menghalangi layar, klik karakter PANJI untuk sembunyikan/munculkan bubble chat. Kalau aku menghalangi layar, klik karakter PANJI untuk minimize/munculkan bubble chat.', 'happy');
           closeLeaderboardModal();
           startGame();
           setTimeout(() => {
@@ -3375,10 +3376,10 @@
       removed: 0,
       combo: 0,
       bestCombo: 0,
-      targetRemoved: 26,
-      speed: 56,
-      spacing: 28,
-      ballRadius: 13,
+      targetRemoved: 18,
+      speed: 50,
+      spacing: 42,
+      ballRadius: 21,
       shooterAngle: -Math.PI / 2,
       currentColor: 'data',
       nextColor: 'pasar',
@@ -3421,8 +3422,8 @@
   function buildBonusOpenWorldPath(width, height) {
     const cx = width * 0.5;
     const cy = height * 0.52;
-    const maxR = Math.min(width, height) * 0.38;
-    const minR = 72;
+    const maxR = Math.min(width, height) * 0.46;
+    const minR = 112;
     const rawPoints = [];
     const loops = 2.32;
     const steps = 260;
@@ -4227,8 +4228,12 @@
 
     const go = () => {
       overlay.remove();
-      if (getCurrentChallenge() && getCurrentChallenge().type === 'bonusOpenWorld' && GAME_STATE.progress === 100) {
+      GAME_STATE.progress = 100;
+      const current = getCurrentChallenge && getCurrentChallenge();
+      if (current && current.type === 'bonusOpenWorld') {
         nextChallenge();
+      } else {
+        renderGame();
       }
     };
 
@@ -4326,7 +4331,7 @@
       score: 0,
       hearts: 3,
       timeLeft: 25,
-      obstacleQueue: ['right', 'left', null, 'right', null, 'left'],
+      obstacleQueue: [null, 'right', null, null, 'left', null, 'right', null],
       activeTip: 'Klik kiri atau kanan. Kalau akar muncul di sisi tempat kamu berdiri, nyawa berkurang.',
       timerId: null
     };
@@ -4354,7 +4359,7 @@
       <div class="ps-tree-wrap">
         <div class="ps-tree-info">
           <div class="ps-bonus3d-kicker">Bonus Level 10 • Reflex Arcade</div>
-          <h3>PANJI Lumber Chop</h3>
+          <h3>PANJI Tree Chop 2D</h3>
           <p>Klik <b>Kiri</b> atau <b>Kanan</b> untuk menebang batang. Akar pohon akan muncul acak di salah satu sisi. Kalau kamu berdiri di sisi yang kena akar, nyawa berkurang.</p>
           <div class="ps-snake-score-row ps-tree-score-row">
             <div><label>Skor</label><b>${tree.score}</b></div>
@@ -4419,7 +4424,7 @@
     const tree = getBonusTreeState();
     tree.obstacleQueue.shift();
     const roll = Math.random();
-    tree.obstacleQueue.push(roll < 0.34 ? 'left' : roll < 0.68 ? 'right' : null);
+    tree.obstacleQueue.push(roll < 0.22 ? 'left' : roll < 0.44 ? 'right' : null);
   }
 
   function chopBonusTree(side) {
@@ -4850,11 +4855,17 @@
     } else {
       GAME_STATE.correct += 1;
       addLog('ok', 'Snake selesai', message);
-      showPanji(message, 'happy');
+      showPanji(message + ' Aku lanjutkan ke soal berikutnya.', 'happy');
       spawnConfetti();
     }
     GAME_STATE.progress = 100;
     renderGame();
+    if (!crashed) {
+      setTimeout(() => {
+        const current = getCurrentChallenge && getCurrentChallenge();
+        if (current && current.type === 'bonusSnake' && GAME_STATE.progress === 100) nextChallenge();
+      }, 1800);
+    }
   }
 
   function getSnakePbjTip(score) {
