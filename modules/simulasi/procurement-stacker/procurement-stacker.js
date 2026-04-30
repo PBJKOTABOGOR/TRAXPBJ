@@ -3065,6 +3065,28 @@
     return 'Level ' + levelNo + ' — ' + rawTitle;
   }
 
+
+  function renderHelperRow(challenge) {
+    return `
+        <div class="ps-helper-row ps-helper-row-compact ps-helper-row-${challenge.type}">
+          <div class="ps-helper-note">
+            <b>PANJI siap bantu.</b> Kalau bingung, tanya PANJI. Hint mengurangi skor <b>${HINT_PENALTY}</b> poin.
+          </div>
+          <div class="ps-helper-actions">
+            <div class="ps-pill ps-current-soal-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
+            <div class="ps-level-time-card ps-level-time-compact">
+              <label>Waktu</label>
+              <strong id="psLevelTimeText">${(challenge.type === 'tenderRush' || challenge.type === 'bonusOpenWorld' || challenge.type === 'bonusSnake' || challenge.type === 'bonusTree') ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
+              <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
+            </div>
+            <button type="button" class="ps-btn ps-btn-soft" id="btnPanjiHint">
+              Tanya PANJI (-${HINT_PENALTY})
+            </button>
+          </div>
+        </div>
+    `;
+  }
+
   function renderGame() {
     if (!root) return;
 
@@ -3117,24 +3139,11 @@
           <div class="ps-progress-bar" style="width:${GAME_STATE.progress}%"></div>
         </div>
 
-        <div class="ps-helper-row ps-helper-row-compact">
-          <div class="ps-helper-note">
-            <b>PANJI siap bantu.</b> Kalau bingung, tanya PANJI. Hint mengurangi skor <b>${HINT_PENALTY}</b> poin.
-          </div>
-          <div class="ps-helper-actions">
-            <div class="ps-pill ps-current-soal-pill">Soal ${GAME_STATE.index + 1} / ${GAME_STATE.order.length}</div>
-            <div class="ps-level-time-card ps-level-time-compact">
-              <label>Waktu</label>
-              <strong id="psLevelTimeText">${(challenge.type === 'tenderRush' || challenge.type === 'bonusOpenWorld' || challenge.type === 'bonusSnake' || challenge.type === 'bonusTree') ? '-' : `${GAME_STATE.levelTimeLeft || getDefaultLevelTime(challenge)}s`}</strong>
-              <div class="ps-mini-time-track"><div class="ps-mini-time-bar" id="psLevelTimeBar" style="width:100%"></div></div>
-            </div>
-            <button type="button" class="ps-btn ps-btn-soft" id="btnPanjiHint">
-              Tanya PANJI (-${HINT_PENALTY})
-            </button>
-          </div>
-        </div>
+        ${challenge.type === 'pipeline' ? '' : renderHelperRow(challenge)}
 
         ${renderChallengeBody(challenge)}
+
+        ${challenge.type === 'pipeline' ? renderHelperRow(challenge) : ''}
 
         ${renderLogs()}
 
@@ -4367,7 +4376,11 @@
       timeLeft: 25,
       obstacleQueue: [null, null, 'right', null, null, 'left', null, null, 'right', null],
       activeTip: 'Klik kiri atau kanan. Kalau akar muncul di sisi tempat kamu berdiri, nyawa berkurang.',
-      timerId: null
+      timerId: null,
+      powerVisible: false,
+      powerSide: 'left',
+      powerUntil: 0,
+      powerReadyAt: 6
     };
   }
 
@@ -4387,20 +4400,31 @@
     }
   }
 
+  function isBonusTreePowerActive(tree = null) {
+    const state = tree || getBonusTreeState();
+    return !!(state && state.powerUntil && state.powerUntil > Date.now());
+  }
+
   function renderBonusTreeChallenge() {
     const tree = getBonusTreeState();
+    const powerActive = isBonusTreePowerActive(tree);
+    const powerSeconds = powerActive ? Math.max(1, Math.ceil((tree.powerUntil - Date.now()) / 1000)) : 0;
     return `
       <div class="ps-tree-wrap">
         <div class="ps-tree-info">
           <div class="ps-bonus3d-kicker">Bonus Level 10 • Reflex Arcade</div>
           <h3>PANJI Tree Chop 2D</h3>
-          <p>Klik <b>Kiri</b> atau <b>Kanan</b> untuk menebang batang. Di keyboard pakai <b>A</b> untuk kiri dan <b>D</b> untuk kanan. Kalau di HP, cukup tap sisi kiri atau sisi kanan area game. Akar pohon akan muncul acak di salah satu sisi. Kalau kamu berdiri di sisi yang kena akar, nyawa berkurang.</p>
-          <div class="ps-snake-score-row ps-tree-score-row">
+          <p>Klik <b>Kiri</b> atau <b>Kanan</b> untuk menebang batang. Di keyboard pakai <b>A</b> untuk kiri dan <b>D</b> untuk kanan. Kalau di HP, cukup tap sisi kiri atau sisi kanan area game. Kalau orb <b>⚡ Power</b> muncul, ambil dengan tebang di sisi orb itu. Setelah aktif, PANJI jadi <b>ngebut</b> dan <b>kebal</b> beberapa detik.</p>
+          <div class="ps-snake-score-row ps-tree-score-row ps-tree-score-row-4">
             <div><label>Skor</label><b>${tree.score}</b></div>
             <div><label>Nyawa</label><b>${'❤️'.repeat(Math.max(0, tree.hearts || 0)) || '0'}</b></div>
             <div><label>Waktu</label><b>${tree.timeLeft}s</b></div>
+            <div><label>Power</label><b class="${powerActive ? 'ps-tree-power-on' : tree.powerVisible ? 'ps-tree-power-ready' : ''}">${powerActive ? 'ON ' + powerSeconds + 's' : tree.powerVisible ? 'SIAP' : 'OFF'}</b></div>
           </div>
-          ${!tree.briefed && !tree.running && !tree.finished ? renderCenterAnnouncement('PANJI: Bonus ini simpel tapi bikin refleks keasah. Tebang batang secepat mungkin, tapi jangan berdiri di sisi akar. Kalau akar muncul di kiri, cepat pindah ke kanan. Kalau di kanan, pindah ke kiri. Waktu kamu terbatas.', 'btnTreeBriefStart', 'Paham, mulai bonus', 'tree') : ''}
+          <div class="ps-bonus3d-panji ps-tree-power-tip ${powerActive ? 'active' : tree.powerVisible ? 'ready' : ''}">
+            <b>PANJI:</b> ${powerActive ? 'POWER aktif! Tebang jadi lebih ngebut, +2 skor tiap chop, dan kebal akar beberapa detik.' : tree.powerVisible ? 'Orb power muncul. Ambil dengan menebang di sisi orb biar PANJI ngebut dan invincible.' : 'Main aman dulu. Nanti orb power bisa muncul biar PANJI makin kencang.'}
+          </div>
+          ${!tree.briefed && !tree.running && !tree.finished ? renderCenterAnnouncement('PANJI: Bonus ini simpel tapi bikin refleks keasah. Tebang batang secepat mungkin, tapi jangan berdiri di sisi akar. Kalau akar muncul di kiri, cepat pindah ke kanan. Kalau di kanan, pindah ke kiri. Kalau orb power muncul, ambil biar kamu kebal dan makin ngebut.', 'btnTreeBriefStart', 'Paham, mulai bonus', 'tree') : ''}
           <div class="ps-buttons">
             <button type="button" class="ps-btn ps-btn-primary" id="btnTreeLeft" ${tree.finished ? 'disabled' : ''}>Tebang Kiri</button>
             <button type="button" class="ps-btn ps-btn-primary" id="btnTreeRight" ${tree.finished ? 'disabled' : ''}>Tebang Kanan</button>
@@ -4408,9 +4432,10 @@
           </div>
         </div>
         <div class="ps-tree-stage">
-          <div class="ps-tree-scene ${tree.running ? 'running' : ''} ${tree.hitFlash ? 'hit-flash' : ''} ${tree.comboFx ? 'combo-fx' : ''}">
+          <div class="ps-tree-scene ${tree.running ? 'running' : ''} ${tree.hitFlash ? 'hit-flash' : ''} ${tree.comboFx ? 'combo-fx' : ''} ${powerActive ? 'power-active' : ''}">
             <div class="ps-tree-bg"></div>
             <div class="ps-tree-timer-bar"><span style="width:${Math.max(0, (tree.timeLeft / 25) * 100)}%"></span></div>
+            ${powerActive ? `<div class="ps-tree-power-badge">⚡ POWER ${powerSeconds}s</div>` : ''}
             <div class="ps-tree-trunk ${tree.chopFlash ? 'swing-' + tree.chopFlash : ''}">
               ${tree.obstacleQueue.map((side, idx) => `
                 <div class="ps-tree-log-row" style="--row:${idx}">
@@ -4420,12 +4445,13 @@
                 </div>
               `).join('')}
             </div>
+            ${tree.powerVisible && !powerActive ? `<div class="ps-tree-power-orb ${tree.powerSide}"><span>⚡</span><small>POWER</small></div>` : ''}
             <button type="button" class="ps-tree-touch-zone left" id="btnTreeTapLeft" aria-label="Tap kiri"></button>
             <button type="button" class="ps-tree-touch-zone right" id="btnTreeTapRight" aria-label="Tap kanan"></button>
-            <div class="ps-tree-player ${tree.side} ${tree.chopFlash ? 'chop-' + tree.chopFlash : ''}"><span>PANJI</span></div><div class="ps-tree-score-pop ${tree.comboFx ? 'show' : ''}">+1</div>
+            <div class="ps-tree-player ${tree.side} ${tree.chopFlash ? 'chop-' + tree.chopFlash : ''}"><span>${powerActive ? 'PANJI ⚡' : 'PANJI'}</span></div><div class="ps-tree-score-pop ${tree.comboFx ? 'show' : ''}">${powerActive ? '+2' : '+1'}</div>
             <div class="ps-tree-ground"></div>
           </div>
-          <div class="ps-snake-caption">A / ← = kiri · D / → = kanan · HP: tap layar kiri / kanan · Waktu habis = bonus selesai</div>
+          <div class="ps-snake-caption">A / ← = kiri · D / → = kanan · HP: tap layar kiri / kanan · Ambil orb ⚡ untuk boost · Waktu habis = bonus selesai</div>
         </div>
       </div>
       ${tree.finished ? `<div class="ps-explanation"><strong>Bonus Tebang Pohon selesai:</strong><br>Skor kamu ${tree.score}. Bonus masuk nilai akhir dan game lanjut otomatis.</div>` : ''}
@@ -4469,10 +4495,21 @@
     tree.side = side;
     tree.chopFlash = side;
     tree.lastHitAt = Date.now();
+    const now = Date.now();
+    const wasPowerActive = isBonusTreePowerActive(tree);
+    if (tree.powerVisible && side === tree.powerSide) {
+      tree.powerVisible = false;
+      tree.powerUntil = now + 5000;
+      playTone(860, 0.08, 'triangle', 0.05);
+      playTone(1120, 0.10, 'triangle', 0.04);
+      showToast('POWER aktif! Tebang ngebut & kebal 5 detik', 'ok');
+      updateBonusTreeTip('POWER masuk! Selama beberapa detik kamu ngebut dan invincible.');
+    }
+    const powerActive = isBonusTreePowerActive(tree);
     const danger = tree.obstacleQueue[0];
-    playTone(side === 'left' ? 260 : 320, 0.05, 'square', 0.03);
-    setTimeout(() => { const t = getBonusTreeState(); t.chopFlash = ''; renderGame(); }, 120);
-    if (danger === side) {
+    playTone(side === 'left' ? (powerActive ? 360 : 260) : (powerActive ? 420 : 320), 0.05, powerActive ? 'triangle' : 'square', powerActive ? 0.05 : 0.03);
+    setTimeout(() => { const t = getBonusTreeState(); t.chopFlash = ''; renderGame(); }, powerActive ? 80 : 120);
+    if (danger === side && !powerActive) {
       tree.hearts -= 1;
       playSfx('bad');
       tree.hitFlash = true; setTimeout(() => { const t = getBonusTreeState(); t.hitFlash = false; renderGame(); }, 180); updateBonusTreeTip('Aduh, kena akar. Lihat sisi terdekat sebelum nebang lagi.');
@@ -4482,15 +4519,30 @@
         return;
       }
     } else {
-      tree.score += 1;
+      const gain = powerActive ? 2 : 1;
+      tree.score += gain;
       GAME_STATE.correct += 1;
-      tree.comboFx = true; setTimeout(() => { const t = getBonusTreeState(); t.comboFx = false; renderGame(); }, 120);
+      tree.comboFx = true; setTimeout(() => { const t = getBonusTreeState(); t.comboFx = false; renderGame(); }, powerActive ? 90 : 120);
+      if (powerActive && !wasPowerActive) {
+        showPanji('Wih, power masuk. Sekarang kamu ngebut dan aman dari akar sebentar!', 'happy');
+      }
+      if (powerActive) {
+        updateBonusTreeTip('Power aktif! Spam aman secukupnya, kamu lagi ngebut dan kebal akar.');
+      } else {
+        updateBonusTreeTip('Mantap. Ritme bagus, lanjut jaga sisi aman.');
+      }
+      if (!powerActive && !tree.powerVisible && tree.score >= tree.powerReadyAt && tree.score % 6 === 0) {
+        tree.powerVisible = true;
+        tree.powerSide = Math.random() < 0.5 ? 'left' : 'right';
+        playTone(620, 0.05, 'triangle', 0.03);
+        showToast('Orb power muncul! Ambil di sisi ' + (tree.powerSide === 'left' ? 'kiri' : 'kanan'), 'info');
+        updateBonusTreeTip('Orb power muncul di sisi ' + (tree.powerSide === 'left' ? 'kiri' : 'kanan') + '. Ambil biar PANJI ngebut dan invincible.');
+      }
       if (tree.score % 5 === 0) {
         playTone(720, 0.06, 'triangle', 0.04);
         playTone(920, 0.08, 'triangle', 0.03);
-        showToast('Combo tebang +5!', 'ok');
+        showToast(powerActive ? 'POWER combo +2!' : 'Combo tebang +5!', 'ok');
       }
-      updateBonusTreeTip('Mantap. Ritme bagus, lanjut jaga sisi aman.');
     }
     shiftBonusTreeQueue();
     renderGame();
