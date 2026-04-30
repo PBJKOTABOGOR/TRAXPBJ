@@ -41,26 +41,26 @@ const APP_ROUTES = {
     js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
   },
 
-'monitoring-nontender': {
-  title: 'Non eTendering/Non ePurchasing',
-  subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
-  type: 'module',
-  html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
-  css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
-  js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
-},
+  'monitoring-nontender': {
+    title: 'Non eTendering/Non ePurchasing',
+    subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
+    type: 'module',
+    html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
+    css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
+    js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
+  },
 
-'rapor-pbj': {
-  title: 'Rapor PBJ',
-  subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
-  type: 'module',
-  html: 'modules/rapor-pbj/rapor-pbj.html',
-  css: 'modules/rapor-pbj/rapor-pbj.css',
-  js: 'modules/rapor-pbj/rapor-pbj.js',
-  externalScripts: [
-    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
-  ]
-},
+  'rapor-pbj': {
+    title: 'Rapor PBJ',
+    subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
+    type: 'module',
+    html: 'modules/rapor-pbj/rapor-pbj.html',
+    css: 'modules/rapor-pbj/rapor-pbj.css',
+    js: 'modules/rapor-pbj/rapor-pbj.js',
+    externalScripts: [
+      'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+    ]
+  },
 
   'monitoring-perencanaan': {
     title: 'Monitoring Realisasi',
@@ -116,6 +116,11 @@ let activeFlyout = null;
 let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
+let appInteractionLocked = false;
+let initialBootActive = true;
+let initialBootResolved = false;
+let initialBootProgress = 0;
+let initialBootTimer = null;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -129,6 +134,116 @@ function escapeHtml(value) {
 function cacheBust(url) {
   const joiner = url.includes('?') ? '&' : '?';
   return `${url}${joiner}v=${Date.now()}`;
+}
+
+function ensureInitialBootOverlay() {
+  let overlay = document.getElementById('initialBootOverlay');
+
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'initialBootOverlay';
+    overlay.className = 'initial-boot-overlay';
+    overlay.innerHTML = `
+      <div class="initial-boot-card">
+        <div class="initial-boot-topline">SIPPBJ · Dashboard Monitoring</div>
+        <div class="initial-boot-title" id="initialBootTitle">Menyiapkan Dashboard...</div>
+        <div class="initial-boot-subtitle" id="initialBootSubtitle">Mohon tunggu, sistem sedang memuat tampilan awal dan data utama.</div>
+        <div class="initial-boot-progress-row">
+          <div class="initial-boot-progress-track">
+            <span class="initial-boot-progress-fill" id="initialBootProgressFill" style="width:0%"></span>
+          </div>
+          <div class="initial-boot-progress-text" id="initialBootProgressText">0%</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  return overlay;
+}
+
+function updateInitialBootOverlay(progress, title, subtitle) {
+  const overlay = ensureInitialBootOverlay();
+  const progressFill = document.getElementById('initialBootProgressFill');
+  const progressText = document.getElementById('initialBootProgressText');
+  const titleEl = document.getElementById('initialBootTitle');
+  const subtitleEl = document.getElementById('initialBootSubtitle');
+
+  const safeProgress = Math.max(0, Math.min(100, Math.round(progress || 0)));
+  initialBootProgress = safeProgress;
+
+  overlay.classList.add('show');
+  if (progressFill) progressFill.style.width = `${safeProgress}%`;
+  if (progressText) progressText.textContent = `${safeProgress}%`;
+  if (titleEl && title) titleEl.textContent = title;
+  if (subtitleEl && subtitle) subtitleEl.textContent = subtitle;
+}
+
+function startInitialBootLoading(title = 'Menyiapkan Dashboard...', subtitle = 'Mohon tunggu, sistem sedang memuat tampilan awal dan data utama.') {
+  if (!initialBootActive || initialBootResolved) return;
+
+  updateInitialBootOverlay(4, title, subtitle);
+  document.body.classList.add('app-is-loading');
+  appInteractionLocked = true;
+
+  if (initialBootTimer) {
+    clearInterval(initialBootTimer);
+  }
+
+  initialBootTimer = window.setInterval(() => {
+    if (!initialBootActive || initialBootResolved) {
+      clearInterval(initialBootTimer);
+      initialBootTimer = null;
+      return;
+    }
+
+    if (initialBootProgress < 92) {
+      const jump = initialBootProgress < 30 ? 6 : initialBootProgress < 60 ? 4 : 2;
+      updateInitialBootOverlay(initialBootProgress + jump);
+    }
+  }, 220);
+}
+
+function finishInitialBootLoading() {
+  if (initialBootResolved) return;
+
+  initialBootResolved = true;
+  updateInitialBootOverlay(100, 'Dashboard siap', 'Tampilan awal selesai dimuat.');
+
+  if (initialBootTimer) {
+    clearInterval(initialBootTimer);
+    initialBootTimer = null;
+  }
+
+  window.setTimeout(() => {
+    const overlay = document.getElementById('initialBootOverlay');
+    if (overlay) overlay.classList.remove('show');
+    document.body.classList.remove('app-is-loading');
+    appInteractionLocked = false;
+    initialBootActive = false;
+  }, 320);
+}
+
+function failInitialBootLoading(message = 'Tampilan awal tetap dibuka meski ada kendala memuat data.') {
+  if (initialBootResolved) return;
+
+  updateInitialBootOverlay(100, 'Memuat selesai', message);
+  finishInitialBootLoading();
+}
+
+function setAppInteractionLock(locked) {
+  if (initialBootActive && !initialBootResolved) {
+    appInteractionLocked = true;
+    document.body.classList.add('app-is-loading');
+    return;
+  }
+
+  appInteractionLocked = !!locked;
+  document.body.classList.toggle('app-is-loading', !!locked);
+}
+
+function isAppInteractionLocked() {
+  return appInteractionLocked;
 }
 
 function showModuleLoading(title = 'Memuat modul...') {
@@ -314,7 +429,6 @@ function applyDashboardContextToModule(page, moduleContainer) {
     }, delay);
   });
 }
-
 
 function normalizeHeader(value) {
   return String(value || '')
@@ -806,12 +920,16 @@ async function loadDashboardData(force = false) {
   DASHBOARD_STATE.error = null;
 
   try {
+    updateInitialBootOverlay(18, 'Menghubungkan ke sumber data...', 'Mengambil data utama dari Google Sheet publik.');
+
     const [itkp, itkpSubOpd, perencanaan, realisasi] = await Promise.all([
       fetchSheetRows(DASHBOARD_SHEETS.itkp),
       fetchSheetRows(DASHBOARD_SHEETS.itkpSubOpd),
       fetchSheetRows(DASHBOARD_SHEETS.perencanaan),
       fetchSheetRows(DASHBOARD_SHEETS.realisasi)
     ]);
+
+    updateInitialBootOverlay(72, 'Menyusun analisis dashboard...', 'Mengolah ITKP, perencanaan, dan realisasi agar siap ditampilkan.');
 
     DASHBOARD_STATE.data = analyzeDashboardData({ itkp, itkpSubOpd, perencanaan, realisasi });
     DASHBOARD_STATE.loadedAt = new Date();
@@ -826,6 +944,7 @@ async function loadDashboardData(force = false) {
 
 function renderDashboardSkeleton() {
   persistDashboardContext();
+  startInitialBootLoading();
 
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
@@ -891,11 +1010,14 @@ async function renderDashboard(force = false) {
 
   try {
     const data = await loadDashboardData(force);
+    updateInitialBootOverlay(88, 'Merapikan tampilan dashboard...', 'Hampir selesai, panel dan kartu sedang ditampilkan.');
     renderDashboardReady(data);
     bindDashboardEvents();
+    finishInitialBootLoading();
   } catch (error) {
     console.error('Dashboard gagal dimuat:', error);
     renderDashboardError(error);
+    failInitialBootLoading('Dashboard tampil terbatas karena data utama gagal dimuat.');
   }
 }
 
@@ -1707,6 +1829,10 @@ async function loadPage(key) {
     return;
   }
 
+  if (isAppInteractionLocked() && !(initialBootActive && key === 'dashboard')) {
+    return;
+  }
+
   if (activePageKey === key) {
     updateActiveMenu(key);
     return;
@@ -1733,7 +1859,7 @@ async function loadPage(key) {
     } else if (page.type === 'placeholder') {
       renderPlaceholderPage(key, page);
     } else {
-      renderDashboard();
+      await renderDashboard();
     }
 
     if (success) {
@@ -1755,6 +1881,10 @@ async function loadPage(key) {
 function bindMenu() {
   document.querySelectorAll('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
+      if (isAppInteractionLocked()) {
+        return;
+      }
+
       const pageKey = button.dataset.page;
 
       if (!pageKey) {
@@ -1767,6 +1897,11 @@ function bindMenu() {
 
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
     button.addEventListener('click', (event) => {
+      if (isAppInteractionLocked()) {
+        event.preventDefault();
+        return;
+      }
+
       const groupName = button.dataset.toggleGroup;
       const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
 
@@ -1786,6 +1921,10 @@ function bindMenu() {
 
   if (sidebarToggleButton && sidebar) {
     sidebarToggleButton.addEventListener('click', () => {
+      if (isAppInteractionLocked()) {
+        return;
+      }
+
       if (window.innerWidth <= 980) {
         sidebar.classList.toggle('mobile-open');
       } else {
