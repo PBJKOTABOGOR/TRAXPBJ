@@ -1083,7 +1083,7 @@
 
   function getCurrentResultSummary() {
     const maxScore = calculateMaxScore();
-    const percent = maxScore > 0 ? Math.round((GAME_STATE.score / maxScore) * 100) : 0;
+    const percent = maxScore > 0 ? Math.max(0, Math.min(100, Math.round((GAME_STATE.score / maxScore) * 100))) : 0;
     const totalSoal = CHALLENGES.length;
     const benar = Math.max(0, Math.min(totalSoal, Number(GAME_STATE.correct || 0)));
     const salah = Math.max(0, Number(GAME_STATE.wrong || 0));
@@ -1835,7 +1835,7 @@
 
   function getPanjiFinalReaction() {
     const result = getCurrentResultSummary();
-    const percent = result.maxScore > 0 ? Math.round((result.skor / result.maxScore) * 100) : 0;
+    const percent = result.maxScore > 0 ? Math.max(0, Math.min(100, Math.round((result.skor / result.maxScore) * 100))) : 0;
     const levelDicapai = Math.max(1, Number(result.levelDicapai || GAME_STATE.index + 1 || 1));
     const totalLevel = CHALLENGES.length;
 
@@ -2033,6 +2033,7 @@
     clearBonusTreeTimers();
     clearBonusSnakeTimers();
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
 
     GAME_STATE.finished = true;
     GAME_STATE.stage = 'result';
@@ -2105,6 +2106,10 @@
 
       if (challenge.type === 'bonusSnake') {
         return total + 120;
+      }
+
+      if (challenge.type === 'bonusTree') {
+        return total + 160;
       }
 
       return total + 20;
@@ -2548,6 +2553,7 @@
 
   function showPanjiIntro() {
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
 
     showPanji(
       'Halo! Perkenalkan, aku PANJI.',
@@ -2647,6 +2653,7 @@
 
   function requestHintFromPanji() {
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
 
     const challenge = getCurrentChallenge();
 
@@ -2677,6 +2684,7 @@
     if (!challenge) return;
 
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
 
     if (challenge.type === 'pipeline') {
       showPanji(
@@ -2733,6 +2741,7 @@
     clearBonusTreeTimers();
     clearBonusSnakeTimers();
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
 
     GAME_STATE.order = CHALLENGES.map((_, index) => index);
     GAME_STATE.index = 0;
@@ -2901,6 +2910,7 @@
     clearTenderRushTimers();
     disableTenderRushKeyboard();
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
 
     GAME_STATE.finished = true;
     GAME_STATE.stage = 'result';
@@ -3753,7 +3763,7 @@
           const point = getBonusOpenWorldPathPoint(bonus.path, ball.distance);
           bonusOpenWorldBurst(point, (bonus.colorMap[ball.color] || {}).color || '#fff', 9);
         });
-        showToast(`Match ${size}! +${gain}`, 'ok');
+        playTone(720, 0.04, 'triangle', 0.035); setTimeout(() => playTone(980, 0.06, 'triangle', 0.03), 40); if (size >= 4) { setTimeout(() => playTone(1220, 0.09, 'square', 0.022), 90); } showToast(`Match ${size}! +${gain}`, 'ok');
         flashScreen('ok');
         popScore(root || document.body, `+${gain}`, 'ok');
         spawnConfetti();
@@ -4072,7 +4082,7 @@
 
     return `
       <div class="ps-zuma-shell">
-        <div class="ps-zuma-layout">
+        <div class="ps-zuma-layout ps-zuma-layout-big">
           <div class="ps-zuma-board-card">
             <div class="ps-zuma-board-head">
               <div>
@@ -4086,7 +4096,7 @@
                 <span><label>Akurasi</label><b id="psBonusZumaAcc">100%</b></span>
               </div>
             </div>
-            <div class="ps-zuma-canvas-wrap">
+            <div class="ps-zuma-canvas-wrap ps-zuma-canvas-wrap-big">
               <canvas id="psBonusZumaCanvas"></canvas>
               <div class="ps-zuma-canvas-tip">Klik / tap area arena untuk menembak • X untuk tukar bola • R untuk ulang</div>
             </div>
@@ -4154,7 +4164,7 @@
       const reward = 20 + Math.min(90, Math.round(bonus.score * .35));
       GAME_STATE.score += reward;
       addLog('ok', 'Bonus level 4 selesai', `Kamu menjaga jalur konsolidasi dengan baik. Bonus akhir +${reward}. Combo terbaik: ${bonus.bestCombo}.`);
-      showToast('Jalur konsolidasi aman!', 'ok');
+      playSfx('ok'); setTimeout(() => playTone(1040, 0.12, 'triangle', 0.03), 80); showToast('Jalur konsolidasi aman!', 'ok');
       showPanji('Mantap. Jalur konsolidasi berhasil kamu jaga sampai portal e-Purchasing aman. Ini baru namanya belajar PBJ sambil main.', 'happy');
       renderGame();
       setTimeout(() => showBonusOpenWorldCompletePopup(bonus, true), 80);
@@ -4164,7 +4174,7 @@
     GAME_STATE.risk += 10;
     GAME_STATE.wrong += 1;
     addLog('bad', 'Portal jebol', 'Rantai masalah berhasil menembus portal. Bonus bisa diulang supaya alur konsolidasi lebih aman.');
-    showToast('Portal jebol. Coba lagi.', 'bad');
+    playSfx('bad'); setTimeout(() => playTone(110, 0.18, 'sawtooth', 0.025), 90); showToast('Portal jebol. Coba lagi.', 'bad');
     showPanji('Aduh, rantainya sampai ke portal. Artinya jalur konsolidasi belum aman. Santai, bonus ini bisa kamu ulangi.', 'sad');
     renderGame();
     setTimeout(() => showBonusOpenWorldCompletePopup(bonus, false), 80);
@@ -4250,7 +4260,9 @@
   }
 
   function getBonusSnakeState() {
-    if (!GAME_STATE.bonusSnake) GAME_STATE.bonusSnake = createBonusSnakeState();
+    if (!GAME_STATE.bonusSnake) {
+      GAME_STATE.bonusSnake = createBonusSnakeState();
+    }
     return GAME_STATE.bonusSnake;
   }
 
@@ -4273,12 +4285,7 @@
           <div class="ps-snake-pbj-pop">
             <b>Popup kisi-kisi PBJ:</b> ${escapeHtml(snake.activeTip || 'Jangan asal ambil keputusan. Cek data, harga, katalog, dan bukti proses.')}
           </div>
-          ${!snake.briefed && !snake.running && !snake.finished ? `
-            <div class="ps-snake-brief-modal ps-snake-story-modal">
-              <div class="ps-typewriter-box" id="psSnakeTypewriter" data-fulltext="PANJI: Bonus ini santai, tapi tetap pakai otak. Ambil bintang pelan-pelan, jangan rakus, dan hindari revisi. Sambil main, ingat juga kisi-kisi PBJ: cek data, harga, katalog, dan bukti proses."></div>
-              <button type="button" class="ps-btn ps-btn-primary" id="btnSnakeBriefStart">Paham, mulai Snake</button>
-            </div>
-          ` : ''}
+          ${!snake.briefed && !snake.running && !snake.finished ? renderCenterAnnouncement('PANJI: Bonus ini santai, tapi tetap pakai otak. Ambil bintang pelan-pelan, jangan rakus, dan hindari revisi. Sambil main, ingat juga kisi-kisi PBJ: cek data, harga, katalog, dan bukti proses.', 'btnSnakeBriefStart', 'Paham, mulai Snake', 'snake') : ''}
           <div class="ps-buttons">
             <button type="button" class="ps-btn ps-btn-primary" id="btnStartSnake" ${snake.running ? 'disabled' : ''}>${snake.finished ? 'Main Lagi Snake' : 'Mulai Snake'}</button>
             <button type="button" class="ps-btn ps-btn-soft" id="btnResetSnake">Ulangi Level Bonus</button>
@@ -4316,8 +4323,10 @@
   }
 
   function getBonusTreeState() {
-    if (!GAME_STATE.bonusTree) clearBonusTreeTimers();
-    GAME_STATE.bonusTree = createBonusTreeState();
+    if (!GAME_STATE.bonusTree) {
+      clearBonusTreeTimers();
+      GAME_STATE.bonusTree = createBonusTreeState();
+    }
     return GAME_STATE.bonusTree;
   }
 
@@ -4342,12 +4351,7 @@
             <div><label>Nyawa</label><b>${'❤️'.repeat(Math.max(0, tree.hearts || 0)) || '0'}</b></div>
             <div><label>Waktu</label><b>${tree.timeLeft}s</b></div>
           </div>
-          ${!tree.briefed && !tree.running && !tree.finished ? `
-            <div class="ps-snake-brief-modal ps-tree-brief-modal">
-              <div class="ps-typewriter-box" id="psTreeTypewriter" data-fulltext="PANJI: Bonus ini simpel tapi bikin refleks keasah. Tebang batang secepat mungkin, tapi jangan berdiri di sisi akar. Kalau akar muncul di kiri, cepat pindah ke kanan. Kalau di kanan, pindah ke kiri. Waktu kamu terbatas."></div>
-              <button type="button" class="ps-btn ps-btn-primary" id="btnTreeBriefStart">Paham, mulai bonus</button>
-            </div>
-          ` : ''}
+          ${!tree.briefed && !tree.running && !tree.finished ? renderCenterAnnouncement('PANJI: Bonus ini simpel tapi bikin refleks keasah. Tebang batang secepat mungkin, tapi jangan berdiri di sisi akar. Kalau akar muncul di kiri, cepat pindah ke kanan. Kalau di kanan, pindah ke kiri. Waktu kamu terbatas.', 'btnTreeBriefStart', 'Paham, mulai bonus', 'tree') : ''}
           <div class="ps-buttons">
             <button type="button" class="ps-btn ps-btn-primary" id="btnTreeLeft" ${tree.finished ? 'disabled' : ''}>Tebang Kiri</button>
             <button type="button" class="ps-btn ps-btn-primary" id="btnTreeRight" ${tree.finished ? 'disabled' : ''}>Tebang Kanan</button>
@@ -4355,10 +4359,10 @@
           </div>
         </div>
         <div class="ps-tree-stage">
-          <div class="ps-tree-scene ${tree.running ? 'running' : ''}">
+          <div class="ps-tree-scene ${tree.running ? 'running' : ''} ${tree.hitFlash ? 'hit-flash' : ''} ${tree.comboFx ? 'combo-fx' : ''}">
             <div class="ps-tree-bg"></div>
             <div class="ps-tree-timer-bar"><span style="width:${Math.max(0, (tree.timeLeft / 25) * 100)}%"></span></div>
-            <div class="ps-tree-trunk">
+            <div class="ps-tree-trunk ${tree.chopFlash ? 'swing-' + tree.chopFlash : ''}">
               ${tree.obstacleQueue.map((side, idx) => `
                 <div class="ps-tree-log-row" style="--row:${idx}">
                   <span class="ps-tree-log"></span>
@@ -4367,7 +4371,7 @@
                 </div>
               `).join('')}
             </div>
-            <div class="ps-tree-player ${tree.side}"><span>PANJI</span></div>
+            <div class="ps-tree-player ${tree.side} ${tree.chopFlash ? 'chop-' + tree.chopFlash : ''}"><span>PANJI</span></div><div class="ps-tree-score-pop ${tree.comboFx ? 'show' : ''}">+1</div>
             <div class="ps-tree-ground"></div>
           </div>
           <div class="ps-snake-caption">A / ← = kiri · D / → = kanan · Waktu habis = bonus selesai</div>
@@ -4390,6 +4394,7 @@
     tree.finished = true;
     GAME_STATE.progress = 100;
     const bonus = Math.min(140, tree.score * 8 + Math.max(0, tree.hearts) * 10);
+    playSfx(tree.hearts > 0 ? 'ok' : 'bad');
     GAME_STATE.score += bonus;
     addLog(tree.hearts > 0 ? 'ok' : 'bad', 'Bonus Tebang Pohon selesai', message + ' Bonus +' + bonus + '.');
     showPanji(message, tree.hearts > 0 ? 'happy' : 'sad');
@@ -4411,12 +4416,14 @@
     const tree = getBonusTreeState();
     if (!tree.running || tree.finished) return;
     tree.side = side;
+    tree.chopFlash = side;
+    tree.lastHitAt = Date.now();
     const danger = tree.obstacleQueue[0];
     playTone(side === 'left' ? 260 : 320, 0.05, 'square', 0.03);
     if (danger === side) {
       tree.hearts -= 1;
       playSfx('bad');
-      updateBonusTreeTip('Aduh, kena akar. Lihat sisi terdekat sebelum nebang lagi.');
+      tree.hitFlash = true; setTimeout(() => { const t = getBonusTreeState(); t.hitFlash = false; renderGame(); }, 180); updateBonusTreeTip('Aduh, kena akar. Lihat sisi terdekat sebelum nebang lagi.');
       showToast('Kena akar! Nyawa -1', 'bad');
       if (tree.hearts <= 0) {
         finishBonusTree('Nyawa habis karena terlalu sering kena akar.');
@@ -4425,6 +4432,7 @@
     } else {
       tree.score += 1;
       GAME_STATE.correct += 1;
+      tree.comboFx = true; setTimeout(() => { const t = getBonusTreeState(); t.comboFx = false; renderGame(); }, 120);
       if (tree.score % 5 === 0) {
         playTone(720, 0.06, 'triangle', 0.04);
         playTone(920, 0.08, 'triangle', 0.03);
@@ -4531,7 +4539,7 @@
 
   function renderResultScreen() {
     const maxScore = calculateMaxScore();
-    const percent = maxScore > 0 ? Math.round((GAME_STATE.score / maxScore) * 100) : 0;
+    const percent = maxScore > 0 ? Math.max(0, Math.min(100, Math.round((GAME_STATE.score / maxScore) * 100))) : 0;
     const grade = getResultGrade(percent);
     const totalQuestions = CHALLENGES.length;
     const riskLabel = GAME_STATE.risk <= 20
@@ -4936,7 +4944,7 @@
   }
 
   function getFinalPanjiAnalysisText(result) {
-    const percent = result.maxScore > 0 ? Math.round((result.skor / result.maxScore) * 100) : 0;
+    const percent = result.maxScore > 0 ? Math.max(0, Math.min(100, Math.round((result.skor / result.maxScore) * 100))) : 0;
     const risk = Number(result.risiko || 0);
     const wrong = Number(result.salah || 0);
     let riskReason = 'Risikonya rendah karena pilihanmu cukup tertib dan jarang kena jebakan.';
@@ -4961,6 +4969,7 @@
     if (!challenge || challenge.type !== 'tenderRush') return;
 
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
     clearLevelTimer();
     clearTenderRushTimers();
 
@@ -5254,33 +5263,19 @@
       });
     }
 
-    const snakeTypewriterEl = root.querySelector('#psSnakeTypewriter');
-    if (snakeTypewriterEl && !snakeTypewriterEl.dataset.typed) {
-      snakeTypewriterEl.dataset.typed = '1';
-      const full = snakeTypewriterEl.dataset.fulltext || '';
-      let words = full.split(/\s+/);
+    root.querySelectorAll('.ps-typewriter-box').forEach((el, idx) => {
+      if (el.dataset.typed) return;
+      el.dataset.typed = '1';
+      const full = el.dataset.fulltext || '';
+      const words = full.split(/\s+/);
       let i = 0;
-      snakeTypewriterEl.textContent = '';
+      el.textContent = '';
       const timer = setInterval(() => {
-        snakeTypewriterEl.textContent = words.slice(0, i + 1).join(' ');
+        el.textContent = words.slice(0, i + 1).join(' ');
         i += 1;
         if (i >= words.length) clearInterval(timer);
-      }, 110);
-    }
-
-    const treeTypewriterEl = root.querySelector('#psTreeTypewriter');
-    if (treeTypewriterEl && !treeTypewriterEl.dataset.typed) {
-      treeTypewriterEl.dataset.typed = '1';
-      const full = treeTypewriterEl.dataset.fulltext || '';
-      let words = full.split(/\s+/);
-      let i = 0;
-      treeTypewriterEl.textContent = '';
-      const timer = setInterval(() => {
-        treeTypewriterEl.textContent = words.slice(0, i + 1).join(' ');
-        i += 1;
-        if (i >= words.length) clearInterval(timer);
-      }, 100);
-    }
+      }, 92);
+    });
 
     const btnTreeBriefStart = root.querySelector('#btnTreeBriefStart');
     if (btnTreeBriefStart) {
@@ -5369,6 +5364,7 @@
 
     if (btnNext) {
       btnNext.addEventListener('click', () => {
+        clearPipelineIdleHint();
         clearAutoNextTimer();
         nextChallenge();
       });
@@ -5376,6 +5372,7 @@
 
     if (btnRestart) {
       btnRestart.addEventListener('click', () => {
+        clearPipelineIdleHint();
         clearAutoNextTimer();
         startGame();
       });
@@ -5383,6 +5380,7 @@
 
     if (btnReset) {
       btnReset.addEventListener('click', () => {
+        clearPipelineIdleHint();
         clearAutoNextTimer();
         clearTenderRushTimers();
         disableTenderRushKeyboard();
@@ -5392,6 +5390,8 @@
 
     if (btnShuffle) {
       btnShuffle.addEventListener('click', () => {
+        clearPipelineIdleHint();
+        clearPipelineIdleHint();
         const challenge = getCurrentChallenge();
 
         if (!challenge || challenge.type !== 'pipeline') return;
@@ -5407,14 +5407,74 @@
 
     if (btnPanjiHint) {
       btnPanjiHint.addEventListener('click', () => {
+        clearPipelineIdleHint();
         requestHintFromPanji();
       });
     }
+
+    if (getCurrentChallenge() && getCurrentChallenge().type === 'pipeline' && GAME_STATE.progress < 100) {
+      schedulePipelineIdleHint();
+    } else {
+      clearPipelineIdleHint();
+    }
+  }
+
+  function clearPipelineIdleHint() {
+    if (pipelineIdleTimer) {
+      clearTimeout(pipelineIdleTimer);
+      pipelineIdleTimer = null;
+    }
+    if (pipelineHintPulseTimer) {
+      clearTimeout(pipelineHintPulseTimer);
+      pipelineHintPulseTimer = null;
+    }
+    if (root) {
+      root.querySelectorAll('.ps-action-card.ps-hint-next, .ps-slot.ps-hint-slot').forEach(el => {
+        el.classList.remove('ps-hint-next', 'ps-hint-slot');
+      });
+    }
+  }
+
+  function schedulePipelineIdleHint() {
+    clearPipelineIdleHint();
+    const challenge = getCurrentChallenge();
+    if (!root || !challenge || challenge.type !== 'pipeline' || GAME_STATE.progress >= 100) return;
+
+    pipelineIdleTimer = setTimeout(() => {
+      const nextEmpty = GAME_STATE.placed.findIndex(item => item === null);
+      if (nextEmpty < 0) return;
+      const expectedId = challenge.idealIds[nextEmpty];
+      const cardEl = root.querySelector(`.ps-action-card[data-card-id="${expectedId}"]`);
+      const slotEl = root.querySelector(`.ps-slot[data-slot-index="${nextEmpty}"]`);
+      if (cardEl) cardEl.classList.add('ps-hint-next');
+      if (slotEl) slotEl.classList.add('ps-hint-slot');
+      playTone(900, 0.06, 'triangle', 0.03);
+      setTimeout(() => playTone(1180, 0.08, 'triangle', 0.022), 70);
+      showToast('Hint PANJI: coba lihat kartu yang berpendar dulu.', 'info');
+      showPanji('Kalau bingung, lihat kartu dan slot yang berkedip. Itu petunjuk langkah berikutnya.', 'thinking');
+      pipelineHintPulseTimer = setTimeout(() => {
+        if (cardEl) cardEl.classList.remove('ps-hint-next');
+        if (slotEl) slotEl.classList.remove('ps-hint-slot');
+      }, 1800);
+    }, 5000);
+  }
+
+  function renderCenterAnnouncement(message, buttonId, buttonText, variant = 'snake') {
+    return `
+      <div class="ps-center-announcement ${variant}">
+        <div class="ps-center-announcement-card">
+          <div class="ps-center-announcement-kicker">PANJI ANNOUNCEMENT</div>
+          <div class="ps-typewriter-box ps-typewriter-announce" id="${buttonId}Typewriter" data-fulltext="${escapeHtml(message)}"></div>
+          <button type="button" class="ps-btn ps-btn-primary" id="${buttonId}">${buttonText}</button>
+        </div>
+      </div>
+    `;
   }
 
   function selectCard(cardId) {
     if (GAME_STATE.progress === 100) return;
 
+    clearPipelineIdleHint();
     GAME_STATE.selectedCardId = GAME_STATE.selectedCardId === cardId ? null : cardId;
 
     if (GAME_STATE.selectedCardId) {
@@ -5424,10 +5484,12 @@
     }
 
     renderGame();
+    schedulePipelineIdleHint();
   }
 
   function placeCard(cardId, slotIndex, slotEl) {
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
 
     const challenge = getCurrentChallenge();
 
@@ -5477,6 +5539,7 @@
     const completed = GAME_STATE.progress === 100;
 
     renderGame();
+    if (!completed) schedulePipelineIdleHint();
     pulseSlot(slotIndex);
 
     if (completed) {
@@ -5524,6 +5587,7 @@
 
   function wrongMove(cardId, message) {
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
 
     GAME_STATE.risk += 10;
     GAME_STATE.wrong += 1;
@@ -5546,6 +5610,7 @@
 
   function answerQuiz(selectedIndex, buttonEl) {
     clearPanjiIntroTimers();
+    clearPipelineIdleHint();
     clearLevelTimer();
 
     const challenge = getCurrentChallenge();
@@ -5869,6 +5934,7 @@
     clearBonusTreeTimers();
     clearBonusSnakeTimers();
       clearPanjiIntroTimers();
+    clearPipelineIdleHint();
       clearPanjiTalkTimer();
 
       if (leaderboardRefreshTimer) {
