@@ -117,8 +117,26 @@ let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
 let appInteractionLocked = false;
-let initialBootActive = true;
-let initialBootResolved = false;
+const INITIAL_BOOT_SESSION_KEY = 'traxpbj_initial_boot_done';
+
+function hasInitialBootBeenShown() {
+  try {
+    return sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY) === '1';
+  } catch (error) {
+    return false;
+  }
+}
+
+function markInitialBootAsShown() {
+  try {
+    sessionStorage.setItem(INITIAL_BOOT_SESSION_KEY, '1');
+  } catch (error) {
+    // ignore storage issue
+  }
+}
+
+let initialBootActive = !hasInitialBootBeenShown();
+let initialBootResolved = !initialBootActive;
 let initialBootProgress = 0;
 let initialBootTimer = null;
 
@@ -221,6 +239,7 @@ function finishInitialBootLoading() {
     document.body.classList.remove('app-is-loading');
     appInteractionLocked = false;
     initialBootActive = false;
+    markInitialBootAsShown();
   }, 320);
 }
 
@@ -229,6 +248,24 @@ function failInitialBootLoading(message = 'Tampilan awal tetap dibuka meski ada 
 
   updateInitialBootOverlay(100, 'Memuat selesai', message);
   finishInitialBootLoading();
+}
+
+function resetInitialBootState(forceShow = false) {
+  initialBootActive = !!forceShow;
+  initialBootResolved = !forceShow;
+  initialBootProgress = 0;
+
+  if (initialBootTimer) {
+    clearInterval(initialBootTimer);
+    initialBootTimer = null;
+  }
+
+  if (!forceShow) {
+    const overlay = document.getElementById('initialBootOverlay');
+    if (overlay) overlay.classList.remove('show');
+    document.body.classList.remove('app-is-loading');
+    appInteractionLocked = false;
+  }
 }
 
 function setAppInteractionLock(locked) {
@@ -2022,4 +2059,5 @@ function toggleFlyout(toggleButton, groupName) {
 }
 
 bindMenu();
+resetInitialBootState(!hasInitialBootBeenShown());
 loadPage('dashboard');
