@@ -5135,12 +5135,12 @@
 }
 .ps-zuma-layout{
   display:grid;
-  grid-template-columns:minmax(0,1.35fr) 340px;
+  grid-template-columns:minmax(0,1.7fr) 300px;
   gap:18px;
   align-items:start;
 }
 .ps-zuma-board-card{
-  padding:16px;
+  padding:12px;
 }
 .ps-zuma-board-head{
   display:flex;
@@ -5181,8 +5181,8 @@
 #psBonusZumaCanvas{
   display:block;
   width:100%;
-  min-height:460px;
-  height:460px;
+  min-height:640px;
+  height:640px;
   background:radial-gradient(circle at 50% 45%, rgba(68,103,145,.28), rgba(6,12,20,.9));
   cursor:crosshair;
 }
@@ -5285,7 +5285,7 @@
   .ps-zuma-legend-grid{ grid-template-columns:1fr; }
   .ps-zuma-board-head{ flex-direction:column; }
   .ps-zuma-mini-hud{ width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); }
-  #psBonusZumaCanvas{ min-height:380px; height:380px; }
+  #psBonusZumaCanvas{ min-height:520px; height:520px; }
 }
 
 
@@ -5481,3 +5481,140 @@
 .ps-tree-score-pop{position:absolute;left:50%;top:90px;transform:translateX(-50%);padding:8px 12px;border-radius:999px;background:rgba(34,197,94,.96);color:#fff;font-weight:900;opacity:0;pointer-events:none}
 .ps-tree-score-pop.show{animation:psTreeScorePop .4s ease}
 @keyframes psTreeScorePop{0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.9)}35%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-18px) scale(1.06)}}
+
+
+/* ===== Revisi v5: Bonus 10 Tree 2D lebih lega ===== */
+.ps-tree-stage{
+  min-width:0;
+}
+.ps-tree-scene{
+  min-height:620px !important;
+  border-radius:28px !important;
+  background:
+    linear-gradient(180deg,#bdefff 0%,#e7fbff 42%,#dff6d3 43%,#b4df8b 68%,#79b65a 100%) !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.45), 0 18px 40px rgba(15,23,42,.12);
+}
+.ps-tree-bg{
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255,255,255,.85), transparent 7%),
+    radial-gradient(circle at 76% 14%, rgba(255,255,255,.72), transparent 9%),
+    radial-gradient(circle at 48% 22%, rgba(255,255,255,.55), transparent 12%),
+    linear-gradient(180deg, transparent 0 68%, rgba(88,155,69,.18) 68% 100%) !important;
+}
+.ps-tree-trunk{
+  top:44px !important;
+  bottom:88px !important;
+  width:174px !important;
+}
+.ps-tree-log-row{
+  bottom:calc(var(--row) * 72px) !important;
+}
+.ps-tree-log{
+  height:68px !important;
+  border-radius:22px !important;
+  background:
+    radial-gradient(circle at 28% 28%, rgba(255,255,255,.18), transparent 16%),
+    linear-gradient(180deg,#a96a32 0%,#7b431c 100%) !important;
+  border:3px solid rgba(76,42,16,.48) !important;
+  box-shadow:
+    inset 0 9px 0 rgba(255,255,255,.13),
+    inset 0 -9px 0 rgba(37,20,9,.13),
+    0 8px 0 rgba(87,48,20,.18) !important;
+}
+.ps-tree-log::before{
+  content:"";
+  position:absolute;
+  left:22px;
+  right:22px;
+  top:50%;
+  height:3px;
+  background:rgba(80,44,18,.22);
+  border-radius:999px;
+}
+.ps-tree-root{
+  top:18px !important;
+  width:128px !important;
+  height:26px !important;
+  border-radius:999px 999px 24px 24px !important;
+  background:
+    radial-gradient(circle at 18% 35%, rgba(255,255,255,.12), transparent 16%),
+    linear-gradient(180deg,#7a431d,#4f2a11) !important;
+  box-shadow:0 12px 18px rgba(15,23,42,.20) !important;
+}
+.ps-tree-root.left{right:124px !important}
+.ps-tree-root.right{left:124px !important}
+.ps-tree-player{
+  bottom:70px !important;
+  width:124px !important;
+  height:154px !important;
+}
+.ps-tree-player.left{left:calc(50% - 220px) !important}
+.ps-tree-player.right{right:calc(50% - 220px) !important}
+.ps-tree-player::before{
+  width:82px !important;
+  height:100px !important;
+  border-radius:34px 34px 20px 20px !important;
+  background:linear-gradient(180deg,#2575ff,#13418c) !important;
+}
+.ps-tree-player::after{
+  width:78px !important;
+  height:78px !important;
+  border-radius:28px !important;
+  background:
+    radial-gradient(circle at 30% 25%, #fff, transparent 18%),
+    linear-gradient(180deg,#f9fcff,#b9d8ff) !important;
+}
+.ps-tree-score-pop{
+  font-size:30px !important;
+  padding:10px 16px !important;
+  border-radius:999px !important;
+  background:linear-gradient(135deg,#facc15,#fb923c) !important;
+  color:#fff !important;
+  text-shadow:0 2px 0 rgba(0,0,0,.12);
+}
+.ps-tree-scene.hit-flash::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(255,45,45,.22);
+  animation:psTreeHitFlash .22s ease;
+  pointer-events:none;
+}
+@keyframes psTreeHitFlash{
+  from{opacity:1}
+  to{opacity:0}
+}
+
+/* ===== Revisi v5: Zuma diperbesar dan lebih zoom ===== */
+.ps-zuma-layout{
+  grid-template-columns:minmax(0,1fr) 280px !important;
+}
+.ps-zuma-board-card{
+  padding:10px !important;
+}
+#psBonusZumaCanvas{
+  min-height:680px !important;
+  height:680px !important;
+}
+.ps-zuma-canvas-wrap{
+  border-radius:30px !important;
+}
+.ps-zuma-mini-hud span{
+  padding:12px 14px !important;
+}
+.ps-zuma-mini-hud b{
+  font-size:22px !important;
+}
+.ps-zuma-bottom-bar{
+  gap:10px !important;
+}
+.ps-zuma-side-card{
+  padding:12px !important;
+}
+@media (max-width:980px){
+  .ps-zuma-layout{grid-template-columns:1fr !important}
+  #psBonusZumaCanvas{min-height:560px !important;height:560px !important}
+  .ps-tree-scene{min-height:560px !important}
+  .ps-tree-player.left{left:calc(50% - 190px) !important}
+  .ps-tree-player.right{right:calc(50% - 190px) !important}
+}
