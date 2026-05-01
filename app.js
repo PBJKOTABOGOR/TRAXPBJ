@@ -41,26 +41,26 @@ const APP_ROUTES = {
     js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
   },
 
-  'monitoring-nontender': {
-    title: 'Non eTendering/Non ePurchasing',
-    subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
-    type: 'module',
-    html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
-    css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
-    js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
-  },
+'monitoring-nontender': {
+  title: 'Non eTendering/Non ePurchasing',
+  subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
+  type: 'module',
+  html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
+  css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
+  js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
+},
 
-  'rapor-pbj': {
-    title: 'Rapor PBJ',
-    subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
-    type: 'module',
-    html: 'modules/rapor-pbj/rapor-pbj.html',
-    css: 'modules/rapor-pbj/rapor-pbj.css',
-    js: 'modules/rapor-pbj/rapor-pbj.js',
-    externalScripts: [
-      'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
-    ]
-  },
+'rapor-pbj': {
+  title: 'Rapor PBJ',
+  subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
+  type: 'module',
+  html: 'modules/rapor-pbj/rapor-pbj.html',
+  css: 'modules/rapor-pbj/rapor-pbj.css',
+  js: 'modules/rapor-pbj/rapor-pbj.js',
+  externalScripts: [
+    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+  ]
+},
 
   'monitoring-perencanaan': {
     title: 'Monitoring Realisasi',
@@ -117,6 +117,181 @@ let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
 
+let dashboardBootShownThisSession = false;
+let dashboardBootOverlayEl = null;
+let dashboardBootProgressTimer = null;
+
+function ensureDashboardBootOverlay() {
+  if (dashboardBootOverlayEl && document.body.contains(dashboardBootOverlayEl)) {
+    return dashboardBootOverlayEl;
+  }
+
+  if (!document.getElementById('dashboardBootOverlayStyle')) {
+    const style = document.createElement('style');
+    style.id = 'dashboardBootOverlayStyle';
+    style.textContent = `
+      .dashboard-boot-overlay{
+        position:fixed;
+        inset:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+        background:rgba(239,244,251,.58);
+        backdrop-filter:blur(10px);
+        -webkit-backdrop-filter:blur(10px);
+        z-index:999999;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity .28s ease;
+      }
+      .dashboard-boot-overlay.show{
+        opacity:1;
+        pointer-events:auto;
+      }
+      .dashboard-boot-card{
+        width:min(100%, 380px);
+        border-radius:26px;
+        padding:18px 18px 16px;
+        color:#fff;
+        background:linear-gradient(135deg,#123a72 0%,#245a9b 58%,#2f9a8f 100%);
+        box-shadow:0 26px 60px rgba(18,58,114,.24);
+        border:1px solid rgba(255,255,255,.16);
+      }
+      .dashboard-boot-kicker{
+        display:inline-flex;
+        align-items:center;
+        min-height:22px;
+        padding:0 10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.14);
+        border:1px solid rgba(255,255,255,.18);
+        color:rgba(255,255,255,.92);
+        font-size:10px;
+        font-weight:900;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+      }
+      .dashboard-boot-title{
+        margin:12px 0 6px;
+        font-size:18px;
+        font-weight:900;
+        line-height:1.15;
+      }
+      .dashboard-boot-text{
+        margin:0;
+        font-size:12px;
+        line-height:1.55;
+        color:rgba(255,255,255,.86);
+      }
+      .dashboard-boot-progress-row{
+        display:grid;
+        grid-template-columns:1fr auto;
+        gap:12px;
+        align-items:center;
+        margin-top:14px;
+      }
+      .dashboard-boot-track{
+        position:relative;
+        height:10px;
+        border-radius:999px;
+        overflow:hidden;
+        background:rgba(255,255,255,.18);
+      }
+      .dashboard-boot-bar{
+        height:100%;
+        width:0%;
+        border-radius:inherit;
+        background:linear-gradient(90deg,#ffffff,#8ce7d7);
+        box-shadow:0 0 18px rgba(255,255,255,.26);
+        transition:width .26s ease;
+      }
+      .dashboard-boot-percent{
+        font-size:15px;
+        font-weight:900;
+        color:#fff;
+        min-width:44px;
+        text-align:right;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  dashboardBootOverlayEl = document.createElement('div');
+  dashboardBootOverlayEl.className = 'dashboard-boot-overlay';
+  dashboardBootOverlayEl.innerHTML = `
+    <div class="dashboard-boot-card">
+      <div class="dashboard-boot-kicker">SIPPBJ · Dashboard Monitoring</div>
+      <div class="dashboard-boot-title" id="dashboardBootTitle">Memuat dashboard...</div>
+      <p class="dashboard-boot-text" id="dashboardBootText">Menyiapkan tampilan dan mengambil data dashboard.</p>
+      <div class="dashboard-boot-progress-row">
+        <div class="dashboard-boot-track"><div class="dashboard-boot-bar" id="dashboardBootBar"></div></div>
+        <div class="dashboard-boot-percent" id="dashboardBootPercent">0%</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(dashboardBootOverlayEl);
+  return dashboardBootOverlayEl;
+}
+
+function setDashboardBootProgress(percent, title, text) {
+  const overlay = ensureDashboardBootOverlay();
+  const safePercent = Math.max(0, Math.min(100, Number(percent || 0)));
+  const titleEl = overlay.querySelector('#dashboardBootTitle');
+  const textEl = overlay.querySelector('#dashboardBootText');
+  const barEl = overlay.querySelector('#dashboardBootBar');
+  const percentEl = overlay.querySelector('#dashboardBootPercent');
+
+  if (titleEl && title) titleEl.textContent = title;
+  if (textEl && text) textEl.textContent = text;
+  if (barEl) barEl.style.width = `${safePercent}%`;
+  if (percentEl) percentEl.textContent = `${Math.round(safePercent)}%`;
+}
+
+function clearDashboardBootTimer() {
+  if (dashboardBootProgressTimer) {
+    window.clearInterval(dashboardBootProgressTimer);
+    dashboardBootProgressTimer = null;
+  }
+}
+
+function showDashboardBootLoading() {
+  const overlay = ensureDashboardBootOverlay();
+  clearDashboardBootTimer();
+  setDashboardBootProgress(6, 'Memuat dashboard...', 'Menyiapkan tampilan dan mengambil data dashboard.');
+  overlay.classList.add('show');
+
+  const steps = [14, 27, 39, 52, 66, 78, 86, 92];
+  let index = 0;
+  dashboardBootProgressTimer = window.setInterval(() => {
+    if (index >= steps.length) {
+      clearDashboardBootTimer();
+      return;
+    }
+    setDashboardBootProgress(steps[index], null, index < 2
+      ? 'Menghubungkan ke sumber data dashboard.'
+      : index < 5
+        ? 'Menyusun kartu, radar, dan ringkasan performa.'
+        : 'Hampir selesai, panel dashboard sedang dirapikan.');
+    index += 1;
+  }, 240);
+}
+
+function hideDashboardBootLoading(success = true) {
+  const overlay = ensureDashboardBootOverlay();
+  clearDashboardBootTimer();
+
+  if (success) {
+    setDashboardBootProgress(100, 'Merapikan tampilan dashboard...', 'Hampir selesai, panel dan kartu sedang ditampilkan.');
+    window.setTimeout(() => {
+      overlay.classList.remove('show');
+    }, 320);
+    return;
+  }
+
+  overlay.classList.remove('show');
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -129,6 +304,15 @@ function escapeHtml(value) {
 function cacheBust(url) {
   const joiner = url.includes('?') ? '&' : '?';
   return `${url}${joiner}v=${Date.now()}`;
+}
+
+function showModuleLoading(title = 'Memuat modul...') {
+  contentArea.innerHTML = `
+    <section class="card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
+    </section>
+  `;
 }
 
 function initScrollAnimation() {
@@ -150,6 +334,7 @@ function initScrollAnimation() {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+
     progress.style.width = `${Math.min(100, Math.max(0, percent))}%`;
   };
 
@@ -243,6 +428,13 @@ function persistDashboardContext() {
   return payload;
 }
 
+function escapeSelectorValue(value) {
+  if (window.CSS && typeof window.CSS.escape === 'function') {
+    return window.CSS.escape(String(value || ''));
+  }
+  return String(value || '').replace(/(["'\\.#:[\]()])/g, '\\$1');
+}
+
 function applyDashboardSatkerToModule(moduleContainer) {
   const context = getDashboardContext();
   const selectedSatker = String(context.selectedSatker || '').trim();
@@ -297,6 +489,7 @@ function applyDashboardContextToModule(page, moduleContainer) {
     }, delay);
   });
 }
+
 
 function normalizeHeader(value) {
   return String(value || '')
@@ -505,6 +698,12 @@ function groupSum(rows, keyGetter, valueGetter) {
   });
 
   return Array.from(map.values()).sort((a, b) => b.value - a.value);
+}
+
+function avg(values) {
+  const cleaned = values.map(toNumber).filter((value) => Number.isFinite(value));
+  if (!cleaned.length) return 0;
+  return cleaned.reduce((total, value) => total + value, 0) / cleaned.length;
 }
 
 function sum(values) {
@@ -806,15 +1005,15 @@ function renderDashboardSkeleton() {
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-glow"></div>
-      <div class="hero-kicker">SIPPBJ · Kota Bogor Procurement Dashboard</div>
-      <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
-      <p>Menarik data dari FIX ITKP OPD, D_PERENCANAAN, dan D_REALISASI untuk merangkum profil ITKP, perencanaan, realisasi, metode pengadaan, OPD dominan, serta indikator progress pengadaan.</p>
+      <div class="hero-kicker">SIPPBJ · Sistem Informasi Pelaporan Pengadaan Barang Jasa</div>
+      <h3>Dashboard Pengadaan Barang/Jasa Kota Bogor</h3>
+      <p></p>
 
       <div class="dashboard-loading">
         <div class="loading-orb"></div>
         <div>
           <b>Memuat data dashboard...</b>
-          <span>Mengambil data Google Sheet dan menyusun analisis Kota Bogor.</span>
+          <span>Mengambil data dan menyusun analisis Kota Bogor.</span>
         </div>
       </div>
     </section>
@@ -863,15 +1062,28 @@ function renderDashboardError(error) {
 }
 
 async function renderDashboard(force = false) {
+  const shouldShowBootLoading = !dashboardBootShownThisSession;
+
+  if (shouldShowBootLoading) {
+    dashboardBootShownThisSession = true;
+    showDashboardBootLoading();
+  }
+
   renderDashboardSkeleton();
 
   try {
     const data = await loadDashboardData(force);
     renderDashboardReady(data);
     bindDashboardEvents();
+    if (shouldShowBootLoading) {
+      hideDashboardBootLoading(true);
+    }
   } catch (error) {
     console.error('Dashboard gagal dimuat:', error);
     renderDashboardError(error);
+    if (shouldShowBootLoading) {
+      hideDashboardBootLoading(false);
+    }
   }
 }
 
@@ -897,9 +1109,9 @@ function renderDashboardReady(data) {
 
       <div class="hero-topline">
         <div>
-          <div class="hero-kicker">SIPPBJ · Kota Bogor Procurement Dashboard</div>
-          <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
-          <p>Ringkasan interaktif dari ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD/Sub OPD berdasarkan data Google Sheet yang tersedia.</p>
+          <div class="hero-kicker">SIPPBJ · Sistem Informasi Pelaporan Pengadaan Barang Jasa</div>
+          <h3>Dashboard Pengadaan Barang/Jasa Kota Bogor</h3>
+          <p>Ringkasan ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD/Sub OPD.</p>
         </div>
 
         <div class="hero-badge">
@@ -928,7 +1140,7 @@ function renderDashboardReady(data) {
           <div>
             <span class="section-kicker">${escapeHtml(profileKicker)}</span>
             <h3>Radar Pemanfaatan Sistem ITKP</h3>
-            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, dibaca langsung dari kolom <b>Nilai ITKP Pemanfaatan Sistem</b>, dan tidak masuk ranking OPD.</p>
+            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator.</p>
           </div>
 
           <label class="satker-select-wrap">
@@ -986,7 +1198,7 @@ function renderDashboardReady(data) {
           <div class="progress-track progress-track--tall">
             <div class="progress-bar progress-bar--${getToneByPercent(data.realisasiPersen)}" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
           </div>
-          <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi pada D_REALISASI dibanding nilai pagu pada D_PERENCANAAN.</p>
+          <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi dibanding nilai pagu.</p>
         </div>
 
         <div class="status-mini-grid">
@@ -1199,10 +1411,7 @@ function bindDashboardEvents() {
       }
 
       const route = item.dataset.quick || item.dataset.route;
-      if (route) {
-        persistDashboardContext();
-        loadPage(route);
-      }
+      if (route) { persistDashboardContext(); loadPage(route); }
     });
   });
 }
@@ -1323,6 +1532,21 @@ function renderCompactList(items, type) {
   `).join('');
 }
 
+function renderActivity(color, icon, title, text, time) {
+  return `
+    <div class="activity-item">
+      <div class="activity-icon" style="background:${color}">${icon}</div>
+
+      <div>
+        <div class="activity-title">${escapeHtml(title)}</div>
+        <div class="activity-text">${escapeHtml(text)}</div>
+      </div>
+
+      <div class="activity-time">${escapeHtml(time)}</div>
+    </div>
+  `;
+}
+
 function renderQuickCard(icon, bg, title, text, route, externalUrl = '') {
   const dataAttrs = externalUrl
     ? `data-external="${escapeHtml(externalUrl)}"`
@@ -1412,14 +1636,8 @@ function renderPlaceholderPage(pageKey, page) {
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Modul belum dihubungkan</h4>
-          <p>Halaman ini sudah disiapkan di portal utama. Nanti saat project GitHub/halaman monitoring selesai, tinggal isi URL atau module path di file <b>app.js</b>.</p>
+          <p>Halaman ini sedang disiapkan.</p>
         </div>
-
-        <div class="placeholder-box">
-          <h4>Langkah berikutnya</h4>
-          <p>Cari route <b>${escapeHtml(pageKey)}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b>.</p>
-        </div>
-      </div>
     </section>
   `;
 }
@@ -1581,47 +1799,54 @@ function extractModuleBody(rawHtml) {
   return rawHtml;
 }
 
-function nextFrame() {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-}
-
 async function renderModulePage(page) {
   const token = ++activeModuleToken;
-  const previousMarkup = contentArea.innerHTML;
 
-  contentArea.classList.add('module-mode');
-  contentArea.classList.add('module-preparing');
+  cleanupDynamicModule();
+  showModuleLoading(page.title || 'Memuat modul...');
 
   try {
-    cleanupDynamicModule();
-
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
       for (const src of page.externalScripts) {
         await loadExternalScriptOnce(src);
-        if (token !== activeModuleToken) return false;
+
+        if (token !== activeModuleToken) {
+          return false;
+        }
       }
     }
 
-    const [rawHtml] = await Promise.all([
-      fetchModuleHtml(page.html),
-      loadModuleCss(page.css)
-    ]);
+    const rawHtml = await fetchModuleHtml(page.html);
 
-    if (token !== activeModuleToken) return false;
+    if (token !== activeModuleToken) {
+      return false;
+    }
+
+    await loadModuleCss(page.css);
+
+    if (token !== activeModuleToken) {
+      return false;
+    }
 
     const moduleContent = extractModuleBody(rawHtml);
 
     contentArea.innerHTML = `
-      <section class="module-page module-page--native module-page--ready">
+      <section class="module-page module-page--native">
         ${moduleContent}
       </section>
     `;
 
-    await nextFrame();
-    if (token !== activeModuleToken) return false;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    if (token !== activeModuleToken) {
+      return false;
+    }
 
     await loadModuleJs(page.js);
-    if (token !== activeModuleToken) return false;
+
+    if (token !== activeModuleToken) {
+      return false;
+    }
 
     const moduleContainer = contentArea.querySelector('.module-page--native') || contentArea;
 
@@ -1645,7 +1870,7 @@ async function renderModulePage(page) {
       return false;
     }
 
-    contentArea.innerHTML = previousMarkup || `
+    contentArea.innerHTML = `
       <section class="card">
         <h3>Gagal memuat modul</h3>
         <p>File modul tidak bisa dimuat. Cek path HTML, CSS, JS, atau inisialisasi modul.</p>
@@ -1654,10 +1879,6 @@ async function renderModulePage(page) {
     `;
 
     return false;
-  } finally {
-    if (token === activeModuleToken) {
-      contentArea.classList.remove('module-preparing');
-    }
   }
 }
 
@@ -1683,7 +1904,8 @@ async function loadPage(key) {
       activeModuleToken++;
       cleanupDynamicModule();
       contentArea.classList.remove('module-mode');
-      contentArea.classList.remove('module-preparing');
+    } else {
+      contentArea.classList.add('module-mode');
     }
 
     if (page.type === 'iframe') {
