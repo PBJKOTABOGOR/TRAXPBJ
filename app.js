@@ -1877,8 +1877,28 @@ function extractModuleBody(rawHtml) {
 
 async function renderModulePage(page) {
   const token = ++activeModuleToken;
+  const hadContentBefore = Boolean(contentArea.innerHTML.trim());
 
   cleanupDynamicModule();
+
+  if (hadContentBefore) {
+    showAppLoadingOverlay({
+      chip: 'SIPPBJ · Memuat Modul',
+      title: `Memuat ${page.title}...`,
+      subtitle: 'Menyiapkan tampilan dan script modul.',
+      footer: 'Mohon tunggu, menu dikunci sementara.',
+      progress: 12
+    });
+
+    startAppLoadingOverlayProgress(84, [
+      'Mengambil file HTML modul...',
+      'Menyiapkan CSS modul...',
+      'Menjalankan script modul...',
+      'Hampir selesai, tampilan modul sedang dipasang.'
+    ]);
+  } else {
+    showModuleLoading(page.title || 'Memuat modul...');
+  }
 
   try {
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
@@ -1906,7 +1926,7 @@ async function renderModulePage(page) {
     const moduleContent = extractModuleBody(rawHtml);
 
     contentArea.innerHTML = `
-      <section class="module-page module-page--native" style="opacity:0; visibility:hidden;">
+      <section class="module-page module-page--native module-boot-hidden" aria-busy="true">
         ${moduleContent}
       </section>
     `;
@@ -1938,15 +1958,15 @@ async function renderModulePage(page) {
 
     applyDashboardContextToModule(page, moduleContainer);
 
-    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
     if (token !== activeModuleToken) {
       return false;
     }
 
-    if (moduleContainer) {
-      moduleContainer.style.opacity = '1';
-      moduleContainer.style.visibility = 'visible';
+    if (moduleContainer && moduleContainer.classList) {
+      moduleContainer.classList.remove('module-boot-hidden');
+      moduleContainer.setAttribute('aria-busy', 'false');
     }
 
     return true;
@@ -1966,6 +1986,10 @@ async function renderModulePage(page) {
     `;
 
     return false;
+  } finally {
+    if (hadContentBefore) {
+      await finishAndHideAppLoadingOverlay('Hampir selesai...', 'Tampilan modul sedang ditampilkan.');
+    }
   }
 }
 
