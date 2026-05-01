@@ -1878,25 +1878,11 @@ function extractModuleBody(rawHtml) {
 async function renderModulePage(page) {
   const token = ++activeModuleToken;
   const hadContentBefore = Boolean(contentArea.innerHTML.trim());
+  let stagedContainer = null;
 
   cleanupDynamicModule();
 
-  if (hadContentBefore) {
-    showAppLoadingOverlay({
-      chip: 'SIPPBJ · Memuat Modul',
-      title: `Memuat ${page.title}...`,
-      subtitle: 'Menyiapkan tampilan dan script modul.',
-      footer: 'Mohon tunggu, menu dikunci sementara.',
-      progress: 12
-    });
-
-    startAppLoadingOverlayProgress(84, [
-      'Mengambil file HTML modul...',
-      'Menyiapkan CSS modul...',
-      'Menjalankan script modul...',
-      'Hampir selesai, tampilan modul sedang dipasang.'
-    ]);
-  } else {
+  if (!hadContentBefore) {
     showModuleLoading(page.title || 'Memuat modul...');
   }
 
@@ -1923,31 +1909,30 @@ async function renderModulePage(page) {
       return false;
     }
 
-    const moduleContent = extractModuleBody(rawHtml);
-
-    contentArea.innerHTML = `
-      <section class="module-page module-page--native module-boot-hidden" aria-busy="true">
-        ${moduleContent}
-      </section>
-    `;
-
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-
-    if (token !== activeModuleToken) {
-      return false;
-    }
-
     await loadModuleJs(page.js);
 
     if (token !== activeModuleToken) {
       return false;
     }
 
-    const moduleContainer = contentArea.querySelector('.module-page--native') || contentArea;
+    const moduleContent = extractModuleBody(rawHtml);
+
+    stagedContainer = document.createElement('section');
+    stagedContainer.className = 'module-page module-page--native module-boot-hidden';
+    stagedContainer.setAttribute('aria-busy', 'true');
+    stagedContainer.style.position = 'fixed';
+    stagedContainer.style.left = '-99999px';
+    stagedContainer.style.top = '0';
+    stagedContainer.style.width = `${Math.max(contentArea.clientWidth || 1200, 1200)}px`;
+    stagedContainer.style.visibility = 'hidden';
+    stagedContainer.style.pointerEvents = 'none';
+    stagedContainer.innerHTML = moduleContent;
+
+    document.body.appendChild(stagedContainer);
 
     if (typeof window.__moduleInit === 'function') {
       const destroyFn = window.__moduleInit({
-        container: moduleContainer,
+        container: stagedContainer,
         route: page
       });
 
@@ -1956,25 +1941,40 @@ async function renderModulePage(page) {
       currentModuleDestroy = null;
     }
 
-    applyDashboardContextToModule(page, moduleContainer);
+    applyDashboardContextToModule(page, stagedContainer);
 
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
     if (token !== activeModuleToken) {
+      if (stagedContainer && stagedContainer.parentNode) {
+        stagedContainer.parentNode.removeChild(stagedContainer);
+      }
       return false;
     }
 
-    if (moduleContainer && moduleContainer.classList) {
-      moduleContainer.classList.remove('module-boot-hidden');
-      moduleContainer.setAttribute('aria-busy', 'false');
-    }
+    contentArea.innerHTML = '';
+    stagedContainer.style.position = '';
+    stagedContainer.style.left = '';
+    stagedContainer.style.top = '';
+    stagedContainer.style.width = '';
+    stagedContainer.style.visibility = '';
+    stagedContainer.style.pointerEvents = '';
+    contentArea.appendChild(stagedContainer);
 
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    stagedContainer.classList.remove('module-boot-hidden');
+    stagedContainer.setAttribute('aria-busy', 'false');
     return true;
   } catch (error) {
     console.error('Gagal memuat module:', error);
 
     if (token !== activeModuleToken) {
       return false;
+    }
+
+    if (stagedContainer && stagedContainer.parentNode) {
+      stagedContainer.parentNode.removeChild(stagedContainer);
     }
 
     contentArea.innerHTML = `
@@ -1986,10 +1986,6 @@ async function renderModulePage(page) {
     `;
 
     return false;
-  } finally {
-    if (hadContentBefore) {
-      await finishAndHideAppLoadingOverlay('Hampir selesai...', 'Tampilan modul sedang ditampilkan.');
-    }
   }
 }
 
