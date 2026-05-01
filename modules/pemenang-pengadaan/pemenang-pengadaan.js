@@ -4,7 +4,7 @@
   const PP_CONFIG = {
     userSheet: {
       spreadsheetId: '1DYsqMtvwhPn-IEA3te9fFukD_iMMDRqUNPamktuPz2U',
-      gid: '574346425',
+      gid: '1707469433',
       title: 'USERID'
     },
     tenderSheet: {
