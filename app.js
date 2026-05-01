@@ -116,9 +116,13 @@ let activeFlyout = null;
 let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
+let appInteractionLocked = false;
 
-const ENTRY_LOADING_KEY = 'traxpbj_first_entry_loading_done';
-let entryLoadingActive = false;
+const INITIAL_BOOT_SESSION_KEY = 'traxpbj_initial_boot_done';
+let initialBootActive = false;
+let initialBootResolved = false;
+let initialBootProgress = 0;
+let initialBootTimer = null;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -134,120 +138,195 @@ function cacheBust(url) {
   return `${url}${joiner}v=${Date.now()}`;
 }
 
-function shouldShowEntryLoading() {
-  try {
-    return sessionStorage.getItem(ENTRY_LOADING_KEY) !== '1';
-  } catch (error) {
-    return !window.__traxEntryLoadingDone;
+function showModuleLoading(title = 'Memuat modul...') {
+  contentArea.innerHTML = `
+    <section class="card module-loading-card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
+      <div class="module-loading-shimmer">
+        <span></span><span></span><span></span>
+      </div>
+    </section>
+  `;
+}
+
+function ensureInitialBootOverlay() {
+  let overlay = document.getElementById('initialBootOverlay');
+
+  if (overlay) {
+    return overlay;
   }
-}
-
-function markEntryLoadingDone() {
-  try {
-    sessionStorage.setItem(ENTRY_LOADING_KEY, '1');
-  } catch (error) {
-    window.__traxEntryLoadingDone = true;
-  }
-}
-
-function getEntryOverlay() {
-  return document.getElementById('appEntryLoadingOverlay');
-}
-
-function ensureEntryOverlay() {
-  let overlay = getEntryOverlay();
-  if (overlay) return overlay;
 
   overlay = document.createElement('div');
-  overlay.id = 'appEntryLoadingOverlay';
-  overlay.className = 'app-entry-loading-overlay';
+  overlay.id = 'initialBootOverlay';
+  overlay.className = 'initial-boot-overlay';
   overlay.innerHTML = `
-    <div class="app-entry-loading-backdrop"></div>
-    <div class="app-entry-loading-card">
-      <div class="app-entry-loading-kicker">SIPPBJ · Dashboard Monitoring</div>
-      <h3 id="appEntryLoadingTitle">Menyiapkan dashboard...</h3>
-      <p id="appEntryLoadingMessage">Mohon tunggu, sistem sedang memuat tampilan awal.</p>
-      <div class="app-entry-loading-progress">
-        <div class="app-entry-loading-bar"><span id="appEntryLoadingBar"></span></div>
-        <strong id="appEntryLoadingPercent">0%</strong>
+    <div class="initial-boot-backdrop"></div>
+    <div class="initial-boot-card">
+      <div class="initial-boot-orb initial-boot-orb--one"></div>
+      <div class="initial-boot-orb initial-boot-orb--two"></div>
+      <div class="initial-boot-kicker">SIPPBJ · Kota Bogor</div>
+      <div class="initial-boot-title" id="initialBootTitle">Menyiapkan Dashboard...</div>
+      <div class="initial-boot-subtitle" id="initialBootSubtitle">Mohon tunggu, sistem sedang memuat tampilan awal dan data utama.</div>
+      <div class="initial-boot-progress-wrap">
+        <div class="initial-boot-progress-track">
+          <span class="initial-boot-progress-fill" id="initialBootProgressFill"></span>
+          <span class="initial-boot-progress-glow"></span>
+        </div>
+        <div class="initial-boot-progress-meta">
+          <span class="initial-boot-progress-text" id="initialBootProgressText">Menyiapkan portal...</span>
+          <strong class="initial-boot-progress-number" id="initialBootProgressNumber">0%</strong>
+        </div>
+      </div>
+      <div class="initial-boot-pulse-row">
+        <span></span><span></span><span></span>
       </div>
     </div>
   `;
+
   document.body.appendChild(overlay);
   return overlay;
 }
 
-function setEntryLoadingProgress(percent, title, message) {
-  const overlay = ensureEntryOverlay();
-  const safePercent = Math.max(0, Math.min(100, Number(percent || 0)));
-  const bar = overlay.querySelector('#appEntryLoadingBar');
-  const percentText = overlay.querySelector('#appEntryLoadingPercent');
-  const titleEl = overlay.querySelector('#appEntryLoadingTitle');
-  const messageEl = overlay.querySelector('#appEntryLoadingMessage');
+function updateInitialBootOverlay(percent = 0, title = '', subtitle = '', progressText = '') {
+  const overlay = ensureInitialBootOverlay();
+  const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
 
-  if (bar) bar.style.width = `${safePercent}%`;
-  if (percentText) percentText.textContent = `${Math.round(safePercent)}%`;
-  if (titleEl && title) titleEl.textContent = title;
-  if (messageEl && message) messageEl.textContent = message;
+  const titleEl = overlay.querySelector('#initialBootTitle');
+  const subtitleEl = overlay.querySelector('#initialBootSubtitle');
+  const fillEl = overlay.querySelector('#initialBootProgressFill');
+  const numberEl = overlay.querySelector('#initialBootProgressNumber');
+  const progressTextEl = overlay.querySelector('#initialBootProgressText');
+
+  initialBootProgress = safePercent;
+
+  if (title && titleEl) titleEl.textContent = title;
+  if (subtitle && subtitleEl) subtitleEl.textContent = subtitle;
+  if (fillEl) fillEl.style.width = `${safePercent}%`;
+  if (numberEl) numberEl.textContent = `${safePercent}%`;
+  if (progressTextEl) {
+    progressTextEl.textContent = progressText || subtitle || 'Menyiapkan portal...';
+  }
 
   overlay.classList.add('show');
-  document.body.classList.add('entry-loading-active');
 }
 
-function hideEntryLoadingOverlay() {
-  const overlay = getEntryOverlay();
-  if (!overlay) return;
-  overlay.classList.remove('show');
-  document.body.classList.remove('entry-loading-active');
+function startInitialBootLoading(
+  title = 'Menyiapkan Dashboard...',
+  subtitle = 'Mohon tunggu, sistem sedang memuat tampilan awal dan data utama.'
+) {
+  if (sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY)) {
+    initialBootActive = false;
+    initialBootResolved = true;
+    return;
+  }
+
+  if (initialBootActive) return;
+
+  initialBootActive = true;
+  initialBootResolved = false;
+  initialBootProgress = 4;
+  updateInitialBootOverlay(4, title, subtitle, 'Menyiapkan portal...');
+  document.body.classList.add('app-is-loading');
+  appInteractionLocked = true;
+
+  if (initialBootTimer) {
+    clearInterval(initialBootTimer);
+  }
+
+  const progressMessages = [
+    { min: 0, text: 'Menyiapkan portal...' },
+    { min: 18, text: 'Menyusun komponen utama...' },
+    { min: 36, text: 'Menghubungkan modul dashboard...' },
+    { min: 58, text: 'Membaca preferensi tampilan...' },
+    { min: 76, text: 'Menata animasi dan panel...' },
+    { min: 90, text: 'Sedikit lagi selesai...' }
+  ];
+
+  initialBootTimer = window.setInterval(() => {
+    if (!initialBootActive || initialBootResolved) {
+      clearInterval(initialBootTimer);
+      initialBootTimer = null;
+      return;
+    }
+
+    if (initialBootProgress < 92) {
+      const jump = initialBootProgress < 24 ? 5 : initialBootProgress < 52 ? 4 : initialBootProgress < 76 ? 3 : 1;
+      const nextPercent = Math.min(92, initialBootProgress + jump);
+      const message = [...progressMessages].reverse().find((item) => nextPercent >= item.min)?.text || 'Menyiapkan portal...';
+      updateInitialBootOverlay(nextPercent, title, subtitle, message);
+    }
+  }, 180);
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function unlockAppAfterInitialLoading() {
+  document.body.classList.remove('app-is-loading');
+  appInteractionLocked = false;
 }
 
-async function runInitialEntryLoading(renderFn) {
-  if (entryLoadingActive) return false;
-  entryLoadingActive = true;
+function finishInitialBootLoading() {
+  if (initialBootResolved && sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY)) {
+    const overlay = document.getElementById('initialBootOverlay');
+    if (overlay) overlay.classList.remove('show');
+    unlockAppAfterInitialLoading();
+    initialBootActive = false;
+    return;
+  }
 
-  const overlay = ensureEntryOverlay();
-  overlay.classList.remove('done');
-  setEntryLoadingProgress(6, 'Menyiapkan dashboard...', 'Memeriksa layout awal portal.');
+  initialBootResolved = true;
+  updateInitialBootOverlay(100, 'Dashboard siap', 'Tampilan awal selesai dimuat.', 'Portal siap digunakan.');
+
+  if (initialBootTimer) {
+    clearInterval(initialBootTimer);
+    initialBootTimer = null;
+  }
 
   try {
-    await delay(140);
-    setEntryLoadingProgress(18, 'Menyiapkan dashboard...', 'Menyusun tampilan sidebar dan area konten.');
-
-    await delay(160);
-    const result = renderFn();
-
-    setEntryLoadingProgress(42, 'Mengambil data dashboard...', 'Menghubungkan ke sumber data yang dibutuhkan.');
-
-    await Promise.resolve(result);
-
-    setEntryLoadingProgress(78, 'Merapikan tampilan dashboard...', 'Panel dan kartu sedang ditampilkan.');
-    await delay(180);
-
-    setEntryLoadingProgress(100, 'Dashboard siap digunakan', 'Tampilan awal berhasil dimuat.');
-    overlay.classList.add('done');
-    markEntryLoadingDone();
-    await delay(220);
-    hideEntryLoadingOverlay();
-    return true;
+    sessionStorage.setItem(INITIAL_BOOT_SESSION_KEY, '1');
   } catch (error) {
-    hideEntryLoadingOverlay();
-    throw error;
-  } finally {
-    entryLoadingActive = false;
+    console.warn('Gagal simpan session initial boot:', error);
   }
+
+  window.setTimeout(() => {
+    const overlay = document.getElementById('initialBootOverlay');
+    if (overlay) overlay.classList.remove('show');
+    unlockAppAfterInitialLoading();
+    initialBootActive = false;
+  }, 420);
 }
 
-function showModuleLoading(title = 'Memuat modul...') {
-  contentArea.innerHTML = `
-    <section class="card">
-      <h3>${escapeHtml(title)}</h3>
-      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
-    </section>
-  `;
+function failInitialBootLoading(message = 'Tampilan awal tetap dibuka meski ada kendala memuat data.') {
+  if (sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY)) {
+    const overlay = document.getElementById('initialBootOverlay');
+    if (overlay) overlay.classList.remove('show');
+    unlockAppAfterInitialLoading();
+    appInteractionLocked = false;
+    initialBootActive = false;
+    initialBootResolved = true;
+    return;
+  }
+
+  if (initialBootTimer) {
+    clearInterval(initialBootTimer);
+    initialBootTimer = null;
+  }
+
+  updateInitialBootOverlay(100, 'Memuat selesai', message, 'Portal dibuka dengan mode aman.');
+
+  try {
+    sessionStorage.setItem(INITIAL_BOOT_SESSION_KEY, '1');
+  } catch (error) {
+    console.warn('Gagal simpan session initial boot:', error);
+  }
+
+  initialBootResolved = true;
+
+  window.setTimeout(() => {
+    const overlay = document.getElementById('initialBootOverlay');
+    if (overlay) overlay.classList.remove('show');
+    unlockAppAfterInitialLoading();
+    initialBootActive = false;
+  }, 480);
 }
 
 function initScrollAnimation() {
@@ -418,10 +497,10 @@ function applyDashboardContextToModule(page, moduleContainer) {
   if (!page || !page.html) return;
   if (!/itkp-sirup|itkp-ekatalog|itkp-etendering|itkp-ekontrak|itkp-nontender/.test(page.html)) return;
 
-  [120, 400, 900, 1600].forEach((delayMs) => {
+  [120, 400, 900, 1600].forEach((delay) => {
     window.setTimeout(() => {
       applyDashboardSatkerToModule(moduleContainer);
-    }, delayMs);
+    }, delay);
   });
 }
 
@@ -634,6 +713,16 @@ function groupSum(rows, keyGetter, valueGetter) {
   return Array.from(map.values()).sort((a, b) => b.value - a.value);
 }
 
+function avg(values) {
+  const cleaned = values.map(toNumber).filter((value) => Number.isFinite(value));
+  if (!cleaned.length) return 0;
+  return cleaned.reduce((total, value) => total + value, 0) / cleaned.length;
+}
+
+function sum(values) {
+  return values.reduce((total, value) => total + toNumber(value), 0);
+}
+
 function isCityAggregateName(name) {
   return String(name || '').trim().toUpperCase() === 'PEMERINTAH KOTA BOGOR';
 }
@@ -649,9 +738,15 @@ function findNumericByHeader(row, requiredWords = [], optionalWords = []) {
   Object.entries(map).forEach(([key, value]) => {
     const number = toNumber(value);
 
-    if (!Number.isFinite(number) || number <= 0) return;
+    if (!Number.isFinite(number) || number <= 0) {
+      return;
+    }
+
     const isMatch = required.every((word) => key.includes(word));
-    if (!isMatch) return;
+
+    if (!isMatch) {
+      return;
+    }
 
     let weight = 0;
     optional.forEach((word) => {
@@ -695,7 +790,9 @@ function getItkpScore(row) {
     'Pemanfaatan Sistem'
   ]));
 
-  if (exactValue > 0) return exactValue;
+  if (exactValue > 0) {
+    return exactValue;
+  }
 
   const headerValue = findNumericByHeader(
     row,
@@ -703,7 +800,9 @@ function getItkpScore(row) {
     ['skor maksimal 30', '30', 'point']
   );
 
-  if (headerValue > 0) return headerValue;
+  if (headerValue > 0) {
+    return headerValue;
+  }
 
   if (isCityAggregateName(getField(row || {}, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']))) {
     return getLastReasonableItkpNumber(row || {});
@@ -916,6 +1015,10 @@ async function loadDashboardData(force = false) {
 function renderDashboardSkeleton() {
   persistDashboardContext();
 
+  if (!sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY)) {
+    startInitialBootLoading();
+  }
+
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-glow"></div>
@@ -980,11 +1083,41 @@ async function renderDashboard(force = false) {
 
   try {
     const data = await loadDashboardData(force);
+
+    if (!sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY)) {
+      updateInitialBootOverlay(
+        88,
+        'Merapikan tampilan dashboard...',
+        'Hampir selesai, panel dan kartu sedang ditampilkan.',
+        'Merapikan animasi dashboard...'
+      );
+    }
+
     renderDashboardReady(data);
     bindDashboardEvents();
+
+    if (!sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY)) {
+      finishInitialBootLoading();
+    } else {
+      const overlay = document.getElementById('initialBootOverlay');
+      if (overlay) overlay.classList.remove('show');
+      unlockAppAfterInitialLoading();
+      appInteractionLocked = false;
+      initialBootActive = false;
+      initialBootResolved = true;
+    }
   } catch (error) {
     console.error('Dashboard gagal dimuat:', error);
     renderDashboardError(error);
+
+    if (!sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY)) {
+      failInitialBootLoading('Dashboard tampil terbatas karena data utama gagal dimuat.');
+    } else {
+      const overlay = document.getElementById('initialBootOverlay');
+      if (overlay) overlay.classList.remove('show');
+      unlockAppAfterInitialLoading();
+      appInteractionLocked = false;
+    }
   }
 }
 
@@ -1312,7 +1445,10 @@ function bindDashboardEvents() {
       }
 
       const route = item.dataset.quick || item.dataset.route;
-      if (route) { persistDashboardContext(); loadPage(route); }
+      if (route) {
+        persistDashboardContext();
+        loadPage(route);
+      }
     });
   });
 }
@@ -1480,6 +1616,7 @@ function renderIframePage(page) {
     const resizeIframe = () => {
       try {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
+
         if (!doc) return;
 
         const body = doc.body;
@@ -1538,11 +1675,17 @@ function updateActiveMenu(key) {
   const directButton = document.querySelector(`.nav-link[data-page="${key}"]`);
   const subButton = document.querySelector(`.submenu-link[data-page="${key}"]`);
 
-  if (directButton) directButton.classList.add('active');
+  if (directButton) {
+    directButton.classList.add('active');
+  }
+
   if (subButton) {
     subButton.classList.add('active');
+
     const group = subButton.closest('.nav-group');
-    if (group) group.classList.add('open');
+    if (group) {
+      group.classList.add('open');
+    }
   }
 }
 
@@ -1608,6 +1751,7 @@ function loadExternalScriptOnce(src) {
     };
 
     script.onerror = () => reject(new Error(`Gagal memuat ${src}`));
+
     document.body.appendChild(script);
   });
 }
@@ -1623,8 +1767,10 @@ function loadModuleCss(href) {
     link.rel = 'stylesheet';
     link.href = cacheBust(href);
     link.setAttribute('data-dynamic-module-css', 'true');
+
     link.onload = () => resolve();
     link.onerror = () => reject(new Error(`Gagal memuat CSS ${href}`));
+
     document.head.appendChild(link);
   });
 }
@@ -1640,24 +1786,32 @@ function loadModuleJs(src) {
     script.src = cacheBust(src);
     script.async = false;
     script.setAttribute('data-dynamic-module-js', 'true');
+
     script.onload = () => resolve();
     script.onerror = () => reject(new Error(`Gagal memuat JS ${src}`));
+
     document.body.appendChild(script);
   });
 }
 
 async function fetchModuleHtml(path) {
   const response = await fetch(cacheBust(path), { cache: 'no-store' });
+
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} saat memuat HTML ${path}`);
   }
+
   return response.text();
 }
 
 function extractModuleBody(rawHtml) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(rawHtml, 'text/html');
-  if (doc.body && doc.body.innerHTML.trim()) return doc.body.innerHTML;
+
+  if (doc.body && doc.body.innerHTML.trim()) {
+    return doc.body.innerHTML;
+  }
+
   return rawHtml;
 }
 
@@ -1682,6 +1836,7 @@ async function renderModulePage(page) {
     if (token !== activeModuleToken) return false;
 
     const moduleContent = extractModuleBody(rawHtml);
+
     contentArea.innerHTML = `
       <section class="module-page module-page--native">
         ${moduleContent}
@@ -1707,6 +1862,7 @@ async function renderModulePage(page) {
     return true;
   } catch (error) {
     console.error('Gagal memuat module:', error);
+
     if (token !== activeModuleToken) return false;
 
     contentArea.innerHTML = `
@@ -1721,10 +1877,17 @@ async function renderModulePage(page) {
   }
 }
 
-async function doLoadPage(key) {
+async function loadPage(key) {
+  if (appInteractionLocked && key !== 'dashboard') {
+    return;
+  }
+
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
 
-  if (loadingPageKey === key) return;
+  if (loadingPageKey === key) {
+    return;
+  }
+
   if (activePageKey === key) {
     updateActiveMenu(key);
     return;
@@ -1754,7 +1917,9 @@ async function doLoadPage(key) {
       await renderDashboard();
     }
 
-    if (success) activePageKey = key;
+    if (success) {
+      activePageKey = key;
+    }
 
     initScrollAnimation();
 
@@ -1762,15 +1927,10 @@ async function doLoadPage(key) {
       sidebar.classList.remove('mobile-open');
     }
   } finally {
-    if (loadingPageKey === key) loadingPageKey = '';
+    if (loadingPageKey === key) {
+      loadingPageKey = '';
+    }
   }
-}
-
-async function loadPage(key) {
-  if (key === 'dashboard' && !activePageKey && shouldShowEntryLoading()) {
-    return runInitialEntryLoading(() => doLoadPage(key));
-  }
-  return doLoadPage(key);
 }
 
 function bindMenu() {
@@ -1784,8 +1944,11 @@ function bindMenu() {
 
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
     button.addEventListener('click', (event) => {
+      if (appInteractionLocked) return;
+
       const groupName = button.dataset.toggleGroup;
       const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
+
       if (!group) return;
 
       if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 980) {
@@ -1800,6 +1963,8 @@ function bindMenu() {
 
   if (sidebarToggleButton && sidebar) {
     sidebarToggleButton.addEventListener('click', () => {
+      if (appInteractionLocked) return;
+
       if (window.innerWidth <= 980) {
         sidebar.classList.toggle('mobile-open');
       } else {
@@ -1811,14 +1976,21 @@ function bindMenu() {
 
   document.addEventListener('click', (event) => {
     if (!activeFlyout) return;
+
     const clickedInsideFlyout = activeFlyout.contains(event.target);
     const clickedToggle = event.target.closest('[data-toggle-group]');
-    if (!clickedInsideFlyout && !clickedToggle) closeFlyout();
+
+    if (!clickedInsideFlyout && !clickedToggle) {
+      closeFlyout();
+    }
   });
 
   window.addEventListener('resize', () => {
     closeFlyout();
-    if (window.innerWidth > 980 && sidebar) sidebar.classList.remove('mobile-open');
+
+    if (window.innerWidth > 980 && sidebar) {
+      sidebar.classList.remove('mobile-open');
+    }
   });
 }
 
@@ -1847,6 +2019,7 @@ function toggleFlyout(toggleButton, groupName) {
   const flyout = document.createElement('div');
   flyout.className = 'sidebar-flyout';
   flyout.dataset.group = groupName;
+
   flyout.innerHTML = `
     <div class="sidebar-flyout-title">${escapeHtml(titleMap[groupName] || 'Menu')}</div>
     ${Array.from(submenuLinks).map((link) => {
