@@ -116,10 +116,6 @@ let activeFlyout = null;
 let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
-let dashboardIntroShownThisLoad = false;
-let appLoadingOverlay = null;
-let appLoadingOverlayTimer = null;
-let appLoadingOverlayProgress = 0;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -133,314 +129,6 @@ function escapeHtml(value) {
 function cacheBust(url) {
   const joiner = url.includes('?') ? '&' : '?';
   return `${url}${joiner}v=${Date.now()}`;
-}
-
-function ensureAppLoadingOverlayStyles() {
-  if (document.getElementById('traxpbj-app-loading-style')) {
-    return;
-  }
-
-  const style = document.createElement('style');
-  style.id = 'traxpbj-app-loading-style';
-  style.textContent = `
-    body.app-loading-active {
-      overflow: hidden !important;
-    }
-
-    body.app-loading-active .app-shell,
-    body.app-loading-active .sidebar,
-    body.app-loading-active .content-area {
-      pointer-events: none !important;
-      user-select: none !important;
-    }
-
-    .content-area.app-route-transitioning {
-      position: relative;
-    }
-
-    .content-area.app-route-transitioning > * {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-
-    .traxpbj-app-loading-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 999999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .24s ease;
-    }
-
-    .traxpbj-app-loading-overlay.is-visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .traxpbj-app-loading-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(238, 244, 251, .40);
-      backdrop-filter: blur(10px) saturate(1.1);
-      -webkit-backdrop-filter: blur(10px) saturate(1.1);
-    }
-
-    .traxpbj-app-loading-card {
-      position: relative;
-      width: min(100%, 420px);
-      border-radius: 26px;
-      padding: 20px 20px 18px;
-      color: #fff;
-      background: linear-gradient(135deg, #123a72 0%, #245a9b 62%, #2f9a8f 100%);
-      box-shadow: 0 28px 60px rgba(18,58,114,.24);
-      border: 1px solid rgba(255,255,255,.20);
-      overflow: hidden;
-      transform: translateY(10px) scale(.98);
-      transition: transform .28s ease;
-    }
-
-    .traxpbj-app-loading-overlay.is-visible .traxpbj-app-loading-card {
-      transform: translateY(0) scale(1);
-    }
-
-    .traxpbj-app-loading-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at top right, rgba(255,255,255,.22), transparent 30%),
-        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-      background-size: auto, 26px 26px, 26px 26px;
-      opacity: .75;
-      pointer-events: none;
-    }
-
-    .traxpbj-app-loading-chip,
-    .traxpbj-app-loading-title,
-    .traxpbj-app-loading-subtitle,
-    .traxpbj-app-loading-footer {
-      position: relative;
-      z-index: 1;
-    }
-
-    .traxpbj-app-loading-chip {
-      display: inline-flex;
-      align-items: center;
-      min-height: 24px;
-      padding: 0 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.14);
-      border: 1px solid rgba(255,255,255,.16);
-      color: rgba(255,255,255,.90);
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .traxpbj-app-loading-title {
-      margin: 0;
-      font-size: 20px;
-      line-height: 1.15;
-      font-weight: 950;
-    }
-
-    .traxpbj-app-loading-subtitle {
-      margin-top: 8px;
-      font-size: 13px;
-      line-height: 1.55;
-      color: rgba(255,255,255,.86);
-    }
-
-    .traxpbj-app-loading-progress-row {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: center;
-      margin-top: 14px;
-    }
-
-    .traxpbj-app-loading-progress-track {
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.16);
-      overflow: hidden;
-      box-shadow: inset 0 1px 3px rgba(15,23,42,.20);
-    }
-
-    .traxpbj-app-loading-progress-fill {
-      display: block;
-      width: 0%;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #ffffff 0%, #d8f6ff 22%, #7ee7d7 100%);
-      box-shadow: 0 0 18px rgba(126,231,215,.55);
-      transition: width .24s ease;
-    }
-
-    .traxpbj-app-loading-percent {
-      min-width: 48px;
-      text-align: right;
-      font-size: 17px;
-      font-weight: 950;
-      color: #fff;
-    }
-
-    .traxpbj-app-loading-footer {
-      margin-top: 10px;
-      font-size: 11px;
-      color: rgba(255,255,255,.74);
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-function ensureAppLoadingOverlay() {
-  ensureAppLoadingOverlayStyles();
-
-  if (appLoadingOverlay) {
-    return appLoadingOverlay;
-  }
-
-  const overlay = document.createElement('div');
-  overlay.className = 'traxpbj-app-loading-overlay';
-  overlay.innerHTML = `
-    <div class="traxpbj-app-loading-backdrop"></div>
-    <div class="traxpbj-app-loading-card" role="dialog" aria-modal="true" aria-live="polite">
-      <div class="traxpbj-app-loading-chip" id="traxpbjLoadingChip">SIPPBJ · Dashboard Monitoring</div>
-      <h3 class="traxpbj-app-loading-title" id="traxpbjLoadingTitle">Memuat dashboard...</h3>
-      <div class="traxpbj-app-loading-subtitle" id="traxpbjLoadingSubtitle">Menyiapkan tampilan dan data utama.</div>
-      <div class="traxpbj-app-loading-progress-row">
-        <div class="traxpbj-app-loading-progress-track">
-          <span class="traxpbj-app-loading-progress-fill" id="traxpbjLoadingFill"></span>
-        </div>
-        <div class="traxpbj-app-loading-percent" id="traxpbjLoadingPercent">0%</div>
-      </div>
-      <div class="traxpbj-app-loading-footer" id="traxpbjLoadingFooter">Mohon tunggu sebentar.</div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-  appLoadingOverlay = overlay;
-  return overlay;
-}
-
-function setAppLoadingInteractionLock(enabled) {
-  document.body.classList.toggle('app-loading-active', !!enabled);
-}
-
-function showAppLoadingOverlay({
-  chip = 'SIPPBJ · Dashboard Monitoring',
-  title = 'Memuat dashboard...',
-  subtitle = 'Menyiapkan tampilan dan data utama.',
-  footer = 'Mohon tunggu sebentar.',
-  progress = 0
-} = {}) {
-  const overlay = ensureAppLoadingOverlay();
-
-  const chipEl = overlay.querySelector('#traxpbjLoadingChip');
-  const titleEl = overlay.querySelector('#traxpbjLoadingTitle');
-  const subtitleEl = overlay.querySelector('#traxpbjLoadingSubtitle');
-  const footerEl = overlay.querySelector('#traxpbjLoadingFooter');
-
-  if (chipEl) chipEl.textContent = chip;
-  if (titleEl) titleEl.textContent = title;
-  if (subtitleEl) subtitleEl.textContent = subtitle;
-  if (footerEl) footerEl.textContent = footer;
-
-  updateAppLoadingOverlay(progress, subtitle, footer);
-  setAppLoadingInteractionLock(true);
-  requestAnimationFrame(() => overlay.classList.add('is-visible'));
-}
-
-function updateAppLoadingOverlay(progress, subtitle, footer) {
-  const overlay = ensureAppLoadingOverlay();
-  appLoadingOverlayProgress = Math.max(0, Math.min(100, Number(progress) || 0));
-
-  const fill = overlay.querySelector('#traxpbjLoadingFill');
-  const percent = overlay.querySelector('#traxpbjLoadingPercent');
-  const subtitleEl = overlay.querySelector('#traxpbjLoadingSubtitle');
-  const footerEl = overlay.querySelector('#traxpbjLoadingFooter');
-
-  if (fill) fill.style.width = `${appLoadingOverlayProgress}%`;
-  if (percent) percent.textContent = `${Math.round(appLoadingOverlayProgress)}%`;
-  if (subtitle && subtitleEl) subtitleEl.textContent = subtitle;
-  if (footer && footerEl) footerEl.textContent = footer;
-}
-
-function clearAppLoadingOverlayTimer() {
-  if (appLoadingOverlayTimer) {
-    clearInterval(appLoadingOverlayTimer);
-    appLoadingOverlayTimer = null;
-  }
-}
-
-function setRouteTransitionMask(enabled) {
-  if (!contentArea) {
-    return;
-  }
-
-  contentArea.classList.toggle('app-route-transitioning', !!enabled);
-}
-
-function startAppLoadingOverlayProgress(maxProgress = 88, messages = []) {
-  clearAppLoadingOverlayTimer();
-
-  let messageIndex = 0;
-  appLoadingOverlayTimer = setInterval(() => {
-    const step = 3 + Math.random() * 6;
-    const next = Math.min(maxProgress, appLoadingOverlayProgress + step);
-    const nextMessage = messages.length
-      ? messages[Math.min(messageIndex, messages.length - 1)]
-      : '';
-
-    updateAppLoadingOverlay(next, nextMessage || undefined);
-
-    if (messageIndex < messages.length - 1) {
-      messageIndex += 1;
-    }
-
-    if (next >= maxProgress) {
-      clearAppLoadingOverlayTimer();
-    }
-  }, 180);
-}
-
-function finishAndHideAppLoadingOverlay(finalSubtitle = 'Hampir selesai...', finalFooter = 'Panel dan kartu sedang ditampilkan.') {
-  clearAppLoadingOverlayTimer();
-  updateAppLoadingOverlay(100, finalSubtitle, finalFooter);
-
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (appLoadingOverlay) {
-        appLoadingOverlay.classList.remove('is-visible');
-      }
-
-      setTimeout(() => {
-        setAppLoadingInteractionLock(false);
-        resolve();
-      }, 220);
-    }, 220);
-  });
-}
-
-function showModuleLoading(title = 'Memuat modul...') {
-  contentArea.innerHTML = `
-    <section class="card">
-      <h3>${escapeHtml(title)}</h3>
-      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
-    </section>
-  `;
 }
 
 function initScrollAnimation() {
@@ -462,7 +150,6 @@ function initScrollAnimation() {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     const percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-
     progress.style.width = `${Math.min(100, Math.max(0, percent))}%`;
   };
 
@@ -554,13 +241,6 @@ function persistDashboardContext() {
 
   window.__dashboardSelectedSatker = payload.selectedSatker;
   return payload;
-}
-
-function escapeSelectorValue(value) {
-  if (window.CSS && typeof window.CSS.escape === 'function') {
-    return window.CSS.escape(String(value || ''));
-  }
-  return String(value || '').replace(/(["'\\.#:[\]()])/g, '\\$1');
 }
 
 function applyDashboardSatkerToModule(moduleContainer) {
@@ -825,12 +505,6 @@ function groupSum(rows, keyGetter, valueGetter) {
   });
 
   return Array.from(map.values()).sort((a, b) => b.value - a.value);
-}
-
-function avg(values) {
-  const cleaned = values.map(toNumber).filter((value) => Number.isFinite(value));
-  if (!cleaned.length) return 0;
-  return cleaned.reduce((total, value) => total + value, 0) / cleaned.length;
 }
 
 function sum(values) {
@@ -1189,47 +863,15 @@ function renderDashboardError(error) {
 }
 
 async function renderDashboard(force = false) {
-  if (DASHBOARD_STATE.data && !force) {
-    renderDashboardReady(DASHBOARD_STATE.data);
-    bindDashboardEvents();
-    initScrollAnimation();
-    return;
-  }
-
-  const showIntroOverlay = !dashboardIntroShownThisLoad;
-  dashboardIntroShownThisLoad = true;
-
   renderDashboardSkeleton();
-
-  if (showIntroOverlay) {
-    showAppLoadingOverlay({
-      chip: 'SIPPBJ · Dashboard Monitoring',
-      title: 'Merapikan tampilan dashboard...',
-      subtitle: 'Mengambil data utama dari Google Sheet.',
-      footer: 'Mohon tunggu, menu dikunci sementara.',
-      progress: 9
-    });
-
-    startAppLoadingOverlayProgress(88, [
-      'Mengambil data FIX ITKP OPD...',
-      'Mengambil data perencanaan dan realisasi...',
-      'Menyusun kartu, radar, dan statistik...',
-      'Hampir selesai, panel dashboard sedang ditampilkan.'
-    ]);
-  }
 
   try {
     const data = await loadDashboardData(force);
     renderDashboardReady(data);
     bindDashboardEvents();
-    initScrollAnimation();
   } catch (error) {
     console.error('Dashboard gagal dimuat:', error);
     renderDashboardError(error);
-  } finally {
-    if (showIntroOverlay) {
-      await finishAndHideAppLoadingOverlay('Hampir selesai...', 'Panel dan kartu sedang ditampilkan.');
-    }
   }
 }
 
@@ -1455,7 +1097,7 @@ function bindDashboardEvents() {
   const refresh = document.getElementById('refreshDashboardButton');
 
   if (refresh) {
-    refresh.addEventListener('click', async () => {
+    refresh.addEventListener('click', () => {
       DASHBOARD_STATE.data = null;
       renderDashboard(true);
     });
@@ -1557,7 +1199,10 @@ function bindDashboardEvents() {
       }
 
       const route = item.dataset.quick || item.dataset.route;
-      if (route) { persistDashboardContext(); loadPage(route); }
+      if (route) {
+        persistDashboardContext();
+        loadPage(route);
+      }
     });
   });
 }
@@ -1698,22 +1343,65 @@ function renderQuickCard(icon, bg, title, text, route, externalUrl = '') {
 }
 
 function renderIframePage(page) {
+  const lowerUrl = String(page.url || '').toLowerCase();
+  const isSimNontender = lowerUrl.includes('simppk');
+
   contentArea.innerHTML = `
-    <section class="embed-card">
+    <section class="embed-card ${isSimNontender ? 'embed-card--simppk' : ''}">
       <h3>${escapeHtml(page.title)}</h3>
       <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
 
-      <div class="embed-frame-wrap">
+      <div class="embed-frame-wrap ${isSimNontender ? 'embed-frame-wrap--simppk' : ''}">
         <iframe
-          class="embed-frame"
+          id="${isSimNontender ? 'simppkFrame' : ''}"
+          class="embed-frame ${isSimNontender ? 'embed-frame--simppk' : ''}"
           src="${page.url}"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
-          scrolling="yes">
+          scrolling="${isSimNontender ? 'no' : 'yes'}">
         </iframe>
       </div>
     </section>
   `;
+
+  if (isSimNontender) {
+    const iframe = document.getElementById('simppkFrame');
+
+    const resizeIframe = () => {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+        if (!doc) {
+          return;
+        }
+
+        const body = doc.body;
+        const html = doc.documentElement;
+
+        const height = Math.max(
+          body ? body.scrollHeight : 0,
+          body ? body.offsetHeight : 0,
+          html ? html.clientHeight : 0,
+          html ? html.scrollHeight : 0,
+          html ? html.offsetHeight : 0,
+          820
+        );
+
+        iframe.style.height = `${height + 40}px`;
+      } catch (error) {
+        iframe.style.height = 'calc(100vh - 170px)';
+        iframe.setAttribute('scrolling', 'yes');
+      }
+    };
+
+    iframe.addEventListener('load', () => {
+      resizeIframe();
+
+      setTimeout(resizeIframe, 300);
+      setTimeout(resizeIframe, 1000);
+      setTimeout(resizeIframe, 2000);
+    });
+  }
 }
 
 function renderPlaceholderPage(pageKey, page) {
@@ -1893,77 +1581,47 @@ function extractModuleBody(rawHtml) {
   return rawHtml;
 }
 
+function nextFrame() {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
 async function renderModulePage(page) {
   const token = ++activeModuleToken;
-  const hadContentBefore = Boolean(contentArea.innerHTML.trim());
+  const previousMarkup = contentArea.innerHTML;
 
-  if (hadContentBefore) {
-    setRouteTransitionMask(true);
-  }
-
-  cleanupDynamicModule();
-
-  if (hadContentBefore) {
-    showAppLoadingOverlay({
-      chip: 'SIPPBJ · Memuat Modul',
-      title: `Memuat ${page.title}...`,
-      subtitle: 'Menyiapkan tampilan dan script modul.',
-      footer: 'Mohon tunggu, menu dikunci sementara.',
-      progress: 12
-    });
-
-    startAppLoadingOverlayProgress(84, [
-      'Mengambil file HTML modul...',
-      'Menyiapkan CSS modul...',
-      'Menjalankan script modul...',
-      'Hampir selesai, tampilan modul sedang dipasang.'
-    ]);
-  } else {
-    showModuleLoading(page.title || 'Memuat modul...');
-  }
+  contentArea.classList.add('module-mode');
+  contentArea.classList.add('module-preparing');
 
   try {
+    cleanupDynamicModule();
+
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
       for (const src of page.externalScripts) {
         await loadExternalScriptOnce(src);
-
-        if (token !== activeModuleToken) {
-          return false;
-        }
+        if (token !== activeModuleToken) return false;
       }
     }
 
-    const rawHtml = await fetchModuleHtml(page.html);
+    const [rawHtml] = await Promise.all([
+      fetchModuleHtml(page.html),
+      loadModuleCss(page.css)
+    ]);
 
-    if (token !== activeModuleToken) {
-      return false;
-    }
-
-    await loadModuleCss(page.css);
-
-    if (token !== activeModuleToken) {
-      return false;
-    }
+    if (token !== activeModuleToken) return false;
 
     const moduleContent = extractModuleBody(rawHtml);
 
     contentArea.innerHTML = `
-      <section class="module-page module-page--native module-boot-hidden" aria-busy="true">
+      <section class="module-page module-page--native module-page--ready">
         ${moduleContent}
       </section>
     `;
 
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-
-    if (token !== activeModuleToken) {
-      return false;
-    }
+    await nextFrame();
+    if (token !== activeModuleToken) return false;
 
     await loadModuleJs(page.js);
-
-    if (token !== activeModuleToken) {
-      return false;
-    }
+    if (token !== activeModuleToken) return false;
 
     const moduleContainer = contentArea.querySelector('.module-page--native') || contentArea;
 
@@ -1979,18 +1637,6 @@ async function renderModulePage(page) {
     }
 
     applyDashboardContextToModule(page, moduleContainer);
-
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-    if (token !== activeModuleToken) {
-      return false;
-    }
-
-    if (moduleContainer && moduleContainer.classList) {
-      moduleContainer.classList.remove('module-boot-hidden');
-      moduleContainer.setAttribute('aria-busy', 'false');
-    }
-
     return true;
   } catch (error) {
     console.error('Gagal memuat module:', error);
@@ -1999,7 +1645,7 @@ async function renderModulePage(page) {
       return false;
     }
 
-    contentArea.innerHTML = `
+    contentArea.innerHTML = previousMarkup || `
       <section class="card">
         <h3>Gagal memuat modul</h3>
         <p>File modul tidak bisa dimuat. Cek path HTML, CSS, JS, atau inisialisasi modul.</p>
@@ -2009,9 +1655,8 @@ async function renderModulePage(page) {
 
     return false;
   } finally {
-    if (hadContentBefore) {
-      await finishAndHideAppLoadingOverlay('Hampir selesai...', 'Tampilan modul sedang ditampilkan.');
-      setRouteTransitionMask(false);
+    if (token === activeModuleToken) {
+      contentArea.classList.remove('module-preparing');
     }
   }
 }
@@ -2035,12 +1680,10 @@ async function loadPage(key) {
     let success = true;
 
     if (page.type !== 'module') {
-      setRouteTransitionMask(true);
       activeModuleToken++;
       cleanupDynamicModule();
       contentArea.classList.remove('module-mode');
-    } else {
-      contentArea.classList.add('module-mode');
+      contentArea.classList.remove('module-preparing');
     }
 
     if (page.type === 'iframe') {
@@ -2050,21 +1693,19 @@ async function loadPage(key) {
     } else if (page.type === 'placeholder') {
       renderPlaceholderPage(key, page);
     } else {
-      await renderDashboard();
+      renderDashboard();
     }
 
     if (success) {
       activePageKey = key;
     }
 
-    setRouteTransitionMask(false);
     initScrollAnimation();
 
     if (window.innerWidth <= 980 && sidebar) {
       sidebar.classList.remove('mobile-open');
     }
   } finally {
-    setRouteTransitionMask(false);
     if (loadingPageKey === key) {
       loadingPageKey = '';
     }
