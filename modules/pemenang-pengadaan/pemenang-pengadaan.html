@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pemenang Pengadaan - Portal Data Pengadaan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-shell" id="loginShell">
+    <div class="login-backdrop"></div>
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="login-brand-logo">PP</div>
+        <div>
+          <div class="login-brand-kicker">PORTAL DATA PENGADAAN</div>
+          <h1>Pemenang Pengadaan</h1>
+          <p>Akses internal untuk pencarian paket penyedia dan pemantauan paket pengadaan aktif.</p>
+        </div>
+      </div>
+
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <label class="field-group">
+          <span>User ID</span>
+          <input type="text" id="loginUserId" placeholder="Masukkan user id" required>
+        </label>
+
+        <label class="field-group">
+          <span>Password</span>
+          <input type="password" id="loginPassword" placeholder="Masukkan password" required>
+        </label>
+
+        <button type="submit" class="login-submit" id="loginSubmitButton">Masuk ke Portal</button>
+        <p class="login-error" id="loginError"></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="app-shell app-hidden" id="appShell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-block brand-block--portal">
+        <div class="brand-left">
+          <div class="brand-logo brand-logo--portal">PP</div>
+          <div class="brand-text">
+            <h1>Pemenang Pengadaan</h1>
+            <p>Portal Data Pengadaan</p>
+          </div>
+        </div>
+
+        <button class="sidebar-toggle-button" id="sidebarToggleButton" type="button" aria-label="Toggle sidebar">☰</button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">MENU UTAMA</div>
+
+        <button class="nav-link active" type="button" data-page="dashboard">
+          <span class="nav-left">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Dashboard</span>
+          </span>
+        </button>
+
+        <button class="nav-link" type="button" data-page="provider-search">
+          <span class="nav-left">
+            <span class="nav-icon">🔎</span>
+            <span class="nav-text">Pencarian Paket Penyedia</span>
+          </span>
+        </button>
+
+        <button class="nav-link" type="button" data-page="active-packages">
+          <span class="nav-left">
+            <span class="nav-icon">📦</span>
+            <span class="nav-text">Paket Pengadaan Aktif</span>
+          </span>
+        </button>
+      </nav>
+
+      <div class="sidebar-help sidebar-help--user">
+        <div class="sidebar-user-label">Login sebagai</div>
+        <h3 id="sidebarUserName">-</h3>
+        <p>Portal ini membaca data dari spreadsheet internal yang Anda siapkan.</p>
+        <button type="button" class="help-button logout-button" id="logoutButton">Keluar</button>
+      </div>
+    </aside>
+
+    <main class="content-area" id="contentArea"></main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
