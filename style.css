@@ -768,6 +768,13 @@ textarea{
   background:transparent;
 }
 
+.module-page--native.module-boot-hidden{
+  opacity:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+
 .module-page--native .timeline-wrapper,
 .module-page--native .table-wrap{
   overflow:auto !important;
