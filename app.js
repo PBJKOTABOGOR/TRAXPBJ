@@ -41,26 +41,26 @@ const APP_ROUTES = {
     js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
   },
 
-'monitoring-nontender': {
-  title: 'Non eTendering/Non ePurchasing',
-  subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
-  type: 'module',
-  html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
-  css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
-  js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
-},
+  'monitoring-nontender': {
+    title: 'Non eTendering/Non ePurchasing',
+    subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
+    type: 'module',
+    html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
+    css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
+    js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
+  },
 
-'rapor-pbj': {
-  title: 'Rapor PBJ',
-  subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
-  type: 'module',
-  html: 'modules/rapor-pbj/rapor-pbj.html',
-  css: 'modules/rapor-pbj/rapor-pbj.css',
-  js: 'modules/rapor-pbj/rapor-pbj.js',
-  externalScripts: [
-    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
-  ]
-},
+  'rapor-pbj': {
+    title: 'Rapor PBJ',
+    subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
+    type: 'module',
+    html: 'modules/rapor-pbj/rapor-pbj.html',
+    css: 'modules/rapor-pbj/rapor-pbj.css',
+    js: 'modules/rapor-pbj/rapor-pbj.js',
+    externalScripts: [
+      'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+    ]
+  },
 
   'monitoring-perencanaan': {
     title: 'Monitoring Realisasi',
@@ -116,141 +116,10 @@ let activeFlyout = null;
 let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
-let appInteractionLocked = false;
-let initialBootResolved = false;
-let initialBootProgress = 0;
-let initialBootTimer = null;
-
-const INITIAL_BOOT_SESSION_KEY = 'traxpbj_initial_boot_done';
-let hasShownInitialBoot = false;
-
-try {
-  hasShownInitialBoot = sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY) === '1';
-} catch (error) {
-  hasShownInitialBoot = false;
-}
-
-let initialBootActive = !hasShownInitialBoot;
-
-function ensureInitialBootOverlay() {
-  let overlay = document.getElementById('initialBootOverlay');
-
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'initialBootOverlay';
-    overlay.className = 'initial-boot-overlay';
-    overlay.innerHTML = `
-      <div class="initial-boot-backdrop-fx"></div>
-      <div class="initial-boot-card">
-        <div class="initial-boot-orb initial-boot-orb--one"></div>
-        <div class="initial-boot-orb initial-boot-orb--two"></div>
-        <div class="initial-boot-topline">SIPPBJ · Dashboard Monitoring</div>
-        <div class="initial-boot-title" id="initialBootTitle">Menyiapkan Dashboard...</div>
-        <div class="initial-boot-subtitle" id="initialBootSubtitle">Mohon tunggu, sistem sedang memuat tampilan awal dan data utama.</div>
-        <div class="initial-boot-progress-row">
-          <div class="initial-boot-progress-track">
-            <span class="initial-boot-progress-glow"></span>
-            <span class="initial-boot-progress-fill" id="initialBootProgressFill" style="width:0%"></span>
-          </div>
-          <div class="initial-boot-progress-text" id="initialBootProgressText">0%</div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-  }
-
-  return overlay;
-}
-
-function updateInitialBootOverlay(progress, title, subtitle) {
-  const overlay = ensureInitialBootOverlay();
-  const progressFill = document.getElementById('initialBootProgressFill');
-  const progressText = document.getElementById('initialBootProgressText');
-  const titleEl = document.getElementById('initialBootTitle');
-  const subtitleEl = document.getElementById('initialBootSubtitle');
-
-  const safeProgress = Math.max(0, Math.min(100, Math.round(progress || 0)));
-  initialBootProgress = safeProgress;
-
-  overlay.classList.add('show');
-  if (progressFill) progressFill.style.width = `${safeProgress}%`;
-  if (progressText) progressText.textContent = `${safeProgress}%`;
-  if (titleEl && title) titleEl.textContent = title;
-  if (subtitleEl && subtitle) subtitleEl.textContent = subtitle;
-}
-
-function startInitialBootLoading(title = 'Menyiapkan Dashboard...', subtitle = 'Mohon tunggu, sistem sedang memuat tampilan awal dan data utama.') {
-  if (!initialBootActive || initialBootResolved) return;
-
-  updateInitialBootOverlay(4, title, subtitle);
-  document.body.classList.add('app-is-loading');
-  appInteractionLocked = true;
-
-  if (initialBootTimer) {
-    clearInterval(initialBootTimer);
-  }
-
-  initialBootTimer = window.setInterval(() => {
-    if (!initialBootActive || initialBootResolved) {
-      clearInterval(initialBootTimer);
-      initialBootTimer = null;
-      return;
-    }
-
-    if (initialBootProgress < 92) {
-      const jump = initialBootProgress < 30 ? 6 : initialBootProgress < 60 ? 4 : 2;
-      updateInitialBootOverlay(initialBootProgress + jump);
-    }
-  }, 220);
-}
-
-function finishInitialBootLoading() {
-  if (!initialBootActive || initialBootResolved) return;
-
-  initialBootResolved = true;
-  updateInitialBootOverlay(100, 'Dashboard siap', 'Tampilan awal selesai dimuat.');
-
-  if (initialBootTimer) {
-    clearInterval(initialBootTimer);
-    initialBootTimer = null;
-  }
-
-  window.setTimeout(() => {
-    const overlay = document.getElementById('initialBootOverlay');
-    if (overlay) overlay.classList.remove('show');
-    document.body.classList.remove('app-is-loading');
-    appInteractionLocked = false;
-    initialBootActive = false;
-    hasShownInitialBoot = true;
-
-    try {
-      sessionStorage.setItem(INITIAL_BOOT_SESSION_KEY, '1');
-    } catch (error) {
-      // ignore storage issue
-    }
-  }, 340);
-}
-
-function failInitialBootLoading(message = 'Tampilan awal tetap dibuka meski ada kendala memuat data.') {
-  if (!initialBootActive || initialBootResolved) return;
-  updateInitialBootOverlay(100, 'Memuat selesai', message);
-  finishInitialBootLoading();
-}
-
-function setAppInteractionLock(locked) {
-  if (initialBootActive && !initialBootResolved) {
-    appInteractionLocked = true;
-    document.body.classList.add('app-is-loading');
-    return;
-  }
-
-  appInteractionLocked = !!locked;
-  document.body.classList.toggle('app-is-loading', !!locked);
-}
-
-function isAppInteractionLocked() {
-  return appInteractionLocked;
-}
+let dashboardIntroShownThisLoad = false;
+let appLoadingOverlay = null;
+let appLoadingOverlayTimer = null;
+let appLoadingOverlayProgress = 0;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -266,161 +135,294 @@ function cacheBust(url) {
   return `${url}${joiner}v=${Date.now()}`;
 }
 
-function ensureRouteTransitionOverlay() {
-  let overlay = document.getElementById('routeTransitionOverlay');
-
-  if (!overlay) {
-    const style = document.createElement('style');
-    style.id = 'routeTransitionOverlayStyle';
-    style.textContent = `
-      .route-transition-overlay{
-        position:fixed;
-        inset:0;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:24px;
-        background:rgba(239,244,251,.36);
-        backdrop-filter:blur(10px);
-        -webkit-backdrop-filter:blur(10px);
-        opacity:0;
-        pointer-events:none;
-        transition:opacity .2s ease;
-        z-index:9998;
-      }
-      .route-transition-overlay.show{
-        opacity:1;
-        pointer-events:auto;
-      }
-      .route-transition-card{
-        position:relative;
-        width:min(100%, 380px);
-        border-radius:26px;
-        padding:20px 20px 18px;
-        color:#fff;
-        background:linear-gradient(135deg,#123a72 0%,#245a9b 68%,#2f9a8f 100%);
-        box-shadow:0 24px 56px rgba(18,58,114,.24);
-        overflow:hidden;
-      }
-      .route-transition-card::before{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:linear-gradient(135deg, rgba(255,255,255,.08), transparent 55%);
-        pointer-events:none;
-      }
-      .route-transition-kicker{
-        position:relative;
-        display:inline-flex;
-        align-items:center;
-        min-height:24px;
-        padding:0 10px;
-        border-radius:999px;
-        background:rgba(255,255,255,.14);
-        border:1px solid rgba(255,255,255,.18);
-        font-size:10px;
-        font-weight:900;
-        letter-spacing:.08em;
-        text-transform:uppercase;
-      }
-      .route-transition-title{
-        position:relative;
-        margin-top:10px;
-        font-size:18px;
-        line-height:1.2;
-        font-weight:900;
-      }
-      .route-transition-subtitle{
-        position:relative;
-        margin-top:6px;
-        font-size:12px;
-        line-height:1.55;
-        color:rgba(255,255,255,.88);
-      }
-      .route-transition-progress-row{
-        position:relative;
-        display:grid;
-        grid-template-columns:1fr auto;
-        gap:12px;
-        align-items:center;
-        margin-top:16px;
-      }
-      .route-transition-progress-track{
-        position:relative;
-        height:12px;
-        border-radius:999px;
-        overflow:hidden;
-        background:rgba(255,255,255,.18);
-      }
-      .route-transition-progress-track::before{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:linear-gradient(90deg, rgba(255,255,255,.16), transparent 35%, rgba(255,255,255,.16));
-        transform:translateX(-100%);
-        animation:routeTransitionShimmer 1.2s linear infinite;
-      }
-      .route-transition-progress-fill{
-        position:absolute;
-        inset:0 auto 0 0;
-        width:74%;
-        border-radius:inherit;
-        background:linear-gradient(90deg,#ffffff 0%, #d9fbff 38%, #67e8f9 100%);
-        box-shadow:0 0 18px rgba(103,232,249,.35);
-      }
-      .route-transition-progress-text{
-        min-width:38px;
-        text-align:right;
-        font-size:14px;
-        font-weight:900;
-      }
-      .content-area.route-loading-stage{
-        opacity:0;
-      }
-      @keyframes routeTransitionShimmer{
-        to{ transform:translateX(100%); }
-      }
-    `;
-    document.head.appendChild(style);
-
-    overlay = document.createElement('div');
-    overlay.id = 'routeTransitionOverlay';
-    overlay.className = 'route-transition-overlay';
-    overlay.innerHTML = `
-      <div class="route-transition-card">
-        <div class="route-transition-kicker">SIPPBJ · Modul Monitoring</div>
-        <div class="route-transition-title" id="routeTransitionTitle">Memuat modul...</div>
-        <div class="route-transition-subtitle" id="routeTransitionSubtitle">Mohon tunggu sebentar, tampilan sedang disiapkan.</div>
-        <div class="route-transition-progress-row">
-          <div class="route-transition-progress-track"><span class="route-transition-progress-fill"></span></div>
-          <div class="route-transition-progress-text">•••</div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
+function ensureAppLoadingOverlayStyles() {
+  if (document.getElementById('traxpbj-app-loading-style')) {
+    return;
   }
 
+  const style = document.createElement('style');
+  style.id = 'traxpbj-app-loading-style';
+  style.textContent = `
+    body.app-loading-active {
+      overflow: hidden !important;
+    }
+
+    body.app-loading-active .app-shell,
+    body.app-loading-active .sidebar,
+    body.app-loading-active .content-area {
+      pointer-events: none !important;
+      user-select: none !important;
+    }
+
+    .traxpbj-app-loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .24s ease;
+    }
+
+    .traxpbj-app-loading-overlay.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .traxpbj-app-loading-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(238, 244, 251, .40);
+      backdrop-filter: blur(10px) saturate(1.1);
+      -webkit-backdrop-filter: blur(10px) saturate(1.1);
+    }
+
+    .traxpbj-app-loading-card {
+      position: relative;
+      width: min(100%, 420px);
+      border-radius: 26px;
+      padding: 20px 20px 18px;
+      color: #fff;
+      background: linear-gradient(135deg, #123a72 0%, #245a9b 62%, #2f9a8f 100%);
+      box-shadow: 0 28px 60px rgba(18,58,114,.24);
+      border: 1px solid rgba(255,255,255,.20);
+      overflow: hidden;
+      transform: translateY(10px) scale(.98);
+      transition: transform .28s ease;
+    }
+
+    .traxpbj-app-loading-overlay.is-visible .traxpbj-app-loading-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .traxpbj-app-loading-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.22), transparent 30%),
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: auto, 26px 26px, 26px 26px;
+      opacity: .75;
+      pointer-events: none;
+    }
+
+    .traxpbj-app-loading-chip,
+    .traxpbj-app-loading-title,
+    .traxpbj-app-loading-subtitle,
+    .traxpbj-app-loading-footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .traxpbj-app-loading-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.16);
+      color: rgba(255,255,255,.90);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .traxpbj-app-loading-title {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.15;
+      font-weight: 950;
+    }
+
+    .traxpbj-app-loading-subtitle {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(255,255,255,.86);
+    }
+
+    .traxpbj-app-loading-progress-row {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .traxpbj-app-loading-progress-track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(15,23,42,.20);
+    }
+
+    .traxpbj-app-loading-progress-fill {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ffffff 0%, #d8f6ff 22%, #7ee7d7 100%);
+      box-shadow: 0 0 18px rgba(126,231,215,.55);
+      transition: width .24s ease;
+    }
+
+    .traxpbj-app-loading-percent {
+      min-width: 48px;
+      text-align: right;
+      font-size: 17px;
+      font-weight: 950;
+      color: #fff;
+    }
+
+    .traxpbj-app-loading-footer {
+      margin-top: 10px;
+      font-size: 11px;
+      color: rgba(255,255,255,.74);
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+function ensureAppLoadingOverlay() {
+  ensureAppLoadingOverlayStyles();
+
+  if (appLoadingOverlay) {
+    return appLoadingOverlay;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'traxpbj-app-loading-overlay';
+  overlay.innerHTML = `
+    <div class="traxpbj-app-loading-backdrop"></div>
+    <div class="traxpbj-app-loading-card" role="dialog" aria-modal="true" aria-live="polite">
+      <div class="traxpbj-app-loading-chip" id="traxpbjLoadingChip">SIPPBJ · Dashboard Monitoring</div>
+      <h3 class="traxpbj-app-loading-title" id="traxpbjLoadingTitle">Memuat dashboard...</h3>
+      <div class="traxpbj-app-loading-subtitle" id="traxpbjLoadingSubtitle">Menyiapkan tampilan dan data utama.</div>
+      <div class="traxpbj-app-loading-progress-row">
+        <div class="traxpbj-app-loading-progress-track">
+          <span class="traxpbj-app-loading-progress-fill" id="traxpbjLoadingFill"></span>
+        </div>
+        <div class="traxpbj-app-loading-percent" id="traxpbjLoadingPercent">0%</div>
+      </div>
+      <div class="traxpbj-app-loading-footer" id="traxpbjLoadingFooter">Mohon tunggu sebentar.</div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  appLoadingOverlay = overlay;
   return overlay;
 }
 
-function showModuleLoading(title = 'Memuat modul...', subtitle = 'Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.') {
-  const overlay = ensureRouteTransitionOverlay();
-  const titleEl = document.getElementById('routeTransitionTitle');
-  const subtitleEl = document.getElementById('routeTransitionSubtitle');
-
-  if (titleEl) titleEl.textContent = title;
-  if (subtitleEl) subtitleEl.textContent = subtitle;
-
-  overlay.classList.add('show');
-  contentArea.classList.add('route-loading-stage');
-  setAppInteractionLock(true);
+function setAppLoadingInteractionLock(enabled) {
+  document.body.classList.toggle('app-loading-active', !!enabled);
 }
 
-function hideModuleLoading() {
-  const overlay = document.getElementById('routeTransitionOverlay');
-  if (overlay) overlay.classList.remove('show');
-  contentArea.classList.remove('route-loading-stage');
-  setAppInteractionLock(false);
+function showAppLoadingOverlay({
+  chip = 'SIPPBJ · Dashboard Monitoring',
+  title = 'Memuat dashboard...',
+  subtitle = 'Menyiapkan tampilan dan data utama.',
+  footer = 'Mohon tunggu sebentar.',
+  progress = 0
+} = {}) {
+  const overlay = ensureAppLoadingOverlay();
+
+  const chipEl = overlay.querySelector('#traxpbjLoadingChip');
+  const titleEl = overlay.querySelector('#traxpbjLoadingTitle');
+  const subtitleEl = overlay.querySelector('#traxpbjLoadingSubtitle');
+  const footerEl = overlay.querySelector('#traxpbjLoadingFooter');
+
+  if (chipEl) chipEl.textContent = chip;
+  if (titleEl) titleEl.textContent = title;
+  if (subtitleEl) subtitleEl.textContent = subtitle;
+  if (footerEl) footerEl.textContent = footer;
+
+  updateAppLoadingOverlay(progress, subtitle, footer);
+  setAppLoadingInteractionLock(true);
+  requestAnimationFrame(() => overlay.classList.add('is-visible'));
+}
+
+function updateAppLoadingOverlay(progress, subtitle, footer) {
+  const overlay = ensureAppLoadingOverlay();
+  appLoadingOverlayProgress = Math.max(0, Math.min(100, Number(progress) || 0));
+
+  const fill = overlay.querySelector('#traxpbjLoadingFill');
+  const percent = overlay.querySelector('#traxpbjLoadingPercent');
+  const subtitleEl = overlay.querySelector('#traxpbjLoadingSubtitle');
+  const footerEl = overlay.querySelector('#traxpbjLoadingFooter');
+
+  if (fill) fill.style.width = `${appLoadingOverlayProgress}%`;
+  if (percent) percent.textContent = `${Math.round(appLoadingOverlayProgress)}%`;
+  if (subtitle && subtitleEl) subtitleEl.textContent = subtitle;
+  if (footer && footerEl) footerEl.textContent = footer;
+}
+
+function clearAppLoadingOverlayTimer() {
+  if (appLoadingOverlayTimer) {
+    clearInterval(appLoadingOverlayTimer);
+    appLoadingOverlayTimer = null;
+  }
+}
+
+function startAppLoadingOverlayProgress(maxProgress = 88, messages = []) {
+  clearAppLoadingOverlayTimer();
+
+  let messageIndex = 0;
+  appLoadingOverlayTimer = setInterval(() => {
+    const step = 3 + Math.random() * 6;
+    const next = Math.min(maxProgress, appLoadingOverlayProgress + step);
+    const nextMessage = messages.length
+      ? messages[Math.min(messageIndex, messages.length - 1)]
+      : '';
+
+    updateAppLoadingOverlay(next, nextMessage || undefined);
+
+    if (messageIndex < messages.length - 1) {
+      messageIndex += 1;
+    }
+
+    if (next >= maxProgress) {
+      clearAppLoadingOverlayTimer();
+    }
+  }, 180);
+}
+
+function finishAndHideAppLoadingOverlay(finalSubtitle = 'Hampir selesai...', finalFooter = 'Panel dan kartu sedang ditampilkan.') {
+  clearAppLoadingOverlayTimer();
+  updateAppLoadingOverlay(100, finalSubtitle, finalFooter);
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (appLoadingOverlay) {
+        appLoadingOverlay.classList.remove('is-visible');
+      }
+
+      setTimeout(() => {
+        setAppLoadingInteractionLock(false);
+        resolve();
+      }, 220);
+    }, 220);
+  });
+}
+
+function showModuleLoading(title = 'Memuat modul...') {
+  contentArea.innerHTML = `
+    <section class="card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
+    </section>
+  `;
 }
 
 function initScrollAnimation() {
@@ -597,7 +599,6 @@ function applyDashboardContextToModule(page, moduleContainer) {
     }, delay);
   });
 }
-
 
 function normalizeHeader(value) {
   return String(value || '')
@@ -1113,15 +1114,15 @@ function renderDashboardSkeleton() {
   contentArea.innerHTML = `
     <section class="hero-card hero-card--dashboard">
       <div class="hero-glow"></div>
-      <div class="hero-kicker">SIPPBJ · Sistem Informasi Pelaporan Pengadaan Barang Jasa</div>
-      <h3>Dashboard Pengadaan Barang/Jasa Kota Bogor</h3>
-      <p></p>
+      <div class="hero-kicker">SIPPBJ · Kota Bogor Procurement Dashboard</div>
+      <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
+      <p>Menarik data dari FIX ITKP OPD, D_PERENCANAAN, dan D_REALISASI untuk merangkum profil ITKP, perencanaan, realisasi, metode pengadaan, OPD dominan, serta indikator progress pengadaan.</p>
 
       <div class="dashboard-loading">
         <div class="loading-orb"></div>
         <div>
           <b>Memuat data dashboard...</b>
-          <span>Mengambil data dan menyusun analisis Kota Bogor.</span>
+          <span>Mengambil data Google Sheet dan menyusun analisis Kota Bogor.</span>
         </div>
       </div>
     </section>
@@ -1170,28 +1171,46 @@ function renderDashboardError(error) {
 }
 
 async function renderDashboard(force = false) {
-  const shouldShowInitialBoot = !hasShownInitialBoot && initialBootActive && !initialBootResolved;
-
-  if (shouldShowInitialBoot) {
-    startInitialBootLoading();
+  if (DASHBOARD_STATE.data && !force) {
+    renderDashboardReady(DASHBOARD_STATE.data);
+    bindDashboardEvents();
+    initScrollAnimation();
+    return;
   }
 
+  const showIntroOverlay = !dashboardIntroShownThisLoad;
+  dashboardIntroShownThisLoad = true;
+
   renderDashboardSkeleton();
+
+  if (showIntroOverlay) {
+    showAppLoadingOverlay({
+      chip: 'SIPPBJ · Dashboard Monitoring',
+      title: 'Merapikan tampilan dashboard...',
+      subtitle: 'Mengambil data utama dari Google Sheet.',
+      footer: 'Mohon tunggu, menu dikunci sementara.',
+      progress: 9
+    });
+
+    startAppLoadingOverlayProgress(88, [
+      'Mengambil data FIX ITKP OPD...',
+      'Mengambil data perencanaan dan realisasi...',
+      'Menyusun kartu, radar, dan statistik...',
+      'Hampir selesai, panel dashboard sedang ditampilkan.'
+    ]);
+  }
 
   try {
     const data = await loadDashboardData(force);
     renderDashboardReady(data);
     bindDashboardEvents();
-
-    if (shouldShowInitialBoot) {
-      finishInitialBootLoading();
-    }
+    initScrollAnimation();
   } catch (error) {
     console.error('Dashboard gagal dimuat:', error);
     renderDashboardError(error);
-
-    if (shouldShowInitialBoot) {
-      failInitialBootLoading('Dashboard tetap dibuka meski ada kendala memuat data.');
+  } finally {
+    if (showIntroOverlay) {
+      await finishAndHideAppLoadingOverlay('Hampir selesai...', 'Panel dan kartu sedang ditampilkan.');
     }
   }
 }
@@ -1218,9 +1237,9 @@ function renderDashboardReady(data) {
 
       <div class="hero-topline">
         <div>
-          <div class="hero-kicker">SIPPBJ · Sistem Informasi Pelaporan Pengadaan Barang Jasa</div>
-          <h3>Dashboard Pengadaan Barang/Jasa Kota Bogor</h3>
-          <p>Ringkasan ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD/Sub OPD.</p>
+          <div class="hero-kicker">SIPPBJ · Kota Bogor Procurement Dashboard</div>
+          <h3>Dashboard Profil Pengadaan Barang/Jasa Kota Bogor</h3>
+          <p>Ringkasan interaktif dari ITKP Kota Bogor, profil perencanaan, realisasi paket, metode pengadaan, dan performa OPD/Sub OPD berdasarkan data Google Sheet yang tersedia.</p>
         </div>
 
         <div class="hero-badge">
@@ -1249,7 +1268,7 @@ function renderDashboardReady(data) {
           <div>
             <span class="section-kicker">${escapeHtml(profileKicker)}</span>
             <h3>Radar Pemanfaatan Sistem ITKP</h3>
-            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator.</p>
+            <p class="section-subnote">Pilih satuan kerja untuk melihat komposisi skor per indikator. Baris <b>PEMERINTAH KOTA BOGOR</b> dipakai sebagai skor agregat kota, dibaca langsung dari kolom <b>Nilai ITKP Pemanfaatan Sistem</b>, dan tidak masuk ranking OPD.</p>
           </div>
 
           <label class="satker-select-wrap">
@@ -1307,7 +1326,7 @@ function renderDashboardReady(data) {
           <div class="progress-track progress-track--tall">
             <div class="progress-bar progress-bar--${getToneByPercent(data.realisasiPersen)}" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
           </div>
-          <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi dibanding nilai pagu.</p>
+          <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi pada D_REALISASI dibanding nilai pagu pada D_PERENCANAAN.</p>
         </div>
 
         <div class="status-mini-grid">
@@ -1418,7 +1437,7 @@ function bindDashboardEvents() {
   const refresh = document.getElementById('refreshDashboardButton');
 
   if (refresh) {
-    refresh.addEventListener('click', () => {
+    refresh.addEventListener('click', async () => {
       DASHBOARD_STATE.data = null;
       renderDashboard(true);
     });
@@ -1641,21 +1660,6 @@ function renderCompactList(items, type) {
   `).join('');
 }
 
-function renderActivity(color, icon, title, text, time) {
-  return `
-    <div class="activity-item">
-      <div class="activity-icon" style="background:${color}">${icon}</div>
-
-      <div>
-        <div class="activity-title">${escapeHtml(title)}</div>
-        <div class="activity-text">${escapeHtml(text)}</div>
-      </div>
-
-      <div class="activity-time">${escapeHtml(time)}</div>
-    </div>
-  `;
-}
-
 function renderQuickCard(icon, bg, title, text, route, externalUrl = '') {
   const dataAttrs = externalUrl
     ? `data-external="${escapeHtml(externalUrl)}"`
@@ -1676,65 +1680,22 @@ function renderQuickCard(icon, bg, title, text, route, externalUrl = '') {
 }
 
 function renderIframePage(page) {
-  const lowerUrl = String(page.url || '').toLowerCase();
-  const isSimNontender = lowerUrl.includes('simppk');
-
   contentArea.innerHTML = `
-    <section class="embed-card ${isSimNontender ? 'embed-card--simppk' : ''}">
+    <section class="embed-card">
       <h3>${escapeHtml(page.title)}</h3>
       <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
 
-      <div class="embed-frame-wrap ${isSimNontender ? 'embed-frame-wrap--simppk' : ''}">
+      <div class="embed-frame-wrap">
         <iframe
-          id="${isSimNontender ? 'simppkFrame' : ''}"
-          class="embed-frame ${isSimNontender ? 'embed-frame--simppk' : ''}"
+          class="embed-frame"
           src="${page.url}"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
-          scrolling="${isSimNontender ? 'no' : 'yes'}">
+          scrolling="yes">
         </iframe>
       </div>
     </section>
   `;
-
-  if (isSimNontender) {
-    const iframe = document.getElementById('simppkFrame');
-
-    const resizeIframe = () => {
-      try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-
-        if (!doc) {
-          return;
-        }
-
-        const body = doc.body;
-        const html = doc.documentElement;
-
-        const height = Math.max(
-          body ? body.scrollHeight : 0,
-          body ? body.offsetHeight : 0,
-          html ? html.clientHeight : 0,
-          html ? html.scrollHeight : 0,
-          html ? html.offsetHeight : 0,
-          820
-        );
-
-        iframe.style.height = `${height + 40}px`;
-      } catch (error) {
-        iframe.style.height = 'calc(100vh - 170px)';
-        iframe.setAttribute('scrolling', 'yes');
-      }
-    };
-
-    iframe.addEventListener('load', () => {
-      resizeIframe();
-
-      setTimeout(resizeIframe, 300);
-      setTimeout(resizeIframe, 1000);
-      setTimeout(resizeIframe, 2000);
-    });
-  }
 }
 
 function renderPlaceholderPage(pageKey, page) {
@@ -1745,8 +1706,14 @@ function renderPlaceholderPage(pageKey, page) {
       <div class="placeholder-grid">
         <div class="placeholder-box">
           <h4>Modul belum dihubungkan</h4>
-          <p>Halaman ini sedang disiapkan.</p>
+          <p>Halaman ini sudah disiapkan di portal utama. Nanti saat project GitHub/halaman monitoring selesai, tinggal isi URL atau module path di file <b>app.js</b>.</p>
         </div>
+
+        <div class="placeholder-box">
+          <h4>Langkah berikutnya</h4>
+          <p>Cari route <b>${escapeHtml(pageKey)}</b> pada objek <b>APP_ROUTES</b>, lalu ubah <b>type</b> menjadi <b>iframe</b> atau <b>module</b>.</p>
+        </div>
+      </div>
     </section>
   `;
 }
@@ -1910,9 +1877,28 @@ function extractModuleBody(rawHtml) {
 
 async function renderModulePage(page) {
   const token = ++activeModuleToken;
+  const hadContentBefore = Boolean(contentArea.innerHTML.trim());
 
   cleanupDynamicModule();
-  showModuleLoading(page.title || 'Memuat modul...', 'Mohon tunggu sebentar, sistem sedang menyiapkan tampilan modul.');
+
+  if (hadContentBefore) {
+    showAppLoadingOverlay({
+      chip: 'SIPPBJ · Memuat Modul',
+      title: `Memuat ${page.title}...`,
+      subtitle: 'Menyiapkan tampilan dan script modul.',
+      footer: 'Mohon tunggu, menu dikunci sementara.',
+      progress: 12
+    });
+
+    startAppLoadingOverlayProgress(84, [
+      'Mengambil file HTML modul...',
+      'Menyiapkan CSS modul...',
+      'Menjalankan script modul...',
+      'Hampir selesai, tampilan modul sedang dipasang.'
+    ]);
+  } else {
+    showModuleLoading(page.title || 'Memuat modul...');
+  }
 
   try {
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
@@ -1971,9 +1957,6 @@ async function renderModulePage(page) {
     }
 
     applyDashboardContextToModule(page, moduleContainer);
-
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    hideModuleLoading();
     return true;
   } catch (error) {
     console.error('Gagal memuat module:', error);
@@ -1982,7 +1965,6 @@ async function renderModulePage(page) {
       return false;
     }
 
-    hideModuleLoading();
     contentArea.innerHTML = `
       <section class="card">
         <h3>Gagal memuat modul</h3>
@@ -1992,13 +1974,17 @@ async function renderModulePage(page) {
     `;
 
     return false;
+  } finally {
+    if (hadContentBefore) {
+      await finishAndHideAppLoadingOverlay('Hampir selesai...', 'Tampilan modul sedang ditampilkan.');
+    }
   }
 }
 
 async function loadPage(key) {
   const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
 
-  if (loadingPageKey === key || isAppInteractionLocked()) {
+  if (loadingPageKey === key) {
     return;
   }
 
@@ -2022,16 +2008,13 @@ async function loadPage(key) {
     }
 
     if (page.type === 'iframe') {
-      hideModuleLoading();
       renderIframePage(page);
     } else if (page.type === 'module') {
       success = await renderModulePage(page);
     } else if (page.type === 'placeholder') {
-      hideModuleLoading();
       renderPlaceholderPage(key, page);
     } else {
-      hideModuleLoading();
-      renderDashboard();
+      await renderDashboard();
     }
 
     if (success) {
@@ -2055,7 +2038,7 @@ function bindMenu() {
     button.addEventListener('click', () => {
       const pageKey = button.dataset.page;
 
-      if (!pageKey || isAppInteractionLocked()) {
+      if (!pageKey) {
         return;
       }
 
@@ -2065,11 +2048,6 @@ function bindMenu() {
 
   document.querySelectorAll('[data-toggle-group]').forEach((button) => {
     button.addEventListener('click', (event) => {
-      if (isAppInteractionLocked()) {
-        event.preventDefault();
-        return;
-      }
-
       const groupName = button.dataset.toggleGroup;
       const group = document.querySelector(`.nav-group[data-group="${groupName}"]`);
 
@@ -2089,10 +2067,6 @@ function bindMenu() {
 
   if (sidebarToggleButton && sidebar) {
     sidebarToggleButton.addEventListener('click', () => {
-      if (isAppInteractionLocked()) {
-        return;
-      }
-
       if (window.innerWidth <= 980) {
         sidebar.classList.toggle('mobile-open');
       } else {
