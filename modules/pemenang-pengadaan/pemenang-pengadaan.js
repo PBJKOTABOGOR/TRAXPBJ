@@ -876,7 +876,7 @@
                 <span>Password</span>
                 <input type="password" name="password" placeholder="Masukkan password" required>
               </label>
-              <button type="submit" class="pp-login-submit">Masuk ke Portal</button>
+              <button type="submit" class="pp-login-submit"><small>✦</small><span>Masuk ke Portal</span></button>
               <div class="pp-login-error">${escapeHtml(state.loginError || '')}</div>
             </form>
 
@@ -887,6 +887,37 @@
         </div>
       </div>
     `;
+  }
+
+  function applyLoginFx(root) {
+    const card = root.querySelector('.pp-login-card');
+    if (!card) return () => {};
+
+    let rafId = 0;
+
+    const onMove = (event) => {
+      const rect = card.getBoundingClientRect();
+      const px = ((event.clientX - rect.left) / rect.width) - 0.5;
+      const py = ((event.clientY - rect.top) / rect.height) - 0.5;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        card.style.transform = `perspective(1200px) rotateX(${(-py * 4).toFixed(2)}deg) rotateY(${(px * 5).toFixed(2)}deg) translateY(-2px)`;
+      });
+    };
+
+    const reset = () => {
+      cancelAnimationFrame(rafId);
+      card.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateY(0)';
+    };
+
+    card.addEventListener('mousemove', onMove);
+    card.addEventListener('mouseleave', reset);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      card.removeEventListener('mousemove', onMove);
+      card.removeEventListener('mouseleave', reset);
+    };
   }
 
   window.__moduleInit = function ({ container }) {
@@ -916,6 +947,7 @@
     };
 
     let destroyed = false;
+    let loginFxDestroy = null;
 
     function paintBoot() {
       root.innerHTML = '<div class="pp-boot"><div class="pp-boot-orb"></div><div><div class="pp-kicker">Pemenang Pengadaan</div><div style="margin-top:10px;font-size:24px;font-weight:950;color:#fff;">Menyiapkan portal...</div></div></div>';
@@ -923,8 +955,16 @@
 
     function rerender() {
       if (destroyed) return;
-      if (!state.session) renderLogin(root, state);
-      else renderApp(root, state);
+      if (typeof loginFxDestroy === 'function') {
+        loginFxDestroy();
+        loginFxDestroy = null;
+      }
+      if (!state.session) {
+        renderLogin(root, state);
+        loginFxDestroy = applyLoginFx(root);
+      } else {
+        renderApp(root, state);
+      }
     }
 
     async function submitLogin(form) {
@@ -1102,6 +1142,7 @@
 
     return function destroy() {
       destroyed = true;
+      if (typeof loginFxDestroy === 'function') loginFxDestroy();
       root.removeEventListener('click', handleClick);
       root.removeEventListener('submit', handleSubmit);
     };
