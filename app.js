@@ -117,11 +117,20 @@ let activePageKey = '';
 let loadingPageKey = '';
 let scrollAnimationDestroy = null;
 let appInteractionLocked = false;
-let initialBootActive = true;
 let initialBootResolved = false;
 let initialBootProgress = 0;
 let initialBootTimer = null;
+
+const INITIAL_BOOT_SESSION_KEY = 'traxpbj_initial_boot_done';
 let hasShownInitialBoot = false;
+
+try {
+  hasShownInitialBoot = sessionStorage.getItem(INITIAL_BOOT_SESSION_KEY) === '1';
+} catch (error) {
+  hasShownInitialBoot = false;
+}
+
+let initialBootActive = !hasShownInitialBoot;
 
 function ensureInitialBootOverlay() {
   let overlay = document.getElementById('initialBootOverlay');
@@ -213,6 +222,12 @@ function finishInitialBootLoading() {
     appInteractionLocked = false;
     initialBootActive = false;
     hasShownInitialBoot = true;
+
+    try {
+      sessionStorage.setItem(INITIAL_BOOT_SESSION_KEY, '1');
+    } catch (error) {
+      // ignore storage issue
+    }
   }, 340);
 }
 
@@ -251,13 +266,161 @@ function cacheBust(url) {
   return `${url}${joiner}v=${Date.now()}`;
 }
 
-function showModuleLoading(title = 'Memuat modul...') {
-  contentArea.innerHTML = `
-    <section class="card">
-      <h3>${escapeHtml(title)}</h3>
-      <p>Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.</p>
-    </section>
-  `;
+function ensureRouteTransitionOverlay() {
+  let overlay = document.getElementById('routeTransitionOverlay');
+
+  if (!overlay) {
+    const style = document.createElement('style');
+    style.id = 'routeTransitionOverlayStyle';
+    style.textContent = `
+      .route-transition-overlay{
+        position:fixed;
+        inset:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+        background:rgba(239,244,251,.36);
+        backdrop-filter:blur(10px);
+        -webkit-backdrop-filter:blur(10px);
+        opacity:0;
+        pointer-events:none;
+        transition:opacity .2s ease;
+        z-index:9998;
+      }
+      .route-transition-overlay.show{
+        opacity:1;
+        pointer-events:auto;
+      }
+      .route-transition-card{
+        position:relative;
+        width:min(100%, 380px);
+        border-radius:26px;
+        padding:20px 20px 18px;
+        color:#fff;
+        background:linear-gradient(135deg,#123a72 0%,#245a9b 68%,#2f9a8f 100%);
+        box-shadow:0 24px 56px rgba(18,58,114,.24);
+        overflow:hidden;
+      }
+      .route-transition-card::before{
+        content:"";
+        position:absolute;
+        inset:0;
+        background:linear-gradient(135deg, rgba(255,255,255,.08), transparent 55%);
+        pointer-events:none;
+      }
+      .route-transition-kicker{
+        position:relative;
+        display:inline-flex;
+        align-items:center;
+        min-height:24px;
+        padding:0 10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.14);
+        border:1px solid rgba(255,255,255,.18);
+        font-size:10px;
+        font-weight:900;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+      }
+      .route-transition-title{
+        position:relative;
+        margin-top:10px;
+        font-size:18px;
+        line-height:1.2;
+        font-weight:900;
+      }
+      .route-transition-subtitle{
+        position:relative;
+        margin-top:6px;
+        font-size:12px;
+        line-height:1.55;
+        color:rgba(255,255,255,.88);
+      }
+      .route-transition-progress-row{
+        position:relative;
+        display:grid;
+        grid-template-columns:1fr auto;
+        gap:12px;
+        align-items:center;
+        margin-top:16px;
+      }
+      .route-transition-progress-track{
+        position:relative;
+        height:12px;
+        border-radius:999px;
+        overflow:hidden;
+        background:rgba(255,255,255,.18);
+      }
+      .route-transition-progress-track::before{
+        content:"";
+        position:absolute;
+        inset:0;
+        background:linear-gradient(90deg, rgba(255,255,255,.16), transparent 35%, rgba(255,255,255,.16));
+        transform:translateX(-100%);
+        animation:routeTransitionShimmer 1.2s linear infinite;
+      }
+      .route-transition-progress-fill{
+        position:absolute;
+        inset:0 auto 0 0;
+        width:74%;
+        border-radius:inherit;
+        background:linear-gradient(90deg,#ffffff 0%, #d9fbff 38%, #67e8f9 100%);
+        box-shadow:0 0 18px rgba(103,232,249,.35);
+      }
+      .route-transition-progress-text{
+        min-width:38px;
+        text-align:right;
+        font-size:14px;
+        font-weight:900;
+      }
+      .content-area.route-loading-stage{
+        opacity:0;
+      }
+      @keyframes routeTransitionShimmer{
+        to{ transform:translateX(100%); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    overlay = document.createElement('div');
+    overlay.id = 'routeTransitionOverlay';
+    overlay.className = 'route-transition-overlay';
+    overlay.innerHTML = `
+      <div class="route-transition-card">
+        <div class="route-transition-kicker">SIPPBJ · Modul Monitoring</div>
+        <div class="route-transition-title" id="routeTransitionTitle">Memuat modul...</div>
+        <div class="route-transition-subtitle" id="routeTransitionSubtitle">Mohon tunggu sebentar, tampilan sedang disiapkan.</div>
+        <div class="route-transition-progress-row">
+          <div class="route-transition-progress-track"><span class="route-transition-progress-fill"></span></div>
+          <div class="route-transition-progress-text">•••</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  return overlay;
+}
+
+function showModuleLoading(title = 'Memuat modul...', subtitle = 'Mohon tunggu sebentar, sistem sedang menyiapkan tampilan dan data.') {
+  const overlay = ensureRouteTransitionOverlay();
+  const titleEl = document.getElementById('routeTransitionTitle');
+  const subtitleEl = document.getElementById('routeTransitionSubtitle');
+
+  if (titleEl) titleEl.textContent = title;
+  if (subtitleEl) subtitleEl.textContent = subtitle;
+
+  overlay.classList.add('show');
+  contentArea.classList.add('route-loading-stage');
+  setAppInteractionLock(true);
+}
+
+function hideModuleLoading() {
+  const overlay = document.getElementById('routeTransitionOverlay');
+  if (overlay) overlay.classList.remove('show');
+  contentArea.classList.remove('route-loading-stage');
+  setAppInteractionLock(false);
 }
 
 function initScrollAnimation() {
@@ -1749,7 +1912,7 @@ async function renderModulePage(page) {
   const token = ++activeModuleToken;
 
   cleanupDynamicModule();
-  showModuleLoading(page.title || 'Memuat modul...');
+  showModuleLoading(page.title || 'Memuat modul...', 'Mohon tunggu sebentar, sistem sedang menyiapkan tampilan modul.');
 
   try {
     if (Array.isArray(page.externalScripts) && page.externalScripts.length) {
@@ -1808,6 +1971,9 @@ async function renderModulePage(page) {
     }
 
     applyDashboardContextToModule(page, moduleContainer);
+
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    hideModuleLoading();
     return true;
   } catch (error) {
     console.error('Gagal memuat module:', error);
@@ -1816,6 +1982,7 @@ async function renderModulePage(page) {
       return false;
     }
 
+    hideModuleLoading();
     contentArea.innerHTML = `
       <section class="card">
         <h3>Gagal memuat modul</h3>
@@ -1855,12 +2022,15 @@ async function loadPage(key) {
     }
 
     if (page.type === 'iframe') {
+      hideModuleLoading();
       renderIframePage(page);
     } else if (page.type === 'module') {
       success = await renderModulePage(page);
     } else if (page.type === 'placeholder') {
+      hideModuleLoading();
       renderPlaceholderPage(key, page);
     } else {
+      hideModuleLoading();
       renderDashboard();
     }
 
