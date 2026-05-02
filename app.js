@@ -127,13 +127,6 @@ const APP_ROUTES = {
     subtitle: 'Panel internal QC untuk review dan persetujuan rapor.',
     type: 'iframe',
     url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDSJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSslbTA/exec?page=qc'
-  },
-
-  'rapor-pbj-dashboard-internal': {
-    title: 'Dashboard Internal Rapor PBJ',
-    subtitle: 'Dashboard internal untuk monitoring data rapor sebelum dipublikasikan.',
-    type: 'iframe',
-    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDSJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSslbTA/exec?page=dashboard'
   }
 
 };
