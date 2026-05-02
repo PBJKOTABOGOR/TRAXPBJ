@@ -15,6 +15,11 @@
   --radius:24px;
 }
 
+
+
+[hidden]{
+  display:none !important;
+}
 *{
   box-sizing:border-box;
 }
