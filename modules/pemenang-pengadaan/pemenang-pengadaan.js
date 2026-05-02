@@ -333,7 +333,111 @@
 
   function renderDashboardContent(){
     const counts = dashboardCounts();
-    return `<div class="pp-dashboard-header"><div class="pp-dashboard-top"><div><span class="pp-panel-title">Dashboard Akses · Pengguna</span><h3>Pilih panel kerja</h3><p>Silakan pilih menu yang ingin dibuka. Tampilan dibuat ringkas supaya lebih cepat dipakai dan lebih mudah dibaca.</p></div><div class="pp-dashboard-mini"><div class="pp-mini-box"><span>Paket penyedia</span><strong>${formatNumber(counts.provider)}</strong></div><div class="pp-mini-box"><span>Paket aktif</span><strong>${formatNumber(counts.active)}</strong></div><div class="pp-mini-box"><span>Instansi</span><strong>${formatNumber(counts.instansi)}</strong></div><div class="pp-mini-box pp-mini-box--purple"><span>E-Katalog</span><strong>${formatNumber(counts.ecat)}</strong></div></div></div></div><div class="pp-feature-grid pp-feature-grid--triple"><button class="pp-feature-card pp-feature-card--blue" data-pp-tab="provider-search"><div class="pp-feature-icon">🔎</div><div class="pp-feature-copy"><span>Menu utama</span><h4>Pencarian Paket Penyedia</h4><p>Telusuri paket penyedia, pemenang, instansi, LPSE, dan rincian penting lainnya.</p></div><div class="pp-feature-arrow">→</div></button><button class="pp-feature-card pp-feature-card--teal" data-pp-tab="active-packages"><div class="pp-feature-icon">📦</div><div class="pp-feature-copy"><span>Pantauan aktif</span><h4>Paket Pengadaan Aktif</h4><p>Cari paket aktif berdasarkan nama paket, instansi, LPSE, jenis paket, dan tahap proses.</p></div><div class="pp-feature-arrow">→</div></button><button class="pp-feature-card pp-feature-card--purple" data-pp-tab="ecatalog-search"><div class="pp-feature-icon">🛒</div><div class="pp-feature-copy"><span>E-Katalog</span><h4>Pencarian Paket E-Katalog</h4><p>Menampilkan paket e-katalog konstruksi dengan tampilan yang dibedakan dari menu lainnya.</p></div><div class="pp-feature-arrow">→</div></button></div><div class="pp-disclaimer" id="ppDisclaimer"><button class="pp-disclaimer-toggle" id="ppDisclaimerToggle" type="button"><div class="pp-disclaimer-left"><div class="pp-disclaimer-badge">!</div><div><strong>Informasi Penting</strong><small>Keterangan singkat sebelum memakai menu</small></div></div><div class="pp-disclaimer-caret">⌄</div></button><div class="pp-disclaimer-body"><div class="pp-disclaimer-grid"><div class="pp-disclaimer-box"><h5>Yang perlu diketahui</h5><ul><li>Menu penyedia dipakai untuk menelusuri pemenang dan riwayat paket.</li><li>Menu paket aktif dipakai untuk melihat paket yang masih berjalan.</li><li>Menu e-katalog dipakai untuk melihat paket konstruksi.</li></ul></div><div class="pp-disclaimer-box"><h5>Catatan pemakaian</h5><ul><li>Gunakan kata kunci yang jelas agar hasil lebih cepat ditemukan.</li><li>Jika data belum muncul, coba ulangi pencarian atau ganti filter.</li><li>Untuk kebutuhan penting, tetap lakukan pengecekan ulang pada tautan yang tersedia.</li></ul></div></div></div></div>`;
+    return `<div class="pp-dashboard-header">
+      <div class="pp-dashboard-top">
+        <div>
+          <span class="pp-panel-title">Dashboard Akses · Pengguna</span>
+          <h3>Pilih panel kerja</h3>
+          <p>Silakan pilih menu yang ingin dibuka. Tampilan dibuat ringkas supaya lebih cepat dipakai dan lebih mudah dibaca.</p>
+        </div>
+        <div class="pp-dashboard-mini">
+          <div class="pp-mini-box"><span>Paket penyedia</span><strong>${formatNumber(counts.provider)}</strong></div>
+          <div class="pp-mini-box"><span>Paket aktif</span><strong>${formatNumber(counts.active)}</strong></div>
+          <div class="pp-mini-box"><span>Instansi</span><strong>${formatNumber(counts.instansi)}</strong></div>
+          <div class="pp-mini-box pp-mini-box--purple"><span>E-Katalog</span><strong>${formatNumber(counts.ecat)}</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pp-feature-grid pp-feature-grid--triple">
+      <button class="pp-feature-card pp-feature-card--blue" data-pp-tab="provider-search">
+        <div class="pp-feature-icon">🔎</div>
+        <div class="pp-feature-copy">
+          <span>Menu utama</span>
+          <h4>Pencarian Paket Penyedia</h4>
+          <p>Telusuri paket penyedia, pemenang, instansi, LPSE, dan rincian penting lainnya.</p>
+        </div>
+        <div class="pp-feature-arrow">→</div>
+      </button>
+
+      <button class="pp-feature-card pp-feature-card--teal" data-pp-tab="active-packages">
+        <div class="pp-feature-icon">📦</div>
+        <div class="pp-feature-copy">
+          <span>Pantauan aktif</span>
+          <h4>Paket Pengadaan Aktif</h4>
+          <p>Cari paket aktif berdasarkan nama paket, instansi, LPSE, jenis paket, dan tahap proses.</p>
+        </div>
+        <div class="pp-feature-arrow">→</div>
+      </button>
+
+      <button class="pp-feature-card pp-feature-card--purple" data-pp-tab="ecatalog-search">
+        <div class="pp-feature-icon">🛒</div>
+        <div class="pp-feature-copy">
+          <span>E-Katalog</span>
+          <h4>Pencarian Paket E-Katalog</h4>
+          <p>Menampilkan paket e-katalog konstruksi dengan tampilan yang dibedakan dari menu lainnya.</p>
+        </div>
+        <div class="pp-feature-arrow">→</div>
+      </button>
+    </div>
+
+    <div class="pp-disclaimer open" id="ppDisclaimer">
+      <div class="pp-disclaimer-toggle pp-disclaimer-toggle--static">
+        <div class="pp-disclaimer-left">
+          <div class="pp-disclaimer-badge">!</div>
+          <div>
+            <strong>Informasi Penting</strong>
+            <small>Baca dulu sebentar biar enak pas pakai menu</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="pp-disclaimer-body">
+        <div class="pp-disclaimer-grid">
+          <div class="pp-disclaimer-box">
+            <h5>Mekanisme Pembaruan Data</h5>
+            <ul>
+              <li>Data ditarik secara berkala, bukan real-time.</li>
+              <li>Biasanya update dilakukan sekitar seminggu sekali karena datanya banyak dan proses nariknya juga lumayan panjang.</li>
+              <li>Jadi kalau ada data terbaru di portal resmi tapi belum muncul di sini, itu masih wajar bro.</li>
+              <li>Dashboard ini dibikin biar cek data lebih enak, bukan buat gantiin sumber resminya.</li>
+            </ul>
+          </div>
+
+          <div class="pp-disclaimer-box">
+            <h5>Akurasi & Tanggung Jawab</h5>
+            <ul>
+              <li>Akurasi dan kelengkapan data tetap sangat bergantung pada kualitas input dari masing-masing instansi di portal SPSE/LPSE.</li>
+              <li>Data ditampilkan sesuai yang kebaca dari sumber, tidak diverifikasi ulang satu per satu dan tidak ditambah-tambah di luar kebutuhan tampilan.</li>
+              <li>Kalau ada selisih dengan portal resmi, biasanya karena beda waktu update, data sumber belum kebaca, atau kendala teknis saat penarikan data.</li>
+              <li>Untuk kebutuhan penting, tetap wajib cek ulang ke sumber resminya ya.</li>
+            </ul>
+          </div>
+
+          <div class="pp-disclaimer-box">
+            <h5>Cocok Dipakai Buat</h5>
+            <ul>
+              <li>Riset dan analisis tren pengadaan.</li>
+              <li>Referensi awal buat cek profil penyedia sebelum verifikasi lebih lanjut.</li>
+              <li>Pemantauan paket aktif dan monitoring data pengadaan.</li>
+              <li>Bahan edukasi, studi kasus, transparansi, dan monitoring internal.</li>
+              <li>Analisis sebaran penyedia, instansi, dan efisiensi nilai paket / HPS.</li>
+            </ul>
+          </div>
+
+          <div class="pp-disclaimer-box">
+            <h5>Tetap Cek Sumber Resmi Buat</h5>
+            <ul>
+              <li>Keputusan hukum, administratif, atau komersial.</li>
+              <li>Verifikasi status resmi pemenang dan keabsahan kontrak aktif.</li>
+              <li>Kebutuhan data real-time untuk tender atau seleksi yang sedang berjalan.</li>
+              <li>Laporan resmi, pengaduan, atau audit formal.</li>
+              <li>Penetapan status yang sifatnya mengikat secara resmi.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>`;
   }
 
   function providerMatches(row, term, tahun){
@@ -426,7 +530,6 @@
     const logoutBtn = appView.querySelector('#ppLogoutBtn');
     if(logoutBtn) logoutBtn.addEventListener('click', ()=>{ clearSession(); state.activeTab='dashboard'; state.providerResults=[]; state.activeResults=[]; state.ecatResults=[]; mount(root); });
     appView.querySelectorAll('[data-pp-tab]').forEach(btn=>btn.addEventListener('click', ()=>changeTab(root, btn.dataset.ppTab)));
-    const dToggle = appView.querySelector('#ppDisclaimerToggle'); if(dToggle) dToggle.addEventListener('click', ()=>{ appView.querySelector('#ppDisclaimer').classList.toggle('open'); });
 
     const pInput = appView.querySelector('#ppProviderKeyword'); const pBtn = appView.querySelector('#ppProviderSearchBtn');
     if(pInput && pBtn){
