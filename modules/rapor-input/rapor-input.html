@@ -1,54 +1,67 @@
-<section class="rapor-input-module" data-module="rapor-input-native">
-  <div class="rapor-input-hero">
-    <div>
-      <div class="rapor-chip">INTERNAL · TAHAP 1</div>
-      <h1>Input Rapor PBJ</h1>
-      <p>Versi native portal untuk tahap awal. Fokus dulu ke identitas rapot, cek existing, lanjutkan draft, dan simpan draft dasar tanpa iframe.</p>
-    </div>
-    <div class="rapor-hero-side">
-      <div class="rapor-kpi">
-        <span class="rapor-kpi-label">Status</span>
-        <strong id="riSummaryStatus">Draft Baru</strong>
-      </div>
-      <div class="rapor-kpi">
-        <span class="rapor-kpi-label">Periode</span>
-        <strong id="riSummaryPeriode">-</strong>
-      </div>
-      <div class="rapor-kpi">
-        <span class="rapor-kpi-label">OPD</span>
-        <strong id="riSummaryOpd">Belum dipilih</strong>
-      </div>
-    </div>
-  </div>
+<section class="rpj-native-input" data-module="rapor-input-native">
+  <div class="wrap-native">
+    <div class="card hero-native">
+      <div class="hero-grid">
+        <div>
+          <div class="side-badge">Rapot PBJ · Form Pegawai</div>
+          <h1>Input Rapot PBJ</h1>
+          <p class="muted">Tampilan native portal mengikuti gaya halaman lama. Perbedaan utamanya hanya sidebar internal lama dihilangkan karena navigasi sudah memakai sidebar portal utama.</p>
 
-  <div class="rapor-input-layout">
-    <aside class="rapor-input-side">
-      <div class="ri-side-card">
-        <h3>Tahapan Input</h3>
-        <div class="ri-side-list">
-          <button class="ri-side-btn active" type="button" data-tab="identitas">1. Identitas</button>
-          <button class="ri-side-btn" type="button" data-tab="sirup" disabled>2. SiRUP & Struktur</button>
-          <button class="ri-side-btn" type="button" data-tab="perencanaan" disabled>3. Perencanaan</button>
-          <button class="ri-side-btn" type="button" data-tab="realisasi" disabled>4. Realisasi</button>
-          <button class="ri-side-btn" type="button" data-tab="pelaku" disabled>5. Pelaku</button>
-          <button class="ri-side-btn" type="button" data-tab="itkp" disabled>6. ITKP</button>
-          <button class="ri-side-btn" type="button" data-tab="analisis" disabled>7. Analisis Manual</button>
-        </div>
-        <p class="ri-side-note">Tahap 1 baru mengaktifkan Identitas. Tab lain disiapkan untuk paket berikutnya.</p>
-      </div>
-    </aside>
-
-    <div class="rapor-input-main">
-      <div class="ri-card">
-        <div class="ri-card-head">
-          <div>
-            <h2>Identitas Rapor</h2>
-            <p>Isi periode, PIC, dan OPD. Sistem akan mengecek apakah rapot periode yang sama sudah ada.</p>
+          <div class="hero-stats">
+            <div class="stat-card">
+              <div class="stat-label">Status</div>
+              <div class="stat-value"><span id="summary_status_badge" class="hero-status-badge hero-status-draft">Draft Baru</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Periode</div>
+              <div class="stat-value" id="summary_periode">-</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">OPD</div>
+              <div class="stat-value" id="summary_opd">Belum dipilih</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">ID Rapot</div>
+              <div class="stat-value" id="infoId">-</div>
+            </div>
           </div>
-          <div class="ri-card-badge" id="riStepBadge">Step 1 / 7</div>
         </div>
 
-        <div class="ri-grid ri-grid-3">
+        <div class="hero-side">
+          <div class="hero-pill">Native Portal · Tahap 1</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card progress-card-native">
+      <div class="progress-label">Progress Form</div>
+      <div class="progress-head">
+        <div class="progress-title">Tahap aktif: Identitas</div>
+        <div class="progress-step" id="progressStepLabel">Step 1 dari 7</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-caption">Tahap 1 ini fokus ke identitas, cek rapot existing, lanjutkan draft, dan simpan draft identitas dengan gaya tampilan lama yang dipertahankan.</div>
+    </div>
+
+    <div class="card">
+      <div class="mobile-nav-title">Navigasi Form</div>
+      <div class="tabs">
+        <button class="tab-btn active" type="button" data-tab="identitas">1. Identitas</button>
+        <button class="tab-btn" type="button" data-tab="sirup" disabled>2. SiRUP & Struktur</button>
+        <button class="tab-btn" type="button" data-tab="perencanaan" disabled>3. Perencanaan</button>
+        <button class="tab-btn" type="button" data-tab="realisasi" disabled>4. Realisasi</button>
+        <button class="tab-btn" type="button" data-tab="pelaku" disabled>5. Pelaku</button>
+        <button class="tab-btn" type="button" data-tab="itkp" disabled>6. ITKP</button>
+        <button class="tab-btn" type="button" data-tab="analisis" disabled>7. Analisis Manual</button>
+      </div>
+
+      <div class="tab-panel active" id="panel-identitas">
+        <div class="subcard">
+          <h3>Identitas Rapot</h3>
+          <div class="small">Isi periode, nama PIC, dan OPD. Sistem akan mengecek apakah rapot pada periode yang sama sudah ada.</div>
+        </div>
+
+        <div class="grid grid-3">
           <div>
             <label for="riTahun">Tahun</label>
             <input type="number" id="riTahun" placeholder="2026">
@@ -73,51 +86,37 @@
           </div>
           <div>
             <label for="riInputBy">Nama PIC / Penginput</label>
-            <select id="riInputBy">
-              <option value="">-- Pilih Nama PIC --</option>
-            </select>
+            <select id="riInputBy"><option value="">-- Pilih Nama PIC --</option></select>
           </div>
         </div>
 
-        <div class="ri-grid ri-grid-2">
+        <div class="grid grid-2">
           <div>
             <label for="riKodeOpd">Kode OPD</label>
-            <input type="text" id="riKodeOpd" placeholder="otomatis / isi manual">
+            <input type="text" id="riKodeOpd" placeholder="Otomatis mengikuti OPD terpilih">
           </div>
           <div>
             <label for="riNamaOpd">Nama OPD</label>
-            <select id="riNamaOpd">
-              <option value="">-- Pilih OPD --</option>
-            </select>
+            <select id="riNamaOpd"><option value="">-- Pilih OPD --</option></select>
           </div>
         </div>
 
-        <div class="ri-availability" id="riAvailabilityBox">
-          <div class="ri-availability-title">Status rapot</div>
-          <div class="ri-availability-message" id="riAvailabilityMessage">Pilih tahun, bulan, dan OPD untuk mengecek apakah rapot sudah ada.</div>
-          <div class="ri-availability-actions">
-            <button class="ri-btn ri-btn-secondary" type="button" id="riBtnCheck">Cek Existing</button>
-            <button class="ri-btn ri-btn-secondary" type="button" id="riBtnLoad" hidden>Lanjutkan Draft</button>
-            <button class="ri-btn ri-btn-secondary" type="button" id="riBtnReadOnly" hidden>Lihat Data</button>
+        <div class="info-box" id="riAvailabilityBox">
+          <h3 style="margin-bottom:8px;">Status Rapot Existing</h3>
+          <div id="riAvailabilityMessage" class="field-value">Pilih tahun, bulan, dan OPD untuk mengecek apakah rapot sudah ada.</div>
+          <div class="btns">
+            <button class="primary" type="button" id="riBtnCheck">Cek Existing</button>
+            <button class="secondary" type="button" id="riBtnLoad" hidden>Lanjutkan Draft</button>
+            <button class="secondary" type="button" id="riBtnReadOnly" hidden>Lihat Data</button>
           </div>
         </div>
 
-        <div class="ri-actions">
-          <button class="ri-btn" type="button" id="riBtnSave">Simpan Draft Identitas</button>
-          <button class="ri-btn ri-btn-secondary" type="button" id="riBtnReset">Reset</button>
+        <div class="btns">
+          <button class="primary" type="button" id="riBtnSave">Simpan Draft Identitas</button>
+          <button class="secondary" type="button" id="riBtnReset">Reset</button>
         </div>
 
-        <div class="ri-result" id="riResult">Modul native aktif. Backend Apps Script dipanggil lewat endpoint API.</div>
-      </div>
-
-      <div class="ri-card">
-        <h2>Paket Berikutnya</h2>
-        <div class="ri-roadmap-grid">
-          <div class="ri-roadmap-item"><strong>SiRUP & Struktur</strong><span>Tarik data OPD + upload screenshot struktur.</span></div>
-          <div class="ri-roadmap-item"><strong>Perencanaan</strong><span>Input jumlah paket dan pagu per metode.</span></div>
-          <div class="ri-roadmap-item"><strong>Realisasi</strong><span>Input progres realisasi dan total realisasi.</span></div>
-          <div class="ri-roadmap-item"><strong>Pelaku / ITKP / Analisis</strong><span>Lengkapi tahap lanjutan pada paket berikutnya.</span></div>
-        </div>
+        <div class="status" id="riResult">Modul native aktif. Style disamakan dengan halaman lama, tanpa sidebar internal kiri.</div>
       </div>
     </div>
   </div>
