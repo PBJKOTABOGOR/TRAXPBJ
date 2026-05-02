@@ -117,17 +117,19 @@ const APP_ROUTES = {
 
   'rapor-pbj-input-internal': {
     title: 'Input Rapor PBJ',
-    subtitle: 'Form internal pegawai untuk input dan upload dokumen Rapor PBJ.',
-    type: 'iframe',
-    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec'
+    subtitle: 'Form internal pegawai tahap 1 dalam mode native portal.',
+    type: 'module',
+    html: 'modules/rapor-input/rapor-input.html',
+    css: 'modules/rapor-input/rapor-input.css',
+    js: 'modules/rapor-input/rapor-input.js'
   },
 
   'rapor-pbj-qc-internal': {
     title: 'QC Rapor PBJ',
     subtitle: 'Panel internal QC untuk review dan persetujuan rapor.',
     type: 'iframe',
-    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc'
-  }
+    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDSJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSslbTA/exec?page=qc'
+  },
 
 };
 
@@ -147,11 +149,6 @@ const internalNavGroup = document.getElementById('internalNavGroup');
 const SECRET_LOGIN_USER = 'admin';
 const SECRET_LOGIN_PASS = 'adminpbjkota123#';
 const SECRET_SESSION_KEY = 'sippbj_internal_menu_unlocked';
-const INTERNAL_ROUTE_KEYS = new Set([
-  'rapor-pbj-input-internal',
-  'rapor-pbj-qc-internal',
-  'rapor-pbj-dashboard-internal'
-]);
 let secretTriggerCount = 0;
 let secretTriggerTimer = null;
 
@@ -165,7 +162,6 @@ let scrollAnimationDestroy = null;
 let dashboardBootShownThisSession = false;
 let dashboardBootOverlayEl = null;
 let dashboardBootProgressTimer = null;
-let pendingInternalRouteKey = '';
 
 function ensureDashboardBootOverlay() {
   if (dashboardBootOverlayEl && document.body.contains(dashboardBootOverlayEl)) {
@@ -1930,28 +1926,19 @@ async function renderModulePage(page) {
 }
 
 async function loadPage(key) {
-  const requestedKey = APP_ROUTES[key] ? key : 'dashboard';
-  const page = APP_ROUTES[requestedKey] || APP_ROUTES.dashboard;
+  const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
 
-  if (isInternalRoute(requestedKey) && !isInternalMenuUnlocked()) {
-    pendingInternalRouteKey = requestedKey;
-    setInternalMenuVisible(false);
-    showSecretLogin();
-    updateActiveMenu(activePageKey || 'dashboard');
+  if (loadingPageKey === key) {
     return;
   }
 
-  if (loadingPageKey === requestedKey) {
+  if (activePageKey === key) {
+    updateActiveMenu(key);
     return;
   }
 
-  if (activePageKey === requestedKey) {
-    updateActiveMenu(requestedKey);
-    return;
-  }
-
-  loadingPageKey = requestedKey;
-  updateActiveMenu(requestedKey);
+  loadingPageKey = key;
+  updateActiveMenu(key);
 
   try {
     let success = true;
@@ -1969,13 +1956,13 @@ async function loadPage(key) {
     } else if (page.type === 'module') {
       success = await renderModulePage(page);
     } else if (page.type === 'placeholder') {
-      renderPlaceholderPage(requestedKey, page);
+      renderPlaceholderPage(key, page);
     } else {
       renderDashboard();
     }
 
     if (success) {
-      activePageKey = requestedKey;
+      activePageKey = key;
     }
 
     initScrollAnimation();
@@ -1984,7 +1971,7 @@ async function loadPage(key) {
       sidebar.classList.remove('mobile-open');
     }
   } finally {
-    if (loadingPageKey === requestedKey) {
+    if (loadingPageKey === key) {
       loadingPageKey = '';
     }
   }
@@ -2031,24 +2018,10 @@ function unlockInternalMenu() {
   sessionStorage.setItem(SECRET_SESSION_KEY, '1');
   setInternalMenuVisible(true);
   showSecretToast('Panel internal aktif');
-
-  const targetRoute = pendingInternalRouteKey;
-  pendingInternalRouteKey = '';
-  if (targetRoute && isInternalRoute(targetRoute)) {
-    window.setTimeout(() => loadPage(targetRoute), 60);
-  }
 }
 
 function restoreInternalMenu() {
   setInternalMenuVisible(sessionStorage.getItem(SECRET_SESSION_KEY) === '1');
-}
-
-function isInternalMenuUnlocked() {
-  return sessionStorage.getItem(SECRET_SESSION_KEY) === '1';
-}
-
-function isInternalRoute(key) {
-  return INTERNAL_ROUTE_KEYS.has(String(key || ''));
 }
 
 function handleSecretTriggerClick() {
