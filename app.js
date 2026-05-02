@@ -154,6 +154,11 @@ const internalNavGroup = document.getElementById('internalNavGroup');
 const SECRET_LOGIN_USER = 'admin';
 const SECRET_LOGIN_PASS = 'adminpbjkota123#';
 const SECRET_SESSION_KEY = 'sippbj_internal_menu_unlocked';
+const INTERNAL_ROUTE_KEYS = new Set([
+  'rapor-pbj-input-internal',
+  'rapor-pbj-qc-internal',
+  'rapor-pbj-dashboard-internal'
+]);
 let secretTriggerCount = 0;
 let secretTriggerTimer = null;
 
@@ -167,6 +172,7 @@ let scrollAnimationDestroy = null;
 let dashboardBootShownThisSession = false;
 let dashboardBootOverlayEl = null;
 let dashboardBootProgressTimer = null;
+let pendingInternalRouteKey = '';
 
 function ensureDashboardBootOverlay() {
   if (dashboardBootOverlayEl && document.body.contains(dashboardBootOverlayEl)) {
@@ -1931,19 +1937,28 @@ async function renderModulePage(page) {
 }
 
 async function loadPage(key) {
-  const page = APP_ROUTES[key] || APP_ROUTES.dashboard;
+  const requestedKey = APP_ROUTES[key] ? key : 'dashboard';
+  const page = APP_ROUTES[requestedKey] || APP_ROUTES.dashboard;
 
-  if (loadingPageKey === key) {
+  if (isInternalRoute(requestedKey) && !isInternalMenuUnlocked()) {
+    pendingInternalRouteKey = requestedKey;
+    setInternalMenuVisible(false);
+    showSecretLogin();
+    updateActiveMenu(activePageKey || 'dashboard');
     return;
   }
 
-  if (activePageKey === key) {
-    updateActiveMenu(key);
+  if (loadingPageKey === requestedKey) {
     return;
   }
 
-  loadingPageKey = key;
-  updateActiveMenu(key);
+  if (activePageKey === requestedKey) {
+    updateActiveMenu(requestedKey);
+    return;
+  }
+
+  loadingPageKey = requestedKey;
+  updateActiveMenu(requestedKey);
 
   try {
     let success = true;
@@ -1961,13 +1976,13 @@ async function loadPage(key) {
     } else if (page.type === 'module') {
       success = await renderModulePage(page);
     } else if (page.type === 'placeholder') {
-      renderPlaceholderPage(key, page);
+      renderPlaceholderPage(requestedKey, page);
     } else {
       renderDashboard();
     }
 
     if (success) {
-      activePageKey = key;
+      activePageKey = requestedKey;
     }
 
     initScrollAnimation();
@@ -1976,7 +1991,7 @@ async function loadPage(key) {
       sidebar.classList.remove('mobile-open');
     }
   } finally {
-    if (loadingPageKey === key) {
+    if (loadingPageKey === requestedKey) {
       loadingPageKey = '';
     }
   }
@@ -2023,10 +2038,24 @@ function unlockInternalMenu() {
   sessionStorage.setItem(SECRET_SESSION_KEY, '1');
   setInternalMenuVisible(true);
   showSecretToast('Panel internal aktif');
+
+  const targetRoute = pendingInternalRouteKey;
+  pendingInternalRouteKey = '';
+  if (targetRoute && isInternalRoute(targetRoute)) {
+    window.setTimeout(() => loadPage(targetRoute), 60);
+  }
 }
 
 function restoreInternalMenu() {
   setInternalMenuVisible(sessionStorage.getItem(SECRET_SESSION_KEY) === '1');
+}
+
+function isInternalMenuUnlocked() {
+  return sessionStorage.getItem(SECRET_SESSION_KEY) === '1';
+}
+
+function isInternalRoute(key) {
+  return INTERNAL_ROUTE_KEYS.has(String(key || ''));
 }
 
 function handleSecretTriggerClick() {
