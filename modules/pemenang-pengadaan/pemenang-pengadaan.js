@@ -3,22 +3,19 @@
 
   const APP_CONFIG = {
     spreadsheetId: '1DYsqMtvwhPn-IEA3te9fFukD_iMMDRqUNPamktuPz2U',
-    userSheet: {
-      gid: '1707469433',
-      title: 'USERID'
-    },
-    tenderSheet: { title: 'SCRAPTENDER' },
-    nonTenderSheet: { title: 'SCRAPNONTENDER' },
-    ecatSheet: { title: 'ECATPEMENANG' },
-    sessionKey: 'pemenang_pengadaan_login_session_v3',
+    userSheet: { gid: '1707469433', title: 'USERID' },
+    providerSheet: { title: 'PORTAL_PENYEDIA' },
+    activeSheet: { title: 'PORTAL_AKTIF' },
+    ecatSheet: { title: 'PORTAL_EKATALOG' },
+    sessionKey: 'pemenang_pengadaan_login_session_v4',
     pageSize: 10
   };
 
   const state = {
     session: null,
     activeTab: 'dashboard',
-    tenderRows: [],
-    nonTenderRows: [],
+    providerRows: [],
+    activeRows: [],
     ecatRows: [],
     providerResults: [],
     activeResults: [],
@@ -77,7 +74,7 @@
     el=document.createElement('div');
     el.id='ppLoadingOverlay';
     el.className='pp-loading-overlay';
-    el.innerHTML=`<div class="pp-loading-card"><div class="pp-loading-ring"></div><div class="pp-loading-kicker" id="ppLoadingKicker">Pemenang Pengadaan</div><div class="pp-loading-title" id="ppLoadingTitle">Menyiapkan halaman...</div><div class="pp-loading-text" id="ppLoadingText">Tunggu sebentar, portal sedang memproses data.</div><div class="pp-loading-track"><div class="pp-loading-bar" id="ppLoadingBar"></div></div><div class="pp-loading-row"><div class="pp-loading-percent" id="ppLoadingPercent">0%</div><div class="pp-loading-note" id="ppLoadingNote">Portal sedang memproses data</div></div></div>`;
+    el.innerHTML=`<div class="pp-loading-card"><div class="pp-loading-ring"></div><div class="pp-loading-kicker" id="ppLoadingKicker">Pemenang Pengadaan</div><div class="pp-loading-title" id="ppLoadingTitle">Menyiapkan halaman...</div><div class="pp-loading-text" id="ppLoadingText">Tunggu sebentar, halaman sedang disiapkan.</div><div class="pp-loading-track"><div class="pp-loading-bar" id="ppLoadingBar"></div></div><div class="pp-loading-row"><div class="pp-loading-percent" id="ppLoadingPercent">0%</div><div class="pp-loading-note">Mohon tunggu sebentar</div></div></div>`;
     document.body.appendChild(el);
     return el;
   }
@@ -89,110 +86,120 @@
     el.querySelector('#ppLoadingBar').style.width=`${Math.max(0,Math.min(100,progress))}%`;
     el.querySelector('#ppLoadingPercent').textContent=`${Math.round(progress)}%`;
   }
-  function showLoading(progress,title,text,kicker){
-    setLoading(progress,title,text,kicker);
-    const el=getLoadingOverlay();
-    el.classList.add('show');
-    state.loadingOverlayVisible=true;
-  }
-  function hideLoading(){
-    const el=getLoadingOverlay();
-    el.classList.remove('show');
-    state.loadingOverlayVisible=false;
-  }
+  function showLoading(progress,title,text,kicker){ setLoading(progress,title,text,kicker); getLoadingOverlay().classList.add('show'); state.loadingOverlayVisible=true; }
+  function hideLoading(){ getLoadingOverlay().classList.remove('show'); state.loadingOverlayVisible=false; }
 
   async function fetchCsvByGid(cfg){const url=`https://docs.google.com/spreadsheets/d/${APP_CONFIG.spreadsheetId}/gviz/tq?tqx=out:csv&gid=${cfg.gid}&v=${Date.now()}`;const r=await fetch(url,{cache:'no-store'});if(!r.ok) throw new Error(`Gagal mengambil ${cfg.title}. HTTP ${r.status}`);const t=await r.text();if(/googlevisualization|DOCTYPE html|<html/i.test(t.slice(0,300))) throw new Error(`${cfg.title} belum bisa dibaca publik.`);return matrixToRows(parseCsv(t));}
   async function fetchCsvBySheetTitle(cfg){const url=`https://docs.google.com/spreadsheets/d/${APP_CONFIG.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(cfg.title)}&v=${Date.now()}`;const r=await fetch(url,{cache:'no-store'});if(!r.ok) throw new Error(`Gagal mengambil ${cfg.title}. HTTP ${r.status}`);const t=await r.text();if(/googlevisualization|DOCTYPE html|<html/i.test(t.slice(0,300))) throw new Error(`${cfg.title} belum bisa dibaca publik.`);return matrixToRows(parseCsv(t));}
 
-  function buildUnifiedRows(){
-    const mapOne=(row,jenis)=>({
-      sourceJenis:jenis,
+  function mapProviderPortalRows(rows){
+    return rows.map(row=>({
+      sourceJenis:getField(row,['sumber']).toUpperCase()||'TENDER',
       tahun:getField(row,['tahun']),
-      kode:getField(row,['kode','kode paket','id paket']),
-      namaPaket:getField(row,['nama_paket','nama paket','nama produk']),
-      tahapan:getField(row,['tahapan_list','tahapan','status','tahap proses']),
-      pagu:toNumber(getField(row,['pagu','nilai pagu','harga'])),
+      kode:getField(row,['kode_paket','kode paket','kode']),
+      namaPaket:getField(row,['nama_paket','nama paket']),
+      tahapan:getField(row,['tahap_aktif','tahap aktif']),
+      pagu:toNumber(getField(row,['pagu'])),
       hps:toNumber(getField(row,['hps'])),
-      urlPemenang:getField(row,['url_pemenang','url produk','url']),
-      namaPemenang:getField(row,['nama_pemenang','pemenang','penyedia','nama penyedia']),
+      urlPemenang:getField(row,['url_pemenang','url pemenang']),
+      namaPemenang:getField(row,['nama_pemenang','nama pemenang']),
       npwp:getField(row,['npwp']),
-      tanggalPembuktian:getField(row,['tanggal_pembuktian','tanggal_pembu','tanggal pembuktian']),
-      tahapPembuatanAktif:getField(row,['tahapan_aktif','tahap aktif','tahap proses','tahapan aktif']),
-      tanggalMulai:getField(row,['tanggal_mulai','mulai tahap']),
-      tanggalSampai:getField(row,['tanggal_sampai','deadline','tanggal sampai']),
-      urlJadwal:getField(row,['url_jadwal']),
-      urlPengumuman:getField(row,['url_pengumuman']),
-      tanggalScrap:getField(row,['tanggal_scrap']),
-      instansi:getField(row,['instansi','kl/pd','instansi/pemda','instansi pembeli']),
-      lpse:getField(row,['lpse','nama lpse','nama_lpse','lpse penyelenggara']),
-      satker:getField(row,['satker','satuan kerja']),
+      tanggalMulai:getField(row,['tanggal_mulai','tanggal mulai']),
+      tanggalSampai:getField(row,['tanggal_sampai','tanggal sampai']),
+      urlJadwal:getField(row,['url_jadwal','url jadwal']),
+      urlPengumuman:getField(row,['url_pengumuman','url pengumuman']),
+      instansi:getField(row,['instansi']),
+      lpse:getField(row,['lpse']),
       alamat:getField(row,['alamat']),
-      lokasi:getField(row,['lokasi','lokasi pekerjaan']),
-      peserta:getField(row,['peserta']),
       jenisPengadaan:getField(row,['jenis_pengadaan','jenis pengadaan']),
-      metode:getField(row,['metode','metode kualifikasi','metode pengadaan']),
-      negosiasi:toNumber(getField(row,['harga_negosiasi','negosiasi'])),
-      penawaran:toNumber(getField(row,['harga_penawaran','penawaran'])),
-      terkoreksi:toNumber(getField(row,['harga_terkoreksi','terkoreksi']))
-    });
-    return [
-      ...state.tenderRows.map(r=>mapOne(r,'TENDER')),
-      ...state.nonTenderRows.map(r=>mapOne(r,'NON TENDER'))
-    ];
+      tahapPembuatanAktif:getField(row,['tahap_aktif','tahap aktif']),
+      satker:'', lokasi:'', peserta:'', metode:'', negosiasi:0, penawaran:0, terkoreksi:0
+    }));
   }
-  function buildEcatalogRows(){
-    return state.ecatRows.map(row=>({
+  function mapActivePortalRows(rows){
+    return rows.map(row=>({
+      sourceJenis:getField(row,['sumber']).toUpperCase()||'TENDER',
+      tahun:getField(row,['tahun']),
+      kode:getField(row,['kode_paket','kode paket','kode']),
+      namaPaket:getField(row,['nama_paket','nama paket']),
+      tahapan:getField(row,['tahap_aktif','tahap aktif']),
+      pagu:toNumber(getField(row,['pagu'])),
+      hps:toNumber(getField(row,['hps'])),
+      urlPemenang:getField(row,['url_pemenang','url pemenang']),
+      namaPemenang:getField(row,['nama_pemenang','nama pemenang']),
+      npwp:getField(row,['npwp']),
+      tanggalMulai:getField(row,['tanggal_mulai','tanggal mulai']),
+      tanggalSampai:getField(row,['tanggal_sampai','tanggal sampai']),
+      urlJadwal:getField(row,['url_jadwal','url jadwal']),
+      urlPengumuman:getField(row,['url_pengumuman','url pengumuman']),
+      instansi:getField(row,['instansi']),
+      lpse:getField(row,['lpse']),
+      alamat:getField(row,['alamat']),
+      jenisPengadaan:getField(row,['jenis_pengadaan','jenis pengadaan']),
+      tahapPembuatanAktif:getField(row,['tahap_aktif','tahap aktif']),
+      satker:'', lokasi:'', peserta:'', metode:'', negosiasi:0, penawaran:0, terkoreksi:0
+    }));
+  }
+  function mapEcatalogPortalRows(rows){
+    return rows.map(row=>({
       sourceJenis:'EKATALOG',
       tahun:getField(row,['tahun']),
-      kode:getField(row,['kode','kode paket','id paket','kode rup']),
-      namaPaket:getField(row,['nama_paket','nama paket','nama produk']),
-      tahapan:getField(row,['status','tahapan','tahapan_list']),
-      pagu:toNumber(getField(row,['pagu','nilai pagu','harga','nilai transaksi'])),
-      hps:toNumber(getField(row,['hps'])),
-      urlPemenang:getField(row,['url_pemenang','url produk','url']),
-      namaPemenang:getField(row,['nama_pemenang','penyedia','nama penyedia','pemenang']),
+      kode:getField(row,['kode_paket','kode paket','kode']),
+      namaPaket:getField(row,['nama_paket','nama paket']),
+      tahapan:getField(row,['tahap_aktif','tahap aktif']) || 'E-Katalog',
+      pagu:toNumber(getField(row,['pagu'])),
+      hps:toNumber(getField(row,['hps'])) || toNumber(getField(row,['pagu'])),
+      urlPemenang:'',
+      namaPemenang:getField(row,['nama_pemenang','nama pemenang']),
       npwp:getField(row,['npwp']),
-      tanggalMulai:getField(row,['tanggal_mulai','tanggal transaksi','mulai tahap']),
-      tanggalSampai:getField(row,['tanggal_sampai']),
-      urlJadwal:getField(row,['url_jadwal']),
-      urlPengumuman:getField(row,['url_pengumuman','url produk','url']),
-      instansi:getField(row,['instansi','instansi pembeli','kl/pd']),
-      lpse:getField(row,['lpse','nama lpse','nama_lpse','penyelenggara']),
-      satker:getField(row,['satker','satuan kerja']),
-      alamat:getField(row,['alamat']),
+      tanggalMulai:'',
+      tanggalSampai:'',
+      urlJadwal:'',
+      urlPengumuman:'',
+      instansi:getField(row,['instansi']),
+      lpse:getField(row,['lpse']) || 'E-Katalog',
+      satker:getField(row,['satker']),
+      alamat:'',
       jenisPengadaan:getField(row,['jenis_pengadaan','jenis pengadaan']),
-      tahapPembuatanAktif:getField(row,['tahapan_aktif','status']) || 'E-Katalog',
-      negosiasi:toNumber(getField(row,['harga_negosiasi','negosiasi'])),
-      penawaran:toNumber(getField(row,['harga_penawaran','penawaran','nilai transaksi'])),
-      terkoreksi:toNumber(getField(row,['harga_terkoreksi','terkoreksi']))
-    })).filter(r=>normalize(r.jenisPengadaan).includes('pekerjaan konstruksi'));
+      tahapPembuatanAktif:getField(row,['tahap_aktif','tahap aktif']) || 'E-Katalog',
+      metode:'', negosiasi:0, penawaran:0, terkoreksi:0
+    }));
   }
+
+  function buildUnifiedRows(){ return state.providerRows; }
+  function getActiveRows(){ return state.activeRows.filter(r=>String(r.tahapPembuatanAktif||r.tahapan||'').trim()!==''); }
+  function buildEcatalogRows(){ return state.ecatRows; }
 
   async function ensureDataLoaded(force = false){
     if((state.dataLoaded && !force) || state.loadingData) return;
     state.loadingData=true;
     try{
-      showLoading(8,'Menyiapkan koneksi data...','Sedang menyiapkan data yang dibutuhkan untuk halaman ini.','Memuat Halaman');
+      showLoading(10,'Menyiapkan data...','Sedang membuka data yang dibutuhkan untuk halaman ini.','Memuat Halaman');
+      await delay(80);
+      setLoading(35,'Menyiapkan daftar penyedia...','Tunggu sebentar, daftar penyedia sedang disiapkan.','Memuat Halaman');
+      const providerP = fetchCsvBySheetTitle(APP_CONFIG.providerSheet);
       await delay(100);
-      setLoading(28,'Membaca sheet tender...','Sedang menyiapkan daftar paket tender.','Memuat Halaman');
-      const tenderP = fetchCsvBySheetTitle(APP_CONFIG.tenderSheet);
-      await delay(120);
-      setLoading(54,'Membaca sheet non tender...','Sedang menyiapkan daftar paket non tender.','Memuat Halaman');
-      const nonTenderP = fetchCsvBySheetTitle(APP_CONFIG.nonTenderSheet);
-      await delay(120);
-      setLoading(72,'Membaca sheet ekatalog...','Sedang menyiapkan daftar paket e-katalog konstruksi.','Memuat Halaman');
+      setLoading(62,'Menyiapkan paket aktif...','Daftar paket aktif sedang dirapikan.','Memuat Halaman');
+      const activeP = fetchCsvBySheetTitle(APP_CONFIG.activeSheet);
+      await delay(100);
+      setLoading(82,'Menyiapkan e-katalog...','Daftar paket e-katalog sedang disiapkan.','Memuat Halaman');
       const ecatP = fetchCsvBySheetTitle(APP_CONFIG.ecatSheet);
-      const [tender,nonTender,ecat]=await Promise.all([tenderP,nonTenderP,ecatP]);
-      state.tenderRows=tender; state.nonTenderRows=nonTender; state.ecatRows=ecat;
-      setLoading(90,'Merapikan struktur dataset...','Menggabungkan data agar siap dipakai portal.','Memuat Halaman');
-      await delay(150);
-      state.dataLoaded=true;
-      setLoading(100,'Data portal siap','Data berhasil disiapkan dan siap ditampilkan.','Memuat Halaman');
-      await delay(180);
-    } finally { state.loadingData=false; hideLoading(); }
+      const [providerRaw, activeRaw, ecatRaw] = await Promise.all([providerP, activeP, ecatP]);
+      state.providerRows = mapProviderPortalRows(providerRaw);
+      state.activeRows = mapActivePortalRows(activeRaw);
+      state.ecatRows = mapEcatalogPortalRows(ecatRaw);
+      state.dataLoaded = true;
+      setLoading(100,'Halaman siap','Data berhasil disiapkan dan siap ditampilkan.','Memuat Halaman');
+      await delay(140);
+    } finally {
+      state.loadingData=false;
+      hideLoading();
+    }
   }
 
-  function renderLogin(){return `<div class="pp-login-wrap"><div class="pp-login-card" id="ppLoginCard"><div class="pp-login-brand"><span class="pp-kicker">Pemenang Pengadaan</span><h2>Pemenang Pengadaan</h2><p>Halaman ini dipakai untuk mencari paket penyedia, memantau paket aktif, dan melihat paket e-katalog. Masuk pakai akun yang sudah disiapkan.</p><div class="pp-login-stats"><div class="pp-mini-stat"><span>Fitur</span><strong>3 Menu</strong><small>Penyedia, paket aktif, dan e-Katalog dalam satu portal premium.</small></div><div class="pp-mini-stat"><span>Sumber</span><strong>3 Sheet</strong><small>SCRAPTENDER, SCRAPNONTENDER, dan ECATPEMENANG dibaca langsung dari spreadsheet.</small></div><div class="pp-mini-stat"><span>Gaya</span><strong>Premium</strong><small>Layout lebih ringkas, lebih rapi, dan lebih enak dilihat.</small></div></div></div><div class="pp-login-form-wrap"><h3>Masuk ke portal</h3><p class="pp-login-copy">Gunakan user id dan password yang sudah disiapkan.</p><form id="ppLoginForm"><label class="pp-field"><span>User ID</span><input class="pp-input" id="ppLoginUser" type="text" placeholder="Masukkan user id" required></label><label class="pp-field"><span>Password</span><input class="pp-input" id="ppLoginPassword" type="password" placeholder="Masukkan password" required></label><button class="pp-login-submit" id="ppLoginSubmit" type="submit">✦ Masuk ke Portal</button><div class="pp-login-error" id="ppLoginError"></div></form><div class="pp-login-note">Kalau gagal masuk, cek lagi user id dan password yang dipakai. Pastikan penulisannya sudah benar.</div></div></div></div>`;}
+  function renderLogin(){
+    return `<div class="pp-login-wrap"><div class="pp-login-card" id="ppLoginCard"><div class="pp-login-brand"><span class="pp-kicker">Pemenang Pengadaan</span><h2>Pemenang Pengadaan</h2><p>Halaman ini dipakai untuk mencari paket penyedia, memantau paket aktif, dan melihat paket e-katalog. Masuk pakai akun yang sudah disiapkan.</p></div><div class="pp-login-form-wrap"><h3>Masuk ke portal</h3><p class="pp-login-copy">Gunakan user id dan password yang sudah disiapkan.</p><form id="ppLoginForm"><label class="pp-field"><span>User ID</span><input class="pp-input" id="ppLoginUser" type="text" placeholder="Masukkan user id" required></label><label class="pp-field"><span>Password</span><input class="pp-input" id="ppLoginPassword" type="password" placeholder="Masukkan password" required></label><button class="pp-login-submit" id="ppLoginSubmit" type="submit">✦ Masuk ke Portal</button><div class="pp-login-error" id="ppLoginError"></div></form><div class="pp-login-note">Kalau gagal masuk, cek lagi user id dan password yang dipakai. Pastikan penulisannya sudah benar.</div></div></div></div>`;
+  }
   function setLoginError(root,msg=''){const el=root.querySelector('#ppLoginError'); if(!el) return; el.textContent=msg; el.classList.toggle('show', !!msg);}
   async function handleLoginSubmit(root,e){
     e.preventDefault();
@@ -208,40 +215,48 @@
       const match=rows.find(row=>String(getField(row,['USERID','user id','user'])).trim()===userId && String(getField(row,['PASSWORD','password','pass'])).trim()===password);
       if(!match) throw new Error('User ID atau password tidak sesuai.');
       persistSession({userId,loginAt:Date.now()});
-      setLoading(100,'Login berhasil','Akses diterima, portal sedang dibuka.','Masuk ke Halaman');
-      await delay(180);
+      setLoading(100,'Login berhasil','Akses diterima, halaman sedang dibuka.','Masuk ke Halaman');
+      await delay(150);
       await ensureDataLoaded();
       renderApp(root);
     }catch(err){hideLoading(); setLoginError(root, err.message||'Login gagal.');}
     finally{btn.disabled=false; btn.textContent='✦ Masuk ke Portal';}
   }
 
-  function dashboardCounts(){ const rows=buildUnifiedRows(); const lpse=new Set(rows.map(r=>r.lpse).filter(Boolean)).size; const instansi=new Set(rows.map(r=>r.instansi).filter(Boolean)).size; return {paket:rows.length, lpse, instansi, ecat: buildEcatalogRows().length}; }
-  function renderDashboardContent(){ const counts=dashboardCounts(); return `<div class="pp-dashboard-header"><div class="pp-dashboard-top"><div><span class="pp-panel-title">Dashboard Akses · Pengguna</span><h3>Pilih panel kerja</h3><p>Silakan pilih menu yang ingin dibuka. Tampilan dibuat ringkas supaya lebih cepat dipakai dan lebih mudah dibaca.</p></div><div class="pp-dashboard-mini"><div class="pp-mini-box"><span>Paket tersedia</span><strong>${formatNumber(counts.paket)}</strong></div><div class="pp-mini-box"><span>LPSE terdaftar</span><strong>${formatNumber(counts.lpse)}</strong></div><div class="pp-mini-box"><span>Instansi</span><strong>${formatNumber(counts.instansi)}</strong></div><div class="pp-mini-box pp-mini-box--purple"><span>E-Katalog</span><strong>${formatNumber(counts.ecat)}</strong></div></div></div></div><div class="pp-feature-grid pp-feature-grid--triple"><button class="pp-feature-card pp-feature-card--blue" data-pp-tab="provider-search"><div class="pp-feature-icon">🔎</div><div class="pp-feature-copy"><span>Menu utama</span><h4>Pencarian Paket Penyedia</h4><p>Telusuri profil penyedia, nilai kontrak, sebaran daerah, LPSE, dan daftar paket pemenang.</p></div><div class="pp-feature-arrow">→</div></button><button class="pp-feature-card pp-feature-card--teal" data-pp-tab="active-packages"><div class="pp-feature-icon">📦</div><div class="pp-feature-copy"><span>Pantauan aktif</span><h4>Paket Pengadaan Aktif</h4><p>Cari paket aktif berdasarkan nama paket, instansi, satker, atau LPSE. Lengkap dengan filter jenis paket dan tahap proses.</p></div><div class="pp-feature-arrow">→</div></button><button class="pp-feature-card pp-feature-card--purple" data-pp-tab="ecatalog-search"><div class="pp-feature-icon">🛒</div><div class="pp-feature-copy"><span>E-Katalog</span><h4>Pencarian Paket E-Katalog</h4><p>Fokus pada sheet ECATPEMENANG dengan filter Jenis Pengadaan = Pekerjaan Konstruksi.</p></div><div class="pp-feature-arrow">→</div></button></div><div class="pp-disclaimer" id="ppDisclaimer"><button class="pp-disclaimer-toggle" id="ppDisclaimerToggle" type="button"><div class="pp-disclaimer-left"><div class="pp-disclaimer-badge">!</div><div><strong>Informasi Penting</strong><small>Keterangan singkat sebelum memakai menu</small></div></div><div class="pp-disclaimer-caret">⌄</div></button><div class="pp-disclaimer-body"><div class="pp-disclaimer-grid"><div class="pp-disclaimer-box"><h5>Yang perlu diketahui</h5><ul><li>Akses masuk dibatasi untuk pengguna yang sudah terdaftar.</li><li>Menu penyedia menampilkan data tender.</li><li>Menu penyedia juga menampilkan data non tender.</li><li>Menu e-katalog fokus ke paket konstruksi.</li></ul></div><div class="pp-disclaimer-box"><h5>Catatan pemakaian</h5><ul><li>Informasi ditampilkan sesuai data yang tersedia saat halaman dibuka.</li><li>Data bisa berubah sewaktu-waktu mengikuti pembaruan terbaru.</li><li>Untuk kebutuhan penting, tetap lakukan pengecekan ulang pada sumber resminya.</li></ul></div></div></div></div>`; }
+  function dashboardCounts(){
+    const providerRows=buildUnifiedRows();
+    const activeRows=getActiveRows();
+    const ecatRows=buildEcatalogRows();
+    const lpse=new Set(providerRows.map(r=>r.lpse).filter(Boolean)).size;
+    const instansi=new Set(providerRows.map(r=>r.instansi).filter(Boolean)).size;
+    return {paket:providerRows.length, lpse, instansi, aktif:activeRows.length, ecat: ecatRows.length};
+  }
+  function renderDashboardContent(){ const counts=dashboardCounts(); return `<div class="pp-dashboard-header"><div class="pp-dashboard-top"><div><span class="pp-panel-title">Dashboard Akses · Pengguna</span><h3>Pilih panel kerja</h3><p>Silakan pilih menu yang ingin dibuka. Tampilan dibuat ringkas supaya lebih cepat dipakai dan lebih mudah dibaca.</p></div><div class="pp-dashboard-mini"><div class="pp-mini-box"><span>Paket tersedia</span><strong>${formatNumber(counts.paket)}</strong></div><div class="pp-mini-box"><span>Paket aktif</span><strong>${formatNumber(counts.aktif)}</strong></div><div class="pp-mini-box"><span>Instansi</span><strong>${formatNumber(counts.instansi)}</strong></div><div class="pp-mini-box pp-mini-box--purple"><span>E-Katalog</span><strong>${formatNumber(counts.ecat)}</strong></div></div></div></div><div class="pp-feature-grid pp-feature-grid--triple"><button class="pp-feature-card pp-feature-card--blue" data-pp-tab="provider-search"><div class="pp-feature-icon">🔎</div><div class="pp-feature-copy"><span>Menu utama</span><h4>Pencarian Paket Penyedia</h4><p>Telusuri profil penyedia, nilai kontrak, sebaran daerah, LPSE, dan daftar paket pemenang.</p></div><div class="pp-feature-arrow">→</div></button><button class="pp-feature-card pp-feature-card--teal" data-pp-tab="active-packages"><div class="pp-feature-icon">📦</div><div class="pp-feature-copy"><span>Pantauan aktif</span><h4>Paket Pengadaan Aktif</h4><p>Cari paket aktif berdasarkan nama paket, instansi, atau LPSE. Lengkap dengan filter jenis paket dan tahap proses.</p></div><div class="pp-feature-arrow">→</div></button><button class="pp-feature-card pp-feature-card--purple" data-pp-tab="ecatalog-search"><div class="pp-feature-icon">🛒</div><div class="pp-feature-copy"><span>E-Katalog</span><h4>Pencarian Paket E-Katalog</h4><p>Fokus pada paket e-katalog konstruksi yang sudah disiapkan untuk halaman ini.</p></div><div class="pp-feature-arrow">→</div></button></div><div class="pp-disclaimer" id="ppDisclaimer"><button class="pp-disclaimer-toggle" id="ppDisclaimerToggle" type="button"><div class="pp-disclaimer-left"><div class="pp-disclaimer-badge">!</div><div><strong>Informasi Penting</strong><small>Keterangan singkat sebelum memakai menu</small></div></div><div class="pp-disclaimer-caret">⌄</div></button><div class="pp-disclaimer-body"><div class="pp-disclaimer-grid"><div class="pp-disclaimer-box"><h5>Yang perlu diketahui</h5><ul><li>Akses masuk dibatasi untuk pengguna yang sudah terdaftar.</li><li>Menu penyedia dipakai untuk mencari paket berdasarkan nama pemenang.</li><li>Menu paket aktif dipakai untuk memantau paket yang masih berjalan.</li><li>Menu e-katalog fokus pada pekerjaan konstruksi.</li></ul></div><div class="pp-disclaimer-box"><h5>Catatan pemakaian</h5><ul><li>Informasi ditampilkan sesuai data yang tersedia saat halaman dibuka.</li><li>Gunakan kata kunci yang lebih spesifik supaya hasil lebih cepat ditemukan.</li><li>Untuk kebutuhan penting, tetap lakukan pengecekan ulang pada sumber resminya.</li></ul></div></div></div></div>`; }
 
-  function providerMatches(row,term,tahun){const hay=[row.namaPemenang,row.namaPaket,row.instansi,row.satker,row.lpse,row.kode,row.npwp].join(' ').toLowerCase(); if(tahun&&String(row.tahun)!==String(tahun)) return false; if(!term) return true; return hay.includes(term.toLowerCase());}
-  function getActiveRows(){return buildUnifiedRows().filter(r=>{ const txt=`${r.tahapan} ${r.tahapPembuatanAktif}`.toLowerCase(); return !/selesai|batal|gagal/.test(txt); });}
+  function providerMatches(row,term,tahun){const hay=[row.namaPemenang,row.namaPaket,row.instansi,row.lpse,row.kode,row.npwp].join(' ').toLowerCase(); if(tahun&&String(row.tahun)!==String(tahun)) return false; if(!term) return true; return hay.includes(term.toLowerCase());}
   function sortRows(rows,by){const arr=[...rows]; if(by==='nilai') arr.sort((a,b)=>(b.pagu||b.hps)-(a.pagu||a.hps)); else if(by==='nama') arr.sort((a,b)=>String(a.namaPaket).localeCompare(String(b.namaPaket),'id')); else if(by==='instansi') arr.sort((a,b)=>String(a.instansi).localeCompare(String(b.instansi),'id')); else arr.sort((a,b)=>String(a.tanggalSampai||'').localeCompare(String(b.tanggalSampai||''),'id')); return arr;}
   function paginate(rows,page){ const total=rows.length; const start=(page-1)*APP_CONFIG.pageSize; const end=Math.min(start+APP_CONFIG.pageSize,total); return {slice:rows.slice(start,end), start, end, total, pages: Math.max(1,Math.ceil(total/APP_CONFIG.pageSize))}; }
   function renderPagination(type, page, total){ const pages=Math.max(1,Math.ceil(total/APP_CONFIG.pageSize)); if(total<=APP_CONFIG.pageSize) return ''; return `<div class="pp-pagination"><button class="pp-page-btn" type="button" data-pp-page-move="${type}:prev" ${page<=1?'disabled':''}>← Prev</button><div class="pp-page-info">Menampilkan ${(page-1)*APP_CONFIG.pageSize+1}-${Math.min(page*APP_CONFIG.pageSize,total)} dari ${formatNumber(total)} hasil</div><button class="pp-page-btn" type="button" data-pp-page-move="${type}:next" ${page>=pages?'disabled':''}>Next →</button></div>`; }
-  function renderQueryInfo(label, q){ return q ? `<div class="pp-query-info">Hasil pencarian untuk <b>${esc(q)}</b></div>` : ''; }
+  function renderQueryInfo(q){ return q ? `<div class="pp-query-info">Hasil pencarian untuk <b>${esc(q)}</b></div>` : ''; }
 
   function renderProviderSearch(){
     const years=[...new Set(buildUnifiedRows().map(r=>r.tahun).filter(Boolean))].sort((a,b)=>String(b).localeCompare(String(a)));
     const all=state.providerResults; const pageData=paginate(all,state.providerPage);
-    return `<div class="pp-section-card"><div class="pp-section-head"><div><span class="pp-panel-title" style="background:#edf4ff;border-color:#dbe4f0;color:#17427d;">Analisis penyedia</span><h3>Pencarian Paket Penyedia</h3><p>Cari nama penyedia, lalu buka rincian paket dan tautan yang dibutuhkan.</p></div><button class="pp-export-btn" type="button" id="ppExportProviderBtn">Export XLSX</button></div><div class="pp-filter-grid"><label class="pp-search-box"><span>Kata kunci penyedia</span><input class="pp-search-input" id="ppProviderKeyword" placeholder="Cari nama penyedia, paket, instansi, LPSE, atau NPWP..." value="${esc(state.providerQuery)}"></label><label class="pp-select-box"><span>Tahun</span><select class="pp-select" id="ppProviderYear"><option value="">Semua tahun</option>${years.map(y=>`<option value="${esc(y)}">${esc(y)}</option>`).join('')}</select></label><div></div><div></div><button class="pp-action-button" id="ppProviderSearchBtn" type="button" ${state.providerQuery.trim()?'':'disabled'}>Cari Penyedia</button></div><div class="pp-summary-strip"><div class="pp-summary-box"><span>Total data tersedia</span><strong>${formatNumber(buildUnifiedRows().length)}</strong></div><div class="pp-summary-box"><span>Data tender</span><strong>${formatNumber(state.tenderRows.length)}</strong></div><div class="pp-summary-box"><span>Data non tender</span><strong>${formatNumber(state.nonTenderRows.length)}</strong></div><div class="pp-summary-box"><span>Hasil saat ini</span><strong>${formatNumber(all.length)}</strong></div></div>${renderQueryInfo('penyedia', state.providerQuery)}<div class="pp-result-list">${pageData.total?pageData.slice.map((r,i)=>renderPackageCard(r,pageData.start+i,true)).join(''):`<div class="pp-empty">Masukkan kata kunci penyedia lalu klik <b>Cari Penyedia</b>.</div>`}</div>${renderPagination('provider',state.providerPage,pageData.total)}</div>`;
+    const tenderCount = buildUnifiedRows().filter(r=>r.sourceJenis==='TENDER').length;
+    const nonTenderCount = buildUnifiedRows().filter(r=>r.sourceJenis==='NON TENDER').length;
+    return `<div class="pp-section-card"><div class="pp-section-head"><div><span class="pp-panel-title" style="background:#edf4ff;border-color:#dbe4f0;color:#17427d;">Analisis penyedia</span><h3>Pencarian Paket Penyedia</h3><p>Cari nama penyedia, lalu buka rincian paket dan tautan yang dibutuhkan.</p></div><button class="pp-export-btn" type="button" id="ppExportProviderBtn">Export XLSX</button></div><div class="pp-filter-grid"><label class="pp-search-box"><span>Kata kunci penyedia</span><input class="pp-search-input" id="ppProviderKeyword" placeholder="Cari nama penyedia, paket, instansi, LPSE, atau NPWP..." value="${esc(state.providerQuery)}"></label><label class="pp-select-box"><span>Tahun</span><select class="pp-select" id="ppProviderYear"><option value="">Semua tahun</option>${years.map(y=>`<option value="${esc(y)}">${esc(y)}</option>`).join('')}</select></label><div></div><div></div><button class="pp-action-button" id="ppProviderSearchBtn" type="button" ${state.providerQuery.trim()?'':'disabled'}>Cari Penyedia</button></div><div class="pp-summary-strip"><div class="pp-summary-box"><span>Total data tersedia</span><strong>${formatNumber(buildUnifiedRows().length)}</strong></div><div class="pp-summary-box"><span>Data tender</span><strong>${formatNumber(tenderCount)}</strong></div><div class="pp-summary-box"><span>Data non tender</span><strong>${formatNumber(nonTenderCount)}</strong></div><div class="pp-summary-box"><span>Hasil saat ini</span><strong>${formatNumber(all.length)}</strong></div></div>${renderQueryInfo(state.providerQuery)}<div class="pp-result-list">${pageData.total?pageData.slice.map((r,i)=>renderPackageCard(r,pageData.start+i,true)).join(''):`<div class="pp-empty">Masukkan kata kunci penyedia lalu klik <b>Cari Penyedia</b>.</div>`}</div>${renderPagination('provider',state.providerPage,pageData.total)}</div>`;
   }
 
   function renderActivePackages(){
     const rows=state.activeResults; const pageData=paginate(rows,state.activePage);
-    const years=[...new Set(buildUnifiedRows().map(r=>r.tahun).filter(Boolean))].sort((a,b)=>String(b).localeCompare(String(a)));
+    const years=[...new Set(getActiveRows().map(r=>r.tahun).filter(Boolean))].sort((a,b)=>String(b).localeCompare(String(a)));
     const phases=[...new Set(getActiveRows().map(r=>r.tahapPembuatanAktif||r.tahapan).filter(Boolean))].sort();
-    return `<div class="pp-section-card"><div class="pp-section-head"><div><span class="pp-panel-title" style="background:#ecfffb;border-color:#d1f6ef;color:#0f766e;">Pantauan aktif</span><h3>Paket Pengadaan Aktif</h3><p>Cari paket aktif berdasarkan nama paket, instansi, LPSE, jenis paket, tahap proses, dan tahun.</p></div><button class="pp-export-btn" type="button" id="ppExportActiveBtn">Export XLSX</button></div><div class="pp-filter-grid"><label class="pp-search-box"><span>Pencarian umum</span><input class="pp-search-input" id="ppActiveKeyword" placeholder="Cari nama paket, instansi, atau LPSE..." value="${esc(state.activeQuery)}"></label><label class="pp-select-box"><span>Jenis paket</span><select class="pp-select" id="ppActiveJenis"><option value="">Semua</option><option value="TENDER">Tender</option><option value="NON TENDER">Non Tender</option></select></label><label class="pp-select-box"><span>Tahap proses</span><select class="pp-select" id="ppActivePhase"><option value="">Semua tahap</option>${phases.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}</select></label><label class="pp-select-box"><span>Tahun</span><select class="pp-select" id="ppActiveYear"><option value="">Semua tahun</option>${years.map(y=>`<option value="${esc(y)}">${esc(y)}</option>`).join('')}</select></label><button class="pp-action-button" id="ppActiveSearchBtn" type="button">Cari Paket</button></div><div class="pp-summary-strip"><div class="pp-summary-box"><span>Total aktif</span><strong>${formatNumber(getActiveRows().length)}</strong></div><div class="pp-summary-box"><span>Hasil ditemukan</span><strong>${formatNumber(rows.length)}</strong></div><div class="pp-summary-box"><span>Dengan pemenang</span><strong>${formatNumber(rows.filter(r=>r.namaPemenang).length)}</strong></div><div class="pp-summary-box"><span>Nilai pagu</span><strong>${formatMoney(rows.reduce((t,r)=>t+(r.pagu||0),0))}</strong></div></div>${renderQueryInfo('paket aktif', state.activeQuery)}<div class="pp-toolbar"><div class="pp-sort-group"><span>Urutkan</span><button class="pp-sort-btn ${state.sortActiveBy==='deadline'?'active':''}" data-pp-sort="deadline" type="button">Deadline</button><button class="pp-sort-btn ${state.sortActiveBy==='nilai'?'active':''}" data-pp-sort="nilai" type="button">Nilai</button><button class="pp-sort-btn ${state.sortActiveBy==='nama'?'active':''}" data-pp-sort="nama" type="button">Nama</button><button class="pp-sort-btn ${state.sortActiveBy==='instansi'?'active':''}" data-pp-sort="instansi" type="button">Instansi</button></div></div><div class="pp-result-list">${pageData.total?pageData.slice.map((r,i)=>renderPackageCard(r,pageData.start+i,false)).join(''):`<div class="pp-empty">Belum ada hasil. Gunakan filter lalu klik <b>Cari Paket</b>.</div>`}</div>${renderPagination('active',state.activePage,pageData.total)}</div>`;
+    return `<div class="pp-section-card"><div class="pp-section-head"><div><span class="pp-panel-title" style="background:#ecfffb;border-color:#d1f6ef;color:#0f766e;">Pantauan aktif</span><h3>Paket Pengadaan Aktif</h3><p>Cari paket aktif berdasarkan nama paket, instansi, atau LPSE. Lengkap dengan filter jenis paket, tahap proses, dan tahun.</p></div><button class="pp-export-btn" type="button" id="ppExportActiveBtn">Export XLSX</button></div><div class="pp-filter-grid"><label class="pp-search-box"><span>Pencarian umum</span><input class="pp-search-input" id="ppActiveKeyword" placeholder="Cari nama paket, instansi, atau LPSE..." value="${esc(state.activeQuery)}"></label><label class="pp-select-box"><span>Jenis paket</span><select class="pp-select" id="ppActiveJenis"><option value="">Semua</option><option value="TENDER">Tender</option><option value="NON TENDER">Non Tender</option></select></label><label class="pp-select-box"><span>Tahap proses</span><select class="pp-select" id="ppActivePhase"><option value="">Semua tahap</option>${phases.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}</select></label><label class="pp-select-box"><span>Tahun</span><select class="pp-select" id="ppActiveYear"><option value="">Semua tahun</option>${years.map(y=>`<option value="${esc(y)}">${esc(y)}</option>`).join('')}</select></label><button class="pp-action-button" id="ppActiveSearchBtn" type="button">Cari Paket</button></div><div class="pp-summary-strip"><div class="pp-summary-box"><span>Total aktif</span><strong>${formatNumber(getActiveRows().length)}</strong></div><div class="pp-summary-box"><span>Hasil ditemukan</span><strong>${formatNumber(rows.length)}</strong></div><div class="pp-summary-box"><span>Dengan pemenang</span><strong>${formatNumber(rows.filter(r=>r.namaPemenang).length)}</strong></div><div class="pp-summary-box"><span>Nilai pagu</span><strong>${formatMoney(rows.reduce((t,r)=>t+(r.pagu||0),0))}</strong></div></div>${renderQueryInfo(state.activeQuery)}<div class="pp-toolbar"><div class="pp-sort-group"><span>Urutkan</span><button class="pp-sort-btn ${state.sortActiveBy==='deadline'?'active':''}" data-pp-sort="deadline" type="button">Deadline</button><button class="pp-sort-btn ${state.sortActiveBy==='nilai'?'active':''}" data-pp-sort="nilai" type="button">Nilai</button><button class="pp-sort-btn ${state.sortActiveBy==='nama'?'active':''}" data-pp-sort="nama" type="button">Nama</button><button class="pp-sort-btn ${state.sortActiveBy==='instansi'?'active':''}" data-pp-sort="instansi" type="button">Instansi</button></div></div><div class="pp-result-list">${pageData.total?pageData.slice.map((r,i)=>renderPackageCard(r,pageData.start+i,false)).join(''):`<div class="pp-empty">Belum ada hasil. Gunakan filter lalu klik <b>Cari Paket</b>.</div>`}</div>${renderPagination('active',state.activePage,pageData.total)}</div>`;
   }
 
   function renderEcatalogSearch(){
     const source=buildEcatalogRows(); const years=[...new Set(source.map(r=>r.tahun).filter(Boolean))].sort((a,b)=>String(b).localeCompare(String(a))); const all=state.ecatResults; const pageData=paginate(all,state.ecatPage);
-    return `<div class="pp-section-card"><div class="pp-section-head"><div><span class="pp-panel-title" style="background:#f3efff;border-color:#e5ddff;color:#6b3fe3;">E-Katalog Konstruksi</span><h3>Pencarian Paket E-Katalog</h3><p>Menampilkan paket e-katalog konstruksi dengan tampilan yang dibedakan dari tender dan non tender.</p></div><button class="pp-export-btn pp-export-btn--purple" type="button" id="ppExportEcatBtn">Export XLSX</button></div><div class="pp-filter-grid"><label class="pp-search-box"><span>Kata kunci e-katalog</span><input class="pp-search-input" id="ppEcatKeyword" placeholder="Cari nama penyedia, paket, instansi, atau LPSE..." value="${esc(state.ecatQuery)}"></label><label class="pp-select-box"><span>Tahun</span><select class="pp-select" id="ppEcatYear"><option value="">Semua tahun</option>${years.map(y=>`<option value="${esc(y)}">${esc(y)}</option>`).join('')}</select></label><div></div><div></div><button class="pp-action-button pp-action-button--purple" id="ppEcatSearchBtn" type="button" ${state.ecatQuery.trim()?'':'disabled'}>Cari E-Katalog</button></div><div class="pp-summary-strip"><div class="pp-summary-box pp-summary-box--purple"><span>Total e-katalog konstruksi</span><strong>${formatNumber(source.length)}</strong></div><div class="pp-summary-box pp-summary-box--purple"><span>Dengan pemenang</span><strong>${formatNumber(source.filter(r=>r.namaPemenang).length)}</strong></div><div class="pp-summary-box pp-summary-box--purple"><span>Instansi</span><strong>${formatNumber(new Set(source.map(r=>r.instansi).filter(Boolean)).size)}</strong></div><div class="pp-summary-box pp-summary-box--purple"><span>Hasil saat ini</span><strong>${formatNumber(all.length)}</strong></div></div>${renderQueryInfo('e-katalog', state.ecatQuery)}<div class="pp-result-list">${pageData.total?pageData.slice.map((r,i)=>renderPackageCard(r,pageData.start+i,true)).join(''):`<div class="pp-empty">Masukkan kata kunci lalu klik <b>Cari E-Katalog</b>.</div>`}</div>${renderPagination('ecat',state.ecatPage,pageData.total)}</div>`;
+    return `<div class="pp-section-card"><div class="pp-section-head"><div><span class="pp-panel-title" style="background:#f3efff;border-color:#e5ddff;color:#6b3fe3;">E-Katalog Konstruksi</span><h3>Pencarian Paket E-Katalog</h3><p>Menampilkan paket e-katalog konstruksi dengan tampilan yang dibedakan dari tender dan non tender.</p></div><button class="pp-export-btn pp-export-btn--purple" type="button" id="ppExportEcatBtn">Export XLSX</button></div><div class="pp-filter-grid"><label class="pp-search-box"><span>Kata kunci e-katalog</span><input class="pp-search-input" id="ppEcatKeyword" placeholder="Cari nama penyedia, paket, instansi, atau LPSE..." value="${esc(state.ecatQuery)}"></label><label class="pp-select-box"><span>Tahun</span><select class="pp-select" id="ppEcatYear"><option value="">Semua tahun</option>${years.map(y=>`<option value="${esc(y)}">${esc(y)}</option>`).join('')}</select></label><div></div><div></div><button class="pp-action-button pp-action-button--purple" id="ppEcatSearchBtn" type="button" ${state.ecatQuery.trim()?'':'disabled'}>Cari E-Katalog</button></div><div class="pp-summary-strip"><div class="pp-summary-box pp-summary-box--purple"><span>Total e-katalog konstruksi</span><strong>${formatNumber(source.length)}</strong></div><div class="pp-summary-box pp-summary-box--purple"><span>Dengan pemenang</span><strong>${formatNumber(source.filter(r=>r.namaPemenang).length)}</strong></div><div class="pp-summary-box pp-summary-box--purple"><span>Instansi</span><strong>${formatNumber(new Set(source.map(r=>r.instansi).filter(Boolean)).size)}</strong></div><div class="pp-summary-box pp-summary-box--purple"><span>Hasil saat ini</span><strong>${formatNumber(all.length)}</strong></div></div>${renderQueryInfo(state.ecatQuery)}<div class="pp-result-list">${pageData.total?pageData.slice.map((r,i)=>renderPackageCard(r,pageData.start+i,true)).join(''):`<div class="pp-empty">Masukkan kata kunci lalu klik <b>Cari E-Katalog</b>.</div>`}</div>${renderPagination('ecat',state.ecatPage,pageData.total)}</div>`;
   }
 
   function renderLink(label, href, icon){ if(!href) return `<span class="pp-link-pill pp-link-pill--disabled">${icon} ${label}</span>`; return `<a class="pp-link-pill pp-link-pill--active" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${icon} ${label}</a>`; }
@@ -249,7 +264,7 @@
   function sourceCardClass(source){ if(source==='EKATALOG') return 'pp-package-card--purple'; if(source==='NON TENDER') return 'pp-package-card--gold'; return 'pp-package-card--blue'; }
   function renderPackageCard(row, idx, providerMode){
     const title=row.namaPaket||'-'; const phase=row.tahapPembuatanAktif||row.tahapan||'-'; const detailId=`pp-detail-${providerMode?'p':'a'}-${idx}`;
-    return `<article class="pp-package-card ${sourceCardClass(row.sourceJenis)}" data-detail-card="${detailId}"><div class="pp-package-main"><div class="pp-package-top"><div class="pp-package-title-wrap"><div class="pp-badges"><span class="pp-badge ${sourceBadgeClass(row.sourceJenis)}">${esc(row.sourceJenis)}</span>${phase&&phase!=='-'?`<span class="pp-badge pp-badge--teal">${esc(phase)}</span>`:''}${row.namaPemenang?`<span class="pp-badge pp-badge--green">Dengan pemenang</span>`:''}</div><h4 class="pp-package-title">${esc(title)}</h4><div class="pp-package-meta"><span>${esc(row.instansi||'-')}</span><span>${esc(row.satker||'-')}</span><span>${esc(row.lpse||'-')}</span></div></div><div class="pp-package-side"><div class="pp-side-card"><span>${providerMode?'Nilai HPS':'Nilai Pagu'}</span><strong>${formatMoney(providerMode?(row.hps||row.pagu):(row.pagu||row.hps))}</strong></div></div></div><div class="pp-package-grid"><div class="pp-meta-tile"><span>Pemenang</span><strong>${esc(row.namaPemenang||'-')}</strong></div><div class="pp-meta-tile"><span>NPWP</span><strong>${esc(row.npwp||'-')}</strong></div><div class="pp-meta-tile"><span>Mulai</span><strong>${esc(formatDateish(row.tanggalMulai||row.tanggalPembuktian))}</strong></div><div class="pp-meta-tile"><span>Sampai / Deadline</span><strong>${esc(formatDateish(row.tanggalSampai))}</strong></div></div></div><div class="pp-package-actions"><div class="pp-link-row">${renderLink('Pemenang', row.urlPemenang, '👁')} ${renderLink('Jadwal', row.urlJadwal, '🗓')} ${renderLink('Pengumuman', row.urlPengumuman, '📢')}</div><button class="pp-detail-toggle" type="button" data-detail-toggle="${detailId}">Lihat detail lengkap</button></div><div class="pp-package-detail" id="${detailId}"><div class="pp-detail-grid"><div class="pp-detail-box"><h5>Identitas Paket</h5><div class="pp-detail-list"><span>Kode Paket</span><strong>${esc(row.kode||'-')}</strong><span>Jenis Pengadaan</span><strong>${esc(row.jenisPengadaan||row.sourceJenis||'-')}</strong><span>Instansi</span><strong>${esc(row.instansi||'-')}</strong><span>LPSE</span><strong>${esc(row.lpse||'-')}</strong><span>Tahap Aktif</span><strong>${esc(phase)}</strong></div></div><div class="pp-detail-box"><h5>Profil Pemenang</h5><div class="pp-provider-profile"><strong>${esc(row.namaPemenang||'-')}</strong><div><b>Alamat</b><br>${esc(row.alamat||'-')}</div><div><b>NPWP</b><br>${esc(row.npwp||'-')}</div><div><b>Nilai Penawaran</b><br>${row.penawaran?formatMoney(row.penawaran):'-'}</div><div><b>Nilai Terkoreksi</b><br>${row.terkoreksi?formatMoney(row.terkoreksi):'-'}</div><div><b>Nilai Negosiasi</b><br>${row.negosiasi?formatMoney(row.negosiasi):'-'}</div></div></div></div></div></article>`;
+    return `<article class="pp-package-card ${sourceCardClass(row.sourceJenis)}" data-detail-card="${detailId}"><div class="pp-package-main"><div class="pp-package-top"><div class="pp-package-title-wrap"><div class="pp-badges"><span class="pp-badge ${sourceBadgeClass(row.sourceJenis)}">${esc(row.sourceJenis)}</span>${phase&&phase!=='-'?`<span class="pp-badge pp-badge--teal">${esc(phase)}</span>`:''}${row.namaPemenang?`<span class="pp-badge pp-badge--green">Dengan pemenang</span>`:''}</div><h4 class="pp-package-title">${esc(title)}</h4><div class="pp-package-meta"><span>${esc(row.instansi||'-')}</span>${row.satker?`<span>${esc(row.satker)}</span>`:''}<span>${esc(row.lpse||'-')}</span></div></div><div class="pp-package-side"><div class="pp-side-card"><span>${providerMode?'Nilai HPS':'Nilai Pagu'}</span><strong>${formatMoney(providerMode?(row.hps||row.pagu):(row.pagu||row.hps))}</strong></div></div></div><div class="pp-package-grid"><div class="pp-meta-tile"><span>Pemenang</span><strong>${esc(row.namaPemenang||'-')}</strong></div><div class="pp-meta-tile"><span>NPWP</span><strong>${esc(row.npwp||'-')}</strong></div><div class="pp-meta-tile"><span>Mulai</span><strong>${esc(formatDateish(row.tanggalMulai))}</strong></div><div class="pp-meta-tile"><span>Sampai / Deadline</span><strong>${esc(formatDateish(row.tanggalSampai))}</strong></div></div></div><div class="pp-package-actions"><div class="pp-link-row">${renderLink('Pemenang', row.urlPemenang, '👁')} ${renderLink('Jadwal', row.urlJadwal, '🗓')} ${renderLink('Pengumuman', row.urlPengumuman, '📢')}</div><button class="pp-detail-toggle" type="button" data-detail-toggle="${detailId}">Lihat detail lengkap</button></div><div class="pp-package-detail" id="${detailId}"><div class="pp-detail-grid"><div class="pp-detail-box"><h5>Identitas Paket</h5><div class="pp-detail-list"><span>Kode Paket</span><strong>${esc(row.kode||'-')}</strong><span>Jenis Pengadaan</span><strong>${esc(row.jenisPengadaan||row.sourceJenis||'-')}</strong><span>Instansi</span><strong>${esc(row.instansi||'-')}</strong><span>LPSE</span><strong>${esc(row.lpse||'-')}</strong><span>Tahap Aktif</span><strong>${esc(phase)}</strong></div></div><div class="pp-detail-box"><h5>Profil Pemenang</h5><div class="pp-provider-profile"><strong>${esc(row.namaPemenang||'-')}</strong><div><b>Alamat</b><br>${esc(row.alamat||'-')}</div><div><b>NPWP</b><br>${esc(row.npwp||'-')}</div><div><b>Nilai Penawaran</b><br>${row.penawaran?formatMoney(row.penawaran):'-'}</div><div><b>Nilai Terkoreksi</b><br>${row.terkoreksi?formatMoney(row.terkoreksi):'-'}</div><div><b>Nilai Negosiasi</b><br>${row.negosiasi?formatMoney(row.negosiasi):'-'}</div></div></div></div></div></article>`;
   }
 
   function exportRowsToCsv(rows, filename){
@@ -270,14 +285,14 @@
   }
 
   async function changeTab(root, tab){
-    showLoading(20,'Menyiapkan halaman...','Portal sedang berpindah menu.','Pemenang Pengadaan · Menu');
+    showLoading(20,'Menyiapkan halaman...','Tunggu sebentar, halaman yang dipilih sedang dibuka.','Pindah Menu');
     state.activeTab=tab;
     if(tab!=='dashboard'){ await ensureDataLoaded(); }
-    setLoading(82,'Menampilkan halaman...','Komponen menu sedang dirender.','Pemenang Pengadaan · Menu');
-    await delay(120);
+    setLoading(82,'Menampilkan halaman...','Halaman sedang dirapikan untuk ditampilkan.','Pindah Menu');
+    await delay(100);
     renderApp(root);
-    setLoading(100,'Halaman siap','Menu berhasil dibuka.','Pemenang Pengadaan · Menu');
-    await delay(120);
+    setLoading(100,'Halaman siap','Menu berhasil dibuka.','Pindah Menu');
+    await delay(100);
     hideLoading();
   }
 
@@ -289,25 +304,25 @@
     const dToggle=appView.querySelector('#ppDisclaimerToggle'); if(dToggle) dToggle.addEventListener('click', ()=>{appView.querySelector('#ppDisclaimer').classList.toggle('open');});
 
     const pInput=appView.querySelector('#ppProviderKeyword'); const pBtn=appView.querySelector('#ppProviderSearchBtn');
-    if(pInput&&pBtn){ pInput.addEventListener('input', ()=>{ state.providerQuery=pInput.value; pBtn.disabled=!pInput.value.trim(); }); pBtn.addEventListener('click', async ()=>{ showLoading(18,'Menyiapkan pencarian penyedia...','Portal sedang membaca data penyedia.','Pencarian Paket Penyedia'); const term=pInput.value.trim(); state.providerQuery=term; const tahun=appView.querySelector('#ppProviderYear').value; await ensureDataLoaded(); setLoading(68,'Menyaring dataset penyedia...','Mencari paket yang cocok dengan kata kunci Anda.','Pencarian Paket Penyedia'); state.providerPage=1; state.providerResults=buildUnifiedRows().filter(r=>providerMatches(r,term,tahun)); await delay(120); renderApp(root); hideLoading(); }); }
+    if(pInput&&pBtn){ pInput.addEventListener('input', ()=>{ state.providerQuery=pInput.value; pBtn.disabled=!pInput.value.trim(); }); pBtn.addEventListener('click', async ()=>{ showLoading(18,'Menyiapkan pencarian penyedia...','Tunggu sebentar, hasil sedang dicari.','Pencarian Penyedia'); const term=pInput.value.trim(); state.providerQuery=term; const tahun=appView.querySelector('#ppProviderYear').value; await ensureDataLoaded(); setLoading(68,'Menyaring hasil...','Sedang mencari data yang cocok dengan kata kunci Anda.','Pencarian Penyedia'); state.providerPage=1; state.providerResults=buildUnifiedRows().filter(r=>providerMatches(r,term,tahun)); await delay(80); renderApp(root); hideLoading(); }); }
     const exportP=appView.querySelector('#ppExportProviderBtn'); if(exportP) exportP.addEventListener('click',()=>exportRowsToCsv(state.providerResults,'pencarian_penyedia.csv'));
 
-    const aBtn=appView.querySelector('#ppActiveSearchBtn'); if(aBtn){ aBtn.addEventListener('click', async ()=>{ showLoading(18,'Menyiapkan pencarian paket aktif...','Portal sedang membaca data paket aktif.','Paket Pengadaan Aktif'); const kw=appView.querySelector('#ppActiveKeyword').value.trim().toLowerCase(); state.activeQuery=appView.querySelector('#ppActiveKeyword').value.trim(); const jenis=appView.querySelector('#ppActiveJenis').value; const phase=appView.querySelector('#ppActivePhase').value; const tahun=appView.querySelector('#ppActiveYear').value; await ensureDataLoaded(); setLoading(70,'Menyaring paket aktif...','Mengambil hasil sesuai filter yang Anda pilih.','Paket Pengadaan Aktif'); let rows=getActiveRows().filter(r=>{ const hay=[r.namaPaket,r.instansi,r.satker,r.lpse].join(' ').toLowerCase(); if(kw && !hay.includes(kw)) return false; if(jenis && r.sourceJenis!==jenis) return false; const phaseVal=r.tahapPembuatanAktif||r.tahapan||''; if(phase && phaseVal!==phase) return false; if(tahun && String(r.tahun)!==String(tahun)) return false; return true; }); state.activePage=1; state.activeResults=sortRows(rows,state.sortActiveBy); await delay(120); renderApp(root); hideLoading(); }); }
+    const aBtn=appView.querySelector('#ppActiveSearchBtn'); if(aBtn){ aBtn.addEventListener('click', async ()=>{ showLoading(18,'Menyiapkan pencarian paket aktif...','Tunggu sebentar, hasil sedang dicari.','Paket Aktif'); const kw=appView.querySelector('#ppActiveKeyword').value.trim().toLowerCase(); state.activeQuery=appView.querySelector('#ppActiveKeyword').value.trim(); const jenis=appView.querySelector('#ppActiveJenis').value; const phase=appView.querySelector('#ppActivePhase').value; const tahun=appView.querySelector('#ppActiveYear').value; await ensureDataLoaded(); setLoading(70,'Menyaring hasil...','Sedang mengambil data sesuai filter yang dipilih.','Paket Aktif'); let rows=getActiveRows().filter(r=>{ const hay=[r.namaPaket,r.instansi,r.lpse].join(' ').toLowerCase(); if(kw && !hay.includes(kw)) return false; if(jenis && r.sourceJenis!==jenis) return false; const phaseVal=r.tahapPembuatanAktif||r.tahapan||''; if(phase && phaseVal!==phase) return false; if(tahun && String(r.tahun)!==String(tahun)) return false; return true; }); state.activePage=1; state.activeResults=sortRows(rows,state.sortActiveBy); await delay(80); renderApp(root); hideLoading(); }); }
     const exportA=appView.querySelector('#ppExportActiveBtn'); if(exportA) exportA.addEventListener('click',()=>exportRowsToCsv(state.activeResults,'paket_aktif.csv'));
 
     const eInput=appView.querySelector('#ppEcatKeyword'); const eBtn=appView.querySelector('#ppEcatSearchBtn');
-    if(eInput&&eBtn){ eInput.addEventListener('input', ()=>{ state.ecatQuery=eInput.value; eBtn.disabled=!eInput.value.trim(); }); eBtn.addEventListener('click', async ()=>{ showLoading(18,'Menyiapkan pencarian e-katalog...','Portal sedang membaca data ECATPEMENANG.','Pencarian Paket Ekatalog'); const kw=eInput.value.trim().toLowerCase(); state.ecatQuery=eInput.value.trim(); const tahun=appView.querySelector('#ppEcatYear').value; await ensureDataLoaded(); setLoading(70,'Menyaring paket e-katalog...','Fokus pada jenis pengadaan pekerjaan konstruksi.','Pencarian Paket Ekatalog'); state.ecatPage=1; state.ecatResults=buildEcatalogRows().filter(r=>{ const hay=[r.namaPaket,r.instansi,r.satker,r.lpse,r.namaPemenang].join(' ').toLowerCase(); if(kw && !hay.includes(kw)) return false; if(tahun && String(r.tahun)!==String(tahun)) return false; return true; }); await delay(120); renderApp(root); hideLoading(); }); }
+    if(eInput&&eBtn){ eInput.addEventListener('input', ()=>{ state.ecatQuery=eInput.value; eBtn.disabled=!eInput.value.trim(); }); eBtn.addEventListener('click', async ()=>{ showLoading(18,'Menyiapkan pencarian e-katalog...','Tunggu sebentar, hasil sedang dicari.','Paket E-Katalog'); const kw=eInput.value.trim().toLowerCase(); state.ecatQuery=eInput.value.trim(); const tahun=appView.querySelector('#ppEcatYear').value; await ensureDataLoaded(); setLoading(70,'Menyaring hasil...','Sedang mengambil data e-katalog yang sesuai.','Paket E-Katalog'); state.ecatPage=1; state.ecatResults=buildEcatalogRows().filter(r=>{ const hay=[r.namaPaket,r.instansi,r.satker,r.lpse,r.namaPemenang].join(' ').toLowerCase(); if(kw && !hay.includes(kw)) return false; if(tahun && String(r.tahun)!==String(tahun)) return false; return true; }); await delay(80); renderApp(root); hideLoading(); }); }
     const exportE=appView.querySelector('#ppExportEcatBtn'); if(exportE) exportE.addEventListener('click',()=>exportRowsToCsv(state.ecatResults,'paket_ekatalog.csv'));
 
     appView.querySelectorAll('[data-pp-sort]').forEach(btn=>btn.addEventListener('click', ()=>{ state.sortActiveBy=btn.dataset.ppSort; state.activeResults=sortRows(state.activeResults,state.sortActiveBy); renderApp(root); }));
     appView.querySelectorAll('[data-detail-toggle]').forEach(btn=>btn.addEventListener('click', ()=>{ const id=btn.dataset.detailToggle; const card=appView.querySelector(`[data-detail-card="${id}"]`); if(card){ card.classList.toggle('open'); btn.textContent=card.classList.contains('open')?'Tutup detail':'Lihat detail lengkap'; } }));
-    appView.querySelectorAll('[data-pp-page-move]').forEach(btn=>btn.addEventListener('click', async ()=>{ const [type,dir]=btn.dataset.ppPageMove.split(':'); showLoading(28,'Memindahkan halaman...','Portal sedang membuka halaman hasil berikutnya.','Pemenang Pengadaan · Paging'); if(type==='provider'){ state.providerPage=Math.max(1, state.providerPage + (dir==='next'?1:-1)); } if(type==='active'){ state.activePage=Math.max(1, state.activePage + (dir==='next'?1:-1)); } if(type==='ecat'){ state.ecatPage=Math.max(1, state.ecatPage + (dir==='next'?1:-1)); } await delay(120); renderApp(root); hideLoading(); }));
+    appView.querySelectorAll('[data-pp-page-move]').forEach(btn=>btn.addEventListener('click', async ()=>{ const [type,dir]=btn.dataset.ppPageMove.split(':'); showLoading(28,'Memindahkan halaman...','Tunggu sebentar, halaman berikutnya sedang dibuka.','Paging'); if(type==='provider'){ state.providerPage=Math.max(1, state.providerPage + (dir==='next'?1:-1)); } if(type==='active'){ state.activePage=Math.max(1, state.activePage + (dir==='next'?1:-1)); } if(type==='ecat'){ state.ecatPage=Math.max(1, state.ecatPage + (dir==='next'?1:-1)); } await delay(80); renderApp(root); hideLoading(); }));
   }
 
   function mount(root){
     root.querySelector('#ppLoginView').innerHTML=renderLogin(); root.querySelector('#ppAppView').innerHTML=''; root.querySelector('#ppLoginView').classList.remove('pp-hidden'); root.querySelector('#ppAppView').classList.add('pp-hidden');
     const form=root.querySelector('#ppLoginForm'); form.addEventListener('submit', handleLoginSubmit.bind(null,root));
-    const session=getStoredSession(); if(session){ state.session=session; showLoading(24,'Memulihkan sesi login...','Portal sedang membaca data terakhir Anda.','Pemenang Pengadaan · Session'); ensureDataLoaded().finally(()=>{ renderApp(root); hideLoading(); }); }
+    const session=getStoredSession(); if(session){ state.session=session; showLoading(24,'Menyiapkan halaman...','Tunggu sebentar, halaman terakhir Anda sedang dibuka.','Memuat Halaman'); ensureDataLoaded().finally(()=>{ renderApp(root); hideLoading(); }); }
   }
 
   window.__moduleInit = function({container}){ const root = container.querySelector('#ppModuleRoot') || container; mount(root); return function destroy(){}; };
