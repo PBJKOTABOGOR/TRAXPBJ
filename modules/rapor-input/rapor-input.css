@@ -1,0 +1,25 @@
+.rapor-input-module{color:#122033}
+.rapor-input-module *{box-sizing:border-box}
+.rapor-input-hero{display:grid;grid-template-columns:1.3fr .7fr;gap:18px;padding:24px;border-radius:26px;background:linear-gradient(135deg,#123a72 0%,#245a9b 60%,#2f9a8f 100%);color:#fff;box-shadow:0 24px 56px rgba(18,58,114,.22);margin-bottom:18px}
+.rapor-input-hero h1{margin:8px 0 10px;font-size:34px;font-weight:900}
+.rapor-input-hero p{margin:0;color:rgba(255,255,255,.86);line-height:1.7}
+.rapor-chip{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);font-size:12px;font-weight:800;letter-spacing:.08em}
+.rapor-hero-side{display:grid;grid-template-columns:1fr;gap:12px}
+.rapor-kpi{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:14px}
+.rapor-kpi-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.72);font-weight:800;margin-bottom:8px}
+.rapor-kpi strong{font-size:19px;line-height:1.35}
+.rapor-input-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px}
+.ri-side-card,.ri-card{background:#fff;border:1px solid #e7eef8;border-radius:24px;padding:18px;box-shadow:0 16px 40px rgba(15,23,42,.08)}
+.ri-side-card h3,.ri-card h2{margin:0 0 12px;color:#102544}.ri-card h2{font-size:22px;font-weight:900}.ri-side-card h3{font-size:18px;font-weight:900}
+.ri-side-list{display:grid;gap:10px}.ri-side-btn{width:100%;border:none;border-radius:16px;padding:12px 14px;text-align:left;font-weight:800;background:linear-gradient(180deg,#fff 0%,#edf3fb 100%);border:1px solid #dbe5f0;color:#18324f}.ri-side-btn.active{background:linear-gradient(135deg,#123a72 0%,#245a9b 100%);color:#fff;border-color:transparent}.ri-side-btn:disabled{opacity:.7;cursor:not-allowed}
+.ri-side-note{margin:14px 0 0;color:#64748b;font-size:13px;line-height:1.6}
+.ri-card-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}.ri-card-head p{margin:6px 0 0;color:#64748b;line-height:1.6}
+.ri-card-badge{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;background:#edf4ff;color:#123a72;font-weight:800;font-size:12px}
+.ri-grid{display:grid;gap:12px;margin-bottom:14px}.ri-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.ri-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rapor-input-module label{display:block;font-size:12px;font-weight:800;margin-bottom:7px;color:#334155;text-transform:uppercase;letter-spacing:.04em}
+.rapor-input-module input,.rapor-input-module select{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #dbe5f0;font-size:14px;font-family:inherit;background:#fff}
+.ri-availability{border:1px solid #dbe5f0;background:linear-gradient(180deg,#fbfdff 0%,#f4f8fc 100%);border-radius:18px;padding:16px;margin-bottom:14px}.ri-availability-title{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;margin-bottom:8px}.ri-availability-message{font-size:14px;line-height:1.7;color:#18324f;font-weight:700}.ri-availability-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.ri-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.ri-btn{width:auto;border:none;border-radius:14px;padding:12px 16px;cursor:pointer;font-weight:800;background:linear-gradient(135deg,#123a72 0%,#245a9b 100%);color:#fff;box-shadow:0 12px 22px rgba(18,58,114,.18)}.ri-btn-secondary{background:linear-gradient(180deg,#fff 0%,#edf3fb 100%);color:#18324f;border:1px solid #dbe5f0;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+.ri-result{margin-top:14px;font-weight:800;color:#153b68;line-height:1.6;white-space:pre-wrap}
+.ri-roadmap-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ri-roadmap-item{border:1px solid #dbe5f0;border-radius:18px;padding:14px;background:linear-gradient(180deg,#fff 0%,#f8fbff 100%)}.ri-roadmap-item strong{display:block;margin-bottom:6px;color:#102544}.ri-roadmap-item span{display:block;color:#64748b;line-height:1.6;font-size:13px}
+@media (max-width:1100px){.rapor-input-hero,.rapor-input-layout{grid-template-columns:1fr}.rapor-hero-side,.ri-grid-3,.ri-grid-2,.ri-roadmap-grid{grid-template-columns:1fr}}
