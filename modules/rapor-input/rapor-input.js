@@ -9,18 +9,35 @@
   let root = null;
   let masterOpd = [];
   let availabilityState = { exists:false, canEdit:true, canOpen:false, id_rapot:'', status_qc:'' };
+  let destroyed = false;
 
   function q(sel){ return root ? root.querySelector(sel) : null; }
-  function setResult(msg){ const el=q('#riResult'); if(el) el.innerText = msg || ''; }
+  function setText(id, value){ const el = q('#' + id); if(el) el.innerText = value == null || value === '' ? '-' : String(value); }
+  function setResult(msg){ const el = q('#riResult'); if(el) el.innerText = msg || ''; }
+  function escapeHtml(text){ return String(text || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[s])); }
+
+  function setStatusBadge(status){
+    const el = q('#summary_status_badge');
+    if(!el) return;
+    const raw = String(status || 'Draft Baru').trim();
+    el.className = 'hero-status-badge';
+    if (/ok/i.test(raw)) el.classList.add('hero-status-ok');
+    else if (/revisi/i.test(raw)) el.classList.add('hero-status-revisi');
+    else if (/menunggu/i.test(raw)) el.classList.add('hero-status-menunggu');
+    else el.classList.add('hero-status-draft');
+    el.innerText = raw || 'Draft Baru';
+  }
+
   function setSummary(){
     const namaOpd = q('#riNamaOpd')?.value || 'Belum dipilih';
     const tahun = q('#riTahun')?.value || '-';
     const bulanVal = q('#riBulan')?.value || '';
     const bulan = bulanVal ? (MONTH_MAP[bulanVal] || bulanVal) : '-';
     const status = availabilityState.exists ? (availabilityState.status_qc || 'Existing') : 'Draft Baru';
-    q('#riSummaryStatus').innerText = status;
-    q('#riSummaryPeriode').innerText = bulan + ' ' + tahun;
-    q('#riSummaryOpd').innerText = namaOpd;
+    setStatusBadge(status);
+    setText('summary_periode', bulan + ' ' + tahun);
+    setText('summary_opd', namaOpd);
+    setText('infoId', availabilityState.id_rapot || '-');
   }
 
   async function apiGet(api, params){
@@ -46,6 +63,7 @@
 
   function renderPicDropdown(selected){
     const select = q('#riInputBy');
+    if(!select) return;
     const current = selected || select.value || '';
     const pics = [...new Set((masterOpd || []).map(r => String(r.nama_pic || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));
     select.innerHTML = '<option value="">-- Pilih Nama PIC --</option>';
@@ -63,6 +81,7 @@
 
   function renderOpdDropdown(rows, selectedNama){
     const select = q('#riNamaOpd');
+    if(!select) return;
     const current = selectedNama || select.value || '';
     select.innerHTML = '<option value="">-- Pilih OPD --</option>';
     (rows || []).forEach(r => {
@@ -94,12 +113,12 @@
     const msg = q('#riAvailabilityMessage');
     const btnLoad = q('#riBtnLoad');
     const btnReadOnly = q('#riBtnReadOnly');
-    btnLoad.hidden = true;
-    btnReadOnly.hidden = true;
+    if(btnLoad) btnLoad.hidden = true;
+    if(btnReadOnly) btnReadOnly.hidden = true;
 
     if(!tahun || !bulan || !nama_opd){
       availabilityState = { exists:false, canEdit:true, canOpen:false, id_rapot:'', status_qc:'' };
-      msg.innerText = 'Pilih tahun, bulan, dan OPD untuk mengecek apakah rapot sudah ada.';
+      if(msg) msg.innerText = 'Pilih tahun, bulan, dan OPD untuk mengecek apakah rapot sudah ada.';
       setSummary();
       return;
     }
@@ -108,9 +127,9 @@
     const res = await apiGet('availability', { tahun, bulan, kode_opd, nama_opd });
     if(!res.success) throw new Error(res.message || 'Gagal mengecek existing');
     availabilityState = Object.assign({ exists:false, canEdit:true, canOpen:false, id_rapot:'', status_qc:'' }, res);
-    msg.innerText = res.message || '-';
-    if(res.exists && res.canEdit) btnLoad.hidden = false;
-    if(res.exists && res.canOpen && !res.canEdit) btnReadOnly.hidden = false;
+    if(msg) msg.innerText = res.message || '-';
+    if(res.exists && res.canEdit && btnLoad) btnLoad.hidden = false;
+    if(res.exists && res.canOpen && !res.canEdit && btnReadOnly) btnReadOnly.hidden = false;
     setSummary();
     setResult(res.message || 'Pengecekan selesai.');
   }
@@ -201,21 +220,24 @@
 
   function handleError(err){
     const msg = err && err.message ? err.message : String(err);
-    setResult('Error: ' + msg + '\nCatatan: jika browser menolak fetch ke Apps Script, aktifkan dulu endpoint API di deployment privat/public yang sama.');
+    setResult('Error: ' + msg + '\nCatatan: jika browser menolak fetch ke Apps Script, aktifkan endpoint API di deployment yang sama.');
     console.error(err);
   }
 
   window.__moduleInit = async function({ container }){
     root = container;
-    root.classList.add('rapor-input-native-mounted');
+    destroyed = false;
+    container.classList.add('module-page--native');
     bindEvents();
     resetForm();
+    setStatusBadge('Draft Baru');
     try {
       await loadMasterOpd();
     } catch (err) {
       handleError(err);
     }
     return function destroy(){
+      destroyed = true;
       root = null;
     };
   };
