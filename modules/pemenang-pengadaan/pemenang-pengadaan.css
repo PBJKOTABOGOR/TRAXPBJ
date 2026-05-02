@@ -327,29 +327,3 @@
   .pp-dashboard-top h3{font-size:24px;}
   .pp-package-title{font-size:18px;}
 }
-
-
-.pp-feature-grid--triple{grid-template-columns:repeat(3,minmax(0,1fr));}
-.pp-feature-card--purple .pp-feature-icon{background:linear-gradient(135deg,#5d34d6,#8e59ff);}
-.pp-mini-box--purple{background:rgba(143,89,255,.18)!important;border-color:rgba(226,214,255,.24)!important}
-.pp-tab--purple.active{background:linear-gradient(135deg,#5d34d6,#8e59ff)!important;color:#fff}
-.pp-export-btn,.pp-export-btn--purple{min-height:42px;padding:0 14px;border:none;border-radius:14px;cursor:pointer;font-weight:900;color:#fff;background:linear-gradient(135deg,#153872,#275ea8 62%,#188e90);box-shadow:var(--pp-shadow-sm)}
-.pp-export-btn--purple{background:linear-gradient(135deg,#5d34d6,#8e59ff)}
-.pp-query-info{margin:-4px 0 14px;font-size:13px;font-weight:900;color:#173862}
-.pp-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid #e2ebf4;flex-wrap:wrap}
-.pp-page-btn{min-height:38px;padding:0 14px;border-radius:14px;border:1px solid #dbe4f0;background:#fff;color:#173862;font-weight:900;cursor:pointer;box-shadow:var(--pp-shadow-sm)}
-.pp-page-btn[disabled]{opacity:.45;cursor:not-allowed}
-.pp-page-info{font-size:12px;font-weight:900;color:#617089}
-.pp-link-pill{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 13px;border-radius:999px;font-weight:900;text-decoration:none;font-size:12px;border:1px solid #dbe4f0;background:#fff;color:#617089}
-.pp-link-pill--active{background:linear-gradient(180deg,#eff7ff,#fff);color:#153872;box-shadow:var(--pp-shadow-sm)}
-.pp-link-pill--disabled{background:#f8fbff;color:#9aa8ba}
-.pp-badge--green{background:#eafff4;color:#0c8a55}
-.pp-badge--purple{background:#f3efff;color:#6b3fe3}
-.pp-package-card--blue::before{background:linear-gradient(90deg,#285ea8,#1a9b95)}
-.pp-package-card--gold::before{background:linear-gradient(90deg,#d6a11f,#f59e0b)}
-.pp-package-card--purple::before{background:linear-gradient(90deg,#6b3fe3,#8e59ff)}
-.pp-summary-box--purple{background:#f7f2ff;border-color:#eadfff}
-.pp-summary-box--purple strong{color:#6b3fe3}
-.pp-action-button[disabled]{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
-.pp-action-button--purple{background:linear-gradient(135deg,#5d34d6,#8e59ff)}
-@media (max-width:1280px){.pp-feature-grid--triple{grid-template-columns:1fr;}}
