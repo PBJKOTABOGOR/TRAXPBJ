@@ -117,7 +117,7 @@ const APP_ROUTES = {
 
   'rapor-pbj-input-internal': {
     title: 'Input Rapor PBJ',
-    subtitle: 'Form internal pegawai tahap 1 dalam mode native portal.',
+    subtitle: 'Form internal pegawai untuk input dan upload dokumen Rapor PBJ.',
     type: 'module',
     html: 'modules/rapor-input/rapor-input.html',
     css: 'modules/rapor-input/rapor-input.css',
@@ -128,8 +128,8 @@ const APP_ROUTES = {
     title: 'QC Rapor PBJ',
     subtitle: 'Panel internal QC untuk review dan persetujuan rapor.',
     type: 'iframe',
-    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDSJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSslbTA/exec?page=qc'
-  },
+    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc'
+  }
 
 };
 
