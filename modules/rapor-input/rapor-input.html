@@ -1,0 +1,124 @@
+<section class="rapor-input-module" data-module="rapor-input-native">
+  <div class="rapor-input-hero">
+    <div>
+      <div class="rapor-chip">INTERNAL · TAHAP 1</div>
+      <h1>Input Rapor PBJ</h1>
+      <p>Versi native portal untuk tahap awal. Fokus dulu ke identitas rapot, cek existing, lanjutkan draft, dan simpan draft dasar tanpa iframe.</p>
+    </div>
+    <div class="rapor-hero-side">
+      <div class="rapor-kpi">
+        <span class="rapor-kpi-label">Status</span>
+        <strong id="riSummaryStatus">Draft Baru</strong>
+      </div>
+      <div class="rapor-kpi">
+        <span class="rapor-kpi-label">Periode</span>
+        <strong id="riSummaryPeriode">-</strong>
+      </div>
+      <div class="rapor-kpi">
+        <span class="rapor-kpi-label">OPD</span>
+        <strong id="riSummaryOpd">Belum dipilih</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="rapor-input-layout">
+    <aside class="rapor-input-side">
+      <div class="ri-side-card">
+        <h3>Tahapan Input</h3>
+        <div class="ri-side-list">
+          <button class="ri-side-btn active" type="button" data-tab="identitas">1. Identitas</button>
+          <button class="ri-side-btn" type="button" data-tab="sirup" disabled>2. SiRUP & Struktur</button>
+          <button class="ri-side-btn" type="button" data-tab="perencanaan" disabled>3. Perencanaan</button>
+          <button class="ri-side-btn" type="button" data-tab="realisasi" disabled>4. Realisasi</button>
+          <button class="ri-side-btn" type="button" data-tab="pelaku" disabled>5. Pelaku</button>
+          <button class="ri-side-btn" type="button" data-tab="itkp" disabled>6. ITKP</button>
+          <button class="ri-side-btn" type="button" data-tab="analisis" disabled>7. Analisis Manual</button>
+        </div>
+        <p class="ri-side-note">Tahap 1 baru mengaktifkan Identitas. Tab lain disiapkan untuk paket berikutnya.</p>
+      </div>
+    </aside>
+
+    <div class="rapor-input-main">
+      <div class="ri-card">
+        <div class="ri-card-head">
+          <div>
+            <h2>Identitas Rapor</h2>
+            <p>Isi periode, PIC, dan OPD. Sistem akan mengecek apakah rapot periode yang sama sudah ada.</p>
+          </div>
+          <div class="ri-card-badge" id="riStepBadge">Step 1 / 7</div>
+        </div>
+
+        <div class="ri-grid ri-grid-3">
+          <div>
+            <label for="riTahun">Tahun</label>
+            <input type="number" id="riTahun" placeholder="2026">
+          </div>
+          <div>
+            <label for="riBulan">Bulan</label>
+            <select id="riBulan">
+              <option value="">-- Pilih Bulan --</option>
+              <option value="1">Januari</option>
+              <option value="2">Februari</option>
+              <option value="3">Maret</option>
+              <option value="4">April</option>
+              <option value="5">Mei</option>
+              <option value="6">Juni</option>
+              <option value="7">Juli</option>
+              <option value="8">Agustus</option>
+              <option value="9">September</option>
+              <option value="10">Oktober</option>
+              <option value="11">November</option>
+              <option value="12">Desember</option>
+            </select>
+          </div>
+          <div>
+            <label for="riInputBy">Nama PIC / Penginput</label>
+            <select id="riInputBy">
+              <option value="">-- Pilih Nama PIC --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ri-grid ri-grid-2">
+          <div>
+            <label for="riKodeOpd">Kode OPD</label>
+            <input type="text" id="riKodeOpd" placeholder="otomatis / isi manual">
+          </div>
+          <div>
+            <label for="riNamaOpd">Nama OPD</label>
+            <select id="riNamaOpd">
+              <option value="">-- Pilih OPD --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ri-availability" id="riAvailabilityBox">
+          <div class="ri-availability-title">Status rapot</div>
+          <div class="ri-availability-message" id="riAvailabilityMessage">Pilih tahun, bulan, dan OPD untuk mengecek apakah rapot sudah ada.</div>
+          <div class="ri-availability-actions">
+            <button class="ri-btn ri-btn-secondary" type="button" id="riBtnCheck">Cek Existing</button>
+            <button class="ri-btn ri-btn-secondary" type="button" id="riBtnLoad" hidden>Lanjutkan Draft</button>
+            <button class="ri-btn ri-btn-secondary" type="button" id="riBtnReadOnly" hidden>Lihat Data</button>
+          </div>
+        </div>
+
+        <div class="ri-actions">
+          <button class="ri-btn" type="button" id="riBtnSave">Simpan Draft Identitas</button>
+          <button class="ri-btn ri-btn-secondary" type="button" id="riBtnReset">Reset</button>
+        </div>
+
+        <div class="ri-result" id="riResult">Modul native aktif. Backend Apps Script dipanggil lewat endpoint API.</div>
+      </div>
+
+      <div class="ri-card">
+        <h2>Paket Berikutnya</h2>
+        <div class="ri-roadmap-grid">
+          <div class="ri-roadmap-item"><strong>SiRUP & Struktur</strong><span>Tarik data OPD + upload screenshot struktur.</span></div>
+          <div class="ri-roadmap-item"><strong>Perencanaan</strong><span>Input jumlah paket dan pagu per metode.</span></div>
+          <div class="ri-roadmap-item"><strong>Realisasi</strong><span>Input progres realisasi dan total realisasi.</span></div>
+          <div class="ri-roadmap-item"><strong>Pelaku / ITKP / Analisis</strong><span>Lengkapi tahap lanjutan pada paket berikutnya.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
