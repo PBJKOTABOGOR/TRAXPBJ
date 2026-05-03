@@ -3139,3 +3139,68 @@ textarea{
 .embed-card--internal iframe{
   min-height:calc(100vh - 170px);
 }
+
+
+/* =========================================================
+   IFRAME FIX - RAPOR PBJ INTERNAL EMBED
+   Supaya tidak kepotong, tidak ketengah, dan menempel ke area kerja
+   ========================================================= */
+
+.content-area.iframe-internal-rapor-mode{
+  padding:0;
+}
+
+.embed-card--internal,
+.embed-card--internal-full{
+  padding:0;
+  margin:0;
+  overflow:hidden;
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  border-radius:28px;
+}
+
+.embed-card--internal-full h3,
+.embed-card--internal-full .page-note{
+  display:none;
+}
+
+.embed-frame-wrap--internal-full{
+  width:100%;
+  max-width:100%;
+  overflow:hidden;
+  border-radius:28px;
+  border:1px solid #dbe5f0;
+  background:#fff;
+  box-shadow:var(--shadow-lg);
+}
+
+.embed-frame--internal-full{
+  width:100%;
+  min-width:100%;
+  height:calc(100vh - 118px);
+  min-height:1200px;
+  border:none;
+  display:block;
+  background:#fff;
+}
+
+.embed-frame--internal-full.is-loaded{
+  background:#fff;
+}
+
+@media (max-width:900px){
+  .content-area.iframe-internal-rapor-mode{
+    padding:8px;
+  }
+
+  .embed-frame-wrap--internal-full{
+    border-radius:20px;
+  }
+
+  .embed-frame--internal-full{
+    height:calc(100vh - 96px);
+    min-height:980px;
+  }
+}
