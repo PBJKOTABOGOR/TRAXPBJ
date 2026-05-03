@@ -26,7 +26,7 @@
 .rp-panel{display:none}.rp-panel.active{display:block}
 .rp-card{background:linear-gradient(180deg,#fff,#f9fbff);padding:14px}
 .rp-card-title h3{margin:0 0 4px;font-size:18px;font-weight:900;color:#1a3355}.rp-card-title p{margin:0;color:#6a7f97;font-size:12px;line-height:1.55}
-.rp-grid{display:grid;gap:10px}.rp-grid-2{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px}.rp-grid-3{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}.rp-grid-4{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px}.rp-grid-analisis{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px}
+.rp-grid{display:grid;gap:10px}.rp-grid-2{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px}.rp-grid-3{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}.rp-grid-4{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px}.rp-grid-analisis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}.rp-grid-analisis>.rp-card{min-width:0}.rp-grid-analisis textarea{min-height:320px}.rp-grid-analisis .rp-mini-scroll{max-height:480px}.rp-grid-analisis .rp-actions{justify-content:flex-start}
 .rp-field{display:block}.rp-field span{display:block;margin-bottom:6px;font-size:12px;font-weight:900;color:#374e6a;text-transform:uppercase;letter-spacing:.03em}
 .rp-field input,.rp-field select,.rp-field textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid #d6e2ef;background:#fbfdff;font:inherit;color:#17314e;box-shadow:inset 0 1px 2px rgba(15,23,42,.03)}
 .rp-field textarea{resize:vertical}
