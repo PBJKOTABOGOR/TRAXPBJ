@@ -1609,24 +1609,43 @@ function renderIframePage(page) {
   const lowerUrl = String(page.url || '').toLowerCase();
   const isSimNontender = lowerUrl.includes('simppk');
   const isInternalRapor = lowerUrl.includes('script.google.com/macros');
+  const iframeId = isSimNontender ? 'simppkFrame' : (isInternalRapor ? 'internalRaporFrame' : 'genericEmbedFrame');
 
-  contentArea.innerHTML = `
-    <section class="embed-card ${isSimNontender ? 'embed-card--simppk' : ''} ${isInternalRapor ? 'embed-card--internal' : ''}">
-      <h3>${escapeHtml(page.title)}</h3>
-      <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
+  if (isInternalRapor) {
+    contentArea.classList.add('iframe-internal-rapor-mode');
+    contentArea.innerHTML = `
+      <section class="embed-card embed-card--internal-full">
+        <div class="embed-frame-wrap embed-frame-wrap--internal-full">
+          <iframe
+            id="${iframeId}"
+            class="embed-frame embed-frame--internal-full"
+            src="${page.url}"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            scrolling="yes">
+          </iframe>
+        </div>
+      </section>
+    `;
+  } else {
+    contentArea.innerHTML = `
+      <section class="embed-card ${isSimNontender ? 'embed-card--simppk' : ''}">
+        <h3>${escapeHtml(page.title)}</h3>
+        <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
 
-      <div class="embed-frame-wrap ${isSimNontender ? 'embed-frame-wrap--simppk' : ''}">
-        <iframe
-          id="${isSimNontender ? 'simppkFrame' : ''}"
-          class="embed-frame ${isSimNontender ? 'embed-frame--simppk' : ''}"
-          src="${page.url}"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          scrolling="${isSimNontender ? 'no' : 'yes'}">
-        </iframe>
-      </div>
-    </section>
-  `;
+        <div class="embed-frame-wrap ${isSimNontender ? 'embed-frame-wrap--simppk' : ''}">
+          <iframe
+            id="${iframeId}"
+            class="embed-frame ${isSimNontender ? 'embed-frame--simppk' : ''}"
+            src="${page.url}"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            scrolling="${isSimNontender ? 'no' : 'yes'}">
+          </iframe>
+        </div>
+      </section>
+    `;
+  }
 
   if (isSimNontender) {
     const iframe = document.getElementById('simppkFrame');
@@ -1665,6 +1684,15 @@ function renderIframePage(page) {
       setTimeout(resizeIframe, 1000);
       setTimeout(resizeIframe, 2000);
     });
+  }
+
+  if (isInternalRapor) {
+    const iframe = document.getElementById('internalRaporFrame');
+    if (iframe) {
+      iframe.addEventListener('load', () => {
+        iframe.classList.add('is-loaded');
+      });
+    }
   }
 }
 
@@ -1944,6 +1972,7 @@ async function loadPage(key) {
       activeModuleToken++;
       cleanupDynamicModule();
       contentArea.classList.remove('module-mode');
+      contentArea.classList.remove('iframe-internal-rapor-mode');
     } else {
       contentArea.classList.add('module-mode');
     }
