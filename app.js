@@ -112,8 +112,7 @@ const APP_ROUTES = {
     subtitle: 'Simulasi PPK untuk pencatatan paket non tender.',
     type: 'iframe',
     url: 'https://pbjkotabogor.github.io/SIMPPK/login.html'
-  }
-,
+  },
 
 'rapor-pbj-input-internal': {
   title: 'Input Rapor PBJ',
