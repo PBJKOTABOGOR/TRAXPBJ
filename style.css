@@ -3204,3 +3204,61 @@ textarea{
     min-height:980px;
   }
 }
+
+/* =========================================================
+   RAPET KE SIDEBAR - FIX TAMBAHAN
+   ========================================================= */
+.app-shell{
+  gap:4px !important;
+}
+
+.content-area{
+  padding:0 0 0 2px !important;
+}
+
+.embed-card,
+.embed-card--internal,
+.embed-card--internal-full{
+  margin-left:0 !important;
+  margin-right:0 !important;
+}
+
+.content-area.iframe-internal-rapor-mode{
+  padding:0 0 0 2px !important;
+}
+
+.embed-frame-wrap--internal-full{
+  margin-left:0 !important;
+  border-top-left-radius:24px !important;
+  border-bottom-left-radius:24px !important;
+}
+
+.embed-frame--internal-full{
+  width:100% !important;
+  min-width:100% !important;
+}
+
+@media (min-width:901px){
+  .content-area,
+  .content-area.iframe-internal-rapor-mode{
+    padding-top:0 !important;
+    padding-right:0 !important;
+    padding-bottom:0 !important;
+    padding-left:2px !important;
+  }
+
+  .embed-card--internal-full{
+    border-radius:24px !important;
+  }
+}
+
+@media (max-width:900px){
+  .content-area,
+  .content-area.iframe-internal-rapor-mode{
+    padding:8px !important;
+  }
+
+  .embed-frame-wrap--internal-full{
+    border-radius:18px !important;
+  }
+}
