@@ -1,146 +1,205 @@
 <!DOCTYPE html>
-<div class="rapor-native-v2">
-  <section class="ri-shell">
-    <aside class="ri-side-panel">
-      <div class="ri-panel-kicker">Rapot PBJ · Form Pegawai</div>
-      <h2>Identitas Rapot</h2>
-      <p>Versi native tahap 1 yang mengikuti alur Apps Script lama, tanpa sidebar internal lama. Fokus dulu di periode, PIC, OPD, dan status rapot existing.</p>
-
-      <div class="ri-mini-summary">
-        <div class="ri-mini-card">
-          <span class="ri-mini-label">Status Rapot</span>
-          <div id="riStatusBadgeWrap" class="ri-mini-value">Draft Baru</div>
-        </div>
-        <div class="ri-mini-card">
-          <span class="ri-mini-label">ID Rapot</span>
-          <div id="riIdRapotLabel" class="ri-mini-value">-</div>
-        </div>
-        <div class="ri-mini-card">
-          <span class="ri-mini-label">Mode</span>
-          <div id="riModeLabel" class="ri-mini-value">Input Baru</div>
-        </div>
+<div class="rapor-native-v3">
+  <section class="rp-shell">
+    <aside class="rp-side">
+      <div class="rp-side-top">
+        <div class="rp-kicker">Rapot PBJ</div>
+        <h2>Navigasi Form</h2>
+        <p>Gunakan menu samping untuk berpindah antar tahapan input secara cepat, rapi, dan nyaman.</p>
       </div>
 
-      <div class="ri-progress-box">
-        <div class="ri-progress-head">
-          <span>Progress Tahap</span>
-          <strong>1 / 7</strong>
+      <div class="rp-side-title">Tahapan Input</div>
+      <nav class="rp-step-nav" id="rpStepNav">
+        <button class="rp-step-btn active" data-step="identitas" type="button"><span class="rp-step-ico">📌</span><span><strong>Identitas</strong><small>Periode dan OPD</small></span></button>
+        <button class="rp-step-btn" data-step="sirup" type="button"><span class="rp-step-ico">📊</span><span><strong>SiRUP &amp; Struktur</strong><small>Tarik data master</small></span></button>
+        <button class="rp-step-btn" data-step="perencanaan" type="button"><span class="rp-step-ico">🗂️</span><span><strong>Perencanaan</strong><small>Paket dan pagu</small></span></button>
+        <button class="rp-step-btn" data-step="realisasi" type="button"><span class="rp-step-ico">💼</span><span><strong>Realisasi</strong><small>Paket dan anggaran</small></span></button>
+        <button class="rp-step-btn" data-step="pelaku" type="button"><span class="rp-step-ico">👥</span><span><strong>Pelaku</strong><small>PP / PPK</small></span></button>
+        <button class="rp-step-btn" data-step="itkp" type="button"><span class="rp-step-ico">🖼️</span><span><strong>ITKP</strong><small>Upload bukti</small></span></button>
+        <button class="rp-step-btn" data-step="analisis" type="button"><span class="rp-step-ico">📝</span><span><strong>Analisis Manual</strong><small>Kesimpulan progres</small></span></button>
+      </nav>
+
+      <div class="rp-side-note">1 tahun + 1 bulan + 1 OPD hanya boleh 1 rapot. Jika ada revisi, edit data yang sama.</div>
+
+      <div class="rp-progress-card">
+        <div class="rp-progress-head">
+          <span>Progress Tahapan</span>
+          <strong id="rpProgressText">Step 1 / 7</strong>
         </div>
-        <div class="ri-progress-bar"><span></span></div>
-        <p>Langkah pertama menempel ke MASTER_OPD dan INDEX_RAPOT. Setelah identitas valid, tahap lain baru bisa dilanjutkan.</p>
+        <div class="rp-progress-label" id="rpProgressLabel">Identitas</div>
+        <div class="rp-progress-bar"><span id="rpProgressBar"></span></div>
+        <p id="rpProgressHint">Lengkapi periode, penginput, dan OPD terlebih dahulu.</p>
       </div>
     </aside>
 
-    <section class="ri-main-panel">
-      <div class="ri-hero-card">
-        <div class="ri-hero-copy">
-          <div class="ri-hero-kicker">Tahap Aktif</div>
+    <section class="rp-main">
+      <div class="rp-hero">
+        <div class="rp-hero-copy">
+          <div class="rp-kicker">Rapot PBJ - Form Pegawai</div>
           <h1>Input Rapor PBJ</h1>
-          <p>Tampilan dibuat lebih ringkas, lebih informatif, dan lebih punya depth visual, tapi logika identitas tetap mengikuti sistem lama.</p>
+          <p>Tampilan native mengikuti gaya halaman lama. Perbedaan utamanya hanya sidebar internal lama dihilangkan karena navigasi sudah memakai sidebar portal utama.</p>
         </div>
-        <div class="ri-hero-stats">
-          <div class="ri-stat-card">
-            <span class="ri-stat-label">Periode</span>
-            <strong id="riSummaryPeriode">-</strong>
-          </div>
-          <div class="ri-stat-card">
-            <span class="ri-stat-label">PIC</span>
-            <strong id="riSummaryPic">Belum dipilih</strong>
-          </div>
-          <div class="ri-stat-card">
-            <span class="ri-stat-label">OPD</span>
-            <strong id="riSummaryOpd">Belum dipilih</strong>
-          </div>
+        <div class="rp-hero-stats">
+          <div class="rp-stat"><span>Status Rapot</span><strong id="rpStatusStat">Draft Baru</strong></div>
+          <div class="rp-stat"><span>OPD Terpilih</span><strong id="rpOpdStat">Belum dipilih</strong></div>
+          <div class="rp-stat"><span>Periode</span><strong id="rpPeriodeStat">- 2026</strong></div>
+          <div class="rp-stat"><span>Progress Input</span><strong id="rpStepStat">1 / 7 Tahap</strong></div>
         </div>
       </div>
 
-      <div class="ri-card ri-tabs-card">
-        <div class="ri-tabs-strip">
-          <button class="ri-tab active" type="button">1. Identitas</button>
-          <button class="ri-tab" type="button" disabled>2. SiRUP &amp; Struktur</button>
-          <button class="ri-tab" type="button" disabled>3. Perencanaan</button>
-          <button class="ri-tab" type="button" disabled>4. Realisasi</button>
-          <button class="ri-tab" type="button" disabled>5. Pelaku</button>
-          <button class="ri-tab" type="button" disabled>6. ITKP</button>
-          <button class="ri-tab" type="button" disabled>7. Analisis Manual</button>
-        </div>
+      <div class="rp-tabs" id="rpTopTabs">
+        <button class="rp-tab active" data-step="identitas" type="button">Identitas</button>
+        <button class="rp-tab" data-step="sirup" type="button">SiRUP &amp; Struktur</button>
+        <button class="rp-tab" data-step="perencanaan" type="button">Perencanaan</button>
+        <button class="rp-tab" data-step="realisasi" type="button">Realisasi</button>
+        <button class="rp-tab" data-step="pelaku" type="button">Pelaku</button>
+        <button class="rp-tab" data-step="itkp" type="button">ITKP</button>
+        <button class="rp-tab" data-step="analisis" type="button">Analisis Manual</button>
       </div>
 
-      <div class="ri-form-grid">
-        <section class="ri-card ri-form-card">
-          <div class="ri-section-head">
-            <div>
-              <div class="ri-section-kicker">Form Identitas</div>
-              <h3>Periode, PIC, dan OPD</h3>
+      <div class="rp-panels">
+        <section class="rp-panel active" data-step-panel="identitas">
+          <div class="rp-card">
+            <div class="rp-card-title"><h3>Identitas</h3><p>Isi periode, nama PIC, dan OPD. Sistem akan mengecek apakah rapot pada periode yang sama sudah ada.</p></div>
+            <div class="rp-grid rp-grid-3">
+              <label class="rp-field"><span>Tahun</span><input id="riTahun" type="number" min="2024" max="2099" value="2026"></label>
+              <label class="rp-field"><span>Bulan</span><select id="riBulan"></select></label>
+              <label class="rp-field"><span>Nama PIC / Penginput</span><select id="riPicSelect"><option value="">-- Pilih Nama PIC --</option></select></label>
             </div>
-            <div class="ri-section-tag">Sinkron ke MASTER_OPD</div>
-          </div>
-
-          <div class="ri-field-grid">
-            <label class="ri-field">
-              <span>Tahun</span>
-              <input id="riTahun" type="number" min="2024" max="2099" value="2026">
-            </label>
-            <label class="ri-field">
-              <span>Bulan</span>
-              <select id="riBulan"></select>
-            </label>
-            <label class="ri-field ri-field-span-2">
-              <span>Nama PIC / Penginput</span>
-              <select id="riPicSelect">
-                <option value="">-- Memuat PIC --</option>
-              </select>
-            </label>
-            <label class="ri-field ri-field-span-2">
-              <span>Nama OPD</span>
-              <select id="riOpdSelect">
-                <option value="">-- Pilih OPD --</option>
-              </select>
-            </label>
-            <label class="ri-field">
-              <span>Kode OPD</span>
-              <input id="riKodeOpd" type="text" readonly placeholder="Otomatis dari OPD terpilih">
-            </label>
-          </div>
-
-          <div id="riHelperBox" class="ri-helper-box">Pilih tahun, bulan, PIC, lalu OPD untuk mengecek rapot existing.</div>
-
-          <div class="ri-action-row">
-            <button id="riCheckBtn" class="ri-btn ri-btn-primary" type="button">Cek Existing</button>
-            <button id="riContinueBtn" class="ri-btn ri-btn-primary" type="button" disabled>Lanjutkan Draft</button>
-            <button id="riOpenBtn" class="ri-btn ri-btn-secondary" type="button" disabled>Lihat Data</button>
-            <button id="riSaveBtn" class="ri-btn ri-btn-ghost" type="button" disabled>Simpan Draft Identitas</button>
+            <div class="rp-grid rp-grid-2">
+              <label class="rp-field"><span>Kode OPD</span><input id="riKodeOpd" type="text" readonly placeholder="Otomatis mengikuti OPD terpilih"></label>
+              <label class="rp-field"><span>Nama OPD</span><select id="riOpdSelect"><option value="">-- Pilih OPD --</option></select></label>
+            </div>
+            <div class="rp-info" id="riHelperBox">Pilih tahun, bulan, dan OPD untuk mengecek apakah rapot sudah ada.</div>
+            <div class="rp-summary-box">
+              <div class="rp-summary-title">Status Rapot Existing</div>
+              <div id="riAvailabilityMessage">Lengkapi data identitas lalu cek existing.</div>
+              <div class="rp-summary-meta">ID Rapot: <span id="riIdRapotLabel">-</span> | Status QC: <span id="riAvailabilityBadge">Belum dicek</span></div>
+              <div id="riQcNotesWrap" class="rp-qc-note">Catatan QC: <span id="riQcNotes">-</span></div>
+            </div>
+            <div class="rp-actions">
+              <button id="riCheckBtn" class="rp-btn rp-btn-primary" type="button">Cek Existing</button>
+              <button id="riContinueBtn" class="rp-btn rp-btn-primary" type="button" disabled>Lanjutkan Draft</button>
+              <button id="riOpenBtn" class="rp-btn rp-btn-secondary" type="button" disabled>Lihat Data</button>
+              <button id="riSaveBtn" class="rp-btn rp-btn-ghost" type="button" disabled>Simpan Draft Identitas</button>
+            </div>
           </div>
         </section>
 
-        <aside class="ri-card ri-status-card">
-          <div class="ri-section-head">
-            <div>
-              <div class="ri-section-kicker">Status Existing</div>
-              <h3>Ringkasan Rapot</h3>
+        <section class="rp-panel" data-step-panel="sirup">
+          <div class="rp-card">
+            <div class="rp-card-title"><h3>SiRUP &amp; Struktur Anggaran</h3><p>Tarik data struktur anggaran dan unggah screenshot pendukung.</p></div>
+            <div class="rp-inline-source">Sumber pengambilan screenshot struktur anggaran: <a href="#" target="_blank" rel="noopener">https://data.inaproc.id/...</a></div>
+            <div class="rp-grid rp-grid-3">
+              <label class="rp-field"><span>Total Pagu Penyedia</span><input type="text"></label>
+              <label class="rp-field"><span>Total Pagu Swakelola</span><input type="text"></label>
+              <label class="rp-field"><span>Total Pagu SiRUP</span><input type="text"></label>
             </div>
-            <div class="ri-section-tag">INDEX_RAPOT</div>
+            <div class="rp-grid rp-grid-3">
+              <label class="rp-field"><span>Total Struktur Anggaran RUP</span><input type="text"></label>
+              <label class="rp-field"><span>Persentase</span><input type="text"></label>
+              <div class="rp-field rp-field-action"><span>&nbsp;</span><button class="rp-btn rp-btn-primary" type="button">Tarik Data</button></div>
+            </div>
+            <label class="rp-field"><span>Upload Screenshot Struktur Anggaran</span><input type="file"></label>
+            <div class="rp-file-label">File lama: -</div>
+            <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
           </div>
+        </section>
 
-          <div class="ri-status-stack">
-            <div class="ri-status-item">
-              <span class="ri-status-label">Kondisi</span>
-              <div id="riAvailabilityBadge">Belum dicek</div>
+        <section class="rp-panel" data-step-panel="perencanaan">
+          <div class="rp-card">
+            <div class="rp-card-title"><h3>Perencanaan</h3><p>Pastikan jumlah paket dan pagu sudah sesuai.</p></div>
+            <div class="rp-grid rp-grid-4">
+              <label class="rp-field"><span>Paket Tender/Seleksi</span><input type="text"></label>
+              <label class="rp-field"><span>Paket Pengadaan Langsung</span><input type="text"></label>
+              <label class="rp-field"><span>Paket E-Purchasing</span><input type="text"></label>
+              <label class="rp-field"><span>Paket Dikecualikan</span><input type="text"></label>
+              <label class="rp-field"><span>Paket Swakelola</span><input type="text"></label>
+              <label class="rp-field"><span>Pagu Tender/Seleksi</span><input type="text"></label>
+              <label class="rp-field"><span>Pagu Pengadaan Langsung</span><input type="text"></label>
+              <label class="rp-field"><span>Pagu E-Purchasing</span><input type="text"></label>
+              <label class="rp-field"><span>Pagu Dikecualikan</span><input type="text"></label>
+              <label class="rp-field"><span>Pagu Swakelola</span><input type="text"></label>
             </div>
-            <div class="ri-status-item">
-              <span class="ri-status-label">Pesan Sistem</span>
-              <div id="riAvailabilityMessage" class="ri-status-text">Lengkapi data identitas lalu cek existing.</div>
-            </div>
-            <div class="ri-status-item">
-              <span class="ri-status-label">Catatan QC</span>
-              <div id="riQcNotes" class="ri-status-text muted">-</div>
-            </div>
-            <div class="ri-status-item">
-              <span class="ri-status-label">Aturan Edit</span>
-              <div id="riEditRule" class="ri-status-text muted">Draft dan Revisi bisa dilanjutkan. Menunggu dan OK hanya bisa dilihat.</div>
-            </div>
+            <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
           </div>
-        </aside>
+        </section>
+
+        <section class="rp-panel" data-step-panel="realisasi">
+          <div class="rp-card">
+            <div class="rp-card-title"><h3>Realisasi</h3><p>Isi realisasi paket dan anggaran, lalu cek totalnya.</p></div>
+            <div class="rp-grid rp-grid-4">
+              <label class="rp-field"><span>Realisasi Paket Tender/Seleksi</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran Tender/Seleksi</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket Pengadaan Langsung</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran Pengadaan Langsung</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket E-Purchasing</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran E-Purchasing</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket Dikecualikan</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran Dikecualikan</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket Swakelola</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran Swakelola</span><input type="text"></label>
+              <label class="rp-field"><span>Total Realisasi Paket</span><input type="text"></label>
+              <label class="rp-field"><span>Total Realisasi Anggaran</span><input type="text"></label>
+            </div>
+            <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
+          </div>
+        </section>
+
+        <section class="rp-panel" data-step-panel="pelaku">
+          <div class="rp-card">
+            <div class="rp-card-title"><h3>Pelaku</h3><p>Tambahkan daftar PP / PPK dan dokumen pendukung.</p></div>
+            <div class="rp-inline-source">Sumber data PP / PPK: <a href="#" target="_blank" rel="noopener">https://bit.ly/PELAKUPENGADAANKOTABOGOR</a></div>
+            <div class="rp-grid rp-grid-2">
+              <label class="rp-field"><span>Daftar PP&amp;PPK</span><textarea rows="5" placeholder="Contoh:
+PPK:
+- Nama PPK
+PP:
+- Nama PP"></textarea></label>
+              <label class="rp-field"><span>Jumlah PP&amp;PPK</span><input type="text"></label>
+            </div>
+            <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
+          </div>
+        </section>
+
+        <section class="rp-panel" data-step-panel="itkp">
+          <div class="rp-card">
+            <div class="rp-card-title"><h3>ITKP</h3><p>Unggah screenshot ITKP sebagai bukti pendukung.</p></div>
+            <div class="rp-inline-source">Sumber pengambilan screenshot ITKP: <a href="#" target="_blank" rel="noopener">https://bit.ly/ITKPKOTABOGOR2026</a></div>
+            <div class="rp-grid rp-grid-2">
+              <label class="rp-field"><span>Upload Screenshot ITKP</span><input type="file"></label>
+              <label class="rp-field"><span>Nilai ITKP</span><input type="text" placeholder="Contoh: 28,00"></label>
+            </div>
+            <div class="rp-file-label">File lama: -</div>
+            <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
+          </div>
+        </section>
+
+        <section class="rp-panel" data-step-panel="analisis">
+          <div class="rp-grid-analisis">
+            <div class="rp-card">
+              <div class="rp-card-title"><h3>Analisis Manual</h3><p>Tulis kesimpulan progres sebelum dikirim ke QC.</p></div>
+              <label class="rp-field"><span>Kesimpulan Progres</span><textarea rows="8"></textarea></label>
+              <div class="rp-actions">
+                <button class="rp-btn rp-btn-secondary" type="button">Preview Analisa</button>
+                <button class="rp-btn rp-btn-secondary" type="button">Masukkan ke Kesimpulan</button>
+              </div>
+              <div class="rp-warning-box">Setelah semua tahapan terisi dan analisis manual selesai, barulah rapot dikirim ke QC.</div>
+            </div>
+            <aside class="rp-card">
+              <div class="rp-card-title"><h3>Ringkasan Input Pegawai</h3><p>Panel kanan dipakai untuk membaca ulang seluruh input sebelum finalisasi analisa.</p></div>
+              <div class="rp-mini-head"><span id="rpMiniOpd">OPD: -</span><span id="rpMiniPeriode">Periode: -</span><span id="rpMiniStatus">Status: Draft Baru</span></div>
+              <div class="rp-mini-scroll">
+                <div class="rp-mini-block"><strong>Identitas</strong><div class="rp-mini-grid"><span>ID Rapot</span><b id="rpMiniId">-</b><span>Tahun</span><b id="rpMiniYear">2026</b><span>Bulan</span><b id="rpMiniMonth">-</b><span>Kode OPD</span><b id="rpMiniKode">-</b><span>Nama OPD</span><b id="rpMiniNamaOpd">-</b><span>Nama PIC / Penginput</span><b id="rpMiniPic">-</b></div></div>
+                <div class="rp-mini-block"><strong>SiRUP &amp; Struktur</strong><div class="rp-mini-grid two"><span>Total Pagu Penyedia</span><b>-</b><span>Total Pagu Swakelola</span><b>-</b><span>Total Pagu SiRUP</span><b>-</b><span>Struktur Anggaran RUP</span><b>-</b><span>Persentase Keterumuman</span><b>-</b><span>File Screenshot Struktur Anggaran</span><b>Belum ada file</b></div></div>
+              </div>
+              <div class="rp-actions">
+                <button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button>
+                <button class="rp-btn rp-btn-primary" type="button">Kirim ke QC</button>
+              </div>
+            </aside>
+          </div>
+        </section>
       </div>
     </section>
   </section>
