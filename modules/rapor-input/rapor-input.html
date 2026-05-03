@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<div class="rapor-native-v3">
+<div class="rapor-native-v5">
   <section class="rp-shell">
     <aside class="rp-side">
       <div class="rp-side-top">
@@ -37,7 +37,7 @@
         <div class="rp-hero-copy">
           <div class="rp-kicker">Rapot PBJ - Form Pegawai</div>
           <h1>Input Rapor PBJ</h1>
-          <p>Tampilan native mengikuti gaya halaman lama. Perbedaan utamanya hanya sidebar internal lama dihilangkan karena navigasi sudah memakai sidebar portal utama.</p>
+          <p>Tampilan native mengikuti gaya halaman lama, nempel ke sidebar portal, dan ringkasan input pegawai dipakai untuk membaca ulang semua tahap.</p>
         </div>
         <div class="rp-hero-stats">
           <div class="rp-stat"><span>Status Rapot</span><strong id="rpStatusStat">Draft Baru</strong></div>
@@ -88,21 +88,24 @@
 
         <section class="rp-panel" data-step-panel="sirup">
           <div class="rp-card">
-            <div class="rp-card-title"><h3>SiRUP &amp; Struktur Anggaran</h3><p>Tarik data struktur anggaran dan unggah screenshot pendukung.</p></div>
-            <div class="rp-inline-source">Sumber pengambilan screenshot struktur anggaran: <a href="#" target="_blank" rel="noopener">https://data.inaproc.id/...</a></div>
+            <div class="rp-card-title"><h3>SiRUP &amp; Struktur Anggaran</h3><p>Tarik data struktur anggaran dan unggah screenshot pendukung. Nilai di panel ini langsung ikut terbaca di ringkasan input pegawai.</p></div>
+            <div class="rp-inline-source">Sumber pengambilan screenshot struktur anggaran: <a id="rpSirupSource" href="#" target="_blank" rel="noopener">https://data.inaproc.id/...</a></div>
             <div class="rp-grid rp-grid-3">
-              <label class="rp-field"><span>Total Pagu Penyedia</span><input type="text"></label>
-              <label class="rp-field"><span>Total Pagu Swakelola</span><input type="text"></label>
-              <label class="rp-field"><span>Total Pagu SiRUP</span><input type="text"></label>
+              <label class="rp-field"><span>Total Pagu Penyedia</span><input id="rpSirupPenyedia" type="text" placeholder="Contoh: 3.673.200.740"></label>
+              <label class="rp-field"><span>Total Pagu Swakelola</span><input id="rpSirupSwakelola" type="text" placeholder="Contoh: 91.216.000"></label>
+              <label class="rp-field"><span>Total Pagu SiRUP</span><input id="rpSirupTotal" type="text" placeholder="Total gabungan"></label>
             </div>
             <div class="rp-grid rp-grid-3">
-              <label class="rp-field"><span>Total Struktur Anggaran RUP</span><input type="text"></label>
-              <label class="rp-field"><span>Persentase</span><input type="text"></label>
-              <div class="rp-field rp-field-action"><span>&nbsp;</span><button class="rp-btn rp-btn-primary" type="button">Tarik Data</button></div>
+              <label class="rp-field"><span>Total Struktur Anggaran RUP</span><input id="rpSirupStruktur" type="text" placeholder="Sesuai screenshot"></label>
+              <label class="rp-field"><span>Persentase</span><input id="rpSirupPersen" type="text" placeholder="100"></label>
+              <div class="rp-field rp-field-action"><span>&nbsp;</span><button id="rpSirupPullBtn" class="rp-btn rp-btn-primary" type="button">Tarik Data ke Form</button></div>
             </div>
-            <label class="rp-field"><span>Upload Screenshot Struktur Anggaran</span><input type="file"></label>
-            <div class="rp-file-label">File lama: -</div>
-            <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
+            <label class="rp-field"><span>Upload Screenshot Struktur Anggaran</span><input id="rpSirupFile" type="file"></label>
+            <div class="rp-file-label">File lama: <span id="rpSirupFileLabel">-</span></div>
+            <div class="rp-actions">
+              <button id="rpSirupSaveBtn" class="rp-btn rp-btn-ghost" type="button">Simpan Draft SiRUP</button>
+              <button id="rpSirupToPlanBtn" class="rp-btn rp-btn-secondary" type="button">Lanjut ke Perencanaan</button>
+            </div>
           </div>
         </section>
 
@@ -110,16 +113,16 @@
           <div class="rp-card">
             <div class="rp-card-title"><h3>Perencanaan</h3><p>Pastikan jumlah paket dan pagu sudah sesuai.</p></div>
             <div class="rp-grid rp-grid-4">
-              <label class="rp-field"><span>Paket Tender/Seleksi</span><input type="text"></label>
-              <label class="rp-field"><span>Paket Pengadaan Langsung</span><input type="text"></label>
-              <label class="rp-field"><span>Paket E-Purchasing</span><input type="text"></label>
-              <label class="rp-field"><span>Paket Dikecualikan</span><input type="text"></label>
-              <label class="rp-field"><span>Paket Swakelola</span><input type="text"></label>
-              <label class="rp-field"><span>Pagu Tender/Seleksi</span><input type="text"></label>
-              <label class="rp-field"><span>Pagu Pengadaan Langsung</span><input type="text"></label>
-              <label class="rp-field"><span>Pagu E-Purchasing</span><input type="text"></label>
-              <label class="rp-field"><span>Pagu Dikecualikan</span><input type="text"></label>
-              <label class="rp-field"><span>Pagu Swakelola</span><input type="text"></label>
+              <label class="rp-field"><span>Paket Tender/Seleksi</span><input id="rpPlanTenderPkt" type="text"></label>
+              <label class="rp-field"><span>Paket Pengadaan Langsung</span><input id="rpPlanPLPkt" type="text"></label>
+              <label class="rp-field"><span>Paket E-Purchasing</span><input id="rpPlanEcatPkt" type="text"></label>
+              <label class="rp-field"><span>Paket Dikecualikan</span><input id="rpPlanDcualPkt" type="text"></label>
+              <label class="rp-field"><span>Paket Swakelola</span><input id="rpPlanSwakPkt" type="text"></label>
+              <label class="rp-field"><span>Pagu Tender/Seleksi</span><input id="rpPlanTenderPagu" type="text"></label>
+              <label class="rp-field"><span>Pagu Pengadaan Langsung</span><input id="rpPlanPLPagu" type="text"></label>
+              <label class="rp-field"><span>Pagu E-Purchasing</span><input id="rpPlanEcatPagu" type="text"></label>
+              <label class="rp-field"><span>Pagu Dikecualikan</span><input id="rpPlanDcualPagu" type="text"></label>
+              <label class="rp-field"><span>Pagu Swakelola</span><input id="rpPlanSwakPagu" type="text"></label>
             </div>
             <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
           </div>
@@ -129,18 +132,18 @@
           <div class="rp-card">
             <div class="rp-card-title"><h3>Realisasi</h3><p>Isi realisasi paket dan anggaran, lalu cek totalnya.</p></div>
             <div class="rp-grid rp-grid-4">
-              <label class="rp-field"><span>Realisasi Paket Tender/Seleksi</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Anggaran Tender/Seleksi</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Paket Pengadaan Langsung</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Anggaran Pengadaan Langsung</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Paket E-Purchasing</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Anggaran E-Purchasing</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Paket Dikecualikan</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Anggaran Dikecualikan</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Paket Swakelola</span><input type="text"></label>
-              <label class="rp-field"><span>Realisasi Anggaran Swakelola</span><input type="text"></label>
-              <label class="rp-field"><span>Total Realisasi Paket</span><input type="text"></label>
-              <label class="rp-field"><span>Total Realisasi Anggaran</span><input type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket Tender/Seleksi</span><input id="rpRealTenderPkt" type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran Tender/Seleksi</span><input id="rpRealTenderAng" type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket Pengadaan Langsung</span><input id="rpRealPLPkt" type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran Pengadaan Langsung</span><input id="rpRealPLAng" type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket E-Purchasing</span><input id="rpRealEcatPkt" type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran E-Purchasing</span><input id="rpRealEcatAng" type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket Dikecualikan</span><input id="rpRealDcualPkt" type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran Dikecualikan</span><input id="rpRealDcualAng" type="text"></label>
+              <label class="rp-field"><span>Realisasi Paket Swakelola</span><input id="rpRealSwakPkt" type="text"></label>
+              <label class="rp-field"><span>Realisasi Anggaran Swakelola</span><input id="rpRealSwakAng" type="text"></label>
+              <label class="rp-field"><span>Total Realisasi Paket</span><input id="rpRealTotalPkt" type="text"></label>
+              <label class="rp-field"><span>Total Realisasi Anggaran</span><input id="rpRealTotalAng" type="text"></label>
             </div>
             <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
           </div>
@@ -151,13 +154,14 @@
             <div class="rp-card-title"><h3>Pelaku</h3><p>Tambahkan daftar PP / PPK dan dokumen pendukung.</p></div>
             <div class="rp-inline-source">Sumber data PP / PPK: <a href="#" target="_blank" rel="noopener">https://bit.ly/PELAKUPENGADAANKOTABOGOR</a></div>
             <div class="rp-grid rp-grid-2">
-              <label class="rp-field"><span>Daftar PP&amp;PPK</span><textarea rows="5" placeholder="Contoh:
+              <label class="rp-field"><span>Daftar PP&amp;PPK</span><textarea id="rpActorList" rows="5" placeholder="Contoh:
 PPK:
 - Nama PPK
 PP:
 - Nama PP"></textarea></label>
-              <label class="rp-field"><span>Jumlah PP&amp;PPK</span><input type="text"></label>
+              <label class="rp-field"><span>Jumlah PP&amp;PPK</span><input id="rpActorCount" type="text"></label>
             </div>
+            <label class="rp-field"><span>Link Dokumen Pendukung</span><input id="rpActorDoc" type="text" placeholder="https://..."></label>
             <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
           </div>
         </section>
@@ -167,10 +171,10 @@ PP:
             <div class="rp-card-title"><h3>ITKP</h3><p>Unggah screenshot ITKP sebagai bukti pendukung.</p></div>
             <div class="rp-inline-source">Sumber pengambilan screenshot ITKP: <a href="#" target="_blank" rel="noopener">https://bit.ly/ITKPKOTABOGOR2026</a></div>
             <div class="rp-grid rp-grid-2">
-              <label class="rp-field"><span>Upload Screenshot ITKP</span><input type="file"></label>
-              <label class="rp-field"><span>Nilai ITKP</span><input type="text" placeholder="Contoh: 28,00"></label>
+              <label class="rp-field"><span>Upload Screenshot ITKP</span><input id="rpItkpFile" type="file"></label>
+              <label class="rp-field"><span>Nilai ITKP</span><input id="rpItkpValue" type="text" placeholder="Contoh: 28,00"></label>
             </div>
-            <div class="rp-file-label">File lama: -</div>
+            <div class="rp-file-label">File lama: <span id="rpItkpFileLabel">-</span></div>
             <div class="rp-actions"><button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button></div>
           </div>
         </section>
@@ -179,19 +183,24 @@ PP:
           <div class="rp-grid-analisis">
             <div class="rp-card">
               <div class="rp-card-title"><h3>Analisis Manual</h3><p>Tulis kesimpulan progres sebelum dikirim ke QC.</p></div>
-              <label class="rp-field"><span>Kesimpulan Progres</span><textarea rows="8"></textarea></label>
+              <label class="rp-field"><span>Kesimpulan Progres</span><textarea id="rpAnalisisText" rows="8"></textarea></label>
               <div class="rp-actions">
                 <button class="rp-btn rp-btn-secondary" type="button">Preview Analisa</button>
                 <button class="rp-btn rp-btn-secondary" type="button">Masukkan ke Kesimpulan</button>
               </div>
               <div class="rp-warning-box">Setelah semua tahapan terisi dan analisis manual selesai, barulah rapot dikirim ke QC.</div>
             </div>
-            <aside class="rp-card">
-              <div class="rp-card-title"><h3>Ringkasan Input Pegawai</h3><p>Panel kanan dipakai untuk membaca ulang seluruh input sebelum finalisasi analisa.</p></div>
+            <aside class="rp-card rp-summary-wide">
+              <div class="rp-card-title"><h3>Ringkasan Input Pegawai</h3><p>Seluruh tahap dimunculkan di sini supaya tidak ada input pegawai yang tertinggal saat finalisasi analisa.</p></div>
               <div class="rp-mini-head"><span id="rpMiniOpd">OPD: -</span><span id="rpMiniPeriode">Periode: -</span><span id="rpMiniStatus">Status: Draft Baru</span></div>
               <div class="rp-mini-scroll">
                 <div class="rp-mini-block"><strong>Identitas</strong><div class="rp-mini-grid"><span>ID Rapot</span><b id="rpMiniId">-</b><span>Tahun</span><b id="rpMiniYear">2026</b><span>Bulan</span><b id="rpMiniMonth">-</b><span>Kode OPD</span><b id="rpMiniKode">-</b><span>Nama OPD</span><b id="rpMiniNamaOpd">-</b><span>Nama PIC / Penginput</span><b id="rpMiniPic">-</b></div></div>
-                <div class="rp-mini-block"><strong>SiRUP &amp; Struktur</strong><div class="rp-mini-grid two"><span>Total Pagu Penyedia</span><b>-</b><span>Total Pagu Swakelola</span><b>-</b><span>Total Pagu SiRUP</span><b>-</b><span>Struktur Anggaran RUP</span><b>-</b><span>Persentase Keterumuman</span><b>-</b><span>File Screenshot Struktur Anggaran</span><b>Belum ada file</b></div></div>
+                <div class="rp-mini-block"><strong>SiRUP &amp; Struktur</strong><div class="rp-mini-grid two"><span>Total Pagu Penyedia</span><b id="miniSirupPenyedia">-</b><span>Total Pagu Swakelola</span><b id="miniSirupSwakelola">-</b><span>Total Pagu SiRUP</span><b id="miniSirupTotal">-</b><span>Struktur Anggaran RUP</span><b id="miniSirupStruktur">-</b><span>Persentase Keterumuman</span><b id="miniSirupPersen">-</b><span>File Screenshot Struktur Anggaran</span><b id="miniSirupFile">Belum ada file</b></div></div>
+                <div class="rp-mini-block"><strong>Perencanaan</strong><div class="rp-mini-grid two"><span>Paket Tender/Seleksi</span><b id="miniPlanTenderPkt">-</b><span>Pagu Tender/Seleksi</span><b id="miniPlanTenderPagu">-</b><span>Paket Pengadaan Langsung</span><b id="miniPlanPLPkt">-</b><span>Pagu Pengadaan Langsung</span><b id="miniPlanPLPagu">-</b><span>Paket E-Purchasing</span><b id="miniPlanEcatPkt">-</b><span>Pagu E-Purchasing</span><b id="miniPlanEcatPagu">-</b><span>Paket Dikecualikan</span><b id="miniPlanDcualPkt">-</b><span>Pagu Dikecualikan</span><b id="miniPlanDcualPagu">-</b><span>Paket Swakelola</span><b id="miniPlanSwakPkt">-</b><span>Pagu Swakelola</span><b id="miniPlanSwakPagu">-</b></div></div>
+                <div class="rp-mini-block"><strong>Realisasi</strong><div class="rp-mini-grid two"><span>Realisasi Paket Tender/Seleksi</span><b id="miniRealTenderPkt">-</b><span>Realisasi Anggaran Tender/Seleksi</span><b id="miniRealTenderAng">-</b><span>Realisasi Paket Pengadaan Langsung</span><b id="miniRealPLPkt">-</b><span>Realisasi Anggaran Pengadaan Langsung</span><b id="miniRealPLAng">-</b><span>Realisasi Paket E-Purchasing</span><b id="miniRealEcatPkt">-</b><span>Realisasi Anggaran E-Purchasing</span><b id="miniRealEcatAng">-</b><span>Realisasi Paket Dikecualikan</span><b id="miniRealDcualPkt">-</b><span>Realisasi Anggaran Dikecualikan</span><b id="miniRealDcualAng">-</b><span>Realisasi Paket Swakelola</span><b id="miniRealSwakPkt">-</b><span>Realisasi Anggaran Swakelola</span><b id="miniRealSwakAng">-</b><span>Total Realisasi Paket</span><b id="miniRealTotalPkt">-</b><span>Total Realisasi Anggaran</span><b id="miniRealTotalAng">-</b></div></div>
+                <div class="rp-mini-block"><strong>Pelaku</strong><div class="rp-mini-grid two"><span>Jumlah PP / PPK</span><b id="miniActorCount">-</b><span>Dokumen Pendukung</span><b id="miniActorDoc">Belum ada file</b><span>Daftar PP / PPK</span><b id="miniActorList">-</b></div></div>
+                <div class="rp-mini-block"><strong>ITKP</strong><div class="rp-mini-grid two"><span>Nilai ITKP</span><b id="miniItkpValue">-</b><span>Screenshot ITKP</span><b id="miniItkpFile">Belum ada file</b></div></div>
+                <div class="rp-mini-block"><strong>Draft Kesimpulan Saat Ini</strong><div class="rp-mini-grid two"><span>Kesimpulan Progres</span><b id="miniAnalisisText">-</b></div></div>
               </div>
               <div class="rp-actions">
                 <button class="rp-btn rp-btn-ghost" type="button">Simpan Draft</button>
