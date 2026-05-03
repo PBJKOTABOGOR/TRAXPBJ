@@ -129,13 +129,6 @@ const APP_ROUTES = {
   url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc&embed=1'
 }
 
-  'rapor-pbj-qc-internal': {
-    title: 'QC Rapor PBJ',
-    subtitle: 'Panel internal QC untuk review dan persetujuan rapor.',
-    type: 'iframe',
-    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc'
-  }
-
 };
 
 const contentArea = document.getElementById('contentArea');
