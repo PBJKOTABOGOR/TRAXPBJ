@@ -116,9 +116,11 @@ const APP_ROUTES = {
 
 'rapor-pbj-input-internal': {
   title: 'Input Rapor PBJ',
-  subtitle: 'Form internal pegawai untuk input dan upload dokumen Rapor PBJ.',
-  type: 'iframe',
-  url: 'https://script.google.com/macros/s/AKfycby3ZGcLfaJ2deOeqn3pxeE6660PVoNxiPn3MFiRKjABatp1_Op73RcjrChkjTYVP3tvJA/exec?embed=1'
+  subtitle: 'Form internal pegawai untuk input identitas rapor PBJ.',
+  type: 'module',
+  html: 'modules/rapor-input/rapor-input.html',
+  css: 'modules/rapor-input/rapor-input.css',
+  js: 'modules/rapor-input/rapor-input.js'
 },
 
 'rapor-pbj-qc-internal': {
