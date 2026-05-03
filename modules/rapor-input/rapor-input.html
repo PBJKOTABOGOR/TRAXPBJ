@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<div class="rapor-input-native">
+  <section class="rapor-hero">
+    <div class="rapor-hero-main">
+      <div class="rapor-kicker">Rapot PBJ · Panel Internal</div>
+      <h1>Input Rapor PBJ</h1>
+      <p>Versi native tahap 1. Fokus dulu ke identitas rapor: periode, PIC, OPD, cek ketersediaan data, dan simpan draft awal. Tampilan dibuat mengikuti nuansa halaman Apps Script lama tanpa sidebar kiri lama.</p>
+    </div>
+    <div class="rapor-hero-side">
+      <div class="rapor-hero-pill">Tahap 1 · Identitas</div>
+    </div>
+  </section>
+
+  <section class="rapor-summary-grid">
+    <article class="rapor-summary-card">
+      <div class="rapor-summary-label">Status Rapor</div>
+      <div class="rapor-summary-value" id="riSummaryStatusWrap"></div>
+    </article>
+    <article class="rapor-summary-card">
+      <div class="rapor-summary-label">OPD Terpilih</div>
+      <div class="rapor-summary-value" id="riSummaryOpd">Belum dipilih</div>
+    </article>
+    <article class="rapor-summary-card">
+      <div class="rapor-summary-label">Periode</div>
+      <div class="rapor-summary-value" id="riSummaryPeriode">-</div>
+    </article>
+    <article class="rapor-summary-card">
+      <div class="rapor-summary-label">Progress Input</div>
+      <div class="rapor-summary-value">1 / 7 Tahap</div>
+    </article>
+  </section>
+
+  <section class="rapor-card rapor-progress-card">
+    <div class="rapor-progress-top">
+      <div>
+        <div class="rapor-section-kicker">Progress Tahapan</div>
+        <div class="rapor-progress-title">Identitas</div>
+      </div>
+      <div class="rapor-progress-step">Step 1 / 7</div>
+    </div>
+    <div class="rapor-progress-bar">
+      <div class="rapor-progress-fill" style="width:14.28%"></div>
+    </div>
+    <div class="rapor-progress-caption">Lengkapi periode, penginput, dan OPD terlebih dahulu. Tahap berikutnya disiapkan setelah identitas stabil.</div>
+  </section>
+
+  <section class="rapor-card">
+    <div class="rapor-tabs">
+      <button class="rapor-tab-btn active" type="button">Identitas</button>
+      <button class="rapor-tab-btn is-disabled" type="button" disabled>SiRUP & Struktur</button>
+      <button class="rapor-tab-btn is-disabled" type="button" disabled>Perencanaan</button>
+      <button class="rapor-tab-btn is-disabled" type="button" disabled>Realisasi</button>
+      <button class="rapor-tab-btn is-disabled" type="button" disabled>Pelaku</button>
+      <button class="rapor-tab-btn is-disabled" type="button" disabled>ITKP</button>
+      <button class="rapor-tab-btn is-disabled" type="button" disabled>Analisis Manual</button>
+    </div>
+
+    <div class="rapor-pane">
+      <div class="rapor-pane-head">
+        <div>
+          <h2>Identitas</h2>
+          <p class="rapor-sub">Tahap pertama native module. Data draft disimpan dulu di browser agar alur dan tampilan bisa dipakai sambil backend disambungkan belakangan.</p>
+        </div>
+        <div class="rapor-badge-soft">Draft Lokal</div>
+      </div>
+
+      <input type="hidden" id="riIdRapot" />
+
+      <div class="rapor-grid rapor-grid-3">
+        <div>
+          <label>Tahun</label>
+          <input type="number" id="riTahun" />
+        </div>
+        <div>
+          <label>Bulan</label>
+          <select id="riBulan">
+            <option value="">-- Pilih Bulan --</option>
+            <option value="1">Januari</option>
+            <option value="2">Februari</option>
+            <option value="3">Maret</option>
+            <option value="4">April</option>
+            <option value="5">Mei</option>
+            <option value="6">Juni</option>
+            <option value="7">Juli</option>
+            <option value="8">Agustus</option>
+            <option value="9">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Desember</option>
+          </select>
+        </div>
+        <div>
+          <label>Nama PIC / Penginput</label>
+          <select id="riInputBy">
+            <option value="">-- Pilih Nama PIC --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rapor-grid rapor-grid-2 rapor-mt-12">
+        <div>
+          <label>Kode OPD</label>
+          <input type="text" id="riKodeOpd" placeholder="otomatis / isi manual" />
+        </div>
+        <div>
+          <label>Nama OPD</label>
+          <select id="riNamaOpd">
+            <option value="">-- Pilih OPD --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rapor-info-box">
+        <div class="rapor-info-line" id="riAvailabilityMessage">Pilih tahun, bulan, dan OPD untuk mengecek apakah draft rapor sudah ada.</div>
+        <div class="rapor-info-line is-muted" id="riAvailabilityMeta"></div>
+        <div class="rapor-info-line is-muted" id="riQcNotesBox"></div>
+
+        <div class="rapor-inline-actions">
+          <button class="rapor-btn rapor-btn-secondary" type="button" id="riBtnLoadExisting" hidden>Lanjutkan</button>
+          <button class="rapor-btn rapor-btn-secondary" type="button" id="riBtnViewExisting" hidden>Lihat Data</button>
+          <button class="rapor-btn rapor-btn-secondary" type="button" id="riBtnReset">Reset</button>
+        </div>
+      </div>
+
+      <div class="rapor-actions">
+        <button class="rapor-btn rapor-btn-secondary" type="button" id="riBtnSaveDraft">Simpan Draft</button>
+      </div>
+
+      <div class="rapor-status" id="riResult"></div>
+      <div class="rapor-small" id="riInfoId"></div>
+    </div>
+  </section>
+
+  <section class="rapor-card">
+    <div class="rapor-pane-head">
+      <div>
+        <h2>Catatan Tahap Berikutnya</h2>
+        <p class="rapor-sub">Bagian ini sengaja belum dihidupkan agar fokus kita rapi: identitas dulu, baru tab lain setelah alurnya stabil.</p>
+      </div>
+    </div>
+    <div class="rapor-next-grid">
+      <div class="rapor-next-box"><b>Step 2</b><span>Hubungkan data SiRUP & Struktur</span></div>
+      <div class="rapor-next-box"><b>Step 3</b><span>Form Perencanaan</span></div>
+      <div class="rapor-next-box"><b>Step 4</b><span>Form Realisasi</span></div>
+      <div class="rapor-next-box"><b>Step 5</b><span>Pelaku & Dokumen</span></div>
+      <div class="rapor-next-box"><b>Step 6</b><span>ITKP & Upload Bukti</span></div>
+      <div class="rapor-next-box"><b>Step 7</b><span>Analisis Manual & Submit</span></div>
+    </div>
+  </section>
+</div>
