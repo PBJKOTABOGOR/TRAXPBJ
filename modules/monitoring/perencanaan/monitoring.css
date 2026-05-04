@@ -472,3 +472,19 @@
 .monitoring-module .hero{
   margin-top:0;
 }
+
+
+    .b-jadwal-melebihi{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+
+    .warn-info{
+      display:inline-block;
+      font-size:12px;
+      font-weight:800;
+      color:#1d4ed8;
+      background:#eff6ff;
+      border:1px solid #bfdbfe;
+      padding:8px 10px;
+      border-radius:12px;
+      line-height:1.4;
+      max-width:280px;
+    }
