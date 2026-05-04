@@ -416,13 +416,11 @@
 
     function buildJadwalBadge(v) {
       if (v === 'Melewati') return `<span class="badge b-jadwal-melewati">${escapeHtml(v)}</span>`;
-      if (v === 'Melebihi') return `<span class="badge b-jadwal-melebihi">${escapeHtml(v)}</span>`;
       if (v === 'Belum') return `<span class="badge b-jadwal-belum">${escapeHtml(v)}</span>`;
       return `<span class="badge b-jadwal-sesuai">${escapeHtml(v)}</span>`;
     }
 
     function warningCell(v) {
-      if (v === 'Melebihi target pemilihan dari bulan ini.') return `<span class="warn-info">${escapeHtml(v)}</span>`;
       if (v && v !== 'OK') return `<span class="warn-bad">${escapeHtml(v)}</span>`;
       return `<span class="warn-ok">OK</span>`;
     }
@@ -613,11 +611,7 @@
 
           let posisiJadwal = 'Belum';
           if (recallPaket > 0) {
-            if (waktuPemilihanOrder > currentOrder) {
-              posisiJadwal = 'Melebihi';
-            } else {
-              posisiJadwal = 'Sesuai';
-            }
+            posisiJadwal = 'Sesuai';
           } else {
             posisiJadwal = waktuPemilihanOrder < currentOrder ? 'Melewati' : 'Belum';
           }
@@ -625,9 +619,6 @@
           let warning = 'OK';
           if (recallPaket === 0 && posisiJadwal === 'Melewati') {
             warning = 'Belum ada realisasi dan sudah melewati waktu pemilihan.';
-          }
-          if (recallPaket > 0 && posisiJadwal === 'Melebihi') {
-            warning = 'Melebihi target pemilihan dari bulan ini.';
           }
 
           const isEPurchasing = String(r.metode_pengadaan || '').toLowerCase().includes('e-purchasing');
