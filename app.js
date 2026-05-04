@@ -1559,17 +1559,29 @@ function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
         <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">Serapan ${formatPercent(data.realisasiPersen)}</span>
       </div>
 
-      <div class="summary-stat-grid">
-        ${renderInfoStat('Total Pagu', formatMoney(data.totalPagu), 'Nilai pagu perencanaan')}
-        ${renderInfoStat('Total Realisasi', formatMoney(data.totalRealisasi), 'Nilai realisasi paket')}
-        ${renderInfoStat('BAST Terisi', formatNumber(data.bastCount), 'Dokumen/referensi BAST', getToneByPercent(bastPercent), formatPercent(bastPercent))}
-        ${renderInfoStat('Selesai', formatNumber(data.selesaiCount), 'Status paket selesai', getToneByPercent(selesaiPercent), formatPercent(selesaiPercent))}
-        ${renderInfoStat('Proses', formatNumber(data.processCount), 'Masih berjalan/proses', getToneByPercent(prosesPercent), formatPercent(prosesPercent))}
-        ${renderInfoStat('Paket Realisasi', formatNumber(data.totalPaketRealisasi), 'Total paket realisasi')}
+      <div class="money-progress money-progress--compact">
+        <div class="money-row">
+          <span>Total Pagu</span>
+          <b>${formatMoney(data.totalPagu)}</b>
+        </div>
+        <div class="money-row">
+          <span>Total Realisasi</span>
+          <b>${formatMoney(data.totalRealisasi)}</b>
+        </div>
+        <div class="progress-track progress-track--tall">
+          <div class="progress-bar progress-bar--${getToneByPercent(data.realisasiPersen)}" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
+        </div>
+      </div>
+
+      <div class="status-mini-grid">
+        ${renderSmallMetric('BAST Terisi', data.bastCount, 'Dokumen/referensi BAST', bastPercent)}
+        ${renderSmallMetric('Selesai', data.selesaiCount, 'Status paket selesai', selesaiPercent)}
+        ${renderSmallMetric('Proses', data.processCount, 'Masih berjalan/proses', prosesPercent)}
       </div>
     </div>
   `;
 }
+
 
 function renderDistributionCard(data, scopeLabel) {
   const methodRows = buildMethodComparisonRows(data).filter((item) => item.paguValue > 0).slice(0, 6);
@@ -1597,7 +1609,7 @@ function renderDistributionCard(data, scopeLabel) {
   const segments = methodRows.map((item, index) => {
     const palette = getMethodPalette(index);
     const fraction = totalPagu > 0 ? item.paguValue / totalPagu : 0;
-    const arcLength = Math.max((fraction * circumference) - 4, 0);
+    const arcLength = Math.max((fraction * circumference) - 5, 0);
     const dashOffset = -(cumulative * circumference);
     cumulative += fraction;
 
@@ -1659,7 +1671,7 @@ function renderDistributionCard(data, scopeLabel) {
         <span class="soft-pill">${formatMoney(data.totalPagu)}</span>
       </div>
 
-      <div class="distribution-card-body">
+      <div class="distribution-card-body distribution-card-body--row">
         <div class="distribution-donut-panel">
           <div class="distribution-donut-wrap">
             <svg class="distribution-donut" viewBox="0 0 220 220" aria-label="Distribusi pagu per metode">
@@ -1672,7 +1684,9 @@ function renderDistributionCard(data, scopeLabel) {
               <small>${escapeHtml(scopeLabel)}</small>
             </div>
           </div>
+        </div>
 
+        <div class="distribution-detail-panel">
           <div class="distribution-insight" id="distributionInsight">
             <span class="distribution-insight-color" id="distributionInsightColor" style="background:${getMethodPalette(0).color}"></span>
             <div class="distribution-insight-body">
@@ -1682,19 +1696,20 @@ function renderDistributionCard(data, scopeLabel) {
               <div class="distribution-insight-meta" id="distributionInsightMeta">${escapeHtml(formatPercent(first.sharePercent))} dari total pagu · ${escapeHtml(formatNumber(first.paguCount))} paket</div>
             </div>
           </div>
-        </div>
 
-        <div class="distribution-legend-list">
-          ${legends}
+          <div class="distribution-legend-list">
+            ${legends}
+          </div>
         </div>
       </div>
     </div>
   `;
 }
 
+
 function renderMethodComparisonCard(data, scopeLabel) {
   const rows = buildMethodComparisonRows(data).filter((item) => item.paguValue > 0 || item.realisasiValue > 0).slice(0, 8);
-  const maxValue = Math.max(1, ...rows.flatMap((item) => [item.paguValue, item.realisasiValue]));
+  const maxValue = Math.max(1, ...rows.map((item) => item.paguValue));
 
   if (!rows.length) {
     return `
@@ -1723,30 +1738,25 @@ function renderMethodComparisonCard(data, scopeLabel) {
 
       <div class="method-comparison-list">
         ${rows.map((item, index) => {
-          const paguWidth = Math.max(2, (item.paguValue / maxValue) * 100);
-          const realWidth = item.realisasiValue > 0 ? Math.max(2, (item.realisasiValue / maxValue) * 100) : 0;
+          const percentOfScale = Math.max(2, (item.paguValue / maxValue) * 100);
+          const percentFill = item.paguValue > 0 ? Math.max(0, Math.min(100, (item.realisasiValue / item.paguValue) * 100)) : 0;
           const serapanTone = getToneByPercent(item.serapanPercent);
           return `
-            <div class="method-compare-item">
-              <div class="method-compare-head">
+            <div class="method-compare-item method-compare-item--single">
+              <div class="method-compare-head method-compare-head--single">
                 <div class="method-compare-title">
                   <span class="bar-index">${index + 1}</span>
                   <div>
                     <b>${escapeHtml(item.name)}</b>
-                    <small>${escapeHtml(formatNumber(item.paguCount))} paket perencanaan · ${escapeHtml(formatNumber(item.realisasiCount))} paket realisasi</small>
+                    <small>Realisasi ${escapeHtml(formatMoney(item.realisasiValue))} / Pagu ${escapeHtml(formatMoney(item.paguValue))}</small>
                   </div>
                 </div>
-                <span class="soft-pill soft-pill--${serapanTone}">Serapan ${formatPercent(item.serapanPercent)}</span>
+                <span class="soft-pill soft-pill--${serapanTone}">${formatPercent(item.serapanPercent)}</span>
               </div>
 
-              <div class="method-track-row">
-                <div class="method-track-label"><span>Pagu</span><b>${escapeHtml(formatMoney(item.paguValue))}</b></div>
-                <div class="method-track"><span class="method-track-fill method-track-fill--pagu" style="width:${paguWidth}%"></span></div>
-              </div>
-
-              <div class="method-track-row">
-                <div class="method-track-label"><span>Realisasi</span><b>${escapeHtml(formatMoney(item.realisasiValue))}</b></div>
-                <div class="method-track"><span class="method-track-fill method-track-fill--realisasi" style="width:${realWidth}%"></span></div>
+              <div class="method-track method-track--single" title="${escapeHtml(item.name)}">
+                <span class="method-track-scale" style="width:${percentOfScale}%"></span>
+                <span class="method-track-fill method-track-fill--${serapanTone}" style="width:${(percentOfScale * percentFill) / 100}%"></span>
               </div>
             </div>
           `;
@@ -1755,6 +1765,7 @@ function renderMethodComparisonCard(data, scopeLabel) {
     </div>
   `;
 }
+
 
 
 function renderDimension(item) {
