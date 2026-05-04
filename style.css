@@ -3826,3 +3826,40 @@ textarea{
     grid-template-columns:1fr;
   }
 }
+
+
+/* Final tweak: donut center text + remove awkward empty area */
+.dashboard-grid--analysis{
+  align-items:stretch;
+}
+
+.method-comparison-card{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+.method-comparison-card .method-compare-list{
+  flex:1 1 auto;
+}
+
+.distribution-donut-center{
+  inset:56px;
+  padding:12px;
+}
+
+.distribution-donut-center span{
+  font-size:10px;
+  letter-spacing:.06em;
+  line-height:1.05;
+}
+
+.distribution-donut-center b{
+  margin-top:4px;
+  font-size:28px;
+  line-height:.96;
+}
+
+.distribution-donut-center small{
+  display:none !important;
+}
