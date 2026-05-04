@@ -278,9 +278,8 @@
     }
 
     function warningCell(v) {
-      if (v === 'OK') return `<span class="warn-ok">OK</span>`;
       if (v === 'Melebihi target pemilihan dari bulan ini.') return `<span class="warn-info">${escapeHtml(v)}</span>`;
-      if (v) return `<span class="warn-bad">${escapeHtml(v)}</span>`;
+      if (v && v !== 'OK') return `<span class="warn-bad">${escapeHtml(v)}</span>`;
       return `<span class="warn-ok">OK</span>`;
     }
 
@@ -491,8 +490,7 @@
           let warning = 'OK';
           if (recallPaket === 0 && posisiJadwal === 'Melewati') {
             warning = 'Belum ada realisasi dan sudah melewati waktu pemilihan.';
-          }
-          if (recallPaket > 0 && posisiJadwal === 'Melebihi') {
+          } else if (recallPaket > 0 && posisiJadwal === 'Melebihi') {
             warning = 'Melebihi target pemilihan dari bulan ini.';
           }
 
