@@ -272,15 +272,16 @@
 
     function buildJadwalBadge(v) {
       if (v === 'Melewati') return `<span class="badge b-jadwal-melewati">${escapeHtml(v)}</span>`;
-      if (v === 'Belum') return `<span class="badge b-jadwal-belum">${escapeHtml(v)}</span>`;
       if (v === 'Melebihi') return `<span class="badge b-jadwal-melebihi">${escapeHtml(v)}</span>`;
+      if (v === 'Belum') return `<span class="badge b-jadwal-belum">${escapeHtml(v)}</span>`;
       return `<span class="badge b-jadwal-sesuai">${escapeHtml(v)}</span>`;
     }
 
-    function warningCell(v, tone) {
-      if (v && v !== 'OK') {
-        return `<span class="${tone === 'info' ? 'warn-info' : 'warn-bad'}">${escapeHtml(v)}</span>`;
+    function warningCell(v) {
+      if (v === 'Melebihi target pemilihan dari bulan ini.') {
+        return `<span class="warn-info">${escapeHtml(v)}</span>`;
       }
+      if (v && v !== 'OK') return `<span class="warn-bad">${escapeHtml(v)}</span>`;
       return `<span class="warn-ok">OK</span>`;
     }
 
@@ -478,24 +479,27 @@
           }
 
           let posisiJadwal = 'Belum';
-          let warning = 'OK';
-          let warningTone = 'default';
-
           if (recallPaket > 0) {
-            posisiJadwal = 'Sesuai';
-          } else if (waktuPemilihanOrder > currentOrder) {
-            posisiJadwal = 'Melebihi';
-            warning = 'Melebihi target pemilihan dari bulan ini.';
-            warningTone = 'info';
-          } else if (waktuPemilihanOrder < currentOrder) {
-            posisiJadwal = 'Melewati';
+            if (waktuPemilihanOrder > currentOrder) {
+              posisiJadwal = 'Melebihi';
+            } else {
+              posisiJadwal = 'Sesuai';
+            }
+          } else {
+            posisiJadwal = waktuPemilihanOrder < currentOrder ? 'Melewati' : 'Belum';
+          }
+
+          let warning = 'OK';
+          if (recallPaket === 0 && posisiJadwal === 'Melewati') {
             warning = 'Belum ada realisasi dan sudah melewati waktu pemilihan.';
+          }
+          if (recallPaket > 0 && posisiJadwal === 'Melebihi') {
+            warning = 'Melebihi target pemilihan dari bulan ini.';
           }
 
           const isEPurchasing = String(r.metode_pengadaan || '').toLowerCase().includes('e-purchasing');
           if (isEPurchasing && persentase >= 99.99 && detailSummary.onProcess > 0) {
             warning = 'Realisasi sudah 100%, namun masih ada paket on process. Perlu tindak lanjut penyelesaian di sistem.';
-            warningTone = 'default';
           }
 
           let ketJadwal = '-';
@@ -532,7 +536,6 @@
             progres: progres,
             posisi_jadwal: posisiJadwal,
             warning: warning,
-            warning_tone: warningTone,
             ket_jadwal: ketJadwal,
             tindak_lanjut: tindakLanjut,
             detail_summary: detailSummary
@@ -623,7 +626,7 @@
           <td>${buildStatusBadge(row.status)}</td>
           <td>${buildProgresBadge(row.progres)}</td>
           <td>${buildJadwalBadge(row.posisi_jadwal)}</td>
-          <td>${warningCell(row.warning, row.warning_tone)}</td>
+          <td>${warningCell(row.warning)}</td>
           <td>
             <button class="detail-btn" onclick="openDetailModal('${escapeHtml(row.kode_rup)}')">Detail</button>
           </td>
