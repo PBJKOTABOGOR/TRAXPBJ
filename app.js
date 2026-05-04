@@ -1027,22 +1027,14 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
       grouped[kode] = {
         recall_paket: 0,
         total_realisasi: 0,
-        rows: [],
-        first_order: null
+        rows: []
       };
     }
 
     const nilai = toNumber(getFieldFn(r, ['Nilai Realisasi', 'nilai_realisasi', 'Total Realisasi']));
-    const waktuOrder = getMonthOrder(getFieldFn(r, ['Waktu Pemilihan', 'waktu_pemilihan']));
 
     grouped[kode].recall_paket += 1;
     grouped[kode].total_realisasi += nilai;
-
-    if (waktuOrder > 0) {
-      if (!grouped[kode].first_order || waktuOrder < grouped[kode].first_order) {
-        grouped[kode].first_order = waktuOrder;
-      }
-    }
 
     grouped[kode].rows.push({
       status_paket: String(getFieldFn(r, ['Status Paket', 'status_paket']) || '').trim(),
@@ -1067,7 +1059,7 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
     const waktuPemilihanOrder = getMonthOrder(getFieldFn(r, ['Waktu Pemilihan', 'waktu_pemilihan']));
     const metode = String(getFieldFn(r, ['Metode Pengadaan', 'metode_pengadaan']) || '').trim();
 
-    const real = grouped[kode] || { recall_paket: 0, total_realisasi: 0, rows: [], first_order: null };
+    const real = grouped[kode] || { recall_paket: 0, total_realisasi: 0, rows: [] };
     const detail = analyzeDashboardPackageStatuses(real.rows || [], metode);
 
     if (real.recall_paket > 0) {
@@ -1079,7 +1071,8 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
       result.melewatiWaktuPemilihan += 1;
     }
 
-    if (real.recall_paket > 0 && real.first_order && waktuPemilihanOrder > 0 && real.first_order < waktuPemilihanOrder) {
+    // Waktu Pemilihan masih lebih besar dari bulan saat ini, tapi realisasi sudah ada.
+    if (real.recall_paket > 0 && waktuPemilihanOrder > currentOrder) {
       result.melebihiTargetPemilihan += 1;
     }
 
@@ -1090,7 +1083,6 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
 
   return result;
 }
-
 
 function analyzeDashboardData(raw) {
   const itkpAllRows = raw.itkp || [];
