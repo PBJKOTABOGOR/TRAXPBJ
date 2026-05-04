@@ -1276,7 +1276,7 @@ textarea{
 }
 
 .dashboard-grid--main{
-  grid-template-columns:1.35fr .9fr;
+  grid-template-columns:1.08fr 1.12fr;
 }
 
 .dashboard-grid--two{
@@ -3823,6 +3823,31 @@ textarea{
 }
 @media (min-width: 1100px){
   .summary-stat-grid--warning{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* Revisi lebar radar vs distribusi */
+.procurement-map-card{
+  padding:18px 18px 16px;
+}
+
+.itkp-radar-layout{
+  gap:14px;
+}
+
+.score-orbit{
+  min-width:220px;
+  max-width:240px;
+}
+
+.dimensions.dimensions--lux{
+  gap:10px;
+}
+
+@media (max-width: 1200px){
+  .dashboard-grid--main{
     grid-template-columns:1fr;
   }
 }
