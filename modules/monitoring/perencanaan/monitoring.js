@@ -485,7 +485,7 @@
             posisiJadwal = 'Sesuai';
           } else if (waktuPemilihanOrder > currentOrder) {
             posisiJadwal = 'Melebihi';
-            warning = 'Melebihi target pemilihan dari bulan ini. Tidak masalah, namun menunjukkan perencanaan belum matang.';
+            warning = 'Melebihi target pemilihan dari bulan ini.';
             warningTone = 'info';
           } else if (waktuPemilihanOrder < currentOrder) {
             posisiJadwal = 'Melewati';
