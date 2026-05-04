@@ -1126,6 +1126,7 @@ async function renderDashboard(force = false) {
   }
 }
 
+
 function renderDashboardReady(data) {
   const lastUpdate = DASHBOARD_STATE.loadedAt
     ? DASHBOARD_STATE.loadedAt.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
@@ -1216,73 +1217,30 @@ function renderDashboardReady(data) {
         </div>
       </div>
 
-      <div class="card">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Kinerja Realisasi · ${escapeHtml(scopeLabel)}</span>
-            <h3>Progress Pagu vs Realisasi</h3>
-          </div>
-          <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">${formatPercent(data.realisasiPersen)}</span>
-        </div>
+      ${renderDistributionCard(data, scopeLabel)}
+    </section>
 
-        <div class="money-progress">
-          <div class="money-row">
-            <span>Total Pagu</span>
-            <b>${formatMoney(data.totalPagu)}</b>
-          </div>
-          <div class="money-row">
-            <span>Total Realisasi</span>
-            <b>${formatMoney(data.totalRealisasi)}</b>
-          </div>
-          <div class="progress-track progress-track--tall">
-            <div class="progress-bar progress-bar--${getToneByPercent(data.realisasiPersen)}" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
-          </div>
-          <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi dibanding nilai pagu.</p>
-        </div>
+    <section class="dashboard-grid dashboard-grid--analysis">
+      ${renderMethodComparisonCard(data, scopeLabel)}
 
-        <div class="status-mini-grid">
-          ${renderSmallMetric('BAST Terisi', data.bastCount, 'Dokumen/referensi BAST', data.totalPaketRealisasi ? (data.bastCount / data.totalPaketRealisasi) * 100 : 0)}
-          ${renderSmallMetric('Selesai', data.selesaiCount, 'Status paket selesai', data.totalPaketRealisasi ? (data.selesaiCount / data.totalPaketRealisasi) * 100 : 0)}
-          ${renderSmallMetric('Proses', data.processCount, 'Masih berjalan/proses', data.totalPaketRealisasi ? (data.processCount / data.totalPaketRealisasi) * 100 : 0)}
-        </div>
+      <div class="dashboard-side-stack">
+        ${renderQuickSummaryCard(data, scopeLabel, scopeDesc)}
 
-        <div class="dashboard-card-links">
-          <div class="dashboard-card-links-title">Akses Cepat</div>
+        <div class="card">
+          <div class="section-title-row">
+            <div>
+              <span class="section-kicker">Akses Cepat</span>
+              <h3>Akses Cepat</h3>
+            </div>
+          </div>
+
           <div class="quick-grid quick-grid--compact">
-            ${renderQuickCard('🧩', 'linear-gradient(135deg,#2563eb,#22c55e)', 'Monitoring Paket Konsolidasi', 'Pantau paket konsolidasi yang sudah disiapkan di portal.', 'monitoring-konsolidasi')}
-            ${renderQuickCard('📦', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Monitoring Realisasi', 'Pantau progress realisasi paket perangkat daerah.', 'monitoring-perencanaan')}
-            ${renderQuickCard('🗓️', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Simulasi Timeline', 'Simulasikan jadwal pengadaan secara terstruktur.', 'simulasi-timeline')}
+            ${renderQuickCard('📝', 'linear-gradient(135deg,#2563eb,#22c55e)', 'Rapor PBJ', 'Buka portal laporan Rapor PBJ perangkat daerah.', 'rapor-pbj')}
+            ${renderQuickCard('🏆', 'linear-gradient(135deg,#7c54e9,#a075f3)', 'Pemenang Pengadaan', 'Telusuri portal pencarian paket penyedia dan paket aktif.', 'pemenang-pengadaan')}
+            ${renderQuickCard('🧩', 'linear-gradient(135deg,#ef8d21,#f8b14c)', 'Monitoring Paket Konsolidasi', 'Pantau paket konsolidasi yang sudah disiapkan di portal.', 'monitoring-konsolidasi')}
             ${renderQuickCard('📈', 'linear-gradient(135deg,#0f766e,#22c55e)', 'Looker Studio ITKP', 'Buka dashboard indikator pemanfaatan sistem di Looker Studio.', '', 'https://datastudio.google.com/reporting/d940ac07-c54f-4ff8-af5e-36424698d5a2')}
           </div>
         </div>
-      </div>
-    </section>
-
-    <section class="dashboard-grid dashboard-grid--analytics">
-      <div class="card card--method-compare">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Perencanaan & Realisasi · ${escapeHtml(scopeLabel)}</span>
-            <h3>Komposisi Pagu vs Realisasi per Metode</h3>
-            <p class="section-subnote">Perbandingan realisasi terhadap pagu pada setiap metode pengadaan.</p>
-          </div>
-          <div class="analytics-head-pills">
-            <span class="soft-pill">${formatNumber(data.totalPaketRup)} paket</span>
-            <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">Serapan ${formatPercent(data.realisasiPersen)}</span>
-          </div>
-        </div>
-        ${renderMethodComparison(data.byMetodePlanning, data.byMetodeReal, data.totalPagu, data.totalRealisasi)}
-      </div>
-
-      <div class="card card--donut-distribution">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Distribusi Pagu · ${escapeHtml(scopeLabel)}</span>
-            <h3>Distribusi Pagu per Metode</h3>
-          </div>
-          <span class="soft-pill">Total ${formatMoney(data.totalPagu)}</span>
-        </div>
-        ${renderPaguDistribution(data.byMetodePlanning, data.totalPagu)}
       </div>
     </section>
 
@@ -1343,6 +1301,7 @@ function renderDashboardReady(data) {
     <div class="footer-note">© 2023 BenRama - TRAXPBJ</div>
   `;
 }
+
 
 function bindDashboardEvents() {
   const refresh = document.getElementById('refreshDashboardButton');
@@ -1441,6 +1400,37 @@ function bindDashboardEvents() {
     });
   }
 
+  const donutSegments = Array.from(contentArea.querySelectorAll('[data-method-segment]'));
+  const donutLegends = Array.from(contentArea.querySelectorAll('[data-method-legend]'));
+  const insightName = document.getElementById('distributionInsightName');
+  const insightValue = document.getElementById('distributionInsightValue');
+  const insightMeta = document.getElementById('distributionInsightMeta');
+  const insightColor = document.getElementById('distributionInsightColor');
+
+  const setActiveDistribution = (dataset) => {
+    if (!dataset) return;
+    const activeName = String(dataset.methodName || '').trim();
+
+    donutSegments.forEach((segment) => {
+      segment.classList.toggle('is-active', String(segment.dataset.methodName || '').trim() === activeName);
+    });
+
+    donutLegends.forEach((item) => {
+      item.classList.toggle('is-active', String(item.dataset.methodName || '').trim() === activeName);
+    });
+
+    if (insightName) insightName.textContent = activeName;
+    if (insightValue) insightValue.textContent = dataset.methodValue || '-';
+    if (insightMeta) insightMeta.textContent = `${dataset.methodShare || '0,00%'} dari total pagu · ${dataset.methodCount || '0'} paket`;
+    if (insightColor) insightColor.style.background = dataset.methodColor || '#2563eb';
+  };
+
+  donutSegments.concat(donutLegends).forEach((item) => {
+    item.addEventListener('click', () => setActiveDistribution(item.dataset));
+    item.addEventListener('mouseenter', () => setActiveDistribution(item.dataset));
+    item.addEventListener('focus', () => setActiveDistribution(item.dataset));
+  });
+
   contentArea.querySelectorAll('[data-quick], [data-route], [data-external]').forEach((item) => {
     item.addEventListener('click', () => {
       const externalUrl = item.dataset.external;
@@ -1481,6 +1471,314 @@ function renderSmallMetric(label, value, desc, percent = 0) {
     </div>
   `;
 }
+
+
+function getMethodPalette(index) {
+  const palette = [
+    { color: '#2563eb', gradient: 'linear-gradient(135deg,#2563eb,#60a5fa)' },
+    { color: '#14b8a6', gradient: 'linear-gradient(135deg,#0f766e,#2dd4bf)' },
+    { color: '#8b5cf6', gradient: 'linear-gradient(135deg,#7c3aed,#a78bfa)' },
+    { color: '#f59e0b', gradient: 'linear-gradient(135deg,#f97316,#fbbf24)' },
+    { color: '#22c55e', gradient: 'linear-gradient(135deg,#16a34a,#86efac)' },
+    { color: '#64748b', gradient: 'linear-gradient(135deg,#64748b,#94a3b8)' },
+    { color: '#ec4899', gradient: 'linear-gradient(135deg,#db2777,#f472b6)' }
+  ];
+
+  return palette[index % palette.length];
+}
+
+function buildMethodComparisonRows(data) {
+  const map = new Map();
+
+  (data.byMetodePlanning || []).forEach((item) => {
+    const key = String(item.name || 'Tidak Terisi').trim() || 'Tidak Terisi';
+    const row = map.get(key) || {
+      name: key,
+      paguValue: 0,
+      paguCount: 0,
+      realisasiValue: 0,
+      realisasiCount: 0
+    };
+
+    row.paguValue = toNumber(item.value);
+    row.paguCount = toNumber(item.count);
+    map.set(key, row);
+  });
+
+  (data.byMetodeReal || []).forEach((item) => {
+    const key = String(item.name || 'Tidak Terisi').trim() || 'Tidak Terisi';
+    const row = map.get(key) || {
+      name: key,
+      paguValue: 0,
+      paguCount: 0,
+      realisasiValue: 0,
+      realisasiCount: 0
+    };
+
+    row.realisasiValue = toNumber(item.value);
+    row.realisasiCount = toNumber(item.count);
+    map.set(key, row);
+  });
+
+  const totalPagu = sum(Array.from(map.values()).map((item) => item.paguValue));
+
+  return Array.from(map.values())
+    .map((item) => ({
+      ...item,
+      sharePercent: totalPagu > 0 ? (item.paguValue / totalPagu) * 100 : 0,
+      serapanPercent: item.paguValue > 0 ? (item.realisasiValue / item.paguValue) * 100 : 0
+    }))
+    .sort((a, b) => Math.max(b.paguValue, b.realisasiValue) - Math.max(a.paguValue, a.realisasiValue));
+}
+
+function renderInfoStat(label, value, desc, tone = '', meta = '') {
+  const toneClass = tone ? ` summary-stat--${tone}` : '';
+  return `
+    <div class="summary-stat${toneClass}">
+      <span class="summary-stat-label">${escapeHtml(label)}</span>
+      <b>${escapeHtml(value)}</b>
+      <small>${escapeHtml(desc)}</small>
+      ${meta ? `<div class="summary-stat-meta">${escapeHtml(meta)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
+  const bastPercent = data.totalPaketRealisasi ? (data.bastCount / data.totalPaketRealisasi) * 100 : 0;
+  const selesaiPercent = data.totalPaketRealisasi ? (data.selesaiCount / data.totalPaketRealisasi) * 100 : 0;
+  const prosesPercent = data.totalPaketRealisasi ? (data.processCount / data.totalPaketRealisasi) * 100 : 0;
+
+  return `
+    <div class="card">
+      <div class="section-title-row">
+        <div>
+          <span class="section-kicker">Ringkasan Cepat · ${escapeHtml(scopeLabel)}</span>
+          <h3>Ringkasan Cepat</h3>
+          <p class="section-subnote">${escapeHtml(scopeDesc)}.</p>
+        </div>
+        <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">Serapan ${formatPercent(data.realisasiPersen)}</span>
+      </div>
+
+      <div class="money-progress money-progress--compact">
+        <div class="money-row">
+          <span>Total Pagu</span>
+          <b>${formatMoney(data.totalPagu)}</b>
+        </div>
+        <div class="money-row">
+          <span>Total Realisasi</span>
+          <b>${formatMoney(data.totalRealisasi)}</b>
+        </div>
+        <div class="progress-track progress-track--tall">
+          <div class="progress-bar progress-bar--${getToneByPercent(data.realisasiPersen)}" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
+        </div>
+      </div>
+
+      <div class="status-mini-grid">
+        ${renderSmallMetric('BAST Terisi', data.bastCount, 'Dokumen/referensi BAST', bastPercent)}
+        ${renderSmallMetric('Selesai', data.selesaiCount, 'Status paket selesai', selesaiPercent)}
+        ${renderSmallMetric('Proses', data.processCount, 'Masih berjalan/proses', prosesPercent)}
+      </div>
+    </div>
+  `;
+}
+
+
+function renderDistributionCard(data, scopeLabel) {
+  const methodRows = buildMethodComparisonRows(data).filter((item) => item.paguValue > 0).slice(0, 6);
+  const totalPagu = sum(methodRows.map((item) => item.paguValue));
+
+  if (!methodRows.length) {
+    return `
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <span class="section-kicker">Distribusi Pagu · ${escapeHtml(scopeLabel)}</span>
+            <h3>Distribusi Pagu per Metode</h3>
+          </div>
+        </div>
+        <div class="empty-state">Belum ada data pagu yang bisa ditampilkan.</div>
+      </div>
+    `;
+  }
+
+  const radius = 72;
+  const circumference = 2 * Math.PI * radius;
+  let cumulative = 0;
+  const first = methodRows[0];
+
+  const segments = methodRows.map((item, index) => {
+    const palette = getMethodPalette(index);
+    const fraction = totalPagu > 0 ? item.paguValue / totalPagu : 0;
+    const arcLength = Math.max((fraction * circumference) - 5, 0);
+    const dashOffset = -(cumulative * circumference);
+    cumulative += fraction;
+
+    return `
+      <circle
+        class="distribution-donut-segment ${index === 0 ? 'is-active' : ''}"
+        cx="110"
+        cy="110"
+        r="${radius}"
+        fill="none"
+        stroke="${palette.color}"
+        stroke-width="24"
+        stroke-linecap="round"
+        stroke-dasharray="${arcLength} ${circumference}"
+        stroke-dashoffset="${dashOffset}"
+        transform="rotate(-90 110 110)"
+        tabindex="0"
+        role="button"
+        aria-label="${escapeHtml(item.name)}"
+        data-method-segment="true"
+        data-method-name="${escapeHtml(item.name)}"
+        data-method-value="${escapeHtml(formatMoney(item.paguValue))}"
+        data-method-share="${escapeHtml(formatPercent(item.sharePercent))}"
+        data-method-count="${escapeHtml(formatNumber(item.paguCount))}"
+        data-method-color="${palette.color}">
+      </circle>
+    `;
+  }).join('');
+
+  const legends = methodRows.map((item, index) => {
+    const palette = getMethodPalette(index);
+    return `
+      <button type="button" class="distribution-legend-item ${index === 0 ? 'is-active' : ''}" data-method-legend="true"
+        data-method-name="${escapeHtml(item.name)}"
+        data-method-value="${escapeHtml(formatMoney(item.paguValue))}"
+        data-method-share="${escapeHtml(formatPercent(item.sharePercent))}"
+        data-method-count="${escapeHtml(formatNumber(item.paguCount))}"
+        data-method-color="${palette.color}">
+        <span class="distribution-legend-main">
+          <span class="distribution-legend-dot" style="background:${palette.color}"></span>
+          <span>
+            <b>${escapeHtml(item.name)}</b>
+            <small>${escapeHtml(formatMoney(item.paguValue))}</small>
+          </span>
+        </span>
+        <strong>${escapeHtml(formatPercent(item.sharePercent))}</strong>
+      </button>
+    `;
+  }).join('');
+
+  return `
+    <div class="card distribution-card">
+      <div class="section-title-row">
+        <div>
+          <span class="section-kicker">Distribusi Pagu · ${escapeHtml(scopeLabel)}</span>
+          <h3>Distribusi Pagu per Metode</h3>
+          <p class="section-subnote">Klik diagram atau daftar metode untuk melihat detail distribusi pagu.</p>
+        </div>
+        <span class="soft-pill">${formatMoney(data.totalPagu)}</span>
+      </div>
+
+      <div class="distribution-card-body distribution-card-body--row">
+        <div class="distribution-donut-panel">
+          <div class="distribution-donut-wrap">
+            <svg class="distribution-donut" viewBox="0 0 220 220" aria-label="Distribusi pagu per metode">
+              <circle class="distribution-donut-track" cx="110" cy="110" r="${radius}" fill="none" stroke="#e7eef7" stroke-width="24"></circle>
+              ${segments}
+            </svg>
+            <div class="distribution-donut-center">
+              <span>Total Pagu</span>
+              <b>${escapeHtml(formatCompactMetric(data.totalPagu))}</b>
+              <small>${escapeHtml(scopeLabel)}</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="distribution-detail-panel">
+          <div class="distribution-insight" id="distributionInsight">
+            <span class="distribution-insight-color" id="distributionInsightColor" style="background:${getMethodPalette(0).color}"></span>
+            <div class="distribution-insight-body">
+              <small>Metode terpilih</small>
+              <b id="distributionInsightName">${escapeHtml(first.name)}</b>
+              <div class="distribution-insight-value" id="distributionInsightValue">${escapeHtml(formatMoney(first.paguValue))}</div>
+              <div class="distribution-insight-meta" id="distributionInsightMeta">${escapeHtml(formatPercent(first.sharePercent))} dari total pagu · ${escapeHtml(formatNumber(first.paguCount))} paket</div>
+            </div>
+          </div>
+
+          <div class="distribution-legend-list">
+            ${legends}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+function renderMethodComparisonCard(data, scopeLabel) {
+  const rows = buildMethodComparisonRows(data)
+    .filter((item) => (item.paguValue > 0 || item.realisasiValue > 0) && String(item.name || '').trim().toLowerCase() !== 'tidak terisi')
+    .slice(0, 8);
+
+  if (!rows.length) {
+    return `
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <span class="section-kicker">Perencanaan & Realisasi · ${escapeHtml(scopeLabel)}</span>
+            <h3>Komposisi Pagu vs Realisasi per Metode</h3>
+          </div>
+        </div>
+        <div class="empty-state">Belum ada data metode yang bisa dibandingkan.</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="card method-comparison-card">
+      <div class="section-title-row">
+        <div>
+          <span class="section-kicker">Perencanaan & Realisasi · ${escapeHtml(scopeLabel)}</span>
+          <h3>Komposisi Pagu vs Realisasi per Metode</h3>
+          <p class="section-subnote">Perbandingan realisasi terhadap pagu pada setiap metode pengadaan.</p>
+        </div>
+        <div class="section-pill-group">
+          <span class="soft-pill">${formatNumber(data.totalPaketRup)} paket</span>
+          <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">Serapan ${formatPercent(data.realisasiPersen)}</span>
+        </div>
+      </div>
+
+      <div class="summary-stat-grid summary-stat-grid--method">
+        ${renderInfoStat('Total Pagu', formatMoney(data.totalPagu), 'Akumulasi nilai pagu perencanaan')}
+        ${renderInfoStat('Total Realisasi', formatMoney(data.totalRealisasi), 'Akumulasi nilai realisasi paket')}
+        ${renderInfoStat('Serapan Total', formatPercent(data.realisasiPersen), 'Persentase realisasi terhadap pagu', getToneByPercent(data.realisasiPersen))}
+      </div>
+
+      <div class="method-comparison-list">
+        ${rows.map((item, index) => {
+          const serapanTone = getToneByPercent(item.serapanPercent);
+          return `
+            <div class="method-compare-item method-compare-item--reference">
+              <div class="method-compare-head method-compare-head--reference">
+                <div class="method-compare-title">
+                  <span class="bar-index">${index + 1}</span>
+                  <div>
+                    <b>${escapeHtml(item.name)}</b>
+                    <small>Realisasi ${escapeHtml(formatMoney(item.realisasiValue))} / Pagu ${escapeHtml(formatMoney(item.paguValue))}</small>
+                  </div>
+                </div>
+
+                <div class="method-compare-metric">
+                  <div class="method-compare-percent method-compare-percent--${serapanTone}">${formatPercent(item.serapanPercent)}</div>
+                  <small>${formatNumber(item.realisasiCount)} / ${formatNumber(item.paguCount)} paket</small>
+                </div>
+              </div>
+
+              <div class="method-track method-track--reference">
+                <span class="method-track-fill method-track-fill--${serapanTone}" style="width:${Math.max(0, Math.min(100, item.serapanPercent))}%"></span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+
+
 
 function renderDimension(item) {
   const percent = item.max > 0 ? Math.min(100, (toNumber(item.value) / item.max) * 100) : 0;
@@ -1538,134 +1836,6 @@ function renderBarList(items, maxValue, type) {
       </div>
     `;
   }).join('');
-}
-
-
-function renderMethodComparison(planningItems, realItems, totalPagu, totalRealisasi) {
-  const planningMap = new Map((planningItems || []).map((item) => [String(item.name || '').trim(), item]));
-  const realMap = new Map((realItems || []).map((item) => [String(item.name || '').trim(), item]));
-  const methodNames = [];
-
-  planningMap.forEach((_, key) => {
-    if (key && !methodNames.includes(key)) methodNames.push(key);
-  });
-  realMap.forEach((_, key) => {
-    if (key && !methodNames.includes(key)) methodNames.push(key);
-  });
-
-  const rows = methodNames.map((name) => {
-    const paguItem = planningMap.get(name) || { count: 0, value: 0 };
-    const realItem = realMap.get(name) || { count: 0, value: 0 };
-    const percent = paguItem.value > 0 ? (realItem.value / paguItem.value) * 100 : 0;
-    return {
-      name,
-      paguCount: paguItem.count || 0,
-      realCount: realItem.count || 0,
-      paguValue: toNumber(paguItem.value),
-      realValue: toNumber(realItem.value),
-      percent,
-      tone: getToneByPercent(percent)
-    };
-  }).sort((a, b) => b.paguValue - a.paguValue).slice(0, 8);
-
-  if (!rows.length) {
-    return `<div class="empty-state">Belum ada data yang bisa ditampilkan.</div>`;
-  }
-
-  return `
-    <div class="method-compare-summary">
-      <div class="method-summary-box">
-        <label>Total Pagu</label>
-        <strong>${formatMoney(totalPagu)}</strong>
-      </div>
-      <div class="method-summary-box">
-        <label>Total Realisasi</label>
-        <strong>${formatMoney(totalRealisasi)}</strong>
-      </div>
-      <div class="method-summary-box method-summary-box--${getToneByPercent(totalPagu > 0 ? (totalRealisasi / totalPagu) * 100 : 0)}">
-        <label>Serapan Total</label>
-        <strong>${formatPercent(totalPagu > 0 ? (totalRealisasi / totalPagu) * 100 : 0)}</strong>
-      </div>
-    </div>
-    <div class="method-compare-list">
-      ${rows.map((row, index) => `
-        <div class="method-compare-item method-compare-item--${row.tone}">
-          <div class="method-compare-head">
-            <div class="method-compare-title-wrap">
-              <span class="method-compare-index">${index + 1}</span>
-              <div>
-                <h4>${escapeHtml(row.name)}</h4>
-                <p>Realisasi ${formatMoney(row.realValue)} / Pagu ${formatMoney(row.paguValue)}</p>
-              </div>
-            </div>
-            <div class="method-compare-right">
-              <strong>${formatPercent(row.percent)}</strong>
-              <small>${formatNumber(row.realCount)} / ${formatNumber(row.paguCount)} paket</small>
-            </div>
-          </div>
-          <div class="method-compare-track">
-            <span class="method-compare-fill method-compare-fill--${row.tone}" style="width:${Math.max(0, Math.min(100, row.percent))}%"></span>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-function renderPaguDistribution(items, totalPagu) {
-  const rows = (items || []).slice(0, 6).map((item, index) => {
-    const value = toNumber(item.value);
-    const percent = totalPagu > 0 ? (value / totalPagu) * 100 : 0;
-    return {
-      name: item.name,
-      value,
-      percent,
-      color: ['#2563eb', '#14b8a6', '#8b5cf6', '#f59e0b', '#ef4444', '#64748b'][index % 6]
-    };
-  });
-
-  if (!rows.length) {
-    return `<div class="empty-state">Belum ada data distribusi pagu.</div>`;
-  }
-
-  const radius = 64;
-  const circumference = 2 * Math.PI * radius;
-  let offset = 0;
-  const segments = rows.map((row) => {
-    const length = circumference * (row.percent / 100);
-    const segment = `<circle cx="90" cy="90" r="${radius}" fill="none" stroke="${row.color}" stroke-width="18" stroke-linecap="round" stroke-dasharray="${length} ${circumference - length}" stroke-dashoffset="${-offset}" transform="rotate(-90 90 90)"></circle>`;
-    offset += length;
-    return segment;
-  }).join('');
-
-  return `
-    <div class="donut-layout">
-      <div class="donut-chart-wrap">
-        <svg viewBox="0 0 180 180" class="donut-chart" aria-hidden="true">
-          <circle cx="90" cy="90" r="${radius}" fill="none" stroke="#e5edf5" stroke-width="18"></circle>
-          ${segments}
-        </svg>
-        <div class="donut-center-label">
-          <span>Total Pagu</span>
-          <strong>${formatMoney(totalPagu)}</strong>
-        </div>
-      </div>
-      <div class="donut-legend-list">
-        ${rows.map((row) => `
-          <div class="donut-legend-item">
-            <div class="donut-legend-main">
-              <span class="donut-dot" style="background:${row.color}"></span>
-              <div>
-                <b>${escapeHtml(row.name)}</b>
-                <small>${formatMoney(row.value)}</small>
-              </div>
-            </div>
-            <strong>${formatPercent(row.percent)}</strong>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
 }
 
 function renderRankRows(items, mode) {
