@@ -3668,3 +3668,77 @@ textarea{
     align-items:flex-start;
   }
 }
+
+
+/* Revisi lanjutan layout dashboard */
+.distribution-card-body--row{
+  grid-template-columns:240px minmax(0,1fr);
+  align-items:center;
+}
+
+.distribution-detail-panel{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-width:0;
+}
+
+.distribution-legend-list{
+  max-height:none;
+}
+
+.money-progress--compact{
+  padding-top:0;
+}
+
+.method-compare-item--single{
+  padding:14px 14px 14px;
+}
+
+.method-compare-head--single{
+  margin-bottom:10px;
+  align-items:center;
+}
+
+.method-track--single{
+  height:12px;
+  border-radius:999px;
+  background:#e8eef6;
+  overflow:hidden;
+  position:relative;
+}
+
+.method-track-scale{
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  border-radius:inherit;
+  background:#d9e7f6;
+}
+
+.method-track-fill--danger{
+  background:linear-gradient(90deg,#ef4444,#fb7185);
+}
+.method-track-fill--warning{
+  background:linear-gradient(90deg,#f59e0b,#fbbf24);
+}
+.method-track-fill--success{
+  background:linear-gradient(90deg,#16a34a,#4ade80);
+}
+
+.small-metric-percent{
+  font-weight:950;
+}
+.small-metric--danger .small-metric-percent{ color:#ef4444; }
+.small-metric--warning .small-metric-percent{ color:#f59e0b; }
+.small-metric--success .small-metric-percent{ color:#16a34a; }
+
+@media (max-width: 980px){
+  .distribution-card-body--row{
+    grid-template-columns:1fr;
+  }
+  .distribution-donut-panel{
+    align-items:center;
+  }
+}
