@@ -272,16 +272,15 @@
 
     function buildJadwalBadge(v) {
       if (v === 'Melewati') return `<span class="badge b-jadwal-melewati">${escapeHtml(v)}</span>`;
-      if (v === 'Melebihi') return `<span class="badge b-jadwal-melebihi">${escapeHtml(v)}</span>`;
       if (v === 'Belum') return `<span class="badge b-jadwal-belum">${escapeHtml(v)}</span>`;
+      if (v === 'Melebihi') return `<span class="badge b-jadwal-melebihi">${escapeHtml(v)}</span>`;
       return `<span class="badge b-jadwal-sesuai">${escapeHtml(v)}</span>`;
     }
 
     function warningCell(v) {
-      if (v === 'Melebihi target pemilihan dari bulan ini.') {
-        return `<span class="warn-info">${escapeHtml(v)}</span>`;
-      }
-      if (v && v !== 'OK') return `<span class="warn-bad">${escapeHtml(v)}</span>`;
+      if (v === 'OK') return `<span class="warn-ok">OK</span>`;
+      if (v === 'Melebihi target pemilihan dari bulan ini.') return `<span class="warn-info">${escapeHtml(v)}</span>`;
+      if (v) return `<span class="warn-bad">${escapeHtml(v)}</span>`;
       return `<span class="warn-ok">OK</span>`;
     }
 
