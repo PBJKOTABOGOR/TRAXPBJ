@@ -3809,3 +3809,20 @@ textarea{
     text-align:left;
   }
 }
+
+
+.summary-stat-grid--warning{
+  grid-template-columns:1fr;
+}
+.summary-stat-grid--warning .summary-stat{
+  min-height:98px;
+}
+.distribution-donut-center small{
+  max-width:120px;
+  text-align:center;
+}
+@media (min-width: 1100px){
+  .summary-stat-grid--warning{
+    grid-template-columns:1fr;
+  }
+}
