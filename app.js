@@ -116,18 +116,16 @@ const APP_ROUTES = {
 
 'rapor-pbj-input-internal': {
   title: 'Input Rapor PBJ',
-  subtitle: 'Form internal pegawai untuk input identitas rapor PBJ.',
-  type: 'module',
-  html: 'modules/rapor-input/rapor-input.html',
-  css: 'modules/rapor-input/rapor-input.css',
-  js: 'modules/rapor-input/rapor-input.js'
+  subtitle: 'Form internal pegawai untuk input dan upload dokumen Rapor PBJ.',
+  type: 'iframe',
+  url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?embed=1'
 },
 
 'rapor-pbj-qc-internal': {
   title: 'QC Rapor PBJ',
   subtitle: 'Panel internal QC untuk review dan persetujuan rapor.',
   type: 'iframe',
-  url: 'https://script.google.com/macros/s/AKfycby3ZGcLfaJ2deOeqn3pxeE6660PVoNxiPn3MFiRKjABatp1_Op73RcjrChkjTYVP3tvJA/exec?page=qc&embed=1'
+  url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc&embed=1'
 }
 
 };
@@ -1128,6 +1126,7 @@ async function renderDashboard(force = false) {
   }
 }
 
+
 function renderDashboardReady(data) {
   const lastUpdate = DASHBOARD_STATE.loadedAt
     ? DASHBOARD_STATE.loadedAt.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
@@ -1135,12 +1134,11 @@ function renderDashboardReady(data) {
 
   const selectedProfile = data.selectedProfile || data.cityProfile;
   const scopeLabel = data.scopeIsCity ? 'Kota Bogor' : selectedProfile.name;
-  const scopeDesc = data.scopeIsCity
-    ? 'Akumulasi seluruh satuan kerja Kota Bogor'
-    : `Filter khusus ${selectedProfile.name}`;
   const profileKicker = data.scopeIsCity
     ? 'Profile Kota Bogor'
     : `Profile ${selectedProfile.name}`;
+  const planningTopValue = data.byMetodePlanning[0]?.value || 1;
+  const realizationTopValue = data.byMetodeReal[0]?.value || 1;
 
   persistDashboardContext();
 
@@ -1218,7 +1216,7 @@ function renderDashboardReady(data) {
         </div>
       </div>
 
-      <div class="card">
+      <div class="card card--analytics-side">
         <div class="section-title-row">
           <div>
             <span class="section-kicker">Kinerja Realisasi · ${escapeHtml(scopeLabel)}</span>
@@ -1239,7 +1237,6 @@ function renderDashboardReady(data) {
           <div class="progress-track progress-track--tall">
             <div class="progress-bar progress-bar--${getToneByPercent(data.realisasiPersen)}" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
           </div>
-          <p class="page-note">${escapeHtml(scopeDesc)}. Persentase dihitung dari nilai realisasi dibanding nilai pagu.</p>
         </div>
 
         <div class="status-mini-grid">
@@ -1260,8 +1257,8 @@ function renderDashboardReady(data) {
       </div>
     </section>
 
-    <section class="dashboard-grid dashboard-grid--two">
-      <div class="card">
+    <section class="dashboard-grid dashboard-grid--analytics">
+      <div class="card analytics-card">
         <div class="section-title-row">
           <div>
             <span class="section-kicker">Perencanaan · ${escapeHtml(scopeLabel)}</span>
@@ -1269,12 +1266,16 @@ function renderDashboardReady(data) {
           </div>
           <span class="soft-pill">${formatNumber(data.totalPaketRup)} paket</span>
         </div>
-        <div class="bar-list">
-          ${renderBarList(data.byMetodePlanning.slice(0, 8), data.byMetodePlanning[0]?.value || 1, 'pagu')}
+        <div class="chart-legend">
+          <span><i class="legend-dot legend-dot--count"></i>Jumlah Paket</span>
+          <span><i class="legend-dot legend-dot--value"></i>Pagu (Rp)</span>
+        </div>
+        <div class="method-chart-list">
+          ${renderMethodComparisonChart(data.byMetodePlanning.slice(0, 8), planningTopValue, 'pagu')}
         </div>
       </div>
 
-      <div class="card">
+      <div class="card analytics-card">
         <div class="section-title-row">
           <div>
             <span class="section-kicker">Realisasi · ${escapeHtml(scopeLabel)}</span>
@@ -1282,14 +1283,27 @@ function renderDashboardReady(data) {
           </div>
           <span class="soft-pill">${formatNumber(data.totalPaketRealisasi)} paket</span>
         </div>
-        <div class="bar-list">
-          ${renderBarList(data.byMetodeReal.slice(0, 8), data.byMetodeReal[0]?.value || 1, 'realisasi')}
+        <div class="chart-legend">
+          <span><i class="legend-dot legend-dot--count"></i>Jumlah Paket</span>
+          <span><i class="legend-dot legend-dot--value"></i>Realisasi (Rp)</span>
+        </div>
+        <div class="method-chart-list">
+          ${renderMethodComparisonChart(data.byMetodeReal.slice(0, 8), realizationTopValue, 'realisasi')}
         </div>
       </div>
-    </section>
 
-    <section class="dashboard-grid dashboard-grid--two">
-      <div class="card">
+      <div class="card analytics-card">
+        <div class="section-title-row">
+          <div>
+            <span class="section-kicker">Distribusi Anggaran</span>
+            <h3>Distribusi Pagu per Metode</h3>
+          </div>
+          <span class="soft-pill">${formatMoney(data.totalPagu)}</span>
+        </div>
+        ${renderDonutDistribution(data.byMetodePlanning.slice(0, 6), data.totalPagu)}
+      </div>
+
+      <div class="card analytics-card">
         <div class="section-title-row">
           <div>
             <span class="section-kicker">Ranking Sub OPD</span>
@@ -1297,21 +1311,8 @@ function renderDashboardReady(data) {
           </div>
           <span class="soft-pill">Top 8 · FIX ITKP SUB OPD</span>
         </div>
-        <div class="rank-table">
-          ${renderRankRows(data.topItkp, 'top')}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-title-row">
-          <div>
-            <span class="section-kicker">Perlu Atensi</span>
-            <h3>Nilai ITKP Terendah</h3>
-          </div>
-          <span class="soft-pill">Bottom 8 · FIX ITKP SUB OPD</span>
-        </div>
-        <div class="rank-table">
-          ${renderRankRows(data.lowItkp, 'low')}
+        <div class="ranking-chart">
+          ${renderRankingBars(data.topItkp, 30)}
         </div>
       </div>
     </section>
@@ -1344,6 +1345,103 @@ function renderDashboardReady(data) {
 
     <div class="footer-note">© 2023 BenRama - TRAXPBJ</div>
   `;
+}
+
+function renderMethodComparisonChart(items, maxValue, type) {
+  if (!items.length) {
+    return `<div class="empty-state">Belum ada data yang bisa ditampilkan.</div>`;
+  }
+
+  const maxCount = Math.max(...items.map((item) => toNumber(item.count)), 1);
+
+  return items.map((item, index) => {
+    const countPercent = Math.max(4, (toNumber(item.count) / maxCount) * 100);
+    const valuePercent = Math.max(4, (toNumber(item.value) / Math.max(1, maxValue)) * 100);
+
+    return `
+      <div class="method-chart-row">
+        <div class="method-chart-rank">${index + 1}</div>
+        <div class="method-chart-main">
+          <div class="method-chart-head">
+            <b>${escapeHtml(item.name)}</b>
+            <strong>${type === 'pagu' ? formatMoney(item.value) : formatMoney(item.value)}</strong>
+          </div>
+          <div class="method-chart-meta">${formatNumber(item.count)} paket</div>
+          <div class="method-chart-bars">
+            <div class="method-chart-track"><span class="method-chart-fill method-chart-fill--count" style="width:${countPercent}%"></span></div>
+            <div class="method-chart-track"><span class="method-chart-fill method-chart-fill--value" style="width:${valuePercent}%"></span></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderDonutDistribution(items, totalValue) {
+  const palette = ['#2563eb', '#14b8a6', '#7c3aed', '#f97316', '#16a34a', '#dc2626', '#0ea5e9', '#f59e0b'];
+  if (!items.length || toNumber(totalValue) <= 0) {
+    return `<div class="empty-state">Belum ada distribusi yang bisa ditampilkan.</div>`;
+  }
+
+  let cumulative = 0;
+  const segments = items.map((item, index) => {
+    const pct = (toNumber(item.value) / toNumber(totalValue)) * 100;
+    const start = cumulative;
+    cumulative += pct;
+    return `${palette[index % palette.length]} ${start.toFixed(2)}% ${cumulative.toFixed(2)}%`;
+  }).join(', ');
+
+  return `
+    <div class="donut-layout">
+      <div class="donut-chart" style="--segments:${segments}">
+        <div class="donut-hole">
+          <span>Total Pagu</span>
+          <b>${formatMoney(totalValue)}</b>
+        </div>
+      </div>
+      <div class="donut-legend">
+        ${items.map((item, index) => {
+          const pct = (toNumber(item.value) / toNumber(totalValue)) * 100;
+          return `
+            <div class="donut-legend-item">
+              <i class="legend-dot" style="background:${palette[index % palette.length]}"></i>
+              <div class="donut-legend-main">
+                <b>${escapeHtml(item.name)}</b>
+                <span>${formatMoney(item.value)}</span>
+              </div>
+              <strong>${pct.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</strong>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderRankingBars(items, maxScore = 30) {
+  const palette = ['#2563eb', '#14b8a6', '#7c3aed', '#f97316', '#16a34a', '#dc2626', '#0ea5e9', '#f59e0b'];
+
+  if (!items.length) {
+    return `<div class="empty-state">Belum ada nilai ITKP.</div>`;
+  }
+
+  return items.map((item, index) => {
+    const percent = Math.max(6, (toNumber(item.score) / Math.max(1, maxScore)) * 100);
+    return `
+      <div class="ranking-chart-row">
+        <div class="ranking-chart-rank">${index + 1}</div>
+        <div class="ranking-chart-main">
+          <div class="ranking-chart-head">
+            <b>${escapeHtml(item.name)}</b>
+            <strong>${toNumber(item.score).toLocaleString('id-ID', { maximumFractionDigits: 2 })}</strong>
+          </div>
+          <div class="ranking-chart-track">
+            <span class="ranking-chart-fill" style="width:${percent}%; background:${palette[index % palette.length]}"></span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function bindDashboardEvents() {
