@@ -1737,7 +1737,7 @@ function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
         ${renderInfoStat('Paket Sedang Berjalan', formatNumber(warning.sedangBerjalan), 'Paket realisasi masih berjalan/proses', warning.sedangBerjalan > 0 ? 'warning' : '')}
         ${renderInfoStat('Paket Selesai Proses Pemilihan', formatNumber(warning.selesaiProsesPemilihan), 'Sudah selesai pemilihan, BAST belum terisi', warning.selesaiProsesPemilihan > 0 ? 'warning' : '')}
         ${renderInfoStat('Paket Melewati Waktu Pemilihan', formatNumber(warning.melewatiWaktuPemilihan), 'Belum ada realisasi tapi jadwal sudah terlewati', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
-        ${renderInfoStat('Paket Melebihi Target Pemilihan', formatNumber(warning.melebihiTargetPemilihan), 'Realisasi lebih cepat dari jadwal; cek kembali kualitas perencanaannya', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
+        ${renderInfoStat('Paket Melebihi Target Pemilihan', formatNumber(warning.melebihiTargetPemilihan), '', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
         ${renderInfoStat('Paket Melebihi Pagu Realisasi', formatNumber(warning.melebihiPaguRealisasi), 'Nilai realisasi sudah melampaui pagu perencanaan', warning.melebihiPaguRealisasi > 0 ? 'danger' : '')}
       </div>
     </div>
