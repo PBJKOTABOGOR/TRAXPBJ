@@ -250,6 +250,7 @@
     .b-progres-default{background:#f8fafc;color:#475569;border-color:#e2e8f0}
 
     .b-jadwal-melewati{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
+    .b-jadwal-melebihi{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
     .b-jadwal-belum{background:#f8fafc;color:#64748b;border-color:#e2e8f0}
     .b-jadwal-sesuai{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
 
@@ -274,6 +275,19 @@
       color:#c2410c;
       background:#fff7ed;
       border:1px solid #fed7aa;
+      padding:8px 10px;
+      border-radius:12px;
+      line-height:1.4;
+      max-width:280px;
+    }
+
+    .warn-info{
+      display:inline-block;
+      font-size:12px;
+      font-weight:800;
+      color:#1d4ed8;
+      background:#eff6ff;
+      border:1px solid #bfdbfe;
       padding:8px 10px;
       border-radius:12px;
       line-height:1.4;
@@ -472,19 +486,3 @@
 .monitoring-module .hero{
   margin-top:0;
 }
-
-
-    .b-jadwal-melebihi{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
-
-    .warn-info{
-      display:inline-block;
-      font-size:12px;
-      font-weight:800;
-      color:#1d4ed8;
-      background:#eff6ff;
-      border:1px solid #bfdbfe;
-      padding:8px 10px;
-      border-radius:12px;
-      line-height:1.4;
-      max-width:280px;
-    }
