@@ -252,7 +252,6 @@
     .b-jadwal-melewati{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
     .b-jadwal-belum{background:#f8fafc;color:#64748b;border-color:#e2e8f0}
     .b-jadwal-sesuai{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
-    .b-jadwal-melebihi{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
 
     .warn-ok{
       display:inline-flex;
@@ -266,19 +265,6 @@
       background:#ecfdf5;
       color:#0f766e;
       white-space:nowrap;
-    }
-
-    .warn-info{
-      display:inline-block;
-      font-size:12px;
-      font-weight:800;
-      color:#1d4ed8;
-      background:#eff6ff;
-      border:1px solid #bfdbfe;
-      padding:8px 10px;
-      border-radius:12px;
-      line-height:1.4;
-      max-width:280px;
     }
 
     .warn-bad{
@@ -486,3 +472,19 @@
 .monitoring-module .hero{
   margin-top:0;
 }
+
+
+    .b-jadwal-melebihi{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}
+
+    .warn-info{
+      display:inline-block;
+      font-size:12px;
+      font-weight:800;
+      color:#1d4ed8;
+      background:#eff6ff;
+      border:1px solid #93c5fd;
+      padding:8px 10px;
+      border-radius:12px;
+      line-height:1.4;
+      max-width:280px;
+    }
