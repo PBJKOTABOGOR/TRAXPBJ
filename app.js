@@ -1722,39 +1722,31 @@ function renderInfoStat(label, value, desc, tone = '', meta = '') {
 }
 
 function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
-  const bastPercent = data.totalPaketRealisasi ? (data.bastCount / data.totalPaketRealisasi) * 100 : 0;
-  const selesaiPercent = data.totalPaketRealisasi ? (data.selesaiCount / data.totalPaketRealisasi) * 100 : 0;
-  const prosesPercent = data.totalPaketRealisasi ? (data.processCount / data.totalPaketRealisasi) * 100 : 0;
+  const warning = data.warningSummary || {
+    sedangBerjalan: 0,
+    selesaiProsesPemilihan: 0,
+    melewatiWaktuPemilihan: 0,
+    melebihiTargetPemilihan: 0,
+    melebihiPaguRealisasi: 0
+  };
 
   return `
     <div class="card">
       <div class="section-title-row">
         <div>
-          <span class="section-kicker">Ringkasan Cepat · ${escapeHtml(scopeLabel)}</span>
-          <h3>Ringkasan Cepat</h3>
+          <span class="section-kicker">Paket Warning · ${escapeHtml(scopeLabel)}</span>
+          <h3>Paket Warning</h3>
           <p class="section-subnote">${escapeHtml(scopeDesc)}.</p>
         </div>
         <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">Serapan ${formatPercent(data.realisasiPersen)}</span>
       </div>
 
-      <div class="money-progress money-progress--compact">
-        <div class="money-row">
-          <span>Total Pagu</span>
-          <b>${formatMoney(data.totalPagu)}</b>
-        </div>
-        <div class="money-row">
-          <span>Total Realisasi</span>
-          <b>${formatMoney(data.totalRealisasi)}</b>
-        </div>
-        <div class="progress-track progress-track--tall">
-          <div class="progress-bar progress-bar--${getToneByPercent(data.realisasiPersen)}" style="width:${Math.min(100, data.realisasiPersen)}%"></div>
-        </div>
-      </div>
-
-      <div class="status-mini-grid">
-        ${renderSmallMetric('BAST Terisi', data.bastCount, 'Dokumen/referensi BAST', bastPercent)}
-        ${renderSmallMetric('Selesai', data.selesaiCount, 'Status paket selesai', selesaiPercent)}
-        ${renderSmallMetric('Proses', data.processCount, 'Masih berjalan/proses', prosesPercent)}
+      <div class="summary-stat-grid summary-stat-grid--warning">
+        ${renderInfoStat('Paket Sedang Berjalan', formatNumber(warning.sedangBerjalan), 'Paket realisasi masih berjalan/proses', warning.sedangBerjalan > 0 ? 'warning' : '')}
+        ${renderInfoStat('Paket Selesai Proses Pemilihan', formatNumber(warning.selesaiProsesPemilihan), 'Sudah selesai pemilihan, BAST belum terisi', warning.selesaiProsesPemilihan > 0 ? 'warning' : '')}
+        ${renderInfoStat('Paket Melewati Waktu Pemilihan', formatNumber(warning.melewatiWaktuPemilihan), 'Belum ada realisasi tapi jadwal sudah terlewati', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
+        ${renderInfoStat('Paket Melebihi Target Pemilihan', formatNumber(warning.melebihiTargetPemilihan), 'Realisasi lebih cepat dari jadwal; cek kembali kualitas perencanaannya', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
+        ${renderInfoStat('Paket Melebihi Pagu Realisasi', formatNumber(warning.melebihiPaguRealisasi), 'Nilai realisasi sudah melampaui pagu perencanaan', warning.melebihiPaguRealisasi > 0 ? 'danger' : '')}
       </div>
     </div>
   `;
