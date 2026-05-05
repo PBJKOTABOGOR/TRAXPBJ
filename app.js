@@ -1015,6 +1015,7 @@ function analyzeDashboardPackageStatuses(rows, metodeRup) {
   return summary;
 }
 
+
 function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
   const grouped = {};
   const currentOrder = getCurrentMonthOrder();
@@ -1027,25 +1028,17 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
       grouped[kode] = {
         recall_paket: 0,
         total_realisasi: 0,
-        rows: [],
-        first_order: null
+        rows: []
       };
     }
 
     const nilai = toNumber(getFieldFn(r, ['Nilai Realisasi', 'nilai_realisasi', 'Total Realisasi']));
-    const waktuOrder = getMonthOrder(getFieldFn(r, ['Waktu Pemilihan', 'waktu_pemilihan']));
 
     grouped[kode].recall_paket += 1;
     grouped[kode].total_realisasi += nilai;
 
-    if (waktuOrder > 0) {
-      if (!grouped[kode].first_order || waktuOrder < grouped[kode].first_order) {
-        grouped[kode].first_order = waktuOrder;
-      }
-    }
-
     grouped[kode].rows.push({
-      status_paket: String(getFieldFn(r, ['Status Paket', 'status_paket']) || '').trim(),
+      status_paket: String(getFieldFn(r, ['Status Paket', 'status_paket', 'Status']) || '').trim(),
       sumber_transaksi: String(getFieldFn(r, ['Sumber Transaksi', 'sumber_transaksi']) || '').trim(),
       bast: String(getFieldFn(r, ['BAST', 'dok_realisasi']) || '').trim()
     });
@@ -1067,19 +1060,25 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
     const waktuPemilihanOrder = getMonthOrder(getFieldFn(r, ['Waktu Pemilihan', 'waktu_pemilihan']));
     const metode = String(getFieldFn(r, ['Metode Pengadaan', 'metode_pengadaan']) || '').trim();
 
-    const real = grouped[kode] || { recall_paket: 0, total_realisasi: 0, rows: [], first_order: null };
+    const real = grouped[kode] || { recall_paket: 0, total_realisasi: 0, rows: [] };
     const detail = analyzeDashboardPackageStatuses(real.rows || [], metode);
 
     if (real.recall_paket > 0) {
-      if (detail.berjalan > 0) result.sedangBerjalan += 1;
-      else if (detail.selesaiPemilihan > 0) result.selesaiProsesPemilihan += 1;
+      if (detail.berjalan > 0) {
+        result.sedangBerjalan += 1;
+      } else if (detail.selesaiPemilihan > 0) {
+        result.selesaiProsesPemilihan += 1;
+      }
     }
 
+    // Belum ada realisasi, tapi jadwal pemilihan sudah lewat bulan berjalan.
     if (real.recall_paket === 0 && waktuPemilihanOrder > 0 && waktuPemilihanOrder < currentOrder) {
       result.melewatiWaktuPemilihan += 1;
     }
 
-    if (real.recall_paket > 0 && real.first_order && waktuPemilihanOrder > 0 && real.first_order < waktuPemilihanOrder) {
+    // SUDAH ADA REALISASI, PADAHAL WAKTU PEMILIHAN MASIH SETELAH BULAN BERJALAN.
+    // Ini logic benar untuk Paket Melebihi Target Pemilihan.
+    if (real.recall_paket > 0 && waktuPemilihanOrder > currentOrder) {
       result.melebihiTargetPemilihan += 1;
     }
 
@@ -1090,7 +1089,6 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
 
   return result;
 }
-
 
 function analyzeDashboardData(raw) {
   const itkpAllRows = raw.itkp || [];
@@ -1851,7 +1849,7 @@ function renderDistributionCard(data, scopeLabel) {
             <div class="distribution-donut-center">
               <span>Total Pagu</span>
               <b>${escapeHtml(formatCompactMetric(data.totalPagu))}</b>
-              
+              <small>Klik metode di kanan</small>
             </div>
           </div>
         </div>
