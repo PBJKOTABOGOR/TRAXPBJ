@@ -1122,37 +1122,31 @@ function getAllprogSatker(row) {
     'Nama Satker',
     'OPD',
     'Nama OPD',
-    'Unit Kerja',
-    'Perangkat Daerah'
+    'Perangkat Daerah',
+    'Unit Kerja'
   ]);
 }
 
 function mapAllprogRows(rows, selectedProfileName, selectedIsCity) {
   const selectedKey = normalizeSatkerName(selectedProfileName);
 
-  return (rows || [])
-    .map((row) => {
-      const satker = getAllprogSatker(row);
-      return {
-        satker,
-        caraPengadaan: getField(row, ['Cara Pengadaan']),
-        jenisPengadaan: getField(row, ['Jenis Pengadaan']),
-        kodeRup: getField(row, ['Kode RUP', 'Kode Rup']),
-        metodePengadaan: getField(row, ['Metode Pengadaan']),
-        sumberTransaksi: getField(row, ['Sumber Transaksi']),
-        namaPaket: getField(row, ['Nama Paket']),
-        nilaiPagu: toNumber(getField(row, ['Nilai Pagu', 'Pagu'])),
-        nilaiRealisasi: toNumber(getField(row, ['Nilai Realisasi', 'Realisasi'])),
-        statusPaket: getField(row, ['Status Paket', 'Status']),
-        waktuPemilihan: getField(row, ['Waktu Pemilihan']),
-        warning: getField(row, ['Warning']),
-        __source: row
-      };
-    })
-    .filter((item) => {
-      if (selectedIsCity) return true;
-      return normalizeSatkerName(item.satker) === selectedKey;
-    });
+  return (rows || []).map((row) => ({
+    satker: getAllprogSatker(row),
+    caraPengadaan: getField(row, ['Cara Pengadaan']),
+    jenisPengadaan: getField(row, ['Jenis Pengadaan']),
+    kodeRup: getField(row, ['Kode RUP', 'Kode Rup']),
+    metodePengadaan: getField(row, ['Metode Pengadaan']),
+    sumberTransaksi: getField(row, ['Sumber Transaksi']),
+    namaPaket: getField(row, ['Nama Paket']),
+    nilaiPagu: toNumber(getField(row, ['Nilai Pagu', 'Pagu'])),
+    nilaiRealisasi: toNumber(getField(row, ['Nilai Realisasi', 'Realisasi'])),
+    statusPaket: getField(row, ['Status Paket', 'Status']),
+    waktuPemilihan: getField(row, ['Waktu Pemilihan']),
+    warning: getField(row, ['Warning'])
+  })).filter((item) => {
+    if (selectedIsCity) return true;
+    return normalizeSatkerName(item.satker) === selectedKey;
+  });
 }
 
 function buildAllprogWarningSummary(rows) {
@@ -1171,7 +1165,6 @@ function buildAllprogWarningSummary(rows) {
     if (warning === 'selesai' || warning.includes('paket selesai')) summary.selesaiProsesPemilihan += 1;
     if (warning.includes('melewati waktu pemilihan')) summary.melewatiWaktuPemilihan += 1;
     if (warning.includes('melebihi target pemilihan')) summary.melebihiTargetPemilihan += 1;
-
     if (warning.includes('melebihi pagu realisasi') || (item.nilaiPagu > 0 && item.nilaiRealisasi > item.nilaiPagu)) {
       summary.melebihiPaguRealisasi += 1;
     }
@@ -1181,42 +1174,104 @@ function buildAllprogWarningSummary(rows) {
 }
 
 function getWarningTypeTitle(type) {
-  const titles = {
+  return ({
     sedangBerjalan: 'Paket Sedang Berjalan',
     selesaiProsesPemilihan: 'Paket Selesai Proses Pemilihan',
     melewatiWaktuPemilihan: 'Paket Melewati Waktu Pemilihan',
     melebihiTargetPemilihan: 'Paket Melebihi Target Pemilihan',
     melebihiPaguRealisasi: 'Paket Melebihi Pagu Realisasi'
-  };
-  return titles[type] || 'Detail Paket Warning';
+  })[type] || 'Detail Paket Warning';
 }
 
 function filterWarningRowsByType(rows, type) {
   return (rows || []).filter((item) => {
     const warning = String(item.warning || '').trim().toLowerCase();
-
-    if (type === 'sedangBerjalan') {
-      return warning.includes('sedang berjalan');
-    }
-
-    if (type === 'selesaiProsesPemilihan') {
-      return warning === 'selesai' || warning.includes('paket selesai');
-    }
-
-    if (type === 'melewatiWaktuPemilihan') {
-      return warning.includes('melewati waktu pemilihan');
-    }
-
-    if (type === 'melebihiTargetPemilihan') {
-      return warning.includes('melebihi target pemilihan');
-    }
-
-    if (type === 'melebihiPaguRealisasi') {
-      return warning.includes('melebihi pagu realisasi') || (item.nilaiPagu > 0 && item.nilaiRealisasi > item.nilaiPagu);
-    }
-
+    if (type === 'sedangBerjalan') return warning.includes('sedang berjalan');
+    if (type === 'selesaiProsesPemilihan') return warning === 'selesai' || warning.includes('paket selesai');
+    if (type === 'melewatiWaktuPemilihan') return warning.includes('melewati waktu pemilihan');
+    if (type === 'melebihiTargetPemilihan') return warning.includes('melebihi target pemilihan');
+    if (type === 'melebihiPaguRealisasi') return warning.includes('melebihi pagu realisasi') || (item.nilaiPagu > 0 && item.nilaiRealisasi > item.nilaiPagu);
     return false;
   });
+}
+
+function ensureWarningModalStyle() {
+  if (document.getElementById('warningModalStyle')) return;
+
+  const style = document.createElement('style');
+  style.id = 'warningModalStyle';
+  style.textContent = `
+    .warning-modal-overlay{
+      position:fixed; inset:0; z-index:999999;
+      background:rgba(15,23,42,.42);
+      display:flex; align-items:center; justify-content:center;
+      padding:24px;
+    }
+    .warning-modal-card{
+      width:min(1180px,100%);
+      max-height:min(86vh,920px);
+      background:#fff;
+      border-radius:24px;
+      border:1px solid #dbe7f3;
+      box-shadow:0 26px 60px rgba(15,23,42,.22);
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    .warning-modal-header,.warning-modal-toolbar,.warning-modal-footer{
+      padding:14px 18px;
+    }
+    .warning-modal-header{
+      display:flex; justify-content:space-between; gap:16px; align-items:flex-start;
+      border-bottom:1px solid #e8eff7;
+    }
+    .warning-modal-kicker{
+      color:#64748b; font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase;
+    }
+    .warning-modal-header h3{
+      margin:6px 0 0; color:#102544; font-size:28px; line-height:1.1;
+    }
+    .warning-modal-close{
+      border:none; width:38px; height:38px; border-radius:999px; cursor:pointer;
+      background:#eef5fb; color:#123a72; font-size:24px;
+    }
+    .warning-modal-toolbar{
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      border-bottom:1px solid #e8eff7;
+    }
+    .warning-modal-caption{ color:#64748b; font-size:13px; font-weight:700; }
+    .warning-modal-button{
+      border:none; background:#123a72; color:#fff; border-radius:12px; padding:10px 14px; cursor:pointer;
+      font-size:13px; font-weight:800;
+    }
+    .warning-modal-button:disabled{ opacity:.45; cursor:not-allowed; }
+    .warning-modal-body{ padding:16px 18px; overflow:auto; min-height:220px; }
+    .warning-modal-footer{
+      display:flex; justify-content:flex-end; align-items:center; gap:12px;
+      border-top:1px solid #e8eff7;
+    }
+    .warning-empty{
+      padding:24px; border:1px dashed #dbe7f3; border-radius:18px; color:#64748b; font-weight:700;
+    }
+    .warning-table-wrap{ overflow:auto; }
+    .warning-table{ width:100%; border-collapse:collapse; min-width:980px; }
+    .warning-table th,.warning-table td{
+      padding:10px 12px; border-bottom:1px solid #edf3f9; text-align:left; font-size:13px; vertical-align:top;
+    }
+    .warning-table th{
+      position:sticky; top:0; background:#f8fbff; color:#123a72; font-size:12px; text-transform:uppercase; letter-spacing:.04em;
+    }
+    .summary-stat--clickable{
+      width:100%; text-align:left; cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .summary-stat--clickable:hover{
+      transform:translateY(-1px); box-shadow:0 10px 24px rgba(18,58,114,.10); border-color:#b8d4ef;
+    }
+    @media (max-width:900px){
+      .warning-modal-card{ max-height:92vh; border-radius:18px; }
+      .warning-modal-header h3{ font-size:22px; }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 function closeWarningModal() {
@@ -1333,6 +1388,8 @@ async function exportWarningRowsToXlsx() {
 }
 
 function openWarningModal(type) {
+  ensureWarningModalStyle();
+
   const rows = filterWarningRowsByType((DASHBOARD_STATE.data && DASHBOARD_STATE.data.allprogRows) || [], type);
 
   WARNING_MODAL_STATE.rows = rows;
@@ -1358,9 +1415,7 @@ function openWarningModal(type) {
 
       <div class="warning-modal-toolbar">
         <div class="warning-modal-caption">Filter mengikuti satuan kerja yang sedang dipilih di dashboard ITKP.</div>
-        <div class="warning-modal-actions">
-          <button type="button" class="warning-modal-button" id="warningModalExport">Save ke XLSX</button>
-        </div>
+        <button type="button" class="warning-modal-button" id="warningModalExport">Save ke XLSX</button>
       </div>
 
       <div class="warning-modal-body" id="warningModalBody"></div>
@@ -1402,7 +1457,7 @@ function analyzeDashboardData(raw) {
   const subOpdAllRows = raw.itkpSubOpd || [];
   const planningRows = raw.perencanaan || [];
   const realRows = raw.realisasi || [];
-  const allprogRows = raw.allprog || [];
+  const allprogAllRows = raw.allprog || [];
 
   const getSatker = (row) => getField(row, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']);
   const getMetode = (row) => getField(row, ['Metode Pengadaan', 'mtd_pemilihan', 'Sumber Transaksi']);
@@ -1424,10 +1479,6 @@ function analyzeDashboardData(raw) {
   DASHBOARD_STATE.selectedItkpSatker = selectedProfile.name;
 
   const selectedIsCity = isCityAggregateName(selectedProfile.name);
-  const normalizeSatkerName = (value) => String(value || '')
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, ' ');
 
   const selectedSatkerKey = normalizeSatkerName(selectedProfile.name);
   const isSelectedSatkerRow = (row) => {
@@ -1460,7 +1511,7 @@ function analyzeDashboardData(raw) {
   const topItkp = [...scoreRows].sort((a, b) => b.score - a.score).slice(0, 8);
   const lowItkp = [...scoreRows].sort((a, b) => a.score - b.score).slice(0, 8);
 
-  const scopedAllprogRows = mapAllprogRows(allprogRows, selectedProfile.name, selectedIsCity);
+  const scopedAllprogRows = mapAllprogRows(allprogAllRows, selectedProfile.name, selectedIsCity);
   const warningSummary = buildAllprogWarningSummary(scopedAllprogRows);
 
   return {
@@ -1468,6 +1519,7 @@ function analyzeDashboardData(raw) {
     itkpSubOpdRows: subOpdRows,
     planningRows,
     realRows,
+    allprogRaw: allprogAllRows,
     totalOpd: itkpOpdRows.length,
     totalSubOpd: subOpdRows.length,
     scopeName: selectedProfile.name,
@@ -1811,7 +1863,8 @@ function bindDashboardEvents() {
           : DASHBOARD_STATE.data.itkpRows,
         itkpSubOpd: DASHBOARD_STATE.data.itkpSubOpdRows,
         perencanaan: DASHBOARD_STATE.data.planningRows,
-        realisasi: DASHBOARD_STATE.data.realRows
+        realisasi: DASHBOARD_STATE.data.realRows,
+        allprog: DASHBOARD_STATE.data.allprogRaw
       });
       renderDashboardReady(DASHBOARD_STATE.data);
       bindDashboardEvents();
@@ -1917,7 +1970,6 @@ function bindDashboardEvents() {
     item.addEventListener('mouseenter', () => setActiveDistribution(item.dataset));
     item.addEventListener('focus', () => setActiveDistribution(item.dataset));
   });
-
 
   contentArea.querySelectorAll('[data-warning-type]').forEach((item) => {
     item.addEventListener('click', () => {
