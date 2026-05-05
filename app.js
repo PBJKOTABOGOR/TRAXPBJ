@@ -429,6 +429,11 @@ const DASHBOARD_SHEETS = {
     title: 'D_REALISASI',
     spreadsheetId: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
     gid: '325886021'
+  },
+  allprog: {
+    title: 'ALLPROG',
+    spreadsheetId: '14i9ni_b0X_3D681j_GHNxap2nfJBmIoaOmy8KNCIHRc',
+    gid: '693324486'
   }
 };
 
@@ -438,6 +443,15 @@ const DASHBOARD_STATE = {
   error: null,
   data: null,
   selectedItkpSatker: 'PEMERINTAH KOTA BOGOR'
+};
+
+const WARNING_MODAL_STATE = {
+  rows: [],
+  filteredRows: [],
+  type: '',
+  title: '',
+  page: 1,
+  pageSize: 10
 };
 
 const DASHBOARD_CONTEXT_KEY = 'traxpbj_dashboard_context';
@@ -1015,7 +1029,6 @@ function analyzeDashboardPackageStatuses(rows, metodeRup) {
   return summary;
 }
 
-
 function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
   const grouped = {};
   const currentOrder = getCurrentMonthOrder();
@@ -1028,17 +1041,25 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
       grouped[kode] = {
         recall_paket: 0,
         total_realisasi: 0,
-        rows: []
+        rows: [],
+        first_order: null
       };
     }
 
     const nilai = toNumber(getFieldFn(r, ['Nilai Realisasi', 'nilai_realisasi', 'Total Realisasi']));
+    const waktuOrder = getMonthOrder(getFieldFn(r, ['Waktu Pemilihan', 'waktu_pemilihan']));
 
     grouped[kode].recall_paket += 1;
     grouped[kode].total_realisasi += nilai;
 
+    if (waktuOrder > 0) {
+      if (!grouped[kode].first_order || waktuOrder < grouped[kode].first_order) {
+        grouped[kode].first_order = waktuOrder;
+      }
+    }
+
     grouped[kode].rows.push({
-      status_paket: String(getFieldFn(r, ['Status Paket', 'status_paket', 'Status']) || '').trim(),
+      status_paket: String(getFieldFn(r, ['Status Paket', 'status_paket']) || '').trim(),
       sumber_transaksi: String(getFieldFn(r, ['Sumber Transaksi', 'sumber_transaksi']) || '').trim(),
       bast: String(getFieldFn(r, ['BAST', 'dok_realisasi']) || '').trim()
     });
@@ -1060,25 +1081,19 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
     const waktuPemilihanOrder = getMonthOrder(getFieldFn(r, ['Waktu Pemilihan', 'waktu_pemilihan']));
     const metode = String(getFieldFn(r, ['Metode Pengadaan', 'metode_pengadaan']) || '').trim();
 
-    const real = grouped[kode] || { recall_paket: 0, total_realisasi: 0, rows: [] };
+    const real = grouped[kode] || { recall_paket: 0, total_realisasi: 0, rows: [], first_order: null };
     const detail = analyzeDashboardPackageStatuses(real.rows || [], metode);
 
     if (real.recall_paket > 0) {
-      if (detail.berjalan > 0) {
-        result.sedangBerjalan += 1;
-      } else if (detail.selesaiPemilihan > 0) {
-        result.selesaiProsesPemilihan += 1;
-      }
+      if (detail.berjalan > 0) result.sedangBerjalan += 1;
+      else if (detail.selesaiPemilihan > 0) result.selesaiProsesPemilihan += 1;
     }
 
-    // Belum ada realisasi, tapi jadwal pemilihan sudah lewat bulan berjalan.
     if (real.recall_paket === 0 && waktuPemilihanOrder > 0 && waktuPemilihanOrder < currentOrder) {
       result.melewatiWaktuPemilihan += 1;
     }
 
-    // SUDAH ADA REALISASI, PADAHAL WAKTU PEMILIHAN MASIH SETELAH BULAN BERJALAN.
-    // Ini logic benar untuk Paket Melebihi Target Pemilihan.
-    if (real.recall_paket > 0 && waktuPemilihanOrder > currentOrder) {
+    if (real.recall_paket > 0 && real.first_order && waktuPemilihanOrder > 0 && real.first_order < waktuPemilihanOrder) {
       result.melebihiTargetPemilihan += 1;
     }
 
@@ -1090,11 +1105,304 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
   return result;
 }
 
+
+
+function normalizeSatkerName(value) {
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ');
+}
+
+function getAllprogSatker(row) {
+  return getField(row, [
+    'Satuan Kerja',
+    'Nama Satuan Kerja',
+    'Satker',
+    'Nama Satker',
+    'OPD',
+    'Nama OPD',
+    'Unit Kerja',
+    'Perangkat Daerah'
+  ]);
+}
+
+function mapAllprogRows(rows, selectedProfileName, selectedIsCity) {
+  const selectedKey = normalizeSatkerName(selectedProfileName);
+
+  return (rows || [])
+    .map((row) => {
+      const satker = getAllprogSatker(row);
+      return {
+        satker,
+        caraPengadaan: getField(row, ['Cara Pengadaan']),
+        jenisPengadaan: getField(row, ['Jenis Pengadaan']),
+        kodeRup: getField(row, ['Kode RUP', 'Kode Rup']),
+        metodePengadaan: getField(row, ['Metode Pengadaan']),
+        sumberTransaksi: getField(row, ['Sumber Transaksi']),
+        namaPaket: getField(row, ['Nama Paket']),
+        nilaiPagu: toNumber(getField(row, ['Nilai Pagu', 'Pagu'])),
+        nilaiRealisasi: toNumber(getField(row, ['Nilai Realisasi', 'Realisasi'])),
+        statusPaket: getField(row, ['Status Paket', 'Status']),
+        waktuPemilihan: getField(row, ['Waktu Pemilihan']),
+        warning: getField(row, ['Warning']),
+        __source: row
+      };
+    })
+    .filter((item) => {
+      if (selectedIsCity) return true;
+      return normalizeSatkerName(item.satker) === selectedKey;
+    });
+}
+
+function buildAllprogWarningSummary(rows) {
+  const summary = {
+    sedangBerjalan: 0,
+    selesaiProsesPemilihan: 0,
+    melewatiWaktuPemilihan: 0,
+    melebihiTargetPemilihan: 0,
+    melebihiPaguRealisasi: 0
+  };
+
+  (rows || []).forEach((item) => {
+    const warning = String(item.warning || '').trim().toLowerCase();
+
+    if (warning.includes('sedang berjalan')) summary.sedangBerjalan += 1;
+    if (warning === 'selesai' || warning.includes('paket selesai')) summary.selesaiProsesPemilihan += 1;
+    if (warning.includes('melewati waktu pemilihan')) summary.melewatiWaktuPemilihan += 1;
+    if (warning.includes('melebihi target pemilihan')) summary.melebihiTargetPemilihan += 1;
+
+    if (warning.includes('melebihi pagu realisasi') || (item.nilaiPagu > 0 && item.nilaiRealisasi > item.nilaiPagu)) {
+      summary.melebihiPaguRealisasi += 1;
+    }
+  });
+
+  return summary;
+}
+
+function getWarningTypeTitle(type) {
+  const titles = {
+    sedangBerjalan: 'Paket Sedang Berjalan',
+    selesaiProsesPemilihan: 'Paket Selesai Proses Pemilihan',
+    melewatiWaktuPemilihan: 'Paket Melewati Waktu Pemilihan',
+    melebihiTargetPemilihan: 'Paket Melebihi Target Pemilihan',
+    melebihiPaguRealisasi: 'Paket Melebihi Pagu Realisasi'
+  };
+  return titles[type] || 'Detail Paket Warning';
+}
+
+function filterWarningRowsByType(rows, type) {
+  return (rows || []).filter((item) => {
+    const warning = String(item.warning || '').trim().toLowerCase();
+
+    if (type === 'sedangBerjalan') {
+      return warning.includes('sedang berjalan');
+    }
+
+    if (type === 'selesaiProsesPemilihan') {
+      return warning === 'selesai' || warning.includes('paket selesai');
+    }
+
+    if (type === 'melewatiWaktuPemilihan') {
+      return warning.includes('melewati waktu pemilihan');
+    }
+
+    if (type === 'melebihiTargetPemilihan') {
+      return warning.includes('melebihi target pemilihan');
+    }
+
+    if (type === 'melebihiPaguRealisasi') {
+      return warning.includes('melebihi pagu realisasi') || (item.nilaiPagu > 0 && item.nilaiRealisasi > item.nilaiPagu);
+    }
+
+    return false;
+  });
+}
+
+function closeWarningModal() {
+  const overlay = document.getElementById('warningModalOverlay');
+  if (overlay) overlay.remove();
+}
+
+function renderWarningModalPage() {
+  const body = document.getElementById('warningModalBody');
+  const titleEl = document.getElementById('warningModalTitle');
+  const pageInfo = document.getElementById('warningModalPageInfo');
+  const prevBtn = document.getElementById('warningModalPrev');
+  const nextBtn = document.getElementById('warningModalNext');
+
+  if (!body || !titleEl) return;
+
+  const totalRows = WARNING_MODAL_STATE.filteredRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / WARNING_MODAL_STATE.pageSize));
+  WARNING_MODAL_STATE.page = Math.min(Math.max(1, WARNING_MODAL_STATE.page), totalPages);
+
+  const start = (WARNING_MODAL_STATE.page - 1) * WARNING_MODAL_STATE.pageSize;
+  const pageRows = WARNING_MODAL_STATE.filteredRows.slice(start, start + WARNING_MODAL_STATE.pageSize);
+
+  titleEl.textContent = `${WARNING_MODAL_STATE.title} · ${totalRows.toLocaleString('id-ID')} paket`;
+
+  if (!pageRows.length) {
+    body.innerHTML = `<div class="warning-empty">Tidak ada data untuk kategori ini.</div>`;
+  } else {
+    body.innerHTML = `
+      <div class="warning-table-wrap">
+        <table class="warning-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Kode RUP</th>
+              <th>Nama Paket</th>
+              <th>Metode</th>
+              <th>Nilai Pagu</th>
+              <th>Nilai Realisasi</th>
+              <th>Status</th>
+              <th>Waktu Pemilihan</th>
+              <th>Warning</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pageRows.map((item, index) => `
+              <tr>
+                <td>${start + index + 1}</td>
+                <td>${escapeHtml(item.kodeRup || '-')}</td>
+                <td>${escapeHtml(item.namaPaket || '-')}</td>
+                <td>${escapeHtml(item.metodePengadaan || '-')}</td>
+                <td>${escapeHtml(formatMoney(item.nilaiPagu || 0))}</td>
+                <td>${escapeHtml(formatMoney(item.nilaiRealisasi || 0))}</td>
+                <td>${escapeHtml(item.statusPaket || '-')}</td>
+                <td>${escapeHtml(item.waktuPemilihan || '-')}</td>
+                <td>${escapeHtml(item.warning || '-')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  if (pageInfo) pageInfo.textContent = `Page ${WARNING_MODAL_STATE.page} / ${totalPages}`;
+  if (prevBtn) prevBtn.disabled = WARNING_MODAL_STATE.page <= 1;
+  if (nextBtn) nextBtn.disabled = WARNING_MODAL_STATE.page >= totalPages;
+}
+
+function ensureXlsxLibrary() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+
+  return new Promise((resolve, reject) => {
+    const existing = document.getElementById('xlsxLibraryLoader');
+
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.XLSX), { once: true });
+      existing.addEventListener('error', reject, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'xlsxLibraryLoader';
+    script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    script.onload = () => resolve(window.XLSX);
+    script.onerror = () => reject(new Error('Gagal memuat library XLSX'));
+    document.body.appendChild(script);
+  });
+}
+
+async function exportWarningRowsToXlsx() {
+  await ensureXlsxLibrary();
+
+  const rows = WARNING_MODAL_STATE.filteredRows.map((item) => ({
+    'Satuan Kerja': item.satker || '',
+    'Cara Pengadaan': item.caraPengadaan || '',
+    'Jenis Pengadaan': item.jenisPengadaan || '',
+    'Kode RUP': item.kodeRup || '',
+    'Metode Pengadaan': item.metodePengadaan || '',
+    'Sumber Transaksi': item.sumberTransaksi || '',
+    'Nama Paket': item.namaPaket || '',
+    'Nilai Pagu': item.nilaiPagu || 0,
+    'Nilai Realisasi': item.nilaiRealisasi || 0,
+    'Status Paket': item.statusPaket || '',
+    'Waktu Pemilihan': item.waktuPemilihan || '',
+    'Warning': item.warning || ''
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Warning');
+  const safeName = WARNING_MODAL_STATE.title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+  XLSX.writeFile(wb, `${safeName || 'warning'}_${Date.now()}.xlsx`);
+}
+
+function openWarningModal(type) {
+  const rows = filterWarningRowsByType((DASHBOARD_STATE.data && DASHBOARD_STATE.data.allprogRows) || [], type);
+
+  WARNING_MODAL_STATE.rows = rows;
+  WARNING_MODAL_STATE.filteredRows = rows;
+  WARNING_MODAL_STATE.type = type;
+  WARNING_MODAL_STATE.title = getWarningTypeTitle(type);
+  WARNING_MODAL_STATE.page = 1;
+
+  closeWarningModal();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'warningModalOverlay';
+  overlay.className = 'warning-modal-overlay';
+  overlay.innerHTML = `
+    <div class="warning-modal-card" role="dialog" aria-modal="true">
+      <div class="warning-modal-header">
+        <div>
+          <div class="warning-modal-kicker">ALLPROG · Warning Paket</div>
+          <h3 id="warningModalTitle">${escapeHtml(WARNING_MODAL_STATE.title)}</h3>
+        </div>
+        <button type="button" class="warning-modal-close" id="warningModalClose">×</button>
+      </div>
+
+      <div class="warning-modal-toolbar">
+        <div class="warning-modal-caption">Filter mengikuti satuan kerja yang sedang dipilih di dashboard ITKP.</div>
+        <div class="warning-modal-actions">
+          <button type="button" class="warning-modal-button" id="warningModalExport">Save ke XLSX</button>
+        </div>
+      </div>
+
+      <div class="warning-modal-body" id="warningModalBody"></div>
+
+      <div class="warning-modal-footer">
+        <button type="button" class="warning-modal-button" id="warningModalPrev">Prev</button>
+        <span id="warningModalPageInfo">Page 1 / 1</span>
+        <button type="button" class="warning-modal-button" id="warningModalNext">Next</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  renderWarningModalPage();
+
+  document.getElementById('warningModalClose')?.addEventListener('click', closeWarningModal);
+  document.getElementById('warningModalPrev')?.addEventListener('click', () => {
+    WARNING_MODAL_STATE.page -= 1;
+    renderWarningModalPage();
+  });
+  document.getElementById('warningModalNext')?.addEventListener('click', () => {
+    WARNING_MODAL_STATE.page += 1;
+    renderWarningModalPage();
+  });
+  document.getElementById('warningModalExport')?.addEventListener('click', () => {
+    exportWarningRowsToXlsx().catch((error) => {
+      alert(error.message || 'Gagal export XLSX');
+    });
+  });
+
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) closeWarningModal();
+  });
+}
+
+
 function analyzeDashboardData(raw) {
   const itkpAllRows = raw.itkp || [];
   const subOpdAllRows = raw.itkpSubOpd || [];
   const planningRows = raw.perencanaan || [];
   const realRows = raw.realisasi || [];
+  const allprogRows = raw.allprog || [];
 
   const getSatker = (row) => getField(row, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']);
   const getMetode = (row) => getField(row, ['Metode Pengadaan', 'mtd_pemilihan', 'Sumber Transaksi']);
@@ -1152,7 +1460,8 @@ function analyzeDashboardData(raw) {
   const topItkp = [...scoreRows].sort((a, b) => b.score - a.score).slice(0, 8);
   const lowItkp = [...scoreRows].sort((a, b) => a.score - b.score).slice(0, 8);
 
-  const warningSummary = buildDashboardWarningSummary(scopedPlanningRows, scopedRealRows, getField);
+  const scopedAllprogRows = mapAllprogRows(allprogRows, selectedProfile.name, selectedIsCity);
+  const warningSummary = buildAllprogWarningSummary(scopedAllprogRows);
 
   return {
     itkpRows: itkpOpdRows,
@@ -1184,7 +1493,8 @@ function analyzeDashboardData(raw) {
     bySatkerReal,
     topItkp,
     lowItkp,
-    warningSummary
+    warningSummary,
+    allprogRows: scopedAllprogRows
   };
 }
 
@@ -1196,14 +1506,15 @@ async function loadDashboardData(force = false) {
   DASHBOARD_STATE.error = null;
 
   try {
-    const [itkp, itkpSubOpd, perencanaan, realisasi] = await Promise.all([
+    const [itkp, itkpSubOpd, perencanaan, realisasi, allprog] = await Promise.all([
       fetchSheetRows(DASHBOARD_SHEETS.itkp),
       fetchSheetRows(DASHBOARD_SHEETS.itkpSubOpd),
       fetchSheetRows(DASHBOARD_SHEETS.perencanaan),
-      fetchSheetRows(DASHBOARD_SHEETS.realisasi)
+      fetchSheetRows(DASHBOARD_SHEETS.realisasi),
+      fetchSheetRows(DASHBOARD_SHEETS.allprog)
     ]);
 
-    DASHBOARD_STATE.data = analyzeDashboardData({ itkp, itkpSubOpd, perencanaan, realisasi });
+    DASHBOARD_STATE.data = analyzeDashboardData({ itkp, itkpSubOpd, perencanaan, realisasi, allprog });
     DASHBOARD_STATE.loadedAt = new Date();
     return DASHBOARD_STATE.data;
   } catch (error) {
@@ -1607,6 +1918,13 @@ function bindDashboardEvents() {
     item.addEventListener('focus', () => setActiveDistribution(item.dataset));
   });
 
+
+  contentArea.querySelectorAll('[data-warning-type]').forEach((item) => {
+    item.addEventListener('click', () => {
+      openWarningModal(item.dataset.warningType || '');
+    });
+  });
+
   contentArea.querySelectorAll('[data-quick], [data-route], [data-external]').forEach((item) => {
     item.addEventListener('click', () => {
       const externalUrl = item.dataset.external;
@@ -1972,7 +2290,7 @@ function renderDimension(item) {
         </div>
         ${detailHtml ? `<div class="dim-detail">${detailHtml}</div>` : ''}
       </div>
-      <div class="dim-value">${toNumber(item.value).toLocaleString('id-ID', { maximumFractionDigits: 2 })}/${item.max}</div>
+      <div class="dim-value">${Math.round(toNumber(item.value)).toLocaleString('id-ID')}/${item.max}</div>
     </button>
   `;
 }
