@@ -1201,6 +1201,18 @@ function ensureWarningModalStyle() {
   const style = document.createElement('style');
   style.id = 'warningModalStyle';
   style.textContent = `
+    .summary-stat--clickable{
+      width:100%;
+      text-align:left;
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      background:#fff;
+    }
+    .summary-stat--clickable:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(18,58,114,.10);
+      border-color:#b8d4ef;
+    }
     .warning-modal-overlay{
       position:fixed; inset:0; z-index:999999;
       background:rgba(15,23,42,.42);
@@ -1208,27 +1220,18 @@ function ensureWarningModalStyle() {
       padding:24px;
     }
     .warning-modal-card{
-      width:min(1180px,100%);
-      max-height:min(86vh,920px);
-      background:#fff;
-      border-radius:24px;
-      border:1px solid #dbe7f3;
+      width:min(1180px,100%); max-height:min(86vh,920px);
+      background:#fff; border-radius:24px; border:1px solid #dbe7f3;
       box-shadow:0 26px 60px rgba(15,23,42,.22);
       display:flex; flex-direction:column; overflow:hidden;
     }
-    .warning-modal-header,.warning-modal-toolbar,.warning-modal-footer{
-      padding:14px 18px;
-    }
+    .warning-modal-header,.warning-modal-toolbar,.warning-modal-footer{ padding:14px 18px; }
     .warning-modal-header{
       display:flex; justify-content:space-between; gap:16px; align-items:flex-start;
       border-bottom:1px solid #e8eff7;
     }
-    .warning-modal-kicker{
-      color:#64748b; font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase;
-    }
-    .warning-modal-header h3{
-      margin:6px 0 0; color:#102544; font-size:28px; line-height:1.1;
-    }
+    .warning-modal-kicker{ color:#64748b; font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+    .warning-modal-header h3{ margin:6px 0 0; color:#102544; font-size:28px; line-height:1.1; }
     .warning-modal-close{
       border:none; width:38px; height:38px; border-radius:999px; cursor:pointer;
       background:#eef5fb; color:#123a72; font-size:24px;
@@ -1244,28 +1247,11 @@ function ensureWarningModalStyle() {
     }
     .warning-modal-button:disabled{ opacity:.45; cursor:not-allowed; }
     .warning-modal-body{ padding:16px 18px; overflow:auto; min-height:220px; }
-    .warning-modal-footer{
-      display:flex; justify-content:flex-end; align-items:center; gap:12px;
-      border-top:1px solid #e8eff7;
-    }
-    .warning-empty{
-      padding:24px; border:1px dashed #dbe7f3; border-radius:18px; color:#64748b; font-weight:700;
-    }
+    .warning-empty{ padding:24px; border:1px dashed #dbe7f3; border-radius:18px; color:#64748b; font-weight:700; }
     .warning-table-wrap{ overflow:auto; }
     .warning-table{ width:100%; border-collapse:collapse; min-width:980px; }
-    .warning-table th,.warning-table td{
-      padding:10px 12px; border-bottom:1px solid #edf3f9; text-align:left; font-size:13px; vertical-align:top;
-    }
-    .warning-table th{
-      position:sticky; top:0; background:#f8fbff; color:#123a72; font-size:12px; text-transform:uppercase; letter-spacing:.04em;
-    }
-    .summary-stat--clickable{
-      width:100%; text-align:left; cursor:pointer;
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    }
-    .summary-stat--clickable:hover{
-      transform:translateY(-1px); box-shadow:0 10px 24px rgba(18,58,114,.10); border-color:#b8d4ef;
-    }
+    .warning-table th,.warning-table td{ padding:10px 12px; border-bottom:1px solid #edf3f9; text-align:left; font-size:13px; vertical-align:top; }
+    .warning-table th{ position:sticky; top:0; background:#f8fbff; color:#123a72; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
     @media (max-width:900px){
       .warning-modal-card{ max-height:92vh; border-radius:18px; }
       .warning-modal-header h3{ font-size:22px; }
@@ -1285,7 +1271,6 @@ function renderWarningModalPage() {
   const pageInfo = document.getElementById('warningModalPageInfo');
   const prevBtn = document.getElementById('warningModalPrev');
   const nextBtn = document.getElementById('warningModalNext');
-
   if (!body || !titleEl) return;
 
   const totalRows = WARNING_MODAL_STATE.filteredRows.length;
@@ -1306,6 +1291,7 @@ function renderWarningModalPage() {
           <thead>
             <tr>
               <th>No</th>
+              <th>Satuan Kerja</th>
               <th>Kode RUP</th>
               <th>Nama Paket</th>
               <th>Metode</th>
@@ -1320,6 +1306,7 @@ function renderWarningModalPage() {
             ${pageRows.map((item, index) => `
               <tr>
                 <td>${start + index + 1}</td>
+                <td>${escapeHtml(item.satker || '-')}</td>
                 <td>${escapeHtml(item.kodeRup || '-')}</td>
                 <td>${escapeHtml(item.namaPaket || '-')}</td>
                 <td>${escapeHtml(item.metodePengadaan || '-')}</td>
@@ -1343,16 +1330,13 @@ function renderWarningModalPage() {
 
 function ensureXlsxLibrary() {
   if (window.XLSX) return Promise.resolve(window.XLSX);
-
   return new Promise((resolve, reject) => {
     const existing = document.getElementById('xlsxLibraryLoader');
-
     if (existing) {
       existing.addEventListener('load', () => resolve(window.XLSX), { once: true });
       existing.addEventListener('error', reject, { once: true });
       return;
     }
-
     const script = document.createElement('script');
     script.id = 'xlsxLibraryLoader';
     script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
@@ -1364,7 +1348,6 @@ function ensureXlsxLibrary() {
 
 async function exportWarningRowsToXlsx() {
   await ensureXlsxLibrary();
-
   const rows = WARNING_MODAL_STATE.filteredRows.map((item) => ({
     'Satuan Kerja': item.satker || '',
     'Cara Pengadaan': item.caraPengadaan || '',
@@ -1379,7 +1362,6 @@ async function exportWarningRowsToXlsx() {
     'Waktu Pemilihan': item.waktuPemilihan || '',
     'Warning': item.warning || ''
   }));
-
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Warning');
@@ -1389,9 +1371,7 @@ async function exportWarningRowsToXlsx() {
 
 function openWarningModal(type) {
   ensureWarningModalStyle();
-
   const rows = filterWarningRowsByType((DASHBOARD_STATE.data && DASHBOARD_STATE.data.allprogRows) || [], type);
-
   WARNING_MODAL_STATE.rows = rows;
   WARNING_MODAL_STATE.filteredRows = rows;
   WARNING_MODAL_STATE.type = type;
@@ -1399,7 +1379,6 @@ function openWarningModal(type) {
   WARNING_MODAL_STATE.page = 1;
 
   closeWarningModal();
-
   const overlay = document.createElement('div');
   overlay.id = 'warningModalOverlay';
   overlay.className = 'warning-modal-overlay';
@@ -1412,14 +1391,11 @@ function openWarningModal(type) {
         </div>
         <button type="button" class="warning-modal-close" id="warningModalClose">×</button>
       </div>
-
       <div class="warning-modal-toolbar">
         <div class="warning-modal-caption">Filter mengikuti satuan kerja yang sedang dipilih di dashboard ITKP.</div>
         <button type="button" class="warning-modal-button" id="warningModalExport">Save ke XLSX</button>
       </div>
-
       <div class="warning-modal-body" id="warningModalBody"></div>
-
       <div class="warning-modal-footer">
         <button type="button" class="warning-modal-button" id="warningModalPrev">Prev</button>
         <span id="warningModalPageInfo">Page 1 / 1</span>
@@ -1427,10 +1403,8 @@ function openWarningModal(type) {
       </div>
     </div>
   `;
-
   document.body.appendChild(overlay);
   renderWarningModalPage();
-
   document.getElementById('warningModalClose')?.addEventListener('click', closeWarningModal);
   document.getElementById('warningModalPrev')?.addEventListener('click', () => {
     WARNING_MODAL_STATE.page -= 1;
@@ -1441,16 +1415,12 @@ function openWarningModal(type) {
     renderWarningModalPage();
   });
   document.getElementById('warningModalExport')?.addEventListener('click', () => {
-    exportWarningRowsToXlsx().catch((error) => {
-      alert(error.message || 'Gagal export XLSX');
-    });
+    exportWarningRowsToXlsx().catch((error) => alert(error.message || 'Gagal export XLSX'));
   });
-
   overlay.addEventListener('click', (event) => {
     if (event.target === overlay) closeWarningModal();
   });
 }
-
 
 function analyzeDashboardData(raw) {
   const itkpAllRows = raw.itkp || [];
@@ -2098,23 +2068,31 @@ function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
     melebihiPaguRealisasi: 0
   };
 
+  const renderWarningCard = (type, label, value, desc, tone) => `
+    <button type="button" class="summary-stat summary-stat--clickable ${tone ? `summary-stat--${tone}` : ''}" data-warning-type="${type}">
+      <span class="summary-stat-label">${escapeHtml(label)}</span>
+      <b>${escapeHtml(formatNumber(value))}</b>
+      <small>${escapeHtml(desc)}</small>
+    </button>
+  `;
+
   return `
     <div class="card">
       <div class="section-title-row">
         <div>
           <span class="section-kicker">Paket Warning · ${escapeHtml(scopeLabel)}</span>
           <h3>Paket Warning</h3>
-          <p class="section-subnote">${escapeHtml(scopeDesc)}.</p>
+          <p class="section-subnote">Sumber: Sheet ALLPROG. Klik card untuk melihat detail paket warning.</p>
         </div>
         <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">Serapan ${formatPercent(data.realisasiPersen)}</span>
       </div>
 
       <div class="summary-stat-grid summary-stat-grid--warning">
-        ${renderInfoStat('Paket Sedang Berjalan', formatNumber(warning.sedangBerjalan), 'Paket realisasi masih berjalan/proses', warning.sedangBerjalan > 0 ? 'warning' : '')}
-        ${renderInfoStat('Paket Selesai Proses Pemilihan', formatNumber(warning.selesaiProsesPemilihan), 'Sudah selesai pemilihan, BAST belum terisi', warning.selesaiProsesPemilihan > 0 ? 'warning' : '')}
-        ${renderInfoStat('Paket Melewati Waktu Pemilihan', formatNumber(warning.melewatiWaktuPemilihan), 'Belum ada realisasi tapi jadwal sudah terlewati', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
-        ${renderInfoStat('Paket Melebihi Target Pemilihan', formatNumber(warning.melebihiTargetPemilihan), 'Realisasi lebih cepat dari jadwal; cek kembali kualitas perencanaannya', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
-        ${renderInfoStat('Paket Melebihi Pagu Realisasi', formatNumber(warning.melebihiPaguRealisasi), 'Nilai realisasi sudah melampaui pagu perencanaan', warning.melebihiPaguRealisasi > 0 ? 'danger' : '')}
+        ${renderWarningCard('sedangBerjalan', 'Paket Sedang Berjalan', warning.sedangBerjalan, 'Paket realisasi masih berjalan/proses', warning.sedangBerjalan > 0 ? 'warning' : '')}
+        ${renderWarningCard('selesaiProsesPemilihan', 'Paket Selesai Proses Pemilihan', warning.selesaiProsesPemilihan, 'Sudah selesai pemilihan', warning.selesaiProsesPemilihan > 0 ? 'warning' : '')}
+        ${renderWarningCard('melewatiWaktuPemilihan', 'Paket Melewati Waktu Pemilihan', warning.melewatiWaktuPemilihan, 'Belum ada realisasi tapi jadwal sudah terlewati', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
+        ${renderWarningCard('melebihiTargetPemilihan', 'Paket Melebihi Target Pemilihan', warning.melebihiTargetPemilihan, 'Realisasi lebih cepat dari jadwal', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
+        ${renderWarningCard('melebihiPaguRealisasi', 'Paket Melebihi Pagu Realisasi', warning.melebihiPaguRealisasi, 'Nilai realisasi sudah melampaui pagu perencanaan', warning.melebihiPaguRealisasi > 0 ? 'danger' : '')}
       </div>
     </div>
   `;
