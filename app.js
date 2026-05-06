@@ -1149,24 +1149,42 @@ function mapAllprogRows(rows, selectedProfileName, selectedIsCity) {
   });
 }
 
+function normalizeWarningText(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
 function buildAllprogWarningSummary(rows) {
   const summary = {
+    totalPaket: (rows || []).length,
+    selesai: 0,
     sedangBerjalan: 0,
-    selesaiProsesPemilihan: 0,
+    belumBerjalan: 0,
     melewatiWaktuPemilihan: 0,
-    melebihiTargetPemilihan: 0,
-    melebihiPaguRealisasi: 0
+    melebihiTargetPemilihan: 0
   };
 
   (rows || []).forEach((item) => {
-    const warning = String(item.warning || '').trim().toLowerCase();
+    const warning = normalizeWarningText(item.warning);
 
-    if (warning.includes('sedang berjalan')) summary.sedangBerjalan += 1;
-    if (warning === 'selesai' || warning.includes('paket selesai')) summary.selesaiProsesPemilihan += 1;
-    if (warning.includes('melewati waktu pemilihan')) summary.melewatiWaktuPemilihan += 1;
-    if (warning.includes('melebihi target pemilihan')) summary.melebihiTargetPemilihan += 1;
-    if (warning.includes('melebihi pagu realisasi') || (item.nilaiPagu > 0 && item.nilaiRealisasi > item.nilaiPagu)) {
-      summary.melebihiPaguRealisasi += 1;
+    if (warning === 'selesai' || warning.includes('paket selesai')) {
+      summary.selesai += 1;
+      return;
+    }
+    if (warning.includes('sedang berjalan')) {
+      summary.sedangBerjalan += 1;
+      return;
+    }
+    if (warning.includes('belum berjalan')) {
+      summary.belumBerjalan += 1;
+      return;
+    }
+    if (warning.includes('melewati waktu pemilihan')) {
+      summary.melewatiWaktuPemilihan += 1;
+      return;
+    }
+    if (warning.includes('melebihi target pemilihan')) {
+      summary.melebihiTargetPemilihan += 1;
+      return;
     }
   });
 
@@ -1175,22 +1193,22 @@ function buildAllprogWarningSummary(rows) {
 
 function getWarningTypeTitle(type) {
   return ({
-    sedangBerjalan: 'Paket Sedang Berjalan',
-    selesaiProsesPemilihan: 'Paket Selesai Proses Pemilihan',
-    melewatiWaktuPemilihan: 'Paket Melewati Waktu Pemilihan',
-    melebihiTargetPemilihan: 'Paket Melebihi Target Pemilihan',
-    melebihiPaguRealisasi: 'Paket Melebihi Pagu Realisasi'
+    selesai: 'Selesai',
+    sedangBerjalan: 'Sedang Berjalan',
+    belumBerjalan: 'Belum Berjalan',
+    melewatiWaktuPemilihan: 'Melewati Waktu Pemilihan',
+    melebihiTargetPemilihan: 'Melebihi Target Pemilihan'
   })[type] || 'Detail Paket Warning';
 }
 
 function filterWarningRowsByType(rows, type) {
   return (rows || []).filter((item) => {
-    const warning = String(item.warning || '').trim().toLowerCase();
+    const warning = normalizeWarningText(item.warning);
+    if (type === 'selesai') return warning === 'selesai' || warning.includes('paket selesai');
     if (type === 'sedangBerjalan') return warning.includes('sedang berjalan');
-    if (type === 'selesaiProsesPemilihan') return warning === 'selesai' || warning.includes('paket selesai');
+    if (type === 'belumBerjalan') return warning.includes('belum berjalan');
     if (type === 'melewatiWaktuPemilihan') return warning.includes('melewati waktu pemilihan');
     if (type === 'melebihiTargetPemilihan') return warning.includes('melebihi target pemilihan');
-    if (type === 'melebihiPaguRealisasi') return warning.includes('melebihi pagu realisasi') || (item.nilaiPagu > 0 && item.nilaiRealisasi > item.nilaiPagu);
     return false;
   });
 }
@@ -1201,61 +1219,26 @@ function ensureWarningModalStyle() {
   const style = document.createElement('style');
   style.id = 'warningModalStyle';
   style.textContent = `
-    .summary-stat--clickable{
-      width:100%;
-      text-align:left;
-      cursor:pointer;
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-      background:#fff;
-    }
-    .summary-stat--clickable:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 24px rgba(18,58,114,.10);
-      border-color:#b8d4ef;
-    }
-    .warning-modal-overlay{
-      position:fixed; inset:0; z-index:999999;
-      background:rgba(15,23,42,.42);
-      display:flex; align-items:center; justify-content:center;
-      padding:24px;
-    }
-    .warning-modal-card{
-      width:min(1180px,100%); max-height:min(86vh,920px);
-      background:#fff; border-radius:24px; border:1px solid #dbe7f3;
-      box-shadow:0 26px 60px rgba(15,23,42,.22);
-      display:flex; flex-direction:column; overflow:hidden;
-    }
-    .warning-modal-header,.warning-modal-toolbar,.warning-modal-footer{ padding:14px 18px; }
-    .warning-modal-header{
-      display:flex; justify-content:space-between; gap:16px; align-items:flex-start;
-      border-bottom:1px solid #e8eff7;
-    }
-    .warning-modal-kicker{ color:#64748b; font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
-    .warning-modal-header h3{ margin:6px 0 0; color:#102544; font-size:28px; line-height:1.1; }
-    .warning-modal-close{
-      border:none; width:38px; height:38px; border-radius:999px; cursor:pointer;
-      background:#eef5fb; color:#123a72; font-size:24px;
-    }
-    .warning-modal-toolbar{
-      display:flex; justify-content:space-between; align-items:center; gap:12px;
-      border-bottom:1px solid #e8eff7;
-    }
-    .warning-modal-caption{ color:#64748b; font-size:13px; font-weight:700; }
-    .warning-modal-button{
-      border:none; background:#123a72; color:#fff; border-radius:12px; padding:10px 14px; cursor:pointer;
-      font-size:13px; font-weight:800;
-    }
-    .warning-modal-button:disabled{ opacity:.45; cursor:not-allowed; }
-    .warning-modal-body{ padding:16px 18px; overflow:auto; min-height:220px; }
-    .warning-empty{ padding:24px; border:1px dashed #dbe7f3; border-radius:18px; color:#64748b; font-weight:700; }
-    .warning-table-wrap{ overflow:auto; }
-    .warning-table{ width:100%; border-collapse:collapse; min-width:980px; }
-    .warning-table th,.warning-table td{ padding:10px 12px; border-bottom:1px solid #edf3f9; text-align:left; font-size:13px; vertical-align:top; }
-    .warning-table th{ position:sticky; top:0; background:#f8fbff; color:#123a72; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
-    @media (max-width:900px){
-      .warning-modal-card{ max-height:92vh; border-radius:18px; }
-      .warning-modal-header h3{ font-size:22px; }
-    }
+    .warning-modal-overlay{position:fixed;inset:0;z-index:999999;background:rgba(15,23,42,.42);display:flex;align-items:center;justify-content:center;padding:24px;}
+    .warning-modal-card{width:min(1180px,100%);max-height:min(86vh,920px);background:#fff;border-radius:24px;border:1px solid #dbe7f3;box-shadow:0 26px 60px rgba(15,23,42,.22);display:flex;flex-direction:column;overflow:hidden;}
+    .warning-modal-header,.warning-modal-toolbar,.warning-modal-footer{padding:14px 18px;}
+    .warning-modal-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:1px solid #e8eff7;}
+    .warning-modal-kicker{color:#64748b;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;}
+    .warning-modal-header h3{margin:6px 0 0;color:#102544;font-size:28px;line-height:1.1;}
+    .warning-modal-close{border:none;width:38px;height:38px;border-radius:999px;cursor:pointer;background:#eef5fb;color:#123a72;font-size:24px;}
+    .warning-modal-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #e8eff7;}
+    .warning-modal-caption{color:#64748b;font-size:13px;font-weight:700;}
+    .warning-modal-button{border:none;background:#123a72;color:#fff;border-radius:12px;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:800;}
+    .warning-modal-button:disabled{opacity:.45;cursor:not-allowed;}
+    .warning-modal-body{padding:16px 18px;overflow:auto;min-height:220px;}
+    .warning-empty{padding:24px;border:1px dashed #dbe7f3;border-radius:18px;color:#64748b;font-weight:700;}
+    .warning-table-wrap{overflow:auto;}
+    .warning-table{width:100%;border-collapse:collapse;min-width:980px;}
+    .warning-table th,.warning-table td{padding:10px 12px;border-bottom:1px solid #edf3f9;text-align:left;font-size:13px;vertical-align:top;}
+    .warning-table th{position:sticky;top:0;background:#f8fbff;color:#123a72;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+    .summary-stat--clickable{width:100%;text-align:left;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;}
+    .summary-stat--clickable:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(18,58,114,.10);border-color:#b8d4ef;}
+    @media (max-width:900px){.warning-modal-card{max-height:92vh;border-radius:18px;}.warning-modal-header h3{font-size:22px;}}
   `;
   document.head.appendChild(style);
 }
@@ -1271,6 +1254,7 @@ function renderWarningModalPage() {
   const pageInfo = document.getElementById('warningModalPageInfo');
   const prevBtn = document.getElementById('warningModalPrev');
   const nextBtn = document.getElementById('warningModalNext');
+
   if (!body || !titleEl) return;
 
   const totalRows = WARNING_MODAL_STATE.filteredRows.length;
@@ -1377,8 +1361,8 @@ function openWarningModal(type) {
   WARNING_MODAL_STATE.type = type;
   WARNING_MODAL_STATE.title = getWarningTypeTitle(type);
   WARNING_MODAL_STATE.page = 1;
-
   closeWarningModal();
+
   const overlay = document.createElement('div');
   overlay.id = 'warningModalOverlay';
   overlay.className = 'warning-modal-overlay';
@@ -1403,8 +1387,10 @@ function openWarningModal(type) {
       </div>
     </div>
   `;
+
   document.body.appendChild(overlay);
   renderWarningModalPage();
+
   document.getElementById('warningModalClose')?.addEventListener('click', closeWarningModal);
   document.getElementById('warningModalPrev')?.addEventListener('click', () => {
     WARNING_MODAL_STATE.page -= 1;
@@ -2068,31 +2054,23 @@ function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
     melebihiPaguRealisasi: 0
   };
 
-  const renderWarningCard = (type, label, value, desc, tone) => `
-    <button type="button" class="summary-stat summary-stat--clickable ${tone ? `summary-stat--${tone}` : ''}" data-warning-type="${type}">
-      <span class="summary-stat-label">${escapeHtml(label)}</span>
-      <b>${escapeHtml(formatNumber(value))}</b>
-      <small>${escapeHtml(desc)}</small>
-    </button>
-  `;
-
   return `
     <div class="card">
       <div class="section-title-row">
         <div>
           <span class="section-kicker">Paket Warning · ${escapeHtml(scopeLabel)}</span>
           <h3>Paket Warning</h3>
-          <p class="section-subnote">Sumber: Sheet ALLPROG. Klik card untuk melihat detail paket warning.</p>
+          <p class="section-subnote">${escapeHtml(scopeDesc)}.</p>
         </div>
         <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">Serapan ${formatPercent(data.realisasiPersen)}</span>
       </div>
 
       <div class="summary-stat-grid summary-stat-grid--warning">
-        ${renderWarningCard('sedangBerjalan', 'Paket Sedang Berjalan', warning.sedangBerjalan, 'Paket realisasi masih berjalan/proses', warning.sedangBerjalan > 0 ? 'warning' : '')}
-        ${renderWarningCard('selesaiProsesPemilihan', 'Paket Selesai Proses Pemilihan', warning.selesaiProsesPemilihan, 'Sudah selesai pemilihan', warning.selesaiProsesPemilihan > 0 ? 'warning' : '')}
-        ${renderWarningCard('melewatiWaktuPemilihan', 'Paket Melewati Waktu Pemilihan', warning.melewatiWaktuPemilihan, 'Belum ada realisasi tapi jadwal sudah terlewati', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
-        ${renderWarningCard('melebihiTargetPemilihan', 'Paket Melebihi Target Pemilihan', warning.melebihiTargetPemilihan, 'Realisasi lebih cepat dari jadwal', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
-        ${renderWarningCard('melebihiPaguRealisasi', 'Paket Melebihi Pagu Realisasi', warning.melebihiPaguRealisasi, 'Nilai realisasi sudah melampaui pagu perencanaan', warning.melebihiPaguRealisasi > 0 ? 'danger' : '')}
+        ${renderInfoStat('Paket Sedang Berjalan', formatNumber(warning.sedangBerjalan), 'Paket realisasi masih berjalan/proses', warning.sedangBerjalan > 0 ? 'warning' : '')}
+        ${renderInfoStat('Paket Selesai Proses Pemilihan', formatNumber(warning.selesaiProsesPemilihan), 'Sudah selesai pemilihan, BAST belum terisi', warning.selesaiProsesPemilihan > 0 ? 'warning' : '')}
+        ${renderInfoStat('Paket Melewati Waktu Pemilihan', formatNumber(warning.melewatiWaktuPemilihan), 'Belum ada realisasi tapi jadwal sudah terlewati', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
+        ${renderInfoStat('Paket Melebihi Target Pemilihan', formatNumber(warning.melebihiTargetPemilihan), 'Realisasi lebih cepat dari jadwal; cek kembali kualitas perencanaannya', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
+        ${renderInfoStat('Paket Melebihi Pagu Realisasi', formatNumber(warning.melebihiPaguRealisasi), 'Nilai realisasi sudah melampaui pagu perencanaan', warning.melebihiPaguRealisasi > 0 ? 'danger' : '')}
       </div>
     </div>
   `;
