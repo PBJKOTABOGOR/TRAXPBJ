@@ -41,26 +41,26 @@ const APP_ROUTES = {
     js: 'modules/monitoring/itkp-ekontrak/itkp-ekontrak.js'
   },
 
-'monitoring-nontender': {
-  title: 'Non eTendering/Non ePurchasing',
-  subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
-  type: 'module',
-  html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
-  css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
-  js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
-},
+  'monitoring-nontender': {
+    title: 'Non eTendering/Non ePurchasing',
+    subtitle: 'Monitoring realisasi paket Non Tender dan capaian ITKP perangkat daerah.',
+    type: 'module',
+    html: 'modules/monitoring/itkp-nontender/itkp-nontender.html',
+    css: 'modules/monitoring/itkp-nontender/itkp-nontender.css',
+    js: 'modules/monitoring/itkp-nontender/itkp-nontender.js'
+  },
 
-'rapor-pbj': {
-  title: 'Rapor PBJ',
-  subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
-  type: 'module',
-  html: 'modules/rapor-pbj/rapor-pbj.html',
-  css: 'modules/rapor-pbj/rapor-pbj.css',
-  js: 'modules/rapor-pbj/rapor-pbj.js',
-  externalScripts: [
-    'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
-  ]
-},
+  'rapor-pbj': {
+    title: 'Rapor PBJ',
+    subtitle: 'Portal laporan Rapor PBJ perangkat daerah.',
+    type: 'module',
+    html: 'modules/rapor-pbj/rapor-pbj.html',
+    css: 'modules/rapor-pbj/rapor-pbj.css',
+    js: 'modules/rapor-pbj/rapor-pbj.js',
+    externalScripts: [
+      'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+    ]
+  },
 
   'monitoring-perencanaan': {
     title: 'Monitoring Realisasi',
@@ -80,14 +80,14 @@ const APP_ROUTES = {
     type: 'placeholder'
   },
 
-    'pemenang-pengadaan': {
-  title: 'Pemenang Pengadaan',
-  subtitle: 'Portal pencarian paket penyedia dan paket pengadaan aktif.',
-  type: 'module',
-  html: 'modules/pemenang-pengadaan/pemenang-pengadaan.html',
-  css: 'modules/pemenang-pengadaan/pemenang-pengadaan.css',
-  js: 'modules/pemenang-pengadaan/pemenang-pengadaan.js'
-},
+  'pemenang-pengadaan': {
+    title: 'Pemenang Pengadaan',
+    subtitle: 'Portal pencarian paket penyedia dan paket pengadaan aktif.',
+    type: 'module',
+    html: 'modules/pemenang-pengadaan/pemenang-pengadaan.html',
+    css: 'modules/pemenang-pengadaan/pemenang-pengadaan.css',
+    js: 'modules/pemenang-pengadaan/pemenang-pengadaan.js'
+  },
 
   'simulasi-procurement-stacker': {
     title: 'Procurement Stacker',
@@ -114,20 +114,19 @@ const APP_ROUTES = {
     url: 'https://pbjkotabogor.github.io/SIMPPK/login.html'
   },
 
-'rapor-pbj-input-internal': {
-  title: 'Input Rapor PBJ',
-  subtitle: 'Form internal pegawai untuk input dan upload dokumen Rapor PBJ.',
-  type: 'iframe',
-  url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?embed=1'
-},
+  'rapor-pbj-input-internal': {
+    title: 'Input Rapor PBJ',
+    subtitle: 'Form internal pegawai untuk input dan upload dokumen Rapor PBJ.',
+    type: 'iframe',
+    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?embed=1'
+  },
 
-'rapor-pbj-qc-internal': {
-  title: 'QC Rapor PBJ',
-  subtitle: 'Panel internal QC untuk review dan persetujuan rapor.',
-  type: 'iframe',
-  url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc&embed=1'
-}
-
+  'rapor-pbj-qc-internal': {
+    title: 'QC Rapor PBJ',
+    subtitle: 'Panel internal QC untuk review dan persetujuan rapor.',
+    type: 'iframe',
+    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc&embed=1'
+  }
 };
 
 const contentArea = document.getElementById('contentArea');
@@ -543,7 +542,6 @@ function applyDashboardContextToModule(page, moduleContainer) {
   });
 }
 
-
 function normalizeHeader(value) {
   return String(value || '')
     .toLowerCase()
@@ -931,7 +929,6 @@ function buildItkpProfile(row, fallbackName = 'PEMERINTAH KOTA BOGOR') {
   };
 }
 
-
 function isBlankDash(v) {
   const s = String(v || '').trim();
   return s === '' || s === '-';
@@ -1039,8 +1036,6 @@ function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
   };
 }
 
-
-
 function normalizeSatkerName(value) {
   return String(value || '')
     .trim()
@@ -1068,14 +1063,14 @@ function mapAllprogRows(rows, selectedProfileName, selectedIsCity) {
     caraPengadaan: getField(row, ['Cara Pengadaan']),
     jenisPengadaan: getField(row, ['Jenis Pengadaan']),
     kodeRup: getField(row, ['Kode RUP', 'Kode Rup']),
-    satker: getField(row, ['Satuan Kerja', 'Nama Satuan Kerja', 'Satker', 'Nama Satker', 'OPD', 'Nama OPD']),
+    satker: getAllprogSatker(row),
     metodePengadaan: getField(row, ['Metode Pengadaan']),
     sumberTransaksi: getField(row, ['Sumber Transaksi']),
     namaPaket: getField(row, ['Nama Paket']),
     nilaiPagu: toNumber(getField(row, ['Nilai Pagu', 'Pagu'])),
     nilaiRealisasi: toNumber(getField(row, ['Nilai Realisasi', 'Realisasi'])),
     statusPaket: getField(row, ['Status Paket', 'Status']),
-    waktuPemilihan: getField(row, ['Waktu Pemilihan']),
+    waktuPemilihan: getField(row, ['Waktu Pemilihan', 'Waktu_Pemilihan', 'Waktu Pemilihan Paket']),
     warning: getField(row, ['Warning'])
   })).filter((item) => {
     if (selectedIsCity) return true;
@@ -1084,7 +1079,10 @@ function mapAllprogRows(rows, selectedProfileName, selectedIsCity) {
 }
 
 function normalizeWarningText(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
 }
 
 function buildAllprogWarningSummary(rows) {
@@ -1100,25 +1098,24 @@ function buildAllprogWarningSummary(rows) {
   (rows || []).forEach((item) => {
     const warning = normalizeWarningText(item.warning);
 
-    if (warning === 'selesai' || warning.includes('selesai')) {
+    if (warning === 'selesai') {
       summary.selesai += 1;
       return;
     }
-    if (warning.includes('sedang berjalan')) {
+    if (warning === 'sedang berjalan') {
       summary.sedangBerjalan += 1;
       return;
     }
-    if (warning.includes('belum berjalan')) {
+    if (warning === 'belum berjalan') {
       summary.belumBerjalan += 1;
       return;
     }
-    if (warning.includes('melewati waktu pemilihan')) {
+    if (warning === 'melewati waktu pemilihan') {
       summary.melewatiWaktuPemilihan += 1;
       return;
     }
-    if (warning.includes('melebihi target pemilihan')) {
+    if (warning === 'melebihi target pemilihan') {
       summary.melebihiTargetPemilihan += 1;
-      return;
     }
   });
 
@@ -1138,11 +1135,11 @@ function getWarningTypeTitle(type) {
 function filterWarningRowsByType(rows, type) {
   return (rows || []).filter((item) => {
     const warning = normalizeWarningText(item.warning);
-    if (type === 'selesai') return warning === 'selesai' || warning.includes('paket selesai');
-    if (type === 'sedangBerjalan') return warning.includes('sedang berjalan');
-    if (type === 'belumBerjalan') return warning.includes('belum berjalan');
-    if (type === 'melewatiWaktuPemilihan') return warning.includes('melewati waktu pemilihan');
-    if (type === 'melebihiTargetPemilihan') return warning.includes('melebihi target pemilihan');
+    if (type === 'selesai') return warning === 'selesai';
+    if (type === 'sedangBerjalan') return warning === 'sedang berjalan';
+    if (type === 'belumBerjalan') return warning === 'belum berjalan';
+    if (type === 'melewatiWaktuPemilihan') return warning === 'melewati waktu pemilihan';
+    if (type === 'melebihiTargetPemilihan') return warning === 'melebihi target pemilihan';
     return false;
   });
 }
@@ -1561,7 +1558,6 @@ async function renderDashboard(force = false) {
   }
 }
 
-
 function renderDashboardReady(data) {
   const lastUpdate = DASHBOARD_STATE.loadedAt
     ? DASHBOARD_STATE.loadedAt.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
@@ -1737,7 +1733,6 @@ function renderDashboardReady(data) {
   `;
 }
 
-
 function bindDashboardEvents() {
   const refresh = document.getElementById('refreshDashboardButton');
 
@@ -1882,7 +1877,10 @@ function bindDashboardEvents() {
       }
 
       const route = item.dataset.quick || item.dataset.route;
-      if (route) { persistDashboardContext(); loadPage(route); }
+      if (route) {
+        persistDashboardContext();
+        loadPage(route);
+      }
     });
   });
 }
@@ -1913,7 +1911,6 @@ function renderSmallMetric(label, value, desc, percent = 0) {
     </div>
   `;
 }
-
 
 function getMethodPalette(index) {
   const palette = [
@@ -2024,7 +2021,6 @@ function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
     </div>
   `;
 }
-
 
 function renderDistributionCard(data, scopeLabel) {
   const methodRows = buildMethodComparisonRows(data).filter((item) => item.paguValue > 0).slice(0, 6);
@@ -2149,7 +2145,6 @@ function renderDistributionCard(data, scopeLabel) {
   `;
 }
 
-
 function renderMethodComparisonCard(data, scopeLabel) {
   const rows = buildMethodComparisonRows(data)
     .filter((item) => (item.paguValue > 0 || item.realisasiValue > 0) && String(item.name || '').trim().toLowerCase() !== 'tidak terisi')
@@ -2219,9 +2214,6 @@ function renderMethodComparisonCard(data, scopeLabel) {
     </div>
   `;
 }
-
-
-
 
 function renderDimension(item) {
   const percent = item.max > 0 ? Math.min(100, (toNumber(item.value) / item.max) * 100) : 0;
@@ -2743,7 +2735,6 @@ async function loadPage(key) {
     }
   }
 }
-
 
 function showSecretLogin() {
   if (!secretLoginOverlay) return;
