@@ -1182,12 +1182,31 @@ function ensureWarningModalStyle() {
     .warning-modal-button:disabled{opacity:.45;cursor:not-allowed;}
     .warning-modal-body{padding:16px 18px;overflow:auto;min-height:220px;}
     .warning-empty{padding:24px;border:1px dashed #dbe7f3;border-radius:18px;color:#64748b;font-weight:700;}
+    .warning-table-top-scroll{height:16px;overflow-x:auto;overflow-y:hidden;margin:0 0 8px;border-radius:999px;background:#f3f7fc;}
+    .warning-table-top-scroll-inner{height:1px;min-width:1280px;}
     .warning-table-wrap{overflow:auto;}
-    .warning-table{width:100%;border-collapse:collapse;min-width:980px;}
+    .warning-table{width:100%;border-collapse:collapse;min-width:1280px;}
     .warning-table th,.warning-table td{padding:10px 12px;border-bottom:1px solid #edf3f9;text-align:left;font-size:13px;vertical-align:top;}
-    .warning-table th{position:sticky;top:0;background:#f8fbff;color:#123a72;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+    .warning-table th{position:sticky;top:0;background:#f8fbff;color:#123a72;font-size:12px;text-transform:uppercase;letter-spacing:.04em;z-index:2;}
+    .warning-table tbody tr.warning-row--selesai{background:linear-gradient(90deg,rgba(34,197,94,.11),rgba(255,255,255,.96));}
+    .warning-table tbody tr.warning-row--sedang{background:linear-gradient(90deg,rgba(59,130,246,.10),rgba(255,255,255,.96));}
+    .warning-table tbody tr.warning-row--belum{background:linear-gradient(90deg,rgba(100,116,139,.10),rgba(255,255,255,.96));}
+    .warning-table tbody tr.warning-row--melewati{background:linear-gradient(90deg,rgba(239,68,68,.12),rgba(255,255,255,.96));}
+    .warning-table tbody tr.warning-row--melebihi{background:linear-gradient(90deg,rgba(245,158,11,.14),rgba(255,255,255,.96));}
+    .warning-badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:900;white-space:nowrap;}
+    .warning-badge--selesai{background:#dcfce7;color:#166534;}
+    .warning-badge--sedang{background:#dbeafe;color:#1d4ed8;}
+    .warning-badge--belum{background:#f1f5f9;color:#475569;}
+    .warning-badge--melewati{background:#fee2e2;color:#b91c1c;}
+    .warning-badge--melebihi{background:#fef3c7;color:#b45309;}
     .summary-stat--clickable{width:100%;text-align:left;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;}
     .summary-stat--clickable:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(18,58,114,.10);border-color:#b8d4ef;}
+    .summary-stat--success{border-left-color:#22c55e!important;}
+    .summary-stat--success b{color:#166534!important;}
+    .summary-stat--info{border-left-color:#3b82f6!important;}
+    .summary-stat--info b{color:#1d4ed8!important;}
+    .summary-stat--muted{border-left-color:#94a3b8!important;}
+    .summary-stat--muted b{color:#475569!important;}
     @media (max-width:900px){.warning-modal-card{max-height:92vh;border-radius:18px;}.warning-modal-header h3{font-size:22px;}}
   `;
   document.head.appendChild(style);
@@ -1196,6 +1215,46 @@ function ensureWarningModalStyle() {
 function closeWarningModal() {
   const overlay = document.getElementById('warningModalOverlay');
   if (overlay) overlay.remove();
+}
+
+
+function getWarningUiKey(value) {
+  const warning = normalizeWarningText(value);
+  if (warning === 'selesai') return 'selesai';
+  if (warning === 'sedang berjalan') return 'sedang';
+  if (warning === 'belum berjalan') return 'belum';
+  if (warning === 'melewati waktu pemilihan') return 'melewati';
+  if (warning === 'melebihi target pemilihan') return 'melebihi';
+  return 'belum';
+}
+
+function renderWarningBadge(value) {
+  const key = getWarningUiKey(value);
+  return `<span class="warning-badge warning-badge--${key}">${escapeHtml(value || '-')}</span>`;
+}
+
+function syncWarningModalScrollers() {
+  const topScroll = document.getElementById('warningTableTopScroll');
+  const topInner = document.getElementById('warningTableTopScrollInner');
+  const tableWrap = document.getElementById('warningTableWrap');
+  const table = tableWrap ? tableWrap.querySelector('.warning-table') : null;
+  if (!topScroll || !topInner || !tableWrap || !table) return;
+
+  topInner.style.width = `${Math.max(table.scrollWidth, tableWrap.scrollWidth)}px`;
+
+  let syncing = false;
+  topScroll.onscroll = () => {
+    if (syncing) return;
+    syncing = true;
+    tableWrap.scrollLeft = topScroll.scrollLeft;
+    syncing = false;
+  };
+  tableWrap.onscroll = () => {
+    if (syncing) return;
+    syncing = true;
+    topScroll.scrollLeft = tableWrap.scrollLeft;
+    syncing = false;
+  };
 }
 
 function renderWarningModalPage() {
@@ -1220,7 +1279,8 @@ function renderWarningModalPage() {
     body.innerHTML = `<div class="warning-empty">Tidak ada data untuk kategori ini.</div>`;
   } else {
     body.innerHTML = `
-      <div class="warning-table-wrap">
+      <div class="warning-table-top-scroll" id="warningTableTopScroll"><div class="warning-table-top-scroll-inner" id="warningTableTopScrollInner"></div></div>
+      <div class="warning-table-wrap" id="warningTableWrap">
         <table class="warning-table">
           <thead>
             <tr>
@@ -1241,7 +1301,7 @@ function renderWarningModalPage() {
           </thead>
           <tbody>
             ${pageRows.map((item, index) => `
-              <tr>
+              <tr class="warning-row--${getWarningUiKey(item.warning)}">
                 <td>${start + index + 1}</td>
                 <td>${escapeHtml(item.caraPengadaan || '-')}</td>
                 <td>${escapeHtml(item.jenisPengadaan || '-')}</td>
@@ -1254,7 +1314,7 @@ function renderWarningModalPage() {
                 <td>${escapeHtml(formatMoney(item.nilaiRealisasi || 0))}</td>
                 <td>${escapeHtml(item.statusPaket || '-')}</td>
                 <td>${escapeHtml(item.waktuPemilihan || '-')}</td>
-                <td>${escapeHtml(item.warning || '-')}</td>
+                <td>${renderWarningBadge(item.warning)}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -1262,6 +1322,8 @@ function renderWarningModalPage() {
       </div>
     `;
   }
+
+  window.setTimeout(syncWarningModalScrollers, 0);
 
   if (pageInfo) pageInfo.textContent = `Page ${WARNING_MODAL_STATE.page} / ${totalPages}`;
   if (prevBtn) prevBtn.disabled = WARNING_MODAL_STATE.page <= 1;
@@ -1326,13 +1388,13 @@ function openWarningModal(type) {
     <div class="warning-modal-card" role="dialog" aria-modal="true">
       <div class="warning-modal-header">
         <div>
-          <div class="warning-modal-kicker">ALLPROG · Warning Paket</div>
+          <div class="warning-modal-kicker">Detail Paket Warning</div>
           <h3 id="warningModalTitle">${escapeHtml(WARNING_MODAL_STATE.title)}</h3>
         </div>
         <button type="button" class="warning-modal-close" id="warningModalClose">×</button>
       </div>
       <div class="warning-modal-toolbar">
-        <div class="warning-modal-caption">Filter mengikuti satuan kerja yang sedang dipilih di dashboard ITKP.</div>
+        <div class="warning-modal-caption">Data mengikuti satuan kerja yang sedang dipilih di dashboard ITKP.</div>
         <button type="button" class="warning-modal-button" id="warningModalExport">Save ke XLSX</button>
       </div>
       <div class="warning-modal-body" id="warningModalBody"></div>
@@ -2025,17 +2087,17 @@ function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
         <div>
           <span class="section-kicker">Paket Warning · ${escapeHtml(scopeLabel)}</span>
           <h3>Paket Warning</h3>
-          <p class="section-subnote">Sumber: Sheet ALLPROG. Klik card untuk melihat detail paket warning.</p>
+          <p class="section-subnote">Klik salah satu status untuk melihat daftar paketnya.</p>
         </div>
         <span class="soft-pill">${formatNumber(warning.totalPaket)} paket</span>
       </div>
 
       <div class="summary-stat-grid summary-stat-grid--warning">
-        ${renderWarningCard('selesai', 'Selesai', warning.selesai, 'Status warning: Selesai', warning.selesai > 0 ? 'warning' : '')}
-        ${renderWarningCard('sedangBerjalan', 'Sedang Berjalan', warning.sedangBerjalan, 'Status warning: Sedang Berjalan', warning.sedangBerjalan > 0 ? 'warning' : '')}
-        ${renderWarningCard('belumBerjalan', 'Belum Berjalan', warning.belumBerjalan, 'Status warning: Belum Berjalan', '')}
-        ${renderWarningCard('melewatiWaktuPemilihan', 'Melewati Waktu Pemilihan', warning.melewatiWaktuPemilihan, 'Status warning: Melewati Waktu Pemilihan', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
-        ${renderWarningCard('melebihiTargetPemilihan', 'Melebihi Target Pemilihan', warning.melebihiTargetPemilihan, 'Status warning: Melebihi Target Pemilihan', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
+        ${renderWarningCard('selesai', 'Selesai', warning.selesai, 'Paket sudah selesai/prosesnya sudah tuntas.', warning.selesai > 0 ? 'success' : '')}
+        ${renderWarningCard('sedangBerjalan', 'Sedang Berjalan', warning.sedangBerjalan, 'Paket sudah ada proses/realisasi dan masih berjalan.', warning.sedangBerjalan > 0 ? 'info' : '')}
+        ${renderWarningCard('belumBerjalan', 'Belum Berjalan', warning.belumBerjalan, 'Paket belum ada proses/realisasi yang tercatat.', 'muted')}
+        ${renderWarningCard('melewatiWaktuPemilihan', 'Melewati Waktu Pemilihan', warning.melewatiWaktuPemilihan, 'Jadwal pemilihan sudah lewat, tapi paket belum selesai/bergerak sesuai data.', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
+        ${renderWarningCard('melebihiTargetPemilihan', 'Melebihi Target Pemilihan', warning.melebihiTargetPemilihan, 'Realisasi/proses muncul lebih cepat dari jadwal pemilihan yang direncanakan.', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
       </div>
     </div>
   `;
