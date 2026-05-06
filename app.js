@@ -729,6 +729,11 @@ async function fetchSheetRows(config) {
       normalized[normalizeHeader(cleanHeader)] = cell;
     });
 
+    // Simpan bentuk asli CSV supaya sheet tertentu yang kolomnya sudah pasti
+    // bisa dibaca berdasarkan posisi kolom. Ini penting untuk ALLPROG karena
+    // Google Visualization kadang membuat pencarian header menjadi terlalu longgar.
+    row.__headers = headers.map((header) => String(header || '').trim());
+    row.__cells = cells.map((cell) => String(cell || '').trim());
     row.__normalized = normalized;
     return row;
   }).filter((row) => {
@@ -1043,8 +1048,22 @@ function normalizeSatkerName(value) {
     .replace(/\s+/g, ' ');
 }
 
+function getAllprogCell(row, index, candidates) {
+  const cells = Array.isArray(row && row.__cells) ? row.__cells : [];
+  const valueByIndex = String(cells[index] || '').trim();
+
+  // ALLPROG punya struktur kolom tetap:
+  // A Cara Pengadaan, B Jenis Pengadaan, C Kode RUP, D Satuan Kerja,
+  // E Metode Pengadaan, F Sumber Transaksi, G Nama Paket, H Nilai Pagu,
+  // I Nilai Realisasi, J Status Paket, K Waktu Pemilihan, L Warning.
+  // Jadi popup dan export harus ambil dari posisi kolom ini, bukan tebakan header.
+  if (valueByIndex) return valueByIndex;
+
+  return getField(row, candidates || []);
+}
+
 function getAllprogSatker(row) {
-  return getField(row, [
+  return getAllprogCell(row, 3, [
     'Satuan Kerja',
     'Nama Satuan Kerja',
     'Satker',
@@ -1060,18 +1079,18 @@ function mapAllprogRows(rows, selectedProfileName, selectedIsCity) {
   const selectedKey = normalizeSatkerName(selectedProfileName);
 
   return (rows || []).map((row) => ({
-    caraPengadaan: getField(row, ['Cara Pengadaan']),
-    jenisPengadaan: getField(row, ['Jenis Pengadaan']),
-    kodeRup: getField(row, ['Kode RUP', 'Kode Rup']),
+    caraPengadaan: getAllprogCell(row, 0, ['Cara Pengadaan']),
+    jenisPengadaan: getAllprogCell(row, 1, ['Jenis Pengadaan']),
+    kodeRup: getAllprogCell(row, 2, ['Kode RUP', 'Kode Rup']),
     satker: getAllprogSatker(row),
-    metodePengadaan: getField(row, ['Metode Pengadaan']),
-    sumberTransaksi: getField(row, ['Sumber Transaksi']),
-    namaPaket: getField(row, ['Nama Paket']),
-    nilaiPagu: toNumber(getField(row, ['Nilai Pagu', 'Pagu'])),
-    nilaiRealisasi: toNumber(getField(row, ['Nilai Realisasi', 'Realisasi'])),
-    statusPaket: getField(row, ['Status Paket', 'Status']),
-    waktuPemilihan: getField(row, ['Waktu Pemilihan', 'Waktu_Pemilihan', 'Waktu Pemilihan Paket']),
-    warning: getField(row, ['Warning'])
+    metodePengadaan: getAllprogCell(row, 4, ['Metode Pengadaan']),
+    sumberTransaksi: getAllprogCell(row, 5, ['Sumber Transaksi']),
+    namaPaket: getAllprogCell(row, 6, ['Nama Paket']),
+    nilaiPagu: toNumber(getAllprogCell(row, 7, ['Nilai Pagu', 'Pagu'])),
+    nilaiRealisasi: toNumber(getAllprogCell(row, 8, ['Nilai Realisasi', 'Realisasi'])),
+    statusPaket: getAllprogCell(row, 9, ['Status Paket', 'Status']),
+    waktuPemilihan: getAllprogCell(row, 10, ['Waktu Pemilihan', 'Waktu_Pemilihan', 'Waktu Pemilihan Paket']),
+    warning: getAllprogCell(row, 11, ['Warning'])
   })).filter((item) => {
     if (selectedIsCity) return true;
     return normalizeSatkerName(item.satker) === selectedKey;
