@@ -1030,79 +1030,13 @@ function analyzeDashboardPackageStatuses(rows, metodeRup) {
 }
 
 function buildDashboardWarningSummary(planningRows, realRows, getFieldFn) {
-  const grouped = {};
-  const currentOrder = getCurrentMonthOrder();
-
-  (realRows || []).forEach((r) => {
-    const kode = String(getFieldFn(r, ['Kode RUP', 'kode_rup']) || '').trim();
-    if (!kode) return;
-
-    if (!grouped[kode]) {
-      grouped[kode] = {
-        recall_paket: 0,
-        total_realisasi: 0,
-        rows: [],
-        first_order: null
-      };
-    }
-
-    const nilai = toNumber(getFieldFn(r, ['Nilai Realisasi', 'nilai_realisasi', 'Total Realisasi']));
-    const waktuOrder = getMonthOrder(getFieldFn(r, ['Waktu Pemilihan', 'waktu_pemilihan']));
-
-    grouped[kode].recall_paket += 1;
-    grouped[kode].total_realisasi += nilai;
-
-    if (waktuOrder > 0) {
-      if (!grouped[kode].first_order || waktuOrder < grouped[kode].first_order) {
-        grouped[kode].first_order = waktuOrder;
-      }
-    }
-
-    grouped[kode].rows.push({
-      status_paket: String(getFieldFn(r, ['Status Paket', 'status_paket']) || '').trim(),
-      sumber_transaksi: String(getFieldFn(r, ['Sumber Transaksi', 'sumber_transaksi']) || '').trim(),
-      bast: String(getFieldFn(r, ['BAST', 'dok_realisasi']) || '').trim()
-    });
-  });
-
-  const result = {
+  return {
     sedangBerjalan: 0,
     selesaiProsesPemilihan: 0,
     melewatiWaktuPemilihan: 0,
     melebihiTargetPemilihan: 0,
     melebihiPaguRealisasi: 0
   };
-
-  (planningRows || []).forEach((r) => {
-    const kode = String(getFieldFn(r, ['Kode RUP', 'kode_rup']) || '').trim();
-    if (!kode) return;
-
-    const pagu = toNumber(getFieldFn(r, ['Nilai Pagu', 'Pagu', 'Total Pagu']));
-    const waktuPemilihanOrder = getMonthOrder(getFieldFn(r, ['Waktu Pemilihan', 'waktu_pemilihan']));
-    const metode = String(getFieldFn(r, ['Metode Pengadaan', 'metode_pengadaan']) || '').trim();
-
-    const real = grouped[kode] || { recall_paket: 0, total_realisasi: 0, rows: [], first_order: null };
-    const detail = analyzeDashboardPackageStatuses(real.rows || [], metode);
-
-    if (real.recall_paket > 0) {
-      if (detail.berjalan > 0) result.sedangBerjalan += 1;
-      else if (detail.selesaiPemilihan > 0) result.selesaiProsesPemilihan += 1;
-    }
-
-    if (real.recall_paket === 0 && waktuPemilihanOrder > 0 && waktuPemilihanOrder < currentOrder) {
-      result.melewatiWaktuPemilihan += 1;
-    }
-
-    if (real.recall_paket > 0 && real.first_order && waktuPemilihanOrder > 0 && real.first_order < waktuPemilihanOrder) {
-      result.melebihiTargetPemilihan += 1;
-    }
-
-    if (real.recall_paket > 0 && real.total_realisasi > pagu) {
-      result.melebihiPaguRealisasi += 1;
-    }
-  });
-
-  return result;
 }
 
 
@@ -1131,10 +1065,10 @@ function mapAllprogRows(rows, selectedProfileName, selectedIsCity) {
   const selectedKey = normalizeSatkerName(selectedProfileName);
 
   return (rows || []).map((row) => ({
-    satker: getAllprogSatker(row),
     caraPengadaan: getField(row, ['Cara Pengadaan']),
     jenisPengadaan: getField(row, ['Jenis Pengadaan']),
     kodeRup: getField(row, ['Kode RUP', 'Kode Rup']),
+    satker: getField(row, ['Satuan Kerja', 'Nama Satuan Kerja', 'Satker', 'Nama Satker', 'OPD', 'Nama OPD']),
     metodePengadaan: getField(row, ['Metode Pengadaan']),
     sumberTransaksi: getField(row, ['Sumber Transaksi']),
     namaPaket: getField(row, ['Nama Paket']),
@@ -1166,7 +1100,7 @@ function buildAllprogWarningSummary(rows) {
   (rows || []).forEach((item) => {
     const warning = normalizeWarningText(item.warning);
 
-    if (warning === 'selesai' || warning.includes('paket selesai')) {
+    if (warning === 'selesai' || warning.includes('selesai')) {
       summary.selesai += 1;
       return;
     }
@@ -1275,13 +1209,16 @@ function renderWarningModalPage() {
           <thead>
             <tr>
               <th>No</th>
-              <th>Satuan Kerja</th>
+              <th>Cara Pengadaan</th>
+              <th>Jenis Pengadaan</th>
               <th>Kode RUP</th>
+              <th>Satuan Kerja</th>
+              <th>Metode Pengadaan</th>
+              <th>Sumber Transaksi</th>
               <th>Nama Paket</th>
-              <th>Metode</th>
               <th>Nilai Pagu</th>
               <th>Nilai Realisasi</th>
-              <th>Status</th>
+              <th>Status Paket</th>
               <th>Waktu Pemilihan</th>
               <th>Warning</th>
             </tr>
@@ -1290,10 +1227,13 @@ function renderWarningModalPage() {
             ${pageRows.map((item, index) => `
               <tr>
                 <td>${start + index + 1}</td>
-                <td>${escapeHtml(item.satker || '-')}</td>
+                <td>${escapeHtml(item.caraPengadaan || '-')}</td>
+                <td>${escapeHtml(item.jenisPengadaan || '-')}</td>
                 <td>${escapeHtml(item.kodeRup || '-')}</td>
-                <td>${escapeHtml(item.namaPaket || '-')}</td>
+                <td>${escapeHtml(item.satker || '-')}</td>
                 <td>${escapeHtml(item.metodePengadaan || '-')}</td>
+                <td>${escapeHtml(item.sumberTransaksi || '-')}</td>
+                <td>${escapeHtml(item.namaPaket || '-')}</td>
                 <td>${escapeHtml(formatMoney(item.nilaiPagu || 0))}</td>
                 <td>${escapeHtml(formatMoney(item.nilaiRealisasi || 0))}</td>
                 <td>${escapeHtml(item.statusPaket || '-')}</td>
