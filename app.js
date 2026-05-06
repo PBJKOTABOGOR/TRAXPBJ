@@ -2047,12 +2047,21 @@ function renderInfoStat(label, value, desc, tone = '', meta = '') {
 
 function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
   const warning = data.warningSummary || {
+    totalPaket: (data.allprogRows || []).length,
+    selesai: 0,
     sedangBerjalan: 0,
-    selesaiProsesPemilihan: 0,
+    belumBerjalan: 0,
     melewatiWaktuPemilihan: 0,
-    melebihiTargetPemilihan: 0,
-    melebihiPaguRealisasi: 0
+    melebihiTargetPemilihan: 0
   };
+
+  const renderWarningCard = (type, label, value, desc, tone) => `
+    <button type="button" class="summary-stat summary-stat--clickable ${tone ? `summary-stat--${tone}` : ''}" data-warning-type="${type}">
+      <span class="summary-stat-label">${escapeHtml(label)}</span>
+      <b>${escapeHtml(formatNumber(value))}</b>
+      <small>${escapeHtml(desc)}</small>
+    </button>
+  `;
 
   return `
     <div class="card">
@@ -2060,17 +2069,17 @@ function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
         <div>
           <span class="section-kicker">Paket Warning · ${escapeHtml(scopeLabel)}</span>
           <h3>Paket Warning</h3>
-          <p class="section-subnote">${escapeHtml(scopeDesc)}.</p>
+          <p class="section-subnote">Sumber: Sheet ALLPROG. Klik card untuk melihat detail paket warning.</p>
         </div>
-        <span class="soft-pill soft-pill--${getToneByPercent(data.realisasiPersen)}">Serapan ${formatPercent(data.realisasiPersen)}</span>
+        <span class="soft-pill">${formatNumber(warning.totalPaket)} paket</span>
       </div>
 
       <div class="summary-stat-grid summary-stat-grid--warning">
-        ${renderInfoStat('Paket Sedang Berjalan', formatNumber(warning.sedangBerjalan), 'Paket realisasi masih berjalan/proses', warning.sedangBerjalan > 0 ? 'warning' : '')}
-        ${renderInfoStat('Paket Selesai Proses Pemilihan', formatNumber(warning.selesaiProsesPemilihan), 'Sudah selesai pemilihan, BAST belum terisi', warning.selesaiProsesPemilihan > 0 ? 'warning' : '')}
-        ${renderInfoStat('Paket Melewati Waktu Pemilihan', formatNumber(warning.melewatiWaktuPemilihan), 'Belum ada realisasi tapi jadwal sudah terlewati', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
-        ${renderInfoStat('Paket Melebihi Target Pemilihan', formatNumber(warning.melebihiTargetPemilihan), 'Realisasi lebih cepat dari jadwal; cek kembali kualitas perencanaannya', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
-        ${renderInfoStat('Paket Melebihi Pagu Realisasi', formatNumber(warning.melebihiPaguRealisasi), 'Nilai realisasi sudah melampaui pagu perencanaan', warning.melebihiPaguRealisasi > 0 ? 'danger' : '')}
+        ${renderWarningCard('selesai', 'Selesai', warning.selesai, 'Status warning: Selesai', warning.selesai > 0 ? 'warning' : '')}
+        ${renderWarningCard('sedangBerjalan', 'Sedang Berjalan', warning.sedangBerjalan, 'Status warning: Sedang Berjalan', warning.sedangBerjalan > 0 ? 'warning' : '')}
+        ${renderWarningCard('belumBerjalan', 'Belum Berjalan', warning.belumBerjalan, 'Status warning: Belum Berjalan', '')}
+        ${renderWarningCard('melewatiWaktuPemilihan', 'Melewati Waktu Pemilihan', warning.melewatiWaktuPemilihan, 'Status warning: Melewati Waktu Pemilihan', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
+        ${renderWarningCard('melebihiTargetPemilihan', 'Melebihi Target Pemilihan', warning.melebihiTargetPemilihan, 'Status warning: Melebihi Target Pemilihan', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
       </div>
     </div>
   `;
