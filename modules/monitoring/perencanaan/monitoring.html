@@ -287,6 +287,7 @@
     let currentPage = 1;
     let sortWaktuAsc = true;
     let groupedRealByKode = {};
+    let historyGabunganByKode = {};
 
     function csvUrlBySheetName(sheetId, sheetName) {
       const cacheBust = Date.now();
@@ -645,7 +646,7 @@
 
         const hist = String(item.history_kode_rup || item.kode_rup_raw || '').trim();
         if (hist && /[;|,]/.test(hist)) {
-          const separator = item.is_gabungan_rup || String(item.jenis_mapping || '').toLowerCase().includes('gabungan') ? ' + ' : ' → ';
+          const separator = item.is_gabungan_rup ? ' + ' : ' → ';
           return hist.split(/[;|,]+/).map(v => v.trim()).filter(Boolean).join(separator);
         }
 
@@ -678,6 +679,38 @@
       }
 
       return '';
+    }
+
+
+    function buildHistoryGabunganLookup(realRowsAsli) {
+      const lookup = {};
+      const rows = normalizeRows(realRowsAsli || []);
+
+      rows.forEach(r => {
+        const metode = String(r.metode_pengadaan || '').toLowerCase();
+        const history = String(
+          r.history_kode_rup ||
+          r.riwayat_kode_rup ||
+          ''
+        ).trim();
+
+        if (!metode.includes('pengadaan langsung')) return;
+        if (!history || !/[;|,]/.test(history)) return;
+
+        const parts = history
+          .split(/[;|,]+/)
+          .map(v => v.trim())
+          .filter(Boolean);
+
+        if (parts.length <= 1) return;
+
+        const label = [...new Set(parts)].join(' + ');
+        parts.forEach(kode => {
+          lookup[kode] = label;
+        });
+      });
+
+      return lookup;
     }
 
     function groupRealisasi(realRows) {
@@ -748,14 +781,8 @@
 
         let historyLabel = '';
 
-        const jenisMappingRaw = String(r.jenis_mapping || '').toLowerCase();
-
-        if (isGabunganRup || jenisMappingRaw.includes('gabungan')) {
-          if (historyParts.length > 1) {
-            historyLabel = historyParts.join(' + ');
-          } else {
-            historyLabel = getHistoryByScanningRow(r, kodeList[0]).replace(/ → /g, ' + ');
-          }
+        if (isGabunganRup) {
+          historyLabel = historyParts.join(' + ');
         } else {
           historyLabel = getHistoryKodeRupLabel(historyKodeRup || kodeRaw, kodeList[0]);
           if (!historyLabel) {
@@ -826,10 +853,11 @@
       return grouped;
     }
 
-    function buildMonitoringData(perencanaanRows, realisasiRows) {
+    function buildMonitoringData(perencanaanRows, realisasiRows, realisasiAsliRows) {
       const planRows = normalizeRows(perencanaanRows);
       const realRows = normalizeRows(realisasiRows);
 
+      historyGabunganByKode = buildHistoryGabunganLookup(realisasiAsliRows || []);
       groupedRealByKode = groupRealisasi(realRows);
 
       const currentOrder = getCurrentMonthOrder();
@@ -1232,9 +1260,14 @@
 
       setText('detailTitle', 'Detail Kode RUP ' + row.kode_rup);
       setText('detailKodeRup', row.kode_rup);
-      const historyDisplay = (historyVisible && historyVisible !== '-')
+      let historyDisplay = (historyVisible && historyVisible !== '-')
         ? historyVisible
         : (detailRows.find(item => item.history_label)?.history_label || '-');
+
+      if ((!historyDisplay || historyDisplay === '-') && historyGabunganByKode[String(row.kode_rup || '').trim()]) {
+        historyDisplay = historyGabunganByKode[String(row.kode_rup || '').trim()];
+      }
+
       setText('detailHistoryKodeRup', historyDisplay);
       setText('detailNamaPaket', row.nama_paket);
       setText('detailSatker', row.satuan_kerja);
