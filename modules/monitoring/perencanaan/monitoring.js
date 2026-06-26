@@ -17,8 +17,7 @@
     let currentPage = 1;
     let sortWaktuAsc = true;
     let groupedRealByKode = {};
-    let historyLookupByKode = {};
-    let historyLookupByKode = {};
+    let semicolonHistoryLookup = {};
     let moduleDestroyed = false;
 
     const cleanupListeners = [];
@@ -507,35 +506,30 @@
     }
 
 
-    function normKodeText(value) {
+    function normalizeKodeValue(value) {
       return String(value == null ? '' : value).trim().replace(/\.0$/, '');
     }
 
-    function splitKodeList(value) {
+    function splitHistoryKode(value) {
       return String(value || '')
         .split(/[;|,]+/)
-        .map(v => normKodeText(v))
+        .map(v => normalizeKodeValue(v))
         .filter(Boolean);
     }
 
-    function buildHistoryLookupFromOriginalRows(originalRows) {
+    function buildSemicolonHistoryLookup(realRows) {
       const lookup = {};
-      const rows = normalizeRows(originalRows || []);
 
-      rows.forEach(r => {
-        const historyRaw = String(
-          r.history_kode_rup ||
-          r.riwayat_kode_rup ||
-          ''
-        ).trim();
-
+      (realRows || []).forEach(r => {
+        const historyRaw = String(r.history_kode_rup || r.riwayat_kode_rup || '').trim();
         if (!historyRaw || !/[;|,]/.test(historyRaw)) return;
 
-        const parts = splitKodeList(historyRaw);
+        const parts = splitHistoryKode(historyRaw);
         if (parts.length <= 1) return;
 
         const metode = String(r.metode_pengadaan || '').toLowerCase();
-        const separator = metode.includes('pengadaan langsung') ? ' + ' : ' → ';
+        const jenisMapping = String(r.jenis_mapping || '').toLowerCase();
+        const separator = (metode.includes('pengadaan langsung') || jenisMapping.includes('gabungan')) ? ' + ' : ' → ';
         const label = [...new Set(parts)].join(separator);
 
         parts.forEach(kode => {
@@ -544,6 +538,28 @@
       });
 
       return lookup;
+    }
+
+    function getSemicolonHistoryForKode(kodeRup, realRows, semicolonLookup) {
+      const kode = normalizeKodeValue(kodeRup);
+
+      // Pertama: ambil dari baris realisasi yang sudah match kode tersebut.
+      const matched = (realRows || []).find(item => {
+        const h = String(item.history_kode_rup || '').trim();
+        return h && /[;|,]/.test(h);
+      });
+
+      if (matched) {
+        const parts = splitHistoryKode(matched.history_kode_rup);
+        if (parts.length > 1) {
+          const isGabungan = String(matched.jenis_mapping || '').toLowerCase().includes('gabungan') ||
+            String(matched.metode || '').toLowerCase().includes('pengadaan langsung');
+          return [...new Set(parts)].join(isGabungan ? ' + ' : ' → ');
+        }
+      }
+
+      // Kedua: cari dari seluruh D_REALISASI_MAP, kalau kode ini ada di dalam History Kode RUP.
+      return semicolonLookup[kode] || '-';
     }
 
     function groupRealisasi(realRows) {
@@ -686,11 +702,11 @@
       return grouped;
     }
 
-    function buildMonitoringData(perencanaanRows, realisasiRows, realisasiOriginalRows) {
+    function buildMonitoringData(perencanaanRows, realisasiRows) {
       const planRows = normalizeRows(perencanaanRows);
       const realRows = normalizeRows(realisasiRows);
 
-      historyLookupByKode = buildHistoryLookupFromOriginalRows(realisasiOriginalRows || []);
+      semicolonHistoryLookup = buildSemicolonHistoryLookup(realRows);
       groupedRealByKode = groupRealisasi(realRows);
 
       const currentOrder = getCurrentMonthOrder();
@@ -738,7 +754,7 @@
           const waktuPemilihanOrder = getWaktuOrder(waktuPemilihanLabel);
 
           const detailSummary = analyzePackageStatuses(real.rows || [], r.metode_pengadaan || '');
-          const historyDisplay = getHistoryFromMatchedRows(real.rows || [], kodeRup);
+          const historyDisplay = getSemicolonHistoryForKode(kodeRup, real.rows || [], semicolonHistoryLookup);
 
           let status = 'Belum Berjalan';
           if (recallPaket > 0) {
@@ -1108,26 +1124,18 @@
       return [...new Set(parts)].join(separator || ' + ');
     }
 
-    function getHistoryFromMatchedRows(rows, currentKodeRup) {
-      const current = normKodeText(currentKodeRup);
-
+    function getHistoryFromMatchedRows(rows) {
       const found = (rows || []).find(item => {
         const h = String(item.history_kode_rup || '').trim();
         return h && h !== '-';
       });
 
-      if (found) {
-        const isGabungan = String(found.jenis_mapping || '').toLowerCase().includes('gabungan') ||
-          String(found.metode || '').toLowerCase().includes('pengadaan langsung');
+      if (!found) return '-';
 
-        return normalizeHistoryText(found.history_kode_rup, isGabungan ? ' + ' : ' → ');
-      }
+      const isGabungan = String(found.jenis_mapping || '').toLowerCase().includes('gabungan') ||
+        String(found.metode || '').toLowerCase().includes('pengadaan langsung');
 
-      if (current && historyLookupByKode[current]) {
-        return historyLookupByKode[current];
-      }
-
-      return '-';
+      return normalizeHistoryText(found.history_kode_rup, isGabungan ? ' + ' : ' → ');
     }
 
     function openDetailModal(kodeRup) {
