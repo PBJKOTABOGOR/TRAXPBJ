@@ -444,7 +444,8 @@
 
         const hist = String(item.history_kode_rup || item.kode_rup_raw || '').trim();
         if (hist && /[;|,]/.test(hist)) {
-          return hist.split(/[;|,]+/).map(v => v.trim()).filter(Boolean).join(' → ');
+          const separator = item.is_gabungan_rup ? ' + ' : ' → ';
+          return hist.split(/[;|,]+/).map(v => v.trim()).filter(Boolean).join(separator);
         }
 
         if (hist && current && hist !== current) {
@@ -491,6 +492,12 @@
           2) Selain Pengadaan Langsung
              = titik koma dianggap RIWAYAT PERUBAHAN KODE.
              Realisasi hanya masuk ke Kode RUP aktif/terbaru.
+
+          CATATAN NILAI:
+          Untuk gabungan RUP, nilai kontrak paket realisasi TIDAK dibebankan penuh ke tiap RUP,
+          karena akan membuat % realisasi tiap RUP jadi melebihi pagu.
+          Di tabel monitoring, nilai gabungan akan disesuaikan maksimal sebesar pagu masing-masing RUP.
+          Nilai kontrak penuh tetap tampil di Detail.
         */
 
         const metodePengadaan = String(r.metode_pengadaan || '').trim();
@@ -566,6 +573,7 @@
           kode_rup_aktif: kodeList[kodeList.length - 1] || '',
           history_label: historyLabel,
           is_gabungan_rup: isGabunganRup,
+          jumlah_kode_gabungan: isGabunganRup ? kodeList.length : 0,
           jenis_mapping: isGabunganRup ? 'Penggabungan beberapa Kode RUP' : (historyLabel ? 'Perubahan Kode RUP' : ''),
           nama_paket: String(r.nama_paket || '').trim(),
           nama_penyedia: String(r.nama_penyedia || '').trim(),
@@ -574,7 +582,8 @@
           status_paket: String(r.status_paket || '').trim(),
           sumber_transaksi: String(r.sumber_transaksi || '').trim(),
           bast: String(r.bast || '').trim(),
-          nilai: nilai
+          nilai: nilai,
+          nilai_full: nilai
         };
 
         kodeList.forEach(kode => {
@@ -582,6 +591,7 @@
             grouped[kode] = {
               recall_paket: 0,
               total_realisasi: 0,
+              total_realisasi_full: 0,
               rows: [],
               first_order: null,
               history_count: 0,
@@ -591,6 +601,7 @@
 
           grouped[kode].recall_paket += 1;
           grouped[kode].total_realisasi += nilai;
+          grouped[kode].total_realisasi_full += nilai;
 
           if (historyLabel && !isGabunganRup) grouped[kode].history_count += 1;
           if (isGabunganRup) grouped[kode].gabungan_count += 1;
@@ -639,7 +650,19 @@
           };
 
           const recallPaket = Number(real.recall_paket || 0);
-          const totalRealisasi = Number(real.total_realisasi || 0);
+          const totalRealisasiFull = Number(real.total_realisasi_full || real.total_realisasi || 0);
+
+          /*
+            Jika realisasi berasal dari gabungan beberapa Kode RUP Pengadaan Langsung,
+            jangan tampilkan nilai paket gabungan penuh pada setiap RUP.
+            Untuk monitoring per kode RUP, cukup dianggap terealisasi sebesar pagu RUP tersebut.
+            Nilai paket gabungan penuh tetap tampil di Detail.
+          */
+          let totalRealisasi = Number(real.total_realisasi || 0);
+          if (Number(real.gabungan_count || 0) > 0 && pagu > 0) {
+            totalRealisasi = Math.min(totalRealisasi, pagu);
+          }
+
           const persentase = pagu > 0 ? (totalRealisasi / pagu) * 100 : 0;
           const sisaPagu = pagu - totalRealisasi;
 
@@ -1059,7 +1082,10 @@
             <td>${escapeHtml(item.status_paket)}</td>
             <td>${escapeHtml(item.sumber_transaksi)}</td>
             <td>${escapeHtml(item.bast || '-')}</td>
-            <td class="right">${formatMoney(item.nilai)}</td>
+            <td class="right">
+              ${formatMoney(item.nilai)}
+              ${item.is_gabungan_rup ? `<div class="history-rup-line">Nilai paket gabungan</div>` : ''}
+            </td>
           `;
           tbody.appendChild(tr);
         });
