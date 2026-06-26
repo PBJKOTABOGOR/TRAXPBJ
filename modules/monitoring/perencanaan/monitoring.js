@@ -674,6 +674,8 @@
         .filter(r => String(r.kode_rup || '').trim())
         .map(r => {
           const kodeRup = String(r.kode_rup || '').trim();
+          const statusKodeRup = String(r.status_kode_rup || '').trim();
+          const keteranganKodeRup = String(r.keterangan_kode_rup || '').trim();
           const historyDisplay = formatHistoryKodeRupPlan(
             r.history_kode_rup ||
             r.riwayat_kode_rup ||
@@ -799,6 +801,8 @@
             warning: warning,
             ket_jadwal: ketJadwal,
             tindak_lanjut: tindakLanjut,
+            status_kode_rup: statusKodeRup,
+            keterangan_kode_rup: keteranganKodeRup,
             history_display: historyDisplay,
             detail_summary: detailSummary
           };
@@ -1135,7 +1139,8 @@
       setText('detailWarning', row.warning || 'OK');
       setText(
         'detailTindakLanjut',
-        (row.history_display && row.history_display !== '-' ? 'Gabungan / History Kode RUP: ' + row.history_display + '\n' : '') +
+        (row.history_display && row.history_display !== '-' ? (row.status_kode_rup || 'Gabungan / History Kode RUP') + ': ' + row.history_display + '\n' : '') +
+        (row.keterangan_kode_rup ? row.keterangan_kode_rup + '\n' : '') +
         (row.tindak_lanjut || 'Tidak ada catatan tambahan.')
       );
 
