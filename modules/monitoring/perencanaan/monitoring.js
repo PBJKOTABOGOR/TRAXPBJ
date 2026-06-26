@@ -116,6 +116,31 @@
     }
 
 
+    async function fetchRealisasiSheet() {
+      /*
+        Prioritas baca D_REALISASI_MAP.
+        Sheet ini adalah hasil normalisasi:
+        - 1 Kode RUP = 1 baris realisasi.
+        - Khusus Pengadaan Langsung gabungan, 1 paket realisasi akan dipecah ke semua Kode RUP di History Kode RUP.
+
+        Jika D_REALISASI_MAP belum dibuat, sistem fallback ke D_REALISASI.
+      */
+      try {
+        const mapRows = await fetchSheet(CONFIG.SHEETS.realisasiMap);
+        const normalized = normalizeRows(mapRows);
+        const validRows = normalized.filter(r => String(r.kode_rup || '').trim());
+
+        if (validRows.length > 0) {
+          return mapRows;
+        }
+      } catch (err) {
+        console.warn('D_REALISASI_MAP belum tersedia, fallback ke D_REALISASI.', err);
+      }
+
+      return fetchSheet(CONFIG.SHEETS.realisasi);
+    }
+
+
     function showMonitoringLoader(text) {
       const loader = qs('monitoringLoader') || document.getElementById('monitoringLoader');
       if (!loader) return;
@@ -1192,7 +1217,7 @@
 
         const [perencanaanRows, realisasiRows] = await Promise.all([
           fetchSheet(CONFIG.SHEETS.perencanaan),
-          fetchSheet(CONFIG.SHEETS.realisasi)
+          fetchRealisasiSheet()
         ]);
 
         if (moduleDestroyed) return;
