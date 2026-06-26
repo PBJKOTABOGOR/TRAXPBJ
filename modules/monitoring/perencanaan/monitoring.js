@@ -683,9 +683,10 @@
         .filter(r => String(r.kode_rup || '').trim())
         .map(r => {
           const kodeRup = String(r.kode_rup || '').trim();
-          const statusKodeRup = String(r.status_kode_rup || '').trim();
-          const keteranganKodeRup = String(r.keterangan_kode_rup || '').trim();
+          const statusKodeRup = String(r.info_status_kode_rup || r.status_kode_rup || '').trim();
+          const keteranganKodeRup = String(r.info_keterangan_kode_rup || r.keterangan_kode_rup || '').trim();
           const historyDisplay = formatHistoryKodeRupPlan(
+            r.info_history_kode_rup ||
             r.history_kode_rup ||
             r.riwayat_kode_rup ||
             r.history_rup ||
