@@ -702,6 +702,21 @@
       return grouped;
     }
 
+
+    function formatHistoryForDisplay(value) {
+      const raw = String(value || '').trim();
+      if (!raw || raw === '-') return '-';
+
+      const parts = raw
+        .split(/[;|,]+/)
+        .map(v => String(v || '').trim())
+        .filter(Boolean);
+
+      if (parts.length <= 1) return '-';
+
+      return [...new Set(parts)].join(' + ');
+    }
+
     function buildMonitoringData(perencanaanRows, realisasiRows) {
       const planRows = normalizeRows(perencanaanRows);
       const realRows = normalizeRows(realisasiRows);
@@ -715,6 +730,13 @@
         .filter(r => String(r.kode_rup || '').trim())
         .map(r => {
           const kodeRup = String(r.kode_rup || '').trim();
+          const historyFromPlan = formatHistoryForDisplay(
+            r.history_kode_rup ||
+            r.riwayat_kode_rup ||
+            r.history_kode_rup_display ||
+            r.history_rup ||
+            ''
+          );
 
           const pagu = parseMoney(
             r.nilai_pagu ||
@@ -754,7 +776,7 @@
           const waktuPemilihanOrder = getWaktuOrder(waktuPemilihanLabel);
 
           const detailSummary = analyzePackageStatuses(real.rows || [], r.metode_pengadaan || '');
-          const historyDisplay = getSemicolonHistoryForKode(kodeRup, real.rows || [], semicolonHistoryLookup);
+          const historyDisplay = historyFromPlan !== '-' ? historyFromPlan : getSemicolonHistoryForKode(kodeRup, real.rows || [], semicolonHistoryLookup);
 
           let status = 'Belum Berjalan';
           if (recallPaket > 0) {
