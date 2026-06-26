@@ -645,7 +645,7 @@
 
         const hist = String(item.history_kode_rup || item.kode_rup_raw || '').trim();
         if (hist && /[;|,]/.test(hist)) {
-          const separator = item.is_gabungan_rup ? ' + ' : ' → ';
+          const separator = item.is_gabungan_rup || String(item.jenis_mapping || '').toLowerCase().includes('gabungan') ? ' + ' : ' → ';
           return hist.split(/[;|,]+/).map(v => v.trim()).filter(Boolean).join(separator);
         }
 
@@ -748,8 +748,14 @@
 
         let historyLabel = '';
 
-        if (isGabunganRup) {
-          historyLabel = historyParts.join(' + ');
+        const jenisMappingRaw = String(r.jenis_mapping || '').toLowerCase();
+
+        if (isGabunganRup || jenisMappingRaw.includes('gabungan')) {
+          if (historyParts.length > 1) {
+            historyLabel = historyParts.join(' + ');
+          } else {
+            historyLabel = getHistoryByScanningRow(r, kodeList[0]).replace(/ → /g, ' + ');
+          }
         } else {
           historyLabel = getHistoryKodeRupLabel(historyKodeRup || kodeRaw, kodeList[0]);
           if (!historyLabel) {
@@ -1226,7 +1232,10 @@
 
       setText('detailTitle', 'Detail Kode RUP ' + row.kode_rup);
       setText('detailKodeRup', row.kode_rup);
-      setText('detailHistoryKodeRup', historyVisible);
+      const historyDisplay = (historyVisible && historyVisible !== '-')
+        ? historyVisible
+        : (detailRows.find(item => item.history_label)?.history_label || '-');
+      setText('detailHistoryKodeRup', historyDisplay);
       setText('detailNamaPaket', row.nama_paket);
       setText('detailSatker', row.satuan_kerja);
       setText('detailPengadaan', row.pengadaan);
