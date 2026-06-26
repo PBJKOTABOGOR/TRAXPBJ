@@ -17,6 +17,8 @@
     let currentPage = 1;
     let sortWaktuAsc = true;
     let groupedRealByKode = {};
+    let historyLookupByKode = {};
+    let historyLookupByKode = {};
     let moduleDestroyed = false;
 
     const cleanupListeners = [];
@@ -504,6 +506,46 @@
       return '';
     }
 
+
+    function normKodeText(value) {
+      return String(value == null ? '' : value).trim().replace(/\.0$/, '');
+    }
+
+    function splitKodeList(value) {
+      return String(value || '')
+        .split(/[;|,]+/)
+        .map(v => normKodeText(v))
+        .filter(Boolean);
+    }
+
+    function buildHistoryLookupFromOriginalRows(originalRows) {
+      const lookup = {};
+      const rows = normalizeRows(originalRows || []);
+
+      rows.forEach(r => {
+        const historyRaw = String(
+          r.history_kode_rup ||
+          r.riwayat_kode_rup ||
+          ''
+        ).trim();
+
+        if (!historyRaw || !/[;|,]/.test(historyRaw)) return;
+
+        const parts = splitKodeList(historyRaw);
+        if (parts.length <= 1) return;
+
+        const metode = String(r.metode_pengadaan || '').toLowerCase();
+        const separator = metode.includes('pengadaan langsung') ? ' + ' : ' → ';
+        const label = [...new Set(parts)].join(separator);
+
+        parts.forEach(kode => {
+          if (!lookup[kode]) lookup[kode] = label;
+        });
+      });
+
+      return lookup;
+    }
+
     function groupRealisasi(realRows) {
       const grouped = {};
 
@@ -644,10 +686,11 @@
       return grouped;
     }
 
-    function buildMonitoringData(perencanaanRows, realisasiRows) {
+    function buildMonitoringData(perencanaanRows, realisasiRows, realisasiOriginalRows) {
       const planRows = normalizeRows(perencanaanRows);
       const realRows = normalizeRows(realisasiRows);
 
+      historyLookupByKode = buildHistoryLookupFromOriginalRows(realisasiOriginalRows || []);
       groupedRealByKode = groupRealisasi(realRows);
 
       const currentOrder = getCurrentMonthOrder();
@@ -695,7 +738,7 @@
           const waktuPemilihanOrder = getWaktuOrder(waktuPemilihanLabel);
 
           const detailSummary = analyzePackageStatuses(real.rows || [], r.metode_pengadaan || '');
-          const historyDisplay = getHistoryFromMatchedRows(real.rows || []);
+          const historyDisplay = getHistoryFromMatchedRows(real.rows || [], kodeRup);
 
           let status = 'Belum Berjalan';
           if (recallPaket > 0) {
@@ -1065,18 +1108,26 @@
       return [...new Set(parts)].join(separator || ' + ');
     }
 
-    function getHistoryFromMatchedRows(rows) {
+    function getHistoryFromMatchedRows(rows, currentKodeRup) {
+      const current = normKodeText(currentKodeRup);
+
       const found = (rows || []).find(item => {
         const h = String(item.history_kode_rup || '').trim();
         return h && h !== '-';
       });
 
-      if (!found) return '-';
+      if (found) {
+        const isGabungan = String(found.jenis_mapping || '').toLowerCase().includes('gabungan') ||
+          String(found.metode || '').toLowerCase().includes('pengadaan langsung');
 
-      const isGabungan = String(found.jenis_mapping || '').toLowerCase().includes('gabungan') ||
-        String(found.metode || '').toLowerCase().includes('pengadaan langsung');
+        return normalizeHistoryText(found.history_kode_rup, isGabungan ? ' + ' : ' → ');
+      }
 
-      return normalizeHistoryText(found.history_kode_rup, isGabungan ? ' + ' : ' → ');
+      if (current && historyLookupByKode[current]) {
+        return historyLookupByKode[current];
+      }
+
+      return '-';
     }
 
     function openDetailModal(kodeRup) {
