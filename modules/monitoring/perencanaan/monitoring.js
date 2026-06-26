@@ -5,7 +5,7 @@
     SHEET_ID: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
     SHEETS: {
       perencanaan: 'D_PERENCANAAN',
-      realisasi: 'D_REALISASI'
+      realisasi: 'D_REALISASI_MAP'
     }
   };
 
