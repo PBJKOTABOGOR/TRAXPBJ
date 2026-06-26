@@ -1,7 +1,20 @@
 <div class="monitoring-module">
+  <div id="monitoringLoader" class="monitoring-loader show">
+    <div class="loader-card">
+      <div class="loader-logo">
+        <span>S</span>
+      </div>
+      <div class="loader-title">Memuat Monitoring</div>
+      <div class="loader-subtitle">Mengambil data dari Google Sheet...</div>
+      <div class="loader-bar">
+        <div class="loader-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="wrap">
     <div class="hero">
-      <h1>Monitoring Perencanaan</h1>
+      <h1>Monitoring Realisasi Perencanaan</h1>
       <p>Untuk Tender dan Non Tender, jika sudah ada BAST maka dianggap selesai penuh. Jika belum ada BAST namun status paket sudah selesai, maka dianggap <b>Selesai Proses Pemilihan</b>.</p>
 
       <div class="summary-strip">
@@ -34,7 +47,7 @@
 
     <div class="card">
       <h2>Filter Monitoring</h2>
-      <div class="sub">Tabel utama disederhanakan. Informasi status paket rinci, BAST, adendum, dan tindak lanjut ditampilkan di Detail.</div>
+      <div class="sub">Gunakan filter di bawah untuk mencari paket. Detail realisasi, BAST, riwayat kode RUP, dan catatan tindak lanjut tersedia pada tombol Detail.</div>
 
       <div class="grid grid-7">
         <div>
@@ -73,7 +86,6 @@
             <option value="">Semua</option>
             <option value="Melewati">Melewati</option>
             <option value="Belum">Belum</option>
-            <option value="Melebihi">Melebihi</option>
             <option value="Sesuai">Sesuai</option>
           </select>
         </div>
@@ -85,8 +97,9 @@
 
       <div class="grid grid-3" style="margin-top:12px;">
         <div>
-          <label>Search Kode RUP</label>
-          <input type="text" id="filter_koderup" placeholder="Cari Kode RUP / Nama Paket / Satuan Kerja">
+          <label>Pencarian Cepat</label>
+          <input type="text" id="filter_koderup" placeholder="Cari Kode RUP, nama paket, atau satuan kerja">
+          <div class="input-help">Contoh: 66824520 / nama paket / nama OPD</div>
         </div>
         <div>
           <label>Jenis Pengadaan</label>
@@ -102,11 +115,19 @@
         </div>
       </div>
 
-      <div class="inline-actions">
-        <button onclick="runMonitoring()">Tampilkan</button>
+      <div class="inline-actions action-bar">
+        <button onclick="runMonitoring()">Tampilkan Data</button>
         <button class="secondary" onclick="toggleSortWaktu()">Urut Waktu: <span id="sortWaktuLabel">Terlama → Terbaru</span></button>
-        <button class="secondary" onclick="resetMonitoring()">Reset</button>
+        <button class="secondary" onclick="resetMonitoring()">Reset Filter</button>
         <button class="secondary" onclick="exportMonitoringExcel()">Export Excel</button>
+      </div>
+
+      <div class="quick-filter-panel">
+        <div class="quick-filter-title">Filter cepat:</div>
+        <button type="button" class="chip-btn" onclick="setQuickMonitoringFilter('belum')">Belum Ada Realisasi</button>
+        <button type="button" class="chip-btn" onclick="setQuickMonitoringFilter('selesai')">Sudah Selesai</button>
+        <button type="button" class="chip-btn" onclick="setQuickMonitoringFilter('warning')">Perlu Perhatian</button>
+        <button type="button" class="chip-btn" onclick="setQuickMonitoringFilter('all')">Tampilkan Semua</button>
       </div>
 
       <div id="monitoringStatus" class="status"></div>
@@ -114,9 +135,24 @@
 
     <div class="card">
       <h2>Daftar Monitoring Kode RUP</h2>
-      <div class="sub">Sumber data utama langsung dari Google Sheet publik.</div>
+      <div class="sub">Daftar paket perencanaan dan status realisasinya. Klik kode RUP atau tombol Detail untuk melihat informasi lengkap.</div>
 
-      <div class="table-wrap">
+      <div class="monitoring-insight-row">
+        <div class="insight-card">
+          <div class="insight-label">Data Ditampilkan</div>
+          <div class="insight-value" id="insightDataTampil">0</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-label">Butuh Perhatian</div>
+          <div class="insight-value" id="insightWarning">0</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-label">Realisasi Tercatat</div>
+          <div class="insight-value" id="insightAdaRealisasi">0</div>
+        </div>
+      </div>
+
+      <div class="table-wrap friendly-table">
         <table>
           <thead>
             <tr>
@@ -165,6 +201,11 @@
           <div class="meta-box">
             <div class="meta-label">Kode RUP</div>
             <div class="meta-value" id="detailKodeRup">-</div>
+          </div>
+
+          <div class="meta-box history-rup-box">
+            <div class="meta-label">History Kode RUP</div>
+            <div class="meta-value compact history-rup-text" id="detailHistoryKodeRup">-</div>
           </div>
           <div class="meta-box">
             <div class="meta-label">Nama Paket</div>
@@ -294,6 +335,24 @@
       });
     }
 
+
+    function showMonitoringLoader(text) {
+      const loader = qs('monitoringLoader') || document.getElementById('monitoringLoader');
+      if (!loader) return;
+
+      const subtitle = loader.querySelector('.loader-subtitle');
+      if (subtitle && text) subtitle.innerText = text;
+
+      loader.classList.add('show');
+    }
+
+    function hideMonitoringLoader() {
+      const loader = qs('monitoringLoader') || document.getElementById('monitoringLoader');
+      if (!loader) return;
+
+      loader.classList.remove('show');
+    }
+
     function setText(id, val) {
       const el = document.getElementById(id);
       if (el) el.innerText = val || '';
@@ -417,12 +476,10 @@
     function buildJadwalBadge(v) {
       if (v === 'Melewati') return `<span class="badge b-jadwal-melewati">${escapeHtml(v)}</span>`;
       if (v === 'Belum') return `<span class="badge b-jadwal-belum">${escapeHtml(v)}</span>`;
-      if (v === 'Melebihi') return `<span class="badge b-jadwal-melebihi">${escapeHtml(v)}</span>`;
       return `<span class="badge b-jadwal-sesuai">${escapeHtml(v)}</span>`;
     }
 
     function warningCell(v) {
-      if (v === 'Melebihi target pemilihan dari bulan ini.') return `<span class="warn-info">${escapeHtml(v)}</span>`;
       if (v && v !== 'OK') return `<span class="warn-bad">${escapeHtml(v)}</span>`;
       return `<span class="warn-ok">OK</span>`;
     }
@@ -509,19 +566,86 @@
       return summary;
     }
 
+
+    function getKodeRupAktifFromText(value) {
+      const raw = String(value || '').trim();
+      if (!raw) return '';
+
+      const parts = raw
+        .split(';')
+        .map(v => v.trim())
+        .filter(Boolean);
+
+      return parts.length ? parts[parts.length - 1] : raw;
+    }
+
+    function getHistoryKodeRupLabel(historyValue, kodeAktif) {
+      const historyRaw = String(historyValue || '').trim();
+      const aktifRaw = String(kodeAktif || '').trim();
+
+      if (!historyRaw) return '';
+      if (!historyRaw.includes(';')) return '';
+
+      const parts = historyRaw
+        .split(';')
+        .map(v => v.trim())
+        .filter(Boolean);
+
+      if (!parts.length) return '';
+
+      const latest = parts[parts.length - 1] || '';
+      if (aktifRaw && latest !== aktifRaw) parts.push(aktifRaw);
+
+      return [...new Set(parts)].join(' → ');
+    }
+
+
+    function getDetailHistoryText(rows) {
+      const histories = (rows || [])
+        .map(item => String(item.history_label || item.history_kode_rup || item.kode_rup_raw || '').trim())
+        .filter(v => v && v.includes(';'));
+
+      const unique = [...new Set(histories)];
+      return unique.length ? unique.join(' | ') : '';
+    }
+
     function groupRealisasi(realRows) {
       const grouped = {};
 
       realRows.forEach(r => {
-        const kode = String(r.kode_rup || '').trim();
+        /*
+          Struktur sheet D_REALISASI yang disarankan:
+          - History Kode RUP = kolom riwayat, contoh: 63112551;66824520
+          - Kode RUP         = kolom kode aktif/terbaru, contoh: 66824520
+
+          Kalau kolom Kode RUP masih berisi 63112551;66824520,
+          sistem tetap ambil kode terakhir sebagai kode aktif.
+        */
+        const historyKodeRup = String(
+          r.history_kode_rup ||
+          r.riwayat_kode_rup ||
+          ''
+        ).trim();
+
+        const kodeRaw = String(
+          r.kode_rup ||
+          r.koderup ||
+          r.kode_rup_paket ||
+          ''
+        ).trim();
+
+        const kode = getKodeRupAktifFromText(kodeRaw || historyKodeRup);
         if (!kode) return;
+
+        const historyLabel = getHistoryKodeRupLabel(historyKodeRup || kodeRaw, kode);
 
         if (!grouped[kode]) {
           grouped[kode] = {
             recall_paket: 0,
             total_realisasi: 0,
             rows: [],
-            first_order: null
+            first_order: null,
+            history_count: 0
           };
         }
 
@@ -538,6 +662,8 @@
         grouped[kode].recall_paket += 1;
         grouped[kode].total_realisasi += nilai;
 
+        if (historyLabel) grouped[kode].history_count += 1;
+
         if (waktuOrder > 0) {
           if (!grouped[kode].first_order || waktuOrder < grouped[kode].first_order) {
             grouped[kode].first_order = waktuOrder;
@@ -546,6 +672,9 @@
 
         grouped[kode].rows.push({
           kode_paket: String(r.kode_paket || '').trim(),
+          history_kode_rup: historyKodeRup,
+          kode_rup_aktif: kode,
+          history_label: historyLabel,
           nama_paket: String(r.nama_paket || '').trim(),
           nama_penyedia: String(r.nama_penyedia || '').trim(),
           satuan_kerja: String(r.nama_satuan_kerja || '').trim(),
@@ -613,11 +742,7 @@
 
           let posisiJadwal = 'Belum';
           if (recallPaket > 0) {
-            if (waktuPemilihanOrder > currentOrder) {
-              posisiJadwal = 'Melebihi';
-            } else {
-              posisiJadwal = 'Sesuai';
-            }
+            posisiJadwal = 'Sesuai';
           } else {
             posisiJadwal = waktuPemilihanOrder < currentOrder ? 'Melewati' : 'Belum';
           }
@@ -625,8 +750,10 @@
           let warning = 'OK';
           if (recallPaket === 0 && posisiJadwal === 'Melewati') {
             warning = 'Belum ada realisasi dan sudah melewati waktu pemilihan.';
-          } else if (recallPaket > 0 && posisiJadwal === 'Melebihi') {
-            warning = 'Melebihi target pemilihan dari bulan ini.';
+          }
+
+          if (recallPaket > 0 && Number(real.history_count || 0) > 0 && warning === 'OK') {
+            warning = 'Kode RUP realisasi memiliki riwayat perubahan kode.';
           }
 
           const isEPurchasing = String(r.metode_pengadaan || '').toLowerCase().includes('e-purchasing');
@@ -700,6 +827,40 @@
       fillSelect('filter_metode', [...new Set(rows.map(r => r.metode).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')));
       fillSelect('filter_jenis', [...new Set(rows.map(r => r.jenis).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')));
       fillSelect('filter_waktu_pemilihan', [...new Set(rows.map(r => r.waktu_pemilihan_label).filter(Boolean))].sort((a, b) => getWaktuOrder(a) - getWaktuOrder(b)));
+    }
+
+
+    function setQuickMonitoringFilter(type) {
+      const statusEl = qs('filter_status');
+      const warningEl = qs('filter_warning');
+      const keywordEl = qs('filter_koderup');
+
+      if (type === 'belum') {
+        if (statusEl) statusEl.value = 'Belum Berjalan';
+        if (warningEl) warningEl.value = '';
+      } else if (type === 'selesai') {
+        if (statusEl) statusEl.value = 'Selesai';
+        if (warningEl) warningEl.value = '';
+      } else if (type === 'warning') {
+        if (statusEl) statusEl.value = '';
+        if (warningEl) warningEl.value = 'PERLU';
+      } else {
+        if (statusEl) statusEl.value = '';
+        if (warningEl) warningEl.value = '';
+        if (keywordEl) keywordEl.value = '';
+      }
+
+      runMonitoring();
+    }
+
+    function renderInsights(rows) {
+      const dataTampil = rows.length;
+      const warning = rows.filter(r => r.warning && r.warning !== 'OK').length;
+      const adaRealisasi = rows.filter(r => Number(r.recall_paket || 0) > 0).length;
+
+      setText('insightDataTampil', String(dataTampil));
+      setText('insightWarning', String(warning));
+      setText('insightAdaRealisasi', String(adaRealisasi));
     }
 
     function renderSummary(rows) {
@@ -918,15 +1079,42 @@
       runMonitoring();
     }
 
+
+    function getReadableHistoryKodeRup(rows, currentKodeRup) {
+      const current = String(currentKodeRup || '').trim();
+
+      const histories = (rows || []).map(item => {
+        const label = String(item.history_label || '').trim();
+        if (label) return label;
+
+        const hist = String(item.history_kode_rup || item.kode_rup_raw || '').trim();
+        if (hist && hist.includes(';')) {
+          return hist.split(';').map(v => v.trim()).filter(Boolean).join(' → ');
+        }
+
+        if (hist && current && hist !== current) {
+          return hist + ' → ' + current;
+        }
+
+        return '';
+      }).filter(Boolean);
+
+      const unique = [...new Set(histories)];
+      return unique.length ? unique.join(' | ') : '-';
+    }
+
     function openDetailModal(kodeRup) {
       const row = allRows.find(r => String(r.kode_rup) === String(kodeRup));
       if (!row) return;
 
       const detailRows = (groupedRealByKode[kodeRup] && groupedRealByKode[kodeRup].rows) ? groupedRealByKode[kodeRup].rows : [];
       const ds = row.detail_summary || {};
+      const historyVisible = getReadableHistoryKodeRup(detailRows, row.kode_rup);
+      const historyText = getDetailHistoryText(detailRows);
 
       setText('detailTitle', 'Detail Kode RUP ' + row.kode_rup);
       setText('detailKodeRup', row.kode_rup);
+      setText('detailHistoryKodeRup', historyVisible);
       setText('detailNamaPaket', row.nama_paket);
       setText('detailSatker', row.satuan_kerja);
       setText('detailPengadaan', row.pengadaan);
@@ -941,7 +1129,11 @@
       setText('detailSisaPagu', formatMoney(row.sisa_pagu));
       setText('detailRingkasanPaket', ds.ringkasanPaket || 'Belum ada paket realisasi');
       setText('detailWarning', row.warning || 'OK');
-      setText('detailTindakLanjut', row.tindak_lanjut || 'Tidak ada catatan tambahan.');
+      setText(
+        'detailTindakLanjut',
+        (historyVisible && historyVisible !== '-' ? 'Riwayat perubahan Kode RUP: ' + historyVisible + '\n' : '') +
+        (row.tindak_lanjut || 'Tidak ada catatan tambahan.')
+      );
 
       const tbody = document.getElementById('detailBody');
       const empty = document.getElementById('detailEmpty');
@@ -957,7 +1149,11 @@
         detailRows.forEach(item => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${escapeHtml(item.kode_paket)}</td>
+            <td>
+              ${escapeHtml(item.kode_paket)}
+              ${item.history_label ? `<div style="font-size:12px;font-weight:800;color:#1d4ed8;margin-top:4px;">History RUP: ${escapeHtml(item.history_label)}</div>` : ''}
+              ${(!item.history_label && item.history_kode_rup && String(item.history_kode_rup).includes(';')) ? `<div style="font-size:12px;font-weight:800;color:#1d4ed8;margin-top:4px;">History RUP: ${escapeHtml(String(item.history_kode_rup).replace(/;/g, ' → '))}</div>` : ''}
+            </td>
             <td>${escapeHtml(item.nama_paket)}</td>
             <td>${escapeHtml(item.nama_penyedia)}</td>
             <td>${escapeHtml(item.satuan_kerja)}</td>
@@ -1091,6 +1287,7 @@
 
     async function loadMonitoringData() {
       try {
+        showMonitoringLoader('Mengambil data dari Google Sheet...');
         setText('monitoringStatus', 'Memuat data dari Google Sheet...');
 
         const [perencanaanRows, realisasiRows] = await Promise.all([
@@ -1103,12 +1300,19 @@
         setText('sortWaktuLabel', sortWaktuAsc ? 'Terlama → Terbaru' : 'Terbaru → Terlama');
         setText('sortWaktuArrow', sortWaktuAsc ? '↑' : '↓');
         runMonitoring();
+        hideMonitoringLoader();
       } catch (err) {
         console.error(err);
+        hideMonitoringLoader();
         setText('monitoringStatus', 'Gagal memuat data monitoring: ' + (err.message || String(err)));
       }
     }
 
     loadMonitoringData();
+
+    // Fallback agar loader tidak nyangkut kalau koneksi/CDN Google Sheet lambat.
+    setTimeout(() => {
+      hideMonitoringLoader();
+    }, 25000);
   </script>
 </div>
