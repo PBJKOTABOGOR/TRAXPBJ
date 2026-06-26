@@ -90,7 +90,8 @@
     }
 
     function csvUrlBySheetName(sheetId, sheetName) {
-      return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+      const cacheBust = Date.now();
+      return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&cache_bust=${cacheBust}`;
     }
 
     function fetchSheet(sheetName) {
@@ -457,6 +458,26 @@
       return unique.length ? unique.join(' | ') : '-';
     }
 
+
+    function getHistoryByScanningRow(row, activeKode) {
+      const active = String(activeKode || '').trim();
+      const values = Object.values(row || {});
+
+      for (const val of values) {
+        const text = String(val || '').trim();
+        if (!text) continue;
+
+        if (/[;|,]/.test(text)) {
+          const parts = text.split(/[;|,]+/).map(v => v.trim()).filter(Boolean);
+          if (parts.length > 1 && (!active || parts.includes(active))) {
+            return parts.join(' → ');
+          }
+        }
+      }
+
+      return '';
+    }
+
     function groupRealisasi(realRows) {
       const grouped = {};
 
@@ -500,7 +521,10 @@
         const kode = getKodeRupAktifFromText(kodeRaw || historyKodeRup);
         if (!kode) return;
 
-        const historyLabel = getHistoryKodeRupLabel(historyKodeRup || kodeRaw, kode);
+        let historyLabel = getHistoryKodeRupLabel(historyKodeRup || kodeRaw, kode);
+        if (!historyLabel) {
+          historyLabel = getHistoryByScanningRow(r, kode);
+        }
 
         if (!grouped[kode]) {
           grouped[kode] = {
