@@ -17,6 +17,7 @@
     let currentPage = 1;
     let sortWaktuAsc = true;
     let groupedRealByKode = {};
+    let allRealisasiRowsForHistory = [];
     let semicolonHistoryLookup = {};
     let moduleDestroyed = false;
 
@@ -562,6 +563,43 @@
       return semicolonLookup[kode] || '-';
     }
 
+
+    function normalizeKodeScan(value) {
+      return String(value == null ? '' : value).trim().replace(/\.0$/, '');
+    }
+
+    function scanHistoryKodeRupDariSemuaKolom(kodeRup) {
+      const kode = normalizeKodeScan(kodeRup);
+      if (!kode) return '-';
+
+      const rows = allRealisasiRowsForHistory || [];
+
+      for (const row of rows) {
+        const metode = String(row.metode_pengadaan || '').toLowerCase();
+        const jenisMapping = String(row.jenis_mapping || '').toLowerCase();
+        const isGabungan = metode.includes('pengadaan langsung') || jenisMapping.includes('gabungan');
+        const separator = isGabungan ? ' + ' : ' → ';
+
+        for (const val of Object.values(row || {})) {
+          const raw = String(val == null ? '' : val).trim();
+          if (!raw || !/[;|,]/.test(raw)) continue;
+
+          const parts = raw
+            .split(/[;|,]+/)
+            .map(v => normalizeKodeScan(v))
+            .filter(Boolean);
+
+          if (parts.length <= 1) continue;
+
+          if (parts.includes(kode)) {
+            return [...new Set(parts)].join(separator);
+          }
+        }
+      }
+
+      return '-';
+    }
+
     function groupRealisasi(realRows) {
       const grouped = {};
 
@@ -702,25 +740,11 @@
       return grouped;
     }
 
-
-    function formatHistoryForDisplay(value) {
-      const raw = String(value || '').trim();
-      if (!raw || raw === '-') return '-';
-
-      const parts = raw
-        .split(/[;|,]+/)
-        .map(v => String(v || '').trim())
-        .filter(Boolean);
-
-      if (parts.length <= 1) return '-';
-
-      return [...new Set(parts)].join(' + ');
-    }
-
     function buildMonitoringData(perencanaanRows, realisasiRows) {
       const planRows = normalizeRows(perencanaanRows);
       const realRows = normalizeRows(realisasiRows);
 
+      allRealisasiRowsForHistory = realRows;
       semicolonHistoryLookup = buildSemicolonHistoryLookup(realRows);
       groupedRealByKode = groupRealisasi(realRows);
 
@@ -730,13 +754,6 @@
         .filter(r => String(r.kode_rup || '').trim())
         .map(r => {
           const kodeRup = String(r.kode_rup || '').trim();
-          const historyFromPlan = formatHistoryForDisplay(
-            r.history_kode_rup ||
-            r.riwayat_kode_rup ||
-            r.history_kode_rup_display ||
-            r.history_rup ||
-            ''
-          );
 
           const pagu = parseMoney(
             r.nilai_pagu ||
@@ -776,7 +793,10 @@
           const waktuPemilihanOrder = getWaktuOrder(waktuPemilihanLabel);
 
           const detailSummary = analyzePackageStatuses(real.rows || [], r.metode_pengadaan || '');
-          const historyDisplay = historyFromPlan !== '-' ? historyFromPlan : getSemicolonHistoryForKode(kodeRup, real.rows || [], semicolonHistoryLookup);
+          let historyDisplay = getSemicolonHistoryForKode(kodeRup, real.rows || [], semicolonHistoryLookup);
+          if (!historyDisplay || historyDisplay === '-') {
+            historyDisplay = scanHistoryKodeRupDariSemuaKolom(kodeRup);
+          }
 
           let status = 'Belum Berjalan';
           if (recallPaket > 0) {
@@ -1166,11 +1186,14 @@
 
       const detailRows = (groupedRealByKode[kodeRup] && groupedRealByKode[kodeRup].rows) ? groupedRealByKode[kodeRup].rows : [];
       const ds = row.detail_summary || {};
+      const historyModalDisplay = (row.history_display && row.history_display !== '-')
+        ? row.history_display
+        : scanHistoryKodeRupDariSemuaKolom(row.kode_rup);
       const historyVisible = getReadableHistoryKodeRup(detailRows, row.kode_rup);
 
       setText('detailTitle', 'Detail Kode RUP ' + row.kode_rup);
       setText('detailKodeRup', row.kode_rup);
-      setText('detailHistoryKodeRup', row.history_display || '-');
+      setText('detailHistoryKodeRup', historyModalDisplay || '-');
       setText('detailNamaPaket', row.nama_paket);
       setText('detailSatker', row.satuan_kerja);
       setText('detailPengadaan', row.pengadaan);
@@ -1187,7 +1210,7 @@
       setText('detailWarning', row.warning || 'OK');
       setText(
         'detailTindakLanjut',
-        (row.history_display && row.history_display !== '-' ? 'Gabungan / History Kode RUP: ' + row.history_display + '\n' : '') +
+        (historyModalDisplay && historyModalDisplay !== '-' ? 'Gabungan / History Kode RUP: ' + historyModalDisplay + '\n' : '') +
         (row.tindak_lanjut || 'Tidak ada catatan tambahan.')
       );
 
