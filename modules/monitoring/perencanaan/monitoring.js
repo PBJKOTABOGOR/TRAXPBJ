@@ -5,7 +5,9 @@
     SHEET_ID: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
     SHEETS: {
       perencanaan: 'D_PERENCANAAN_MONITORING',
-      realisasi: 'D_REALISASI_MAP'
+      realisasi: 'D_REALISASI_MAP',
+      rupGabungan: 'D_RUP_GABUNGAN',
+      rupHistory: 'D_RUP_HISTORY'
     }
   };
 
@@ -17,6 +19,7 @@
     let currentPage = 1;
     let sortWaktuAsc = true;
     let groupedRealByKode = {};
+    let helperHistoryByKode = {};
     let moduleDestroyed = false;
 
     const cleanupListeners = [];
@@ -671,10 +674,48 @@
       return [...new Set(parts)].join(' + ');
     }
 
-    function buildMonitoringData(perencanaanRows, realisasiRows) {
+
+    function normalizeKodeHelper(value) {
+      return String(value == null ? '' : value).trim().replace(/\.0$/, '');
+    }
+
+    function buildDirectHelperHistoryLookup(gabRowsRaw, hisRowsRaw) {
+      const lookup = {};
+      const gabRows = normalizeRows(gabRowsRaw || []);
+      const hisRows = normalizeRows(hisRowsRaw || []);
+
+      gabRows.forEach(r => {
+        const kode = normalizeKodeHelper(r.kode_rup);
+        const hist = String(r.gabungan_kode_rup || r.history_kode_rup || '').trim();
+        if (!kode || !hist || !/[;|,]/.test(hist)) return;
+        const label = hist.split(/[;|,]+/).map(v => normalizeKodeHelper(v)).filter(Boolean).join(' + ');
+        lookup[kode] = {
+          status: 'Gabungan RUP',
+          history: label,
+          ket: String(r.keterangan || 'Kode RUP ini merupakan bagian dari konsolidasi/gabungan beberapa RUP pada Pengadaan Langsung.').trim()
+        };
+      });
+
+      hisRows.forEach(r => {
+        const kode = normalizeKodeHelper(r.kode_rup_baru || r.kode_rup);
+        const hist = String(r.history_kode_rup || '').trim();
+        if (!kode || !hist || !/[;|,]/.test(hist)) return;
+        const label = hist.split(/[;|,]+/).map(v => normalizeKodeHelper(v)).filter(Boolean).join(' → ');
+        lookup[kode] = {
+          status: 'Kode RUP Baru',
+          history: label,
+          ket: String(r.keterangan || 'Kode RUP ini memiliki history perubahan kode paket.').trim()
+        };
+      });
+
+      return lookup;
+    }
+
+    function buildMonitoringData(perencanaanRows, realisasiRows, gabunganRows, historyRows) {
       const planRows = normalizeRows(perencanaanRows);
       const realRows = normalizeRows(realisasiRows);
 
+      helperHistoryByKode = buildDirectHelperHistoryLookup(gabunganRows || [], historyRows || []);
       groupedRealByKode = groupRealisasi(realRows);
 
       const currentOrder = getCurrentMonthOrder();
@@ -683,9 +724,10 @@
         .filter(r => String(r.kode_rup || '').trim())
         .map(r => {
           const kodeRup = String(r.kode_rup || '').trim();
-          const statusKodeRup = String(r.info_status_kode_rup || r.status_kode_rup || '').trim();
-          const keteranganKodeRup = String(r.info_keterangan_kode_rup || r.keterangan_kode_rup || '').trim();
-          const historyDisplay = formatHistoryKodeRupPlan(
+          const helperInfo = helperHistoryByKode[kodeRup] || {};
+          const statusKodeRup = String(helperInfo.status || r.info_status_kode_rup || r.status_kode_rup || '').trim();
+          const keteranganKodeRup = String(helperInfo.ket || r.info_keterangan_kode_rup || r.keterangan_kode_rup || '').trim();
+          const historyDisplay = helperInfo.history || formatHistoryKodeRupPlan(
             r.info_history_kode_rup ||
             r.history_kode_rup ||
             r.riwayat_kode_rup ||
