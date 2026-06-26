@@ -114,6 +114,24 @@
       });
     }
 
+
+    function showMonitoringLoader(text) {
+      const loader = qs('monitoringLoader') || document.getElementById('monitoringLoader');
+      if (!loader) return;
+
+      const subtitle = loader.querySelector('.loader-subtitle');
+      if (subtitle && text) subtitle.innerText = text;
+
+      loader.classList.add('show');
+    }
+
+    function hideMonitoringLoader() {
+      const loader = qs('monitoringLoader') || document.getElementById('monitoringLoader');
+      if (!loader) return;
+
+      loader.classList.remove('show');
+    }
+
     function setText(id, val) {
       const el = qs(id);
       if (el) el.innerText = val || '';
@@ -271,17 +289,13 @@
     }
 
     function buildJadwalBadge(v) {
-      if (v === 'Melebihi') return `<span class="badge b-jadwal-melebihi">${escapeHtml(v)}</span>`;
       if (v === 'Melewati') return `<span class="badge b-jadwal-melewati">${escapeHtml(v)}</span>`;
       if (v === 'Belum') return `<span class="badge b-jadwal-belum">${escapeHtml(v)}</span>`;
       return `<span class="badge b-jadwal-sesuai">${escapeHtml(v)}</span>`;
     }
 
     function warningCell(v) {
-      if (v && v !== 'OK') {
-        const klass = String(v).toLowerCase().includes('melebihi target pemilihan dari bulan ini') ? 'warn-info' : 'warn-bad';
-        return `<span class="${klass}">${escapeHtml(v)}</span>`;
-      }
+      if (v && v !== 'OK') return `<span class="warn-bad">${escapeHtml(v)}</span>`;
       return `<span class="warn-ok">OK</span>`;
     }
 
@@ -480,15 +494,13 @@
 
           let posisiJadwal = 'Belum';
           if (recallPaket > 0) {
-            posisiJadwal = waktuPemilihanOrder > currentOrder ? 'Melebihi' : 'Sesuai';
+            posisiJadwal = 'Sesuai';
           } else {
             posisiJadwal = waktuPemilihanOrder < currentOrder ? 'Melewati' : 'Belum';
           }
 
           let warning = 'OK';
-          if (recallPaket > 0 && posisiJadwal === 'Melebihi') {
-            warning = 'Melebihi target pemilihan dari bulan ini.';
-          } else if (recallPaket === 0 && posisiJadwal === 'Melewati') {
+          if (recallPaket === 0 && posisiJadwal === 'Melewati') {
             warning = 'Belum ada realisasi dan sudah melewati waktu pemilihan.';
           }
 
@@ -563,6 +575,40 @@
       fillSelect('filter_metode', [...new Set(rows.map(r => r.metode).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')));
       fillSelect('filter_jenis', [...new Set(rows.map(r => r.jenis).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id')));
       fillSelect('filter_waktu_pemilihan', [...new Set(rows.map(r => r.waktu_pemilihan_label).filter(Boolean))].sort((a, b) => getWaktuOrder(a) - getWaktuOrder(b)));
+    }
+
+
+    function setQuickMonitoringFilter(type) {
+      const statusEl = qs('filter_status');
+      const warningEl = qs('filter_warning');
+      const keywordEl = qs('filter_koderup');
+
+      if (type === 'belum') {
+        if (statusEl) statusEl.value = 'Belum Berjalan';
+        if (warningEl) warningEl.value = '';
+      } else if (type === 'selesai') {
+        if (statusEl) statusEl.value = 'Selesai';
+        if (warningEl) warningEl.value = '';
+      } else if (type === 'warning') {
+        if (statusEl) statusEl.value = '';
+        if (warningEl) warningEl.value = 'PERLU';
+      } else {
+        if (statusEl) statusEl.value = '';
+        if (warningEl) warningEl.value = '';
+        if (keywordEl) keywordEl.value = '';
+      }
+
+      runMonitoring();
+    }
+
+    function renderInsights(rows) {
+      const dataTampil = rows.length;
+      const warning = rows.filter(r => r.warning && r.warning !== 'OK').length;
+      const adaRealisasi = rows.filter(r => Number(r.recall_paket || 0) > 0).length;
+
+      setText('insightDataTampil', String(dataTampil));
+      setText('insightWarning', String(warning));
+      setText('insightAdaRealisasi', String(adaRealisasi));
     }
 
     function renderSummary(rows) {
@@ -788,15 +834,41 @@
       runMonitoring();
     }
 
+
+    function getReadableHistoryKodeRup(rows, currentKodeRup) {
+      const current = String(currentKodeRup || '').trim();
+
+      const histories = (rows || []).map(item => {
+        const label = String(item.history_label || '').trim();
+        if (label) return label;
+
+        const hist = String(item.history_kode_rup || item.kode_rup_raw || '').trim();
+        if (hist && hist.includes(';')) {
+          return hist.split(';').map(v => v.trim()).filter(Boolean).join(' → ');
+        }
+
+        if (hist && current && hist !== current) {
+          return hist + ' → ' + current;
+        }
+
+        return '';
+      }).filter(Boolean);
+
+      const unique = [...new Set(histories)];
+      return unique.length ? unique.join(' | ') : '-';
+    }
+
     function openDetailModal(kodeRup) {
       const row = allRows.find(r => String(r.kode_rup) === String(kodeRup));
       if (!row) return;
 
       const detailRows = (groupedRealByKode[kodeRup] && groupedRealByKode[kodeRup].rows) ? groupedRealByKode[kodeRup].rows : [];
       const ds = row.detail_summary || {};
+      const historyVisible = getReadableHistoryKodeRup(detailRows, row.kode_rup);
 
       setText('detailTitle', 'Detail Kode RUP ' + row.kode_rup);
       setText('detailKodeRup', row.kode_rup);
+      setText('detailHistoryKodeRup', historyVisible);
       setText('detailNamaPaket', row.nama_paket);
       setText('detailSatker', row.satuan_kerja);
       setText('detailPengadaan', row.pengadaan);
@@ -811,7 +883,11 @@
       setText('detailSisaPagu', formatMoney(row.sisa_pagu));
       setText('detailRingkasanPaket', ds.ringkasanPaket || 'Belum ada paket realisasi');
       setText('detailWarning', row.warning || 'OK');
-      setText('detailTindakLanjut', row.tindak_lanjut || 'Tidak ada catatan tambahan.');
+      setText(
+        'detailTindakLanjut',
+        (historyVisible && historyVisible !== '-' ? 'Riwayat perubahan Kode RUP: ' + historyVisible + '\n' : '') +
+        (row.tindak_lanjut || 'Tidak ada catatan tambahan.')
+      );
 
       const tbody = qs('detailBody');
       const empty = qs('detailEmpty');
@@ -829,7 +905,11 @@
         detailRows.forEach(item => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${escapeHtml(item.kode_paket)}</td>
+            <td>
+              ${escapeHtml(item.kode_paket)}
+              ${item.history_label ? `<div class="history-rup-line">History RUP: ${escapeHtml(item.history_label)}</div>` : ''}
+              ${(!item.history_label && item.history_kode_rup && String(item.history_kode_rup).includes(';')) ? `<div class="history-rup-line">History RUP: ${escapeHtml(String(item.history_kode_rup).replace(/;/g, ' → '))}</div>` : ''}
+            </td>
             <td>${escapeHtml(item.nama_paket)}</td>
             <td>${escapeHtml(item.nama_penyedia)}</td>
             <td>${escapeHtml(item.satuan_kerja)}</td>
@@ -939,6 +1019,7 @@
 
     async function loadMonitoringData() {
       try {
+        showMonitoringLoader('Mengambil data dari Google Sheet...');
         setText('monitoringStatus', 'Memuat data dari Google Sheet...');
 
         const [perencanaanRows, realisasiRows] = await Promise.all([
@@ -955,8 +1036,10 @@
         setText('sortWaktuArrow', sortWaktuAsc ? '↑' : '↓');
 
         runMonitoring();
+        hideMonitoringLoader();
       } catch (err) {
         console.error(err);
+        hideMonitoringLoader();
         setText('monitoringStatus', 'Gagal memuat data monitoring: ' + (err.message || String(err)));
       }
     }
@@ -970,6 +1053,7 @@
     }
 
     window.runMonitoring = runMonitoring;
+    window.setQuickMonitoringFilter = setQuickMonitoringFilter;
     window.toggleSortWaktu = toggleSortWaktu;
     window.resetMonitoring = resetMonitoring;
     window.openDetailModal = openDetailModal;
@@ -983,6 +1067,11 @@
       .then(() => {
         if (!moduleDestroyed) {
           loadMonitoringData();
+
+    // Fallback agar loader tidak nyangkut kalau koneksi/CDN Google Sheet lambat.
+    setTimeout(() => {
+      hideMonitoringLoader();
+    }, 25000);
         }
       })
       .catch((err) => {
