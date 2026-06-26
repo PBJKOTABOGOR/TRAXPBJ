@@ -972,8 +972,7 @@
       setText('detailWarning', row.warning || 'OK');
       setText(
         'detailTindakLanjut',
-        (historyVisible && historyVisible !== '-' ? 'Riwayat perubahan Kode RUP: ' + historyVisible + '
-' : '') +
+        (historyVisible && historyVisible !== '-' ? 'Riwayat perubahan Kode RUP: ' + historyVisible + '\\n' : '') +
         (row.tindak_lanjut || 'Tidak ada catatan tambahan.')
       );
 
@@ -1158,7 +1157,7 @@
     // Fallback agar loader tidak nyangkut kalau koneksi/CDN Google Sheet lambat.
     setTimeout(() => {
       hideMonitoringLoader();
-    }, 25000);
+    }, 12000);
         }
       })
       .catch((err) => {
