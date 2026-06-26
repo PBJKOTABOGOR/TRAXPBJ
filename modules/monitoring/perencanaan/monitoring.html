@@ -287,8 +287,6 @@
     let currentPage = 1;
     let sortWaktuAsc = true;
     let groupedRealByKode = {};
-    let allRealisasiRowsForHistory = [];
-    let semicolonHistoryLookup = {};
 
     function csvUrlBySheetName(sheetId, sheetName) {
       const cacheBust = Date.now();
@@ -682,100 +680,6 @@
       return '';
     }
 
-
-    function normalizeKodeValue(value) {
-      return String(value == null ? '' : value).trim().replace(/\.0$/, '');
-    }
-
-    function splitHistoryKode(value) {
-      return String(value || '')
-        .split(/[;|,]+/)
-        .map(v => normalizeKodeValue(v))
-        .filter(Boolean);
-    }
-
-    function buildSemicolonHistoryLookup(realRows) {
-      const lookup = {};
-
-      (realRows || []).forEach(r => {
-        const historyRaw = String(r.history_kode_rup || r.riwayat_kode_rup || '').trim();
-        if (!historyRaw || !/[;|,]/.test(historyRaw)) return;
-
-        const parts = splitHistoryKode(historyRaw);
-        if (parts.length <= 1) return;
-
-        const metode = String(r.metode_pengadaan || '').toLowerCase();
-        const jenisMapping = String(r.jenis_mapping || '').toLowerCase();
-        const separator = (metode.includes('pengadaan langsung') || jenisMapping.includes('gabungan')) ? ' + ' : ' → ';
-        const label = [...new Set(parts)].join(separator);
-
-        parts.forEach(kode => {
-          if (!lookup[kode]) lookup[kode] = label;
-        });
-      });
-
-      return lookup;
-    }
-
-    function getSemicolonHistoryForKode(kodeRup, realRows, semicolonLookup) {
-      const kode = normalizeKodeValue(kodeRup);
-
-      // Pertama: ambil dari baris realisasi yang sudah match kode tersebut.
-      const matched = (realRows || []).find(item => {
-        const h = String(item.history_kode_rup || '').trim();
-        return h && /[;|,]/.test(h);
-      });
-
-      if (matched) {
-        const parts = splitHistoryKode(matched.history_kode_rup);
-        if (parts.length > 1) {
-          const isGabungan = String(matched.jenis_mapping || '').toLowerCase().includes('gabungan') ||
-            String(matched.metode || '').toLowerCase().includes('pengadaan langsung');
-          return [...new Set(parts)].join(isGabungan ? ' + ' : ' → ');
-        }
-      }
-
-      // Kedua: cari dari seluruh D_REALISASI_MAP, kalau kode ini ada di dalam History Kode RUP.
-      return semicolonLookup[kode] || '-';
-    }
-
-
-    function normalizeKodeScan(value) {
-      return String(value == null ? '' : value).trim().replace(/\.0$/, '');
-    }
-
-    function scanHistoryKodeRupDariSemuaKolom(kodeRup) {
-      const kode = normalizeKodeScan(kodeRup);
-      if (!kode) return '-';
-
-      const rows = allRealisasiRowsForHistory || [];
-
-      for (const row of rows) {
-        const metode = String(row.metode_pengadaan || '').toLowerCase();
-        const jenisMapping = String(row.jenis_mapping || '').toLowerCase();
-        const isGabungan = metode.includes('pengadaan langsung') || jenisMapping.includes('gabungan');
-        const separator = isGabungan ? ' + ' : ' → ';
-
-        for (const val of Object.values(row || {})) {
-          const raw = String(val == null ? '' : val).trim();
-          if (!raw || !/[;|,]/.test(raw)) continue;
-
-          const parts = raw
-            .split(/[;|,]+/)
-            .map(v => normalizeKodeScan(v))
-            .filter(Boolean);
-
-          if (parts.length <= 1) continue;
-
-          if (parts.includes(kode)) {
-            return [...new Set(parts)].join(separator);
-          }
-        }
-      }
-
-      return '-';
-    }
-
     function groupRealisasi(realRows) {
       const grouped = {};
 
@@ -916,12 +820,28 @@
       return grouped;
     }
 
+
+    function formatHistoryKodeRupPlan(value) {
+      const raw = String(value || '').trim();
+      if (!raw || raw === '-') return '-';
+
+      // History hanya dianggap perlu tampil kalau ada separator.
+      if (!/[;|,]/.test(raw)) return '-';
+
+      const parts = raw
+        .split(/[;|,]+/)
+        .map(v => String(v || '').trim())
+        .filter(Boolean);
+
+      if (parts.length <= 1) return '-';
+
+      return [...new Set(parts)].join(' + ');
+    }
+
     function buildMonitoringData(perencanaanRows, realisasiRows) {
       const planRows = normalizeRows(perencanaanRows);
       const realRows = normalizeRows(realisasiRows);
 
-      allRealisasiRowsForHistory = realRows;
-      semicolonHistoryLookup = buildSemicolonHistoryLookup(realRows);
       groupedRealByKode = groupRealisasi(realRows);
 
       const currentOrder = getCurrentMonthOrder();
@@ -960,10 +880,12 @@
           const waktuPemilihanOrder = getWaktuOrder(waktuPemilihanLabel);
 
           const detailSummary = analyzePackageStatuses(real.rows || [], r.metode_pengadaan || '');
-          let historyDisplay = getSemicolonHistoryForKode(kodeRup, real.rows || [], semicolonHistoryLookup);
-          if (!historyDisplay || historyDisplay === '-') {
-            historyDisplay = scanHistoryKodeRupDariSemuaKolom(kodeRup);
-          }
+          const historyDisplay = formatHistoryKodeRupPlan(
+            r.history_kode_rup ||
+            r.riwayat_kode_rup ||
+            r.history_rup ||
+            ''
+          );
 
           let status = 'Belum Berjalan';
           if (recallPaket > 0) {
@@ -1353,15 +1275,12 @@
 
       const detailRows = (groupedRealByKode[kodeRup] && groupedRealByKode[kodeRup].rows) ? groupedRealByKode[kodeRup].rows : [];
       const ds = row.detail_summary || {};
-      const historyModalDisplay = (row.history_display && row.history_display !== '-')
-        ? row.history_display
-        : scanHistoryKodeRupDariSemuaKolom(row.kode_rup);
       const historyVisible = getReadableHistoryKodeRup(detailRows, row.kode_rup);
       const historyText = getDetailHistoryText(detailRows);
 
       setText('detailTitle', 'Detail Kode RUP ' + row.kode_rup);
       setText('detailKodeRup', row.kode_rup);
-      setText('detailHistoryKodeRup', historyModalDisplay || '-');
+      setText('detailHistoryKodeRup', row.history_display || '-');
       setText('detailNamaPaket', row.nama_paket);
       setText('detailSatker', row.satuan_kerja);
       setText('detailPengadaan', row.pengadaan);
@@ -1378,7 +1297,7 @@
       setText('detailWarning', row.warning || 'OK');
       setText(
         'detailTindakLanjut',
-        (historyModalDisplay && historyModalDisplay !== '-' ? 'Gabungan / History Kode RUP: ' + historyModalDisplay + '\n' : '') +
+        (row.history_display && row.history_display !== '-' ? 'Gabungan / History Kode RUP: ' + row.history_display + '\n' : '') +
         (row.tindak_lanjut || 'Tidak ada catatan tambahan.')
       );
 
