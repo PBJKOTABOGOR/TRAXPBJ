@@ -327,6 +327,15 @@
       loader.classList.remove('show');
     }
 
+
+    window.addEventListener('error', () => {
+      try { hideMonitoringLoader(); } catch(e) {}
+    });
+
+    window.addEventListener('unhandledrejection', () => {
+      try { hideMonitoringLoader(); } catch(e) {}
+    });
+
     function setText(id, val) {
       const el = document.getElementById(id);
       if (el) el.innerText = val || '';
@@ -882,12 +891,6 @@
           const waktuPemilihanOrder = getWaktuOrder(waktuPemilihanLabel);
 
           const detailSummary = analyzePackageStatuses(real.rows || [], r.metode_pengadaan || '');
-          const historyDisplay = formatHistoryKodeRupPlan(
-            r.history_kode_rup ||
-            r.riwayat_kode_rup ||
-            r.history_rup ||
-            ''
-          );
 
           let status = 'Belum Berjalan';
           if (recallPaket > 0) {
