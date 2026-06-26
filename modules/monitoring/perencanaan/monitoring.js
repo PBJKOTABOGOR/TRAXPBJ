@@ -6,6 +6,7 @@
     SHEETS: {
       perencanaan: 'D_PERENCANAAN_MONITORING',
       realisasi: 'D_REALISASI_MAP',
+      realisasiMap: 'D_REALISASI_MAP',
       rupGabungan: 'D_RUP_GABUNGAN',
       rupHistory: 'D_RUP_HISTORY'
     }
@@ -1326,14 +1327,22 @@
         showMonitoringLoader('Mengambil data dari Google Sheet...');
         setText('monitoringStatus', 'Memuat data dari Google Sheet...');
 
-        const [perencanaanRows, realisasiRows] = await Promise.all([
+        const [perencanaanRows, realisasiRows, gabunganRows, historyRows] = await Promise.all([
           fetchSheet(CONFIG.SHEETS.perencanaan),
-          fetchRealisasiSheet()
+          fetchRealisasiSheet(),
+          fetchSheet(CONFIG.SHEETS.rupGabungan).catch(err => {
+            console.warn('D_RUP_GABUNGAN gagal dibaca:', err);
+            return [];
+          }),
+          fetchSheet(CONFIG.SHEETS.rupHistory).catch(err => {
+            console.warn('D_RUP_HISTORY gagal dibaca:', err);
+            return [];
+          })
         ]);
 
         if (moduleDestroyed) return;
 
-        allRows = buildMonitoringData(perencanaanRows, realisasiRows);
+        allRows = buildMonitoringData(perencanaanRows, realisasiRows, gabunganRows, historyRows);
         buildFilterOptions(allRows);
 
         setText('sortWaktuLabel', sortWaktuAsc ? 'Terlama → Terbaru' : 'Terbaru → Terlama');
