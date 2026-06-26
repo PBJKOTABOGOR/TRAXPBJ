@@ -17,7 +17,6 @@
     let currentPage = 1;
     let sortWaktuAsc = true;
     let groupedRealByKode = {};
-    let historyGabunganByKode = {};
     let moduleDestroyed = false;
 
     const cleanupListeners = [];
@@ -505,38 +504,6 @@
       return '';
     }
 
-
-    function buildHistoryGabunganLookup(realRowsAsli) {
-      const lookup = {};
-      const rows = normalizeRows(realRowsAsli || []);
-
-      rows.forEach(r => {
-        const metode = String(r.metode_pengadaan || '').toLowerCase();
-        const history = String(
-          r.history_kode_rup ||
-          r.riwayat_kode_rup ||
-          ''
-        ).trim();
-
-        if (!metode.includes('pengadaan langsung')) return;
-        if (!history || !/[;|,]/.test(history)) return;
-
-        const parts = history
-          .split(/[;|,]+/)
-          .map(v => v.trim())
-          .filter(Boolean);
-
-        if (parts.length <= 1) return;
-
-        const label = [...new Set(parts)].join(' + ');
-        parts.forEach(kode => {
-          lookup[kode] = label;
-        });
-      });
-
-      return lookup;
-    }
-
     function groupRealisasi(realRows) {
       const grouped = {};
 
@@ -677,11 +644,10 @@
       return grouped;
     }
 
-    function buildMonitoringData(perencanaanRows, realisasiRows, realisasiAsliRows) {
+    function buildMonitoringData(perencanaanRows, realisasiRows) {
       const planRows = normalizeRows(perencanaanRows);
       const realRows = normalizeRows(realisasiRows);
 
-      historyGabunganByKode = buildHistoryGabunganLookup(realisasiAsliRows || []);
       groupedRealByKode = groupRealisasi(realRows);
 
       const currentOrder = getCurrentMonthOrder();
@@ -729,6 +695,7 @@
           const waktuPemilihanOrder = getWaktuOrder(waktuPemilihanLabel);
 
           const detailSummary = analyzePackageStatuses(real.rows || [], r.metode_pengadaan || '');
+          const historyDisplay = getHistoryFromMatchedRows(real.rows || []);
 
           let status = 'Belum Berjalan';
           if (recallPaket > 0) {
@@ -803,6 +770,7 @@
             warning: warning,
             ket_jadwal: ketJadwal,
             tindak_lanjut: tindakLanjut,
+            history_display: historyDisplay,
             detail_summary: detailSummary
           };
         });
@@ -1082,6 +1050,35 @@
       return unique.length ? unique.join(' | ') : '-';
     }
 
+
+    function normalizeHistoryText(value, separator) {
+      const raw = String(value || '').trim();
+      if (!raw || raw === '-') return '-';
+
+      const parts = raw
+        .split(/[;|,]+/)
+        .map(v => v.trim())
+        .filter(Boolean);
+
+      if (parts.length <= 1) return raw;
+
+      return [...new Set(parts)].join(separator || ' + ');
+    }
+
+    function getHistoryFromMatchedRows(rows) {
+      const found = (rows || []).find(item => {
+        const h = String(item.history_kode_rup || '').trim();
+        return h && h !== '-';
+      });
+
+      if (!found) return '-';
+
+      const isGabungan = String(found.jenis_mapping || '').toLowerCase().includes('gabungan') ||
+        String(found.metode || '').toLowerCase().includes('pengadaan langsung');
+
+      return normalizeHistoryText(found.history_kode_rup, isGabungan ? ' + ' : ' → ');
+    }
+
     function openDetailModal(kodeRup) {
       const row = allRows.find(r => String(r.kode_rup) === String(kodeRup));
       if (!row) return;
@@ -1092,15 +1089,7 @@
 
       setText('detailTitle', 'Detail Kode RUP ' + row.kode_rup);
       setText('detailKodeRup', row.kode_rup);
-      let historyDisplay = (historyVisible && historyVisible !== '-')
-        ? historyVisible
-        : (detailRows.find(item => item.history_label)?.history_label || '-');
-
-      if ((!historyDisplay || historyDisplay === '-') && historyGabunganByKode[String(row.kode_rup || '').trim()]) {
-        historyDisplay = historyGabunganByKode[String(row.kode_rup || '').trim()];
-      }
-
-      setText('detailHistoryKodeRup', historyDisplay);
+      setText('detailHistoryKodeRup', row.history_display || '-');
       setText('detailNamaPaket', row.nama_paket);
       setText('detailSatker', row.satuan_kerja);
       setText('detailPengadaan', row.pengadaan);
@@ -1117,7 +1106,7 @@
       setText('detailWarning', row.warning || 'OK');
       setText(
         'detailTindakLanjut',
-        (historyVisible && historyVisible !== '-' ? 'Riwayat perubahan Kode RUP: ' + historyVisible + '\\n' : '') +
+        (row.history_display && row.history_display !== '-' ? 'Gabungan / History Kode RUP: ' + row.history_display + '\n' : '') +
         (row.tindak_lanjut || 'Tidak ada catatan tambahan.')
       );
 
