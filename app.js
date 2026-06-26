@@ -74,11 +74,13 @@ const APP_ROUTES = {
     ]
   },
 
-  'monitoring-konsolidasi': {
-    title: 'Monitoring Paket Konsolidasi',
-    subtitle: 'Halaman ini disiapkan untuk monitoring paket konsolidasi.',
-    type: 'placeholder'
-  },
+'monitoring-konsolidasi': {
+  title: 'Monitoring Paket Konsolidasi',
+  subtitle: '',
+  type: 'iframe',
+  url: 'https://pbjkotabogor.github.io/atk-monitoring/',
+  fullPage: true
+},
 
   'pemenang-pengadaan': {
     title: 'Pemenang Pengadaan',
@@ -118,14 +120,16 @@ const APP_ROUTES = {
     title: 'Input Rapor PBJ',
     subtitle: 'Form internal pegawai untuk input dan upload dokumen Rapor PBJ.',
     type: 'iframe',
-    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?embed=1'
+    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?embed=1',
+    fullPage: true
   },
 
   'rapor-pbj-qc-internal': {
     title: 'QC Rapor PBJ',
     subtitle: 'Panel internal QC untuk review dan persetujuan rapor.',
     type: 'iframe',
-    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc&embed=1'
+    url: 'https://script.google.com/macros/s/AKfycbx7r228pPRdeO6egj_6bDsJu0-V4TY64XiQOG0sZCjhTLexaUV-oqk3PJCKpc3oSsIbTA/exec?page=qc&embed=1',
+    fullPage: true
   }
 };
 
@@ -345,6 +349,7 @@ function cacheBust(url) {
 }
 
 function showModuleLoading(title = 'Memuat modul...') {
+  contentArea.classList.remove('iframe-fullpage-mode');
   contentArea.innerHTML = `
     <section class="card">
       <h3>${escapeHtml(title)}</h3>
@@ -2124,7 +2129,7 @@ function renderQuickSummaryCard(data, scopeLabel, scopeDesc) {
       <div class="summary-stat-grid summary-stat-grid--warning">
         ${renderWarningCard('selesai', 'Selesai', warning.selesai, 'Paket sudah selesai/prosesnya sudah tuntas.', warning.selesai > 0 ? 'success' : '')}
         ${renderWarningCard('sedangBerjalan', 'Sedang Berjalan', warning.sedangBerjalan, 'Paket sudah ada proses/realisasi dan masih berjalan.', warning.sedangBerjalan > 0 ? 'info' : '')}
-        ${renderWarningCard('belumBerjalan', 'Belum Berjalan', warning.belumBerjalan, 'Paket belum ada proses/realisasi yang tercatat.', 'muted')}
+        ${renderWarningCard('belumBerjalan', 'Belum Berjalan', warning.belumBerjalan, 'Paket belum memasuki waktu pemilihan.', 'muted')}
         ${renderWarningCard('melewatiWaktuPemilihan', 'Melewati Waktu Pemilihan', warning.melewatiWaktuPemilihan, 'Jadwal pemilihan sudah lewat, tapi paket belum selesai/bergerak sesuai data.', warning.melewatiWaktuPemilihan > 0 ? 'danger' : '')}
         ${renderWarningCard('melebihiTargetPemilihan', 'Melebihi Target Pemilihan', warning.melebihiTargetPemilihan, 'Realisasi/proses muncul lebih cepat dari jadwal pemilihan yang direncanakan.', warning.melebihiTargetPemilihan > 0 ? 'warning' : '')}
       </div>
@@ -2449,94 +2454,85 @@ function renderQuickCard(icon, bg, title, text, route, externalUrl = '') {
 }
 
 function renderIframePage(page) {
-  const lowerUrl = String(page.url || '').toLowerCase();
-  const isSimNontender = lowerUrl.includes('simppk');
-  const isInternalRapor = lowerUrl.includes('script.google.com/macros');
-  const iframeId = isSimNontender ? 'simppkFrame' : (isInternalRapor ? 'internalRaporFrame' : 'genericEmbedFrame');
+  const isFullPage = !!(page && page.fullPage);
+  const useHideHeader = !!(page && (page.hideHeader || page.fullPage));
 
-  if (isInternalRapor) {
-    contentArea.classList.add('iframe-internal-rapor-mode');
-    contentArea.innerHTML = `
-      <section class="embed-card embed-card--internal-full">
-        <div class="embed-frame-wrap embed-frame-wrap--internal-full">
-          <iframe
-            id="${iframeId}"
-            class="embed-frame embed-frame--internal-full"
-            src="${page.url}"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            scrolling="yes">
-          </iframe>
-        </div>
-      </section>
-    `;
-  } else {
-    contentArea.innerHTML = `
-      <section class="embed-card ${isSimNontender ? 'embed-card--simppk' : ''}">
-        <h3>${escapeHtml(page.title)}</h3>
-        <div class="page-note">Halaman dimuat dari project/modul yang sudah ada.</div>
+  contentArea.classList.remove('module-mode');
+  contentArea.classList.remove('iframe-fullpage-mode');
+  contentArea.classList.toggle('iframe-fullpage-mode', isFullPage);
 
-        <div class="embed-frame-wrap ${isSimNontender ? 'embed-frame-wrap--simppk' : ''}">
-          <iframe
-            id="${iframeId}"
-            class="embed-frame ${isSimNontender ? 'embed-frame--simppk' : ''}"
-            src="${page.url}"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            scrolling="${isSimNontender ? 'no' : 'yes'}">
-          </iframe>
-        </div>
-      </section>
-    `;
-  }
+  contentArea.innerHTML = `
+    <section class="${isFullPage ? 'embed-card embed-card--fullpage' : 'embed-card'}">
+      ${useHideHeader ? '' : `
+        <h3>${escapeHtml(page.title || '')}</h3>
+        ${page.subtitle ? `<p class="page-note">${escapeHtml(page.subtitle)}</p>` : ''}
+      `}
+      <div class="${isFullPage ? 'embed-frame-wrap embed-frame-wrap--fullpage' : 'embed-frame-wrap'}">
+        <iframe
+          class="${isFullPage ? 'embed-frame embed-frame--fullpage' : 'embed-frame'}"
+          src="${escapeHtml(page.url || '')}"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </section>
+  `;
 
-  if (isSimNontender) {
-    const iframe = document.getElementById('simppkFrame');
-
-    const resizeIframe = () => {
+  const iframe = contentArea.querySelector('iframe');
+  const wrap = contentArea.querySelector('.embed-frame-wrap');
+  if (iframe && isFullPage) {
+    const resizeIframeToContent = () => {
       try {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-
-        if (!doc) {
-          return;
-        }
-
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
         const body = doc.body;
         const html = doc.documentElement;
+        if (!body || !html) return;
+
+        body.style.overflow = 'hidden';
+        html.style.overflow = 'hidden';
 
         const height = Math.max(
-          body ? body.scrollHeight : 0,
-          body ? body.offsetHeight : 0,
-          html ? html.clientHeight : 0,
-          html ? html.scrollHeight : 0,
-          html ? html.offsetHeight : 0,
-          820
+          body.scrollHeight || 0,
+          body.offsetHeight || 0,
+          html.clientHeight || 0,
+          html.scrollHeight || 0,
+          html.offsetHeight || 0
         );
 
-        iframe.style.height = `${height + 40}px`;
+        if (height > 0) {
+          iframe.style.height = `${height}px`;
+          if (wrap) wrap.style.height = `${height}px`;
+        }
       } catch (error) {
-        iframe.style.height = 'calc(100vh - 170px)';
-        iframe.setAttribute('scrolling', 'yes');
+        iframe.style.height = '1600px';
+        if (wrap) wrap.style.height = '1600px';
       }
     };
 
     iframe.addEventListener('load', () => {
-      resizeIframe();
+      resizeIframeToContent();
+      window.setTimeout(resizeIframeToContent, 150);
+      window.setTimeout(resizeIframeToContent, 500);
+      window.setTimeout(resizeIframeToContent, 1200);
 
-      setTimeout(resizeIframe, 300);
-      setTimeout(resizeIframe, 1000);
-      setTimeout(resizeIframe, 2000);
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        const ro = window.ResizeObserver ? new ResizeObserver(() => resizeIframeToContent()) : null;
+        if (ro && doc && doc.body) {
+          ro.observe(doc.body);
+          iframe.__traxResizeObserver = ro;
+        }
+      } catch (error) {
+        // ignore cross-origin or observer issues
+      }
     });
+
+    window.setTimeout(resizeIframeToContent, 50);
   }
 
-  if (isInternalRapor) {
-    const iframe = document.getElementById('internalRaporFrame');
-    if (iframe) {
-      iframe.addEventListener('load', () => {
-        iframe.classList.add('is-loaded');
-      });
-    }
-  }
+  initScrollAnimation();
 }
 
 function renderPlaceholderPage(pageKey, page) {
@@ -2817,7 +2813,8 @@ async function loadPage(key) {
       contentArea.classList.remove('module-mode');
       contentArea.classList.remove('iframe-internal-rapor-mode');
     } else {
-      contentArea.classList.add('module-mode');
+      contentArea.classList.remove('iframe-fullpage-mode');
+  contentArea.classList.add('module-mode');
     }
 
     if (page.type === 'iframe') {
