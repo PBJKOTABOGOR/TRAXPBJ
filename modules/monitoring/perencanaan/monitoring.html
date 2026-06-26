@@ -277,7 +277,8 @@
       SHEET_ID: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
       SHEETS: {
         perencanaan: 'D_PERENCANAAN',
-        realisasi: 'D_REALISASI'
+        realisasi: 'D_REALISASI',
+        realisasiMap: 'D_REALISASI_MAP'
       }
     };
 
@@ -1406,7 +1407,7 @@
 
         const [perencanaanRows, realisasiRows] = await Promise.all([
           fetchSheet(CONFIG.SHEETS.perencanaan),
-          fetchSheet(CONFIG.SHEETS.realisasi)
+          fetchRealisasiSheet()
         ]);
 
         allRows = buildMonitoringData(perencanaanRows, realisasiRows);
