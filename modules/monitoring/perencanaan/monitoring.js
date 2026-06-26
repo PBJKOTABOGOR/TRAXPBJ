@@ -4,7 +4,7 @@
   const CONFIG = {
     SHEET_ID: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
     SHEETS: {
-      perencanaan: 'D_PERENCANAAN',
+      perencanaan: 'D_PERENCANAAN_MONITORING',
       realisasi: 'D_REALISASI_MAP'
     }
   };
