@@ -1,625 +1,161 @@
-/* =========================================================
-   PBJ MOBILE PIN WIDGET - HP ONLY
-   Tempel setelah JS utama dashboard sudah jalan.
-
-   Fitur:
-   - Muncul di HP saja lewat CSS.
-   - Pilih OPD/Satuan Kerja.
-   - Pilihan disimpan localStorage.
-   - Pin ring menampilkan skor ITKP OPD terpilih.
-   - Panel dropdown menampilkan skor per indikator.
-   - Info rapor terbaru khusus OPD terpilih.
-
-   PENTING:
-   Fungsi ini fleksibel baca data dari variable global kalau ada:
-   window.itkpRows / window.ITKP_ROWS / window.masterItkp / window.dashboardRows
-   window.indexRapotRows / window.raporRows / window.INDEX_RAPOT_ROWS
-
-   Kalau nama variable di dashboard lu beda, cukup set mapping di PBJ_PIN_CONFIG.
-   ========================================================= */
+/* Floating OPD pin widget for SIPPBJ.
+   Requires optional window.PBJ_PIN_CONFIG.
+   This revision: when Search Penyedia tab is active, Info Rapor and Ringkasan ITKP are hidden. */
 (function(){
-  'use strict';
+  if (window.__PBJ_PIN_WIDGET_LOADED__) return;
+  window.__PBJ_PIN_WIDGET_LOADED__ = true;
 
-  /* FIX: cegah widget dobel kalau script kepasang/ter-cache lebih dari sekali */
-  if (window.__PBJ_PIN_WIDGET_BOOTED__) {
-    document.querySelectorAll('.pbj-pin-fab, .pbj-pin-panel, .pbj-pin-backdrop').forEach(function(el, idx){
-      if (idx > 2) el.remove();
-    });
-    return;
-  }
-  window.__PBJ_PIN_WIDGET_BOOTED__ = true;
-
-  const STORAGE_KEY = 'PBJ_PIN_SELECTED_OPD';
-  const STORAGE_LAST_RAPOR_KEY = 'PBJ_PIN_LAST_RAPOR_ID';
-
-  window.PBJ_PIN_CONFIG = Object.assign({
-    scoreMax: 30,
+  const CONFIG = Object.assign({
     defaultOpd: 'PEMERINTAH KOTA BOGOR',
-    dashboardUrl: '',
-    refreshMs: 60000,
-    dataProvider: null,
-    providerSearchPage: 'pemenang-pengadaan',
-    providerSpreadsheetId: '1DYsqMtvwhPn-IEA3te9fFukD_iMMDRqUNPamktuPz2U',
-    providerSheetName: 'PORTAL_PENYEDIA',
-    providerGid: '',
-    providerLimit: 8
+    scoreMax: 30,
+    storageKey: 'pbj_pin_selected_opd',
+    dataProvider: function(){
+      return {
+        opdRows: window.itkpRows || window.ITKP_ROWS || window.dashboardRows || window.DASHBOARD_ROWS || [],
+        raporRows: window.raporRows || window.RAPOR_ROWS || window.indexRapotRows || window.INDEX_RAPOT_ROWS || [],
+        providerRows: window.providerRows || window.PROVIDER_ROWS || window.pemenangRows || window.PEMENANG_ROWS || window.allProviderRows || []
+      };
+    }
   }, window.PBJ_PIN_CONFIG || {});
 
-  let state = {
-    open:false,
-    selectedOpd:'',
-    opdRows:[],
-    raporRows:[],
-    latestRapot:null,
-    unreadCount:0,
-    providerSearchOpen:false,
-    providerQuery:'',
-    providerRows:[],
-    providerResults:[],
-    providerLoading:false,
-    providerLoaded:false,
-    providerMessage:'Ketik nama penyedia lalu tekan Cari.'
-  };
+  const state = { selectedOpd:'', open:false, tab:'search', itkpMinimized:false, q:'', providerResults:[] };
 
-  function isMobile(){
-    return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-  }
-
-  function norm(v){
-    return String(v == null ? '' : v).toLowerCase().replace(/\s+/g,' ').trim();
-  }
-
-  function pick(row, names, fallback){
-    if (!row) return fallback || '';
-    for (const name of names){
-      if (row[name] !== undefined && row[name] !== null && String(row[name]).trim() !== '') return row[name];
-    }
-    const lower = {};
-    Object.keys(row).forEach(k => lower[norm(k).replace(/ /g,'_')] = row[k]);
-    for (const name of names){
-      const key = norm(name).replace(/ /g,'_');
-      if (lower[key] !== undefined && lower[key] !== null && String(lower[key]).trim() !== '') return lower[key];
-    }
-    return fallback || '';
-  }
-
-  function toNum(v){
+  function esc(v){return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+  function norm(v){return String(v||'').toLowerCase().replace(/\s+/g,' ').trim();}
+  function num(v){
     if (typeof v === 'number') return isNaN(v) ? 0 : v;
-    let s = String(v == null ? '' : v).trim();
-    if (!s || s === '-') return 0;
-    s = s.replace('%','').replace(/Rp/gi,'').replace(/\s/g,'');
-    const hasDot = s.includes('.');
-    const hasComma = s.includes(',');
-    if (hasDot && hasComma) s = s.replace(/\./g,'').replace(',', '.');
+    let s = String(v ?? '').trim();
+    if (!s) return 0;
+    const hasComma = s.includes(','), hasDot = s.includes('.');
+    s = s.replace(/Rp/gi,'').replace(/%/g,'').replace(/\s/g,'');
+    if (hasComma && hasDot) s = s.replace(/\./g,'').replace(',', '.');
     else if (hasComma) s = s.replace(',', '.');
-    const n = Number(s.replace(/[^\d.-]/g,''));
+    s = s.replace(/[^\d.-]/g,'');
+    const n = Number(s);
     return isNaN(n) ? 0 : n;
   }
-
-  function fmtScore(v){
-    return new Intl.NumberFormat('id-ID', { minimumFractionDigits:2, maximumFractionDigits:2 }).format(toNum(v));
-  }
-
-  function fmtInt(v){
-    return new Intl.NumberFormat('id-ID', { maximumFractionDigits:0 }).format(toNum(v));
-  }
-
-  function esc(v){
-    return String(v == null ? '' : v)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  }
-
-  function getGlobalRows(names){
-    for (const name of names){
-      const val = window[name];
-      if (Array.isArray(val)) return val;
-      if (val && Array.isArray(val.rows)) return val.rows;
-      if (val && Array.isArray(val.data)) return val.data;
-    }
-    return [];
-  }
-
-  function fallbackCollectRowsFromDom(){
-    const selected = document.querySelector('#satkerSelect, #opdSelect, [data-selected-opd]');
-    const selectedName = selected ? (selected.value || selected.getAttribute('data-selected-opd') || '') : '';
-    const scoreText = document.querySelector('[data-itkp-score], .itkp-score, #itkpScore');
-    const score = scoreText ? (scoreText.getAttribute('data-itkp-score') || scoreText.textContent || '') : '';
-    if (!selectedName && !score) return [];
-    return [{ nama_opd: selectedName || window.PBJ_PIN_CONFIG.defaultOpd, nilai_itkp: score || 0 }];
-  }
-
-  function getData(){
-    if (typeof window.PBJ_PIN_CONFIG.dataProvider === 'function'){
-      try {
-        const data = window.PBJ_PIN_CONFIG.dataProvider() || {};
-        return {
-          opdRows: Array.isArray(data.opdRows) ? data.opdRows : [],
-          raporRows: Array.isArray(data.raporRows) ? data.raporRows : [],
-          providerRows: Array.isArray(data.providerRows) ? data.providerRows : []
-        };
-      } catch(e) {}
-    }
-
-    let opdRows = getGlobalRows([
-      'itkpRows','ITKP_ROWS','masterItkp','MASTER_ITKP','dashboardRows','DASHBOARD_ROWS','satkerRows','SATKER_ROWS','allSatkerRows','ALL_SATKER_ROWS'
-    ]);
-    const raporRows = getGlobalRows([
-      'indexRapotRows','INDEX_RAPOT_ROWS','raporRows','RAPOR_ROWS','reportRows','REPORT_ROWS','indexRows','INDEX_ROWS'
-    ]);
-
-    if (!opdRows.length) opdRows = fallbackCollectRowsFromDom();
-    const providerRows = getGlobalRows([
-      'providerRows','PROVIDER_ROWS','pemenangRows','PEMENANG_ROWS','portalPenyediaRows','PORTAL_PENYEDIA_ROWS'
-    ]);
-    return { opdRows, raporRows, providerRows };
-  }
-
-  function normalizeOpdRow(row){
-    const nama = String(pick(row, ['nama_opd','nama_satker','satker','opd','nama','Nama OPD','Satuan Kerja'], '')).trim();
-    const kode = String(pick(row, ['kode_opd','kode_satker','kode','Kode OPD'], '')).trim();
-    const score = toNum(pick(row, ['nilai_itkp','skor_itkp','itkp','score','nilai','Skor ITKP'], 0));
-    const sirup = toNum(pick(row, ['sirup_score','skor_sirup','sirup','nilai_sirup'], 0));
-    const toko = toNum(pick(row, ['toko_daring_score','skor_toko_daring','toko_daring','nilai_toko_daring'], 0));
-    const epur = toNum(pick(row, ['epurchasing_score','e_purchasing_score','skor_epurchasing','epurchasing','e_purchasing'], 0));
-    const etender = toNum(pick(row, ['etendering_score','e_tendering_score','skor_etendering','etendering','e_tendering'], 0));
-    const ekontrak = toNum(pick(row, ['ekontrak_score','e_kontrak_score','skor_ekontrak','ekontrak','e_kontrak'], 0));
-    const non = toNum(pick(row, ['non_etendering_score','non_e_tendering_score','non_etendering','non_e_tendering'], 0));
-    return { raw:row, nama, kode, score, indicators:[
-      {name:'SiRUP', score:sirup, max:10},
-      {name:'Toko Daring', score:toko, max:1},
-      {name:'e-Purchasing', score:epur, max:4},
-      {name:'e-Tendering', score:etender, max:5},
-      {name:'e-Kontrak', score:ekontrak, max:5},
-      {name:'Non eTendering / Non ePurchasing', score:non, max:5}
-    ]};
-  }
-
-  function normalizeRaporRow(row){
-    return {
-      raw:row,
-      id:String(pick(row, ['id_rapot','id_rapor','id','ID Rapor'], '')).trim(),
-      nama:String(pick(row, ['nama_opd','nama_satker','opd','Nama OPD'], '')).trim(),
-      kode:String(pick(row, ['kode_opd','kode_satker','kode','Kode OPD'], '')).trim(),
-      tahun:String(pick(row, ['tahun','year'], '')).trim(),
-      bulan:String(pick(row, ['bulan','month'], '')).trim(),
-      status:String(pick(row, ['status_qc','status','Status QC'], '')).trim(),
-      updated:String(pick(row, ['updated_at','updated','timestamp','created_at'], '')).trim()
-    };
-  }
-
-  function monthName(b){
-    const m = {'1':'Januari','2':'Februari','3':'Maret','4':'April','5':'Mei','6':'Juni','7':'Juli','8':'Agustus','9':'September','10':'Oktober','11':'November','12':'Desember'};
-    return m[String(b)] || String(b || '-');
-  }
-
-  function refreshState(){
-    const data = getData();
-    state.opdRows = (data.opdRows || []).map(normalizeOpdRow).filter(r => r.nama);
-    state.raporRows = (data.raporRows || []).map(normalizeRaporRow).filter(r => r.id || r.nama);
-    if (Array.isArray(data.providerRows) && data.providerRows.length) {
-      state.providerRows = data.providerRows.map(normalizeProviderRow).filter(r => r.namaPemenang || r.namaPaket);
-      state.providerLoaded = true;
-    }
-
-    const saved = localStorage.getItem(STORAGE_KEY) || '';
-    if (saved && state.opdRows.some(r => norm(r.nama) === norm(saved))) state.selectedOpd = saved;
-    else if (!state.selectedOpd) {
-      const def = window.PBJ_PIN_CONFIG.defaultOpd;
-      const foundDef = state.opdRows.find(r => norm(r.nama) === norm(def));
-      state.selectedOpd = foundDef ? foundDef.nama : (state.opdRows[0] ? state.opdRows[0].nama : def);
-    }
-
-    const current = getSelectedRow();
-    state.latestRapot = getLatestRapot(current);
-    const lastSeen = localStorage.getItem(STORAGE_LAST_RAPOR_KEY) || '';
-    state.unreadCount = state.latestRapot && state.latestRapot.id && state.latestRapot.id !== lastSeen ? 1 : 0;
-  }
-
-  function getSelectedRow(){
-    return state.opdRows.find(r => norm(r.nama) === norm(state.selectedOpd)) || state.opdRows[0] || {nama:state.selectedOpd || window.PBJ_PIN_CONFIG.defaultOpd, score:0, indicators:[]};
-  }
-
-  function getLatestRapot(opd){
-    const rows = state.raporRows.filter(r => {
-      if (!opd) return false;
-      if (opd.kode && r.kode && norm(opd.kode) === norm(r.kode)) return true;
-      return norm(r.nama) === norm(opd.nama);
-    });
-    if (!rows.length) return null;
-    rows.sort((a,b) => {
-      const tb = Number(b.tahun || 0) - Number(a.tahun || 0); if (tb) return tb;
-      const mb = Number(b.bulan || 0) - Number(a.bulan || 0); if (mb) return mb;
-      return String(b.updated || '').localeCompare(String(a.updated || ''));
-    });
-    return rows[0];
-  }
-
-  function scoreDeg(score){
-    const max = Number(window.PBJ_PIN_CONFIG.scoreMax || 30);
-    return Math.max(0, Math.min(360, (toNum(score) / max) * 360));
-  }
-
-  function ensureWidget(){
-    const existingFab = document.querySelectorAll('#pbjPinWidgetFab, .pbj-pin-fab');
-    const existingPanel = document.querySelectorAll('#pbjPinPanel, .pbj-pin-panel');
-    const existingBackdrop = document.querySelectorAll('#pbjPinBackdrop, .pbj-pin-backdrop');
-
-    if (existingFab.length && existingPanel.length && existingBackdrop.length) {
-      existingFab.forEach(function(el, idx){ if (idx > 0) el.remove(); });
-      existingPanel.forEach(function(el, idx){ if (idx > 0) el.remove(); });
-      existingBackdrop.forEach(function(el, idx){ if (idx > 0) el.remove(); });
-      if (document.getElementById('pbjPinWidgetFab')) return;
-    }
-
-    document.querySelectorAll('.pbj-pin-fab, .pbj-pin-panel, .pbj-pin-backdrop').forEach(function(el){ el.remove(); });
-
-    const fab = document.createElement('button');
-    fab.type = 'button';
-    fab.id = 'pbjPinWidgetFab';
-    fab.className = 'pbj-pin-fab';
-    fab.innerHTML = `
-      <div class="pbj-pin-fab-ring"><div class="pbj-pin-fab-score">0,00</div></div>
-      <div class="pbj-pin-fab-text"><div class="pbj-pin-fab-label">OPD Dipantau</div><div class="pbj-pin-fab-opd">-</div></div>
-      <div class="pbj-pin-badge" id="pbjPinBadge">1</div>
-    `;
-
-    const backdrop = document.createElement('div');
-    backdrop.id = 'pbjPinBackdrop';
-    backdrop.className = 'pbj-pin-backdrop';
-
-    const panel = document.createElement('div');
-    panel.id = 'pbjPinPanel';
-    panel.className = 'pbj-pin-panel';
-
-    document.body.appendChild(fab);
-    document.body.appendChild(backdrop);
-    document.body.appendChild(panel);
-
-    fab.addEventListener('click', togglePanel);
-    backdrop.addEventListener('click', closePanel);
-  }
-
-  function renderFab(){
-    const current = getSelectedRow();
-    const fab = document.getElementById('pbjPinWidgetFab');
-    if (!fab) return;
-    fab.style.setProperty('--pbj-score-deg', scoreDeg(current.score) + 'deg');
-    const score = fab.querySelector('.pbj-pin-fab-score');
-    const opd = fab.querySelector('.pbj-pin-fab-opd');
-    const badge = document.getElementById('pbjPinBadge');
-    if (score) score.textContent = fmtScore(current.score);
-    if (opd) opd.textContent = current.nama || '-';
-    if (badge){
-      badge.textContent = String(state.unreadCount || 0);
-      badge.classList.toggle('show', !!state.unreadCount);
-    }
-  }
-
-
-
-  function parseCsv(text){
-    const rows=[]; let row=[], val='', q=false;
-    for(let i=0;i<text.length;i++){
-      const c=text[i], n=text[i+1];
-      if(c==='"' && q && n==='"'){ val+='"'; i++; continue; }
-      if(c==='"'){ q=!q; continue; }
-      if(c===',' && !q){ row.push(val); val=''; continue; }
-      if((c==='\n'||c==='\r') && !q){
-        if(c==='\r' && n==='\n') i++;
-        row.push(val);
-        if(row.some(x => String(x).trim() !== '')) rows.push(row);
-        row=[]; val=''; continue;
-      }
-      val+=c;
-    }
-    row.push(val);
-    if(row.some(x => String(x).trim() !== '')) rows.push(row);
-    return rows;
-  }
-
-  function matrixToObjects(matrix){
-    const rows = (matrix || []).slice();
-    const headers = rows.shift() || [];
-    return rows.map(cols => {
-      const obj = {};
-      headers.forEach((h,i) => obj[String(h || '').trim()] = String(cols[i] || '').trim());
-      return obj;
-    });
-  }
-
-  function normalizeProviderRow(row){
-    return {
-      raw: row,
-      tahun: String(pick(row, ['TAHUN','Tahun','tahun'], '')).trim(),
-      kode: String(pick(row, ['KODE_PAKET','Kode Paket','kode_paket','Kode RUP','KODE RUP'], '')).trim(),
-      namaPaket: String(pick(row, ['NAMA_PAKET','Nama Paket','nama_paket'], '')).trim(),
-      instansi: String(pick(row, ['INSTANSI','Nama Instansi','instansi'], '')).trim(),
-      satker: String(pick(row, ['SATKER','Nama Satuan Kerja','satker'], '')).trim(),
-      lpse: String(pick(row, ['LPSE','Nama LPSE','lpse'], '')).trim(),
-      namaPemenang: String(pick(row, ['NAMA_PEMENANG','Nama Pemenang','PEMENANG','Nama Penyedia','nama_pemenang'], '')).trim(),
-      npwp: String(pick(row, ['NPWP','npwp'], '')).trim(),
-      nilai: toNum(pick(row, ['NILAI_KONTRAK','Nilai Kontrak','NILAI_NEGOSIASI','Nilai Negosiasi','HPS','PAGU','Nilai Paket'], 0)),
-      sumber: String(pick(row, ['SUMBER','Sumber','sumber'], '')).trim()
-    };
-  }
-
+  function fmt2(v){return new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}).format(num(v));}
   function fmtMoney(v){
-    const n = toNum(v);
-    if (!n) return '-';
-    if (n >= 1000000000000) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1000000000000) + ' T';
-    if (n >= 1000000000) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1000000000) + ' M';
-    if (n >= 1000000) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:1}).format(n/1000000) + ' Jt';
+    const n = num(v);
+    if (n >= 1e12) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1e12) + ' T';
+    if (n >= 1e9) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1e9) + ' M';
+    if (n >= 1e6) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1e6) + ' Jt';
     return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(n);
   }
-
-  async function fetchProviderRows(){
-    if (state.providerLoaded && state.providerRows.length) return state.providerRows;
+  function pick(row, keys, def){
+    if (!row) return def;
+    for (const k of keys){
+      if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') return row[k];
+      const found = Object.keys(row).find(x => norm(x) === norm(k));
+      if (found && row[found] !== undefined && row[found] !== null && String(row[found]).trim() !== '') return row[found];
+    }
+    return def;
+  }
+  function getData(){
+    try { return CONFIG.dataProvider() || {}; }
+    catch(e){ return {}; }
+  }
+  function getOpdName(row){return String(pick(row,['nama_opd','nama_satker','satker','opd','Nama OPD','Satuan Kerja'],'')||'').trim();}
+  function getScore(row){return num(pick(row,['nilai_itkp','skor_itkp','score','itkp','Total Skor','SKOR ITKP'],0));}
+  function getSelectedRow(){
     const data = getData();
-    if (Array.isArray(data.providerRows) && data.providerRows.length) {
-      state.providerRows = data.providerRows.map(normalizeProviderRow).filter(r => r.namaPemenang || r.namaPaket);
-      state.providerLoaded = true;
-      return state.providerRows;
-    }
-    const spreadsheetId = String(window.PBJ_PIN_CONFIG.providerSpreadsheetId || '').trim();
-    const sheetName = String(window.PBJ_PIN_CONFIG.providerSheetName || 'PORTAL_PENYEDIA').trim();
-    const gid = String(window.PBJ_PIN_CONFIG.providerGid || '').trim();
-    if (!spreadsheetId) throw new Error('Spreadsheet penyedia belum diset di PBJ_PIN_CONFIG.providerSpreadsheetId.');
-    const q = gid ? ('gid=' + encodeURIComponent(gid)) : ('sheet=' + encodeURIComponent(sheetName));
-    const url = 'https://docs.google.com/spreadsheets/d/' + encodeURIComponent(spreadsheetId) + '/gviz/tq?tqx=out:csv&' + q + '&v=' + Date.now();
-    const res = await fetch(url, { cache:'no-store' });
-    if (!res.ok) throw new Error('Data penyedia belum bisa dibuka.');
-    const text = await res.text();
-    if (/DOCTYPE html|<html/i.test(text.slice(0,300))) throw new Error('Sheet penyedia belum public / belum bisa dibaca.');
-    state.providerRows = matrixToObjects(parseCsv(text)).map(normalizeProviderRow).filter(r => r.namaPemenang || r.namaPaket);
-    state.providerLoaded = true;
-    return state.providerRows;
+    const rows = Array.isArray(data.opdRows) ? data.opdRows : [];
+    const selected = norm(state.selectedOpd || CONFIG.defaultOpd);
+    return rows.find(r => norm(getOpdName(r)) === selected) || rows.find(r => norm(getOpdName(r)).includes(selected) || selected.includes(norm(getOpdName(r)))) || rows[0] || null;
   }
-
-  function searchProviderRows(query){
-    const term = norm(query);
-    if (!term || term.length < 2) return [];
-    const words = term.split(' ').filter(Boolean);
-    return (state.providerRows || []).filter(r => {
-      const hay = norm([r.namaPemenang,r.namaPaket,r.instansi,r.satker,r.lpse,r.kode,r.npwp,r.sumber].join(' '));
-      return words.every(w => hay.includes(w));
-    }).slice(0, Number(window.PBJ_PIN_CONFIG.providerLimit || 8));
+  function getLatestRapor(opd){
+    const data = getData();
+    const rows = Array.isArray(data.raporRows) ? data.raporRows : [];
+    const nOpd = norm(opd);
+    const list = rows.filter(r => norm(pick(r,['nama_opd','opd','Nama OPD'],'')).includes(nOpd) || nOpd.includes(norm(pick(r,['nama_opd','opd','Nama OPD'],''))));
+    list.sort((a,b)=> String(pick(b,['updated_at','created_at','tanggal','timestamp'],'')).localeCompare(String(pick(a,['updated_at','created_at','tanggal','timestamp'],''))));
+    return list[0] || null;
   }
+  function metric(row, label, aKeys, bKeys, maxKeys){
+    const a = num(pick(row,aKeys,0));
+    const b = num(pick(row,bKeys,maxKeys ? pick(row,maxKeys,0) : 0));
+    const pct = b ? Math.min(100, (a/b)*100) : 0;
+    return `<div class="pbj-pin-metric"><div class="pbj-pin-metric-head"><span>${esc(label)}</span><span>${esc(new Intl.NumberFormat('id-ID').format(a))}/${esc(new Intl.NumberFormat('id-ID').format(b))}</span></div><div class="pbj-pin-bar"><div class="pbj-pin-bar-fill" style="width:${pct}%"></div></div></div>`;
+  }
+  function getProviderName(row){return String(pick(row,['pemenang','nama_penyedia','penyedia','Nama Penyedia','Pemenang'],'-')||'-').trim();}
+  function getProviderPackage(row){return String(pick(row,['nama_paket','paket','Nama Paket'],'-')||'-').trim();}
+  function providerSearchRows(q){
+    const data = getData();
+    const rows = Array.isArray(data.providerRows) ? data.providerRows : [];
+    const kw = norm(q);
+    if (kw.length < 2) return [];
+    return rows.filter(r => {
+      const hay = [getProviderName(r), getProviderPackage(r), pick(r,['instansi','nama_opd','satker','lpse','kategori','metode_pengadaan'],'')].join(' ');
+      return norm(hay).includes(kw);
+    }).slice(0, 30);
+  }
+  function renderProviderCard(row){
+    const name = getProviderName(row);
+    const paket = getProviderPackage(row);
+    const meta = [pick(row,['tahun','Tahun'],''), pick(row,['instansi','nama_opd','satker','Instansi'],''), pick(row,['status','status_paket','Status Paket'],'')].filter(Boolean).join(' · ');
+    const nilai = pick(row,['nilai','nilai_pagu','nilai_kontrak','kontrak','pagu','Nilai'],0);
+    return `<div class="pbj-pin-provider-card"><div class="pbj-pin-provider-name">${esc(name)}</div><div class="pbj-pin-provider-package">${esc(paket)}</div><div class="pbj-pin-provider-meta">${esc(meta || '-')}</div><span class="pbj-pin-provider-value">${esc(fmtMoney(nilai))}</span></div>`;
+  }
+  function render(){
+    let root = document.getElementById('pbj-pin-widget-root');
+    if (!root){ root = document.createElement('div'); root.id='pbj-pin-widget-root'; document.body.appendChild(root); }
+    const data = getData();
+    const opdRows = Array.isArray(data.opdRows) ? data.opdRows : [];
+    if (!state.selectedOpd){ state.selectedOpd = localStorage.getItem(CONFIG.storageKey) || CONFIG.defaultOpd; }
+    const row = getSelectedRow();
+    const opd = row ? getOpdName(row) : state.selectedOpd;
+    const score = row ? getScore(row) : 0;
+    const deg = Math.max(0, Math.min(360, (score / Number(CONFIG.scoreMax || 30))*360));
+    const latest = getLatestRapor(opd);
+    const providerHtml = state.providerResults.length ? state.providerResults.map(renderProviderCard).join('') : `<div class="pbj-pin-empty">Ketik minimal 2 karakter lalu tekan Cari.</div>`;
+    const opdListHtml = opdRows.map(r => {
+      const n = getOpdName(r); const s = getScore(r);
+      return `<div class="pbj-pin-opd-item ${norm(n)===norm(opd)?'active':''}" data-opd="${esc(n)}"><div class="pbj-pin-opd-name">${esc(n)}</div><div class="pbj-pin-opd-score">${esc(fmt2(s))}</div></div>`;
+    }).join('') || `<div class="pbj-pin-empty">Belum ada data OPD.</div>`;
+    const metrics = row ? [
+      metric(row,'SiRUP',['sirup_nilai','sirup_terisi','sirup_score'],['sirup_target','sirup_total','sirup_max']),
+      metric(row,'Toko Daring',['toko_daring_nilai','toko_daring_terisi','toko_score'],['toko_daring_target','toko_daring_total','toko_max']),
+      metric(row,'e-Purchasing',['epurchasing_nilai','epurchasing_terisi','epurchasing_score'],['epurchasing_target','epurchasing_total','epurchasing_max']),
+      metric(row,'e-Tendering',['etendering_nilai','etendering_terisi','etendering_score'],['etendering_target','etendering_total','etendering_max']),
+      metric(row,'e-Kontrak',['ekontrak_nilai','ekontrak_terisi','ekontrak_score'],['ekontrak_target','ekontrak_total','ekontrak_max']),
+      metric(row,'Non eTendering / Non ePurchasing',['nonetendering_nilai','nonetendering_terisi','non_score'],['nonetendering_target','nonetendering_total','non_max'])
+    ].join('') : '';
 
-  function renderProviderResults(){
-    const box = document.getElementById('pbjPinProviderResults');
-    if (!box) return;
-    if (state.providerLoading) {
-      box.innerHTML = '<div class="pbj-pin-provider-empty">Mencari data penyedia...</div>';
-      return;
-    }
-    if (state.providerMessage && !state.providerResults.length) {
-      box.innerHTML = '<div class="pbj-pin-provider-empty">' + esc(state.providerMessage) + '</div>';
-      return;
-    }
-    if (!state.providerResults.length) {
-      box.innerHTML = '<div class="pbj-pin-provider-empty">Data tidak ditemukan.</div>';
-      return;
-    }
-    box.innerHTML = state.providerResults.map(r => `
-      <div class="pbj-pin-provider-item">
-        <div class="pbj-pin-provider-name">${esc(r.namaPemenang || '-')}</div>
-        <div class="pbj-pin-provider-pkg">${esc(r.namaPaket || '-')}</div>
-        <div class="pbj-pin-provider-meta">${esc(r.tahun || '-')} · ${esc(r.instansi || r.satker || '-')} · ${esc(r.sumber || '-')}</div>
-        <div class="pbj-pin-provider-value">${esc(fmtMoney(r.nilai))}</div>
+    root.innerHTML = `
+      <div class="pbj-pin-mini" style="--pbj-pin-deg:${deg}deg" title="Klik untuk buka widget">
+        <div class="pbj-pin-mini-score"><span>${esc(fmt2(score))}</span></div>
+        <div class="pbj-pin-mini-text"><div class="pbj-pin-mini-kicker">OPD Dipantau</div><div class="pbj-pin-mini-opd">${esc(opd || '-')}</div></div>
       </div>
-    `).join('');
-  }
-
-  async function runProviderSearch(query){
-    state.providerQuery = String(query || '').trim();
-    if (state.providerQuery.length < 2) {
-      state.providerResults = [];
-      state.providerMessage = 'Ketik minimal 2 karakter nama penyedia / paket.';
-      renderProviderResults();
-      return;
-    }
-    state.providerLoading = true;
-    state.providerMessage = '';
-    renderProviderResults();
-    try {
-      await fetchProviderRows();
-      state.providerResults = searchProviderRows(state.providerQuery);
-      state.providerMessage = state.providerResults.length ? '' : 'Data tidak ditemukan.';
-    } catch(err) {
-      state.providerResults = [];
-      state.providerMessage = (err && err.message) ? err.message : String(err);
-    } finally {
-      state.providerLoading = false;
-      renderProviderResults();
-    }
-  }
-
-  function toggleProviderSearch(){
-    state.providerSearchOpen = !state.providerSearchOpen;
-    renderPanel(document.getElementById('pbjPinSearch')?.value || '');
-    if (state.providerSearchOpen) setTimeout(() => document.getElementById('pbjPinProviderInput')?.focus(), 50);
-  }
-
-  function isItkpCollapsed(){
-    try { return localStorage.getItem('PBJ_PIN_ITKP_COLLAPSED') === '1'; } catch(e) { return false; }
-  }
-
-  function setItkpCollapsed(value){
-    try { localStorage.setItem('PBJ_PIN_ITKP_COLLAPSED', value ? '1' : '0'); } catch(e) {}
-  }
-
-  function isOpdSearchOpen(){
-    try { return localStorage.getItem('PBJ_PIN_OPD_SEARCH_OPEN') === '1'; } catch(e) { return false; }
-  }
-
-  function setOpdSearchOpen(value){
-    try { localStorage.setItem('PBJ_PIN_OPD_SEARCH_OPEN', value ? '1' : '0'); } catch(e) {}
-  }
-
-  function renderPanel(filterText){
-    const panel = document.getElementById('pbjPinPanel');
-    if (!panel) return;
-    const current = getSelectedRow();
-    const filter = norm(filterText || '');
-    const rows = state.opdRows.filter(r => !filter || norm(r.nama).includes(filter) || norm(r.kode).includes(filter)).slice(0, 80);
-    const latest = state.latestRapot;
-    const max = Number(window.PBJ_PIN_CONFIG.scoreMax || 30);
-    const itkpCollapsed = isItkpCollapsed();
-    const opdSearchOpen = isOpdSearchOpen();
-
-    panel.innerHTML = `
-      <div class="pbj-pin-panel-head">
-        <div class="pbj-pin-title-row">
-          <div>
-            <div class="pbj-pin-title">OPD Dipantau</div>
-            <div class="pbj-pin-selected">${esc(current.nama || '-')}</div>
-            <div class="pbj-pin-status-pill">Widget OPD Dipantau</div>
-          </div>
-          <button type="button" class="pbj-pin-close" id="pbjPinCloseBtn">×</button>
+      <div class="pbj-pin-panel ${state.open ? 'open':''}">
+        <div class="pbj-pin-head"><button class="pbj-pin-close" type="button">×</button><div class="pbj-pin-title-small">OPD Dipantau</div><div class="pbj-pin-title">${esc(opd || '-')}</div><div class="pbj-pin-tag">Widget OPD Dipantau</div></div>
+        <div class="pbj-pin-tabs"><button class="pbj-pin-tab ${state.tab==='search'?'active':''}" data-tab="search">🔎 Cari Penyedia di Widget</button><button class="pbj-pin-tab ${state.tab==='opd'?'active':''}" data-tab="opd">Cari / Ganti OPD</button></div>
+        <div class="pbj-pin-body">
+          <div class="pbj-pin-section ${state.tab==='search'?'':'hidden'}" id="pbj-pin-provider-section"><div class="pbj-pin-section-title">Pencarian Penyedia Pengadaan SPSE</div><div class="pbj-pin-row"><input class="pbj-pin-input" id="pbj-pin-provider-q" value="${esc(state.q)}" placeholder="Cari nama penyedia / paket..."><button class="pbj-pin-btn" id="pbj-pin-provider-btn" type="button">Cari</button></div><div class="pbj-pin-provider-results">${providerHtml}</div></div>
+          <div class="pbj-pin-section ${state.tab==='opd'?'':'hidden'}"><div class="pbj-pin-section-title">Pilih OPD</div><div class="pbj-pin-row"><input class="pbj-pin-input" id="pbj-pin-opd-filter" placeholder="Cari OPD..."><button class="pbj-pin-btn light" id="pbj-pin-opd-reset" type="button">Reset</button></div><div class="pbj-pin-opd-list">${opdListHtml}</div></div>
+          <div class="pbj-pin-section ${state.tab==='search'?'hidden':''}" id="pbj-pin-latest-section"><div class="pbj-pin-section-title">Info Rapor Terbaru</div>${latest ? `<div class="pbj-pin-latest-title">Rapor ${esc(pick(latest,['nama_opd','opd'],'OPD'))}</div><div class="pbj-pin-latest-text">Periode ${esc(pick(latest,['bulan','Bulan'],'-'))} ${esc(pick(latest,['tahun','Tahun'],'-'))}. Status QC: <b>${esc(pick(latest,['status_qc','Status QC'],'-'))}</b>. ID: ${esc(pick(latest,['id_rapot','ID Rapot'],'-'))}</div>` : `<div class="pbj-pin-empty">Belum ada rapor terbaru untuk OPD ini.</div>`}</div>
+          <div class="pbj-pin-section ${state.tab==='search'?'hidden':''} ${state.itkpMinimized?'pbj-pin-itkp-collapsed':''}" id="pbj-pin-itkp-section"><div class="pbj-pin-minimize-line"><div class="pbj-pin-section-title" style="margin:0">Ringkasan ITKP</div><button class="pbj-pin-minimize-btn" id="pbj-pin-itkp-toggle" type="button">${state.itkpMinimized?'Tampilkan':'Minimize'}</button></div><div class="pbj-pin-itkp-head"><div class="pbj-pin-circle" style="--pbj-pin-deg:${deg}deg"><div class="pbj-pin-circle-inner"><div class="pbj-pin-circle-kicker">ITKP OPD</div><div class="pbj-pin-circle-score">${esc(fmt2(score))}</div><div class="pbj-pin-circle-max">dari ${esc(CONFIG.scoreMax)} poin</div></div></div><div class="pbj-pin-latest-text">Skor dan indikator OPD yang dipantau.</div></div><div class="pbj-pin-metrics">${metrics || `<div class="pbj-pin-empty">Belum ada rincian ITKP.</div>`}</div></div>
         </div>
-      </div>
-      <div class="pbj-pin-body">
-        <div class="pbj-pin-action-row">
-          <button type="button" class="pbj-pin-action-btn" id="pbjPinOpenSearchBtn">🔎 Cari Penyedia di Widget</button>
-          <button type="button" class="pbj-pin-action-btn secondary" id="pbjPinToggleOpdSearch">${opdSearchOpen ? 'Tutup Pilih OPD' : 'Cari / Ganti OPD'}</button>
-        </div>
-
-        <div class="pbj-pin-opd-search-wrap ${opdSearchOpen ? 'show' : ''}">
-          <input class="pbj-pin-search" id="pbjPinSearch" placeholder="Cari OPD..." value="${esc(filterText || '')}">
-          <div class="pbj-pin-opd-list">
-            ${rows.map(r => `
-              <div class="pbj-pin-opd-item ${norm(r.nama) === norm(current.nama) ? 'active' : ''}" data-opd="${esc(r.nama)}">
-                <div class="pbj-pin-opd-name">${esc(r.nama)}</div>
-                <div class="pbj-pin-opd-score">${fmtScore(r.score)}</div>
-              </div>`).join('') || '<div class="pbj-pin-report-text">OPD tidak ditemukan.</div>'}
-          </div>
-        </div>
-
-        <div class="pbj-pin-provider-wrap ${state.providerSearchOpen ? 'show' : ''}">
-          <div class="pbj-pin-provider-title">Pencarian Penyedia Pengadaan SPSE</div>
-          <div class="pbj-pin-provider-search-row">
-            <input class="pbj-pin-provider-input" id="pbjPinProviderInput" placeholder="Cari PT / CV / nama paket..." value="${esc(state.providerQuery || '')}">
-            <button type="button" class="pbj-pin-provider-search-btn" id="pbjPinProviderSearchBtn">Cari</button>
-          </div>
-          <div id="pbjPinProviderResults" class="pbj-pin-provider-results"></div>
-        </div>
-
-        <div class="pbj-pin-report-box">
-          <div class="pbj-pin-report-title">Info Rapor Terbaru</div>
-          <div class="pbj-pin-report-text">
-            ${latest ? `Rapor ${esc(current.nama)} periode ${esc(monthName(latest.bulan))} ${esc(latest.tahun)} tersedia. Status QC: <b>${esc(latest.status || '-')}</b>. ID: <b>${esc(latest.id || '-')}</b>.` : 'Belum ada rapor terbaru untuk OPD ini.'}
-          </div>
-        </div>
-
-        <div class="pbj-pin-itkp-head">
-          <div>
-            <div class="pbj-pin-report-title">Ringkasan ITKP</div>
-            <div class="pbj-pin-report-text">Skor dan indikator OPD yang dipantau.</div>
-          </div>
-          <button type="button" class="pbj-pin-mini-btn" id="pbjPinToggleItkp">${itkpCollapsed ? 'Tampilkan' : 'Minimize'}</button>
-        </div>
-
-        <div class="pbj-pin-itkp-section ${itkpCollapsed ? 'collapsed' : ''}">
-          <div class="pbj-pin-score-card">
-            <div class="pbj-pin-score-ring" style="--pbj-score-deg:${scoreDeg(current.score)}deg">
-              <div class="pbj-pin-score-inner">
-                <div class="pbj-pin-score-label">ITKP OPD</div>
-                <div class="pbj-pin-score-value">${fmtScore(current.score)}</div>
-                <div class="pbj-pin-score-max">dari ${fmtInt(max)} poin</div>
-              </div>
-            </div>
-            <div class="pbj-pin-note">
-              Pilihan ini tersimpan di perangkat ini. Notifikasi rapor terbaru hanya menampilkan OPD yang dipilih.
-            </div>
-          </div>
-
-          <div class="pbj-pin-bars">
-            ${(current.indicators || []).map(ind => {
-              const pct = ind.max ? Math.max(0, Math.min(100, (toNum(ind.score) / toNum(ind.max)) * 100)) : 0;
-              return `<div class="pbj-pin-bar-item">
-                <div class="pbj-pin-bar-top"><div class="pbj-pin-bar-name">${esc(ind.name)}</div><div class="pbj-pin-bar-score">${fmtInt(ind.score)}/${fmtInt(ind.max)}</div></div>
-                <div class="pbj-pin-bar-track"><div class="pbj-pin-bar-fill" style="width:${pct}%"></div></div>
-              </div>`;
-            }).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-
-    const closeBtn = document.getElementById('pbjPinCloseBtn');
-    if (closeBtn) closeBtn.addEventListener('click', closePanel);
-    const providerBtn = document.getElementById('pbjPinOpenSearchBtn');
-    if (providerBtn) providerBtn.addEventListener('click', toggleProviderSearch);
-    const providerInput = document.getElementById('pbjPinProviderInput');
-    const providerSearchBtn = document.getElementById('pbjPinProviderSearchBtn');
-    if (providerSearchBtn) providerSearchBtn.addEventListener('click', () => runProviderSearch(providerInput ? providerInput.value : ''));
-    if (providerInput) providerInput.addEventListener('keydown', e => { if (e.key === 'Enter') runProviderSearch(providerInput.value); });
-    renderProviderResults();
-    const toggleOpd = document.getElementById('pbjPinToggleOpdSearch');
-    if (toggleOpd) toggleOpd.addEventListener('click', () => { setOpdSearchOpen(!opdSearchOpen); renderPanel(filterText || ''); });
-    const toggleItkp = document.getElementById('pbjPinToggleItkp');
-    if (toggleItkp) toggleItkp.addEventListener('click', () => { setItkpCollapsed(!itkpCollapsed); renderPanel(filterText || ''); });
-    const search = document.getElementById('pbjPinSearch');
-    if (search) search.addEventListener('input', () => renderPanel(search.value));
-    panel.querySelectorAll('.pbj-pin-opd-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const opd = item.getAttribute('data-opd') || '';
-        state.selectedOpd = opd;
-        localStorage.setItem(STORAGE_KEY, opd);
-        refreshState();
-        if (state.latestRapot && state.latestRapot.id) localStorage.setItem(STORAGE_LAST_RAPOR_KEY, state.latestRapot.id);
-        state.unreadCount = 0;
-        renderFab();
-        renderPanel(search ? search.value : '');
-        try { window.dispatchEvent(new CustomEvent('pbj-pin-opd-change', { detail:{ nama_opd:opd } })); } catch(e) {}
-      });
+      </div>`;
+    bind(root);
+  }
+  function bind(root){
+    root.querySelector('.pbj-pin-mini')?.addEventListener('click',()=>{state.open=true;render();});
+    root.querySelector('.pbj-pin-close')?.addEventListener('click',()=>{state.open=false;render();});
+    root.querySelectorAll('.pbj-pin-tab').forEach(btn=>btn.addEventListener('click',()=>{state.tab=btn.dataset.tab;render();}));
+    root.querySelector('#pbj-pin-itkp-toggle')?.addEventListener('click',()=>{state.itkpMinimized=!state.itkpMinimized;render();});
+    const providerQ = root.querySelector('#pbj-pin-provider-q');
+    const search = ()=>{ state.q = providerQ ? providerQ.value : ''; state.providerResults = providerSearchRows(state.q); render(); };
+    root.querySelector('#pbj-pin-provider-btn')?.addEventListener('click', search);
+    providerQ?.addEventListener('keydown', e=>{ if(e.key==='Enter') search(); });
+    root.querySelectorAll('.pbj-pin-opd-item').forEach(el=>el.addEventListener('click',()=>{state.selectedOpd=el.dataset.opd||CONFIG.defaultOpd;localStorage.setItem(CONFIG.storageKey,state.selectedOpd);state.tab='opd';render();try{window.dispatchEvent(new CustomEvent('pbj-pin-opd-changed',{detail:{opd:state.selectedOpd}}));}catch(e){}}));
+    const opdFilter = root.querySelector('#pbj-pin-opd-filter');
+    opdFilter?.addEventListener('input',()=>{
+      const kw = norm(opdFilter.value);
+      root.querySelectorAll('.pbj-pin-opd-item').forEach(item=>{item.style.display = !kw || norm(item.dataset.opd).includes(kw) ? '' : 'none';});
     });
+    root.querySelector('#pbj-pin-opd-reset')?.addEventListener('click',()=>{state.selectedOpd=CONFIG.defaultOpd;localStorage.setItem(CONFIG.storageKey,state.selectedOpd);render();});
   }
-
-  function openPanel(){
-    state.open = true;
-    refreshState();
-    renderFab();
-    renderPanel('');
-    const panel = document.getElementById('pbjPinPanel');
-    const backdrop = document.getElementById('pbjPinBackdrop');
-    if (panel) panel.classList.add('show');
-    if (backdrop) backdrop.classList.add('show');
-    if (state.latestRapot && state.latestRapot.id) localStorage.setItem(STORAGE_LAST_RAPOR_KEY, state.latestRapot.id);
-    state.unreadCount = 0;
-    renderFab();
-  }
-
-  function closePanel(){
-    state.open = false;
-    const panel = document.getElementById('pbjPinPanel');
-    const backdrop = document.getElementById('pbjPinBackdrop');
-    if (panel) panel.classList.remove('show');
-    if (backdrop) backdrop.classList.remove('show');
-  }
-
-  function togglePanel(){
-    if (state.open) closePanel();
-    else openPanel();
-  }
-
-  function tick(){
-    ensureWidget();
-    refreshState();
-    renderFab();
-    if (state.open) renderPanel(document.getElementById('pbjPinSearch')?.value || '');
-  }
-
-  function init(){
-    document.querySelectorAll('.pbj-pin-fab, .pbj-pin-panel, .pbj-pin-backdrop').forEach(function(el){ el.remove(); });
-    ensureWidget();
-    tick();
-    setInterval(tick, Number(window.PBJ_PIN_CONFIG.refreshMs || 60000));
-    window.addEventListener('resize', tick);
-    window.PBJ_PIN_WIDGET = { refresh:tick, open:openPanel, close:closePanel, getState:() => state };
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  function init(){ render(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  window.PBJPinWidget = { refresh: render, open:function(){state.open=true;render();}, close:function(){state.open=false;render();} };
 })();
