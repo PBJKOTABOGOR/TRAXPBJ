@@ -1971,8 +1971,6 @@ function renderDashboardReady(data) {
       </div>
     </section>
 
-    ${renderDashboardPinWidget(data, selectedProfile)}
-
     <div class="footer-note">© 2023 BenRama - TRAXPBJ</div>
   `;
 }
@@ -2008,43 +2006,7 @@ function bindDashboardEvents() {
   };
 
 
-  const dashboardPinButton = document.getElementById('dashboardPinButton');
-  const dashboardPinPanel = document.getElementById('dashboardPinPanel');
-  const dashboardPinWidget = document.getElementById('dashboardPinWidget');
-  const dashboardPinSearch = document.getElementById('dashboardPinSearch');
-  const dashboardPinOptions = document.getElementById('dashboardPinOptions');
-
-  if (dashboardPinButton && dashboardPinPanel && dashboardPinWidget) {
-    dashboardPinButton.addEventListener('click', (event) => {
-      event.stopPropagation();
-      dashboardPinWidget.classList.toggle('is-open');
-      if (dashboardPinWidget.classList.contains('is-open')) {
-        setTimeout(() => dashboardPinSearch?.focus(), 80);
-      }
-    });
-
-    dashboardPinPanel.addEventListener('click', (event) => {
-      event.stopPropagation();
-    });
-
-    dashboardPinOptions?.querySelectorAll('[data-pin-satker-option]').forEach((button) => {
-      button.addEventListener('click', () => {
-        rerenderDashboardBySatker(button.dataset.pinSatkerOption || 'PEMERINTAH KOTA BOGOR');
-      });
-    });
-
-    dashboardPinSearch?.addEventListener('input', () => {
-      const keyword = String(dashboardPinSearch.value || '').trim().toLowerCase();
-      dashboardPinOptions?.querySelectorAll('[data-pin-satker-option]').forEach((button) => {
-        const name = String(button.dataset.pinSatkerOption || '').toLowerCase();
-        button.hidden = !!keyword && !name.includes(keyword);
-      });
-    });
-
-    document.addEventListener('click', () => {
-      dashboardPinWidget.classList.remove('is-open');
-    }, { once: true });
-  }
+  /* Pin lama bawaan dashboard dinonaktifkan. Widget yang dipakai sekarang dari mobile-pin-widget.js */
 
   const satkerSearch = document.getElementById('itkpSatkerSearch');
   const satkerToggle = document.getElementById('itkpSatkerToggle');
