@@ -1,4 +1,4 @@
-const PBJ_CACHE = 'sippbj-cache-v2-widget-search-minimize';
+const PBJ_CACHE = 'sippbj-cache-v3-widget-search-inside-big';
 const ASSETS = [
   './',
   './index.html',
