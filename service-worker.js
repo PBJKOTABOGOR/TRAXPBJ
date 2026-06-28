@@ -1,33 +1,13 @@
-const PBJ_CACHE = 'sippbj-cache-v3-widget-search-inside-big';
-const ASSETS = [
-  './',
-  './index.html',
-  './mobile-pin-widget.css',
-  './mobile-pin-widget.js',
-  './manifest.json'
-];
-
+const CACHE_NAME = 'sippbj-pwa-v1';
+const ASSETS = ['./','./index.html','./mobile-pin-widget.css','./mobile-pin-widget.js','./manifest.json'];
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(PBJ_CACHE).then(cache => cache.addAll(ASSETS).catch(() => null))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).catch(()=>{}));
   self.skipWaiting();
 });
-
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(key => key !== PBJ_CACHE ? caches.delete(key) : null)))
-  );
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
   self.clients.claim();
 });
-
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(
-    fetch(event.request).then(response => {
-      const copy = response.clone();
-      caches.open(PBJ_CACHE).then(cache => cache.put(event.request, copy)).catch(() => null);
-      return response;
-    }).catch(() => caches.match(event.request).then(cached => cached || caches.match('./')))
-  );
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
