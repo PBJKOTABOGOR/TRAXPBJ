@@ -21,7 +21,7 @@
 .pbj-pin-mini-kicker{font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.70);white-space:nowrap}
 .pbj-pin-mini-opd{font-size:11px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:165px;color:#fff}
 
-.pbj-pin-panel{width:390px;max-width:calc(100vw - 24px);max-height:calc(100vh - 28px);overflow:hidden;border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.30);border:1px solid #cfe0f2;display:none}
+.pbj-pin-panel{width:430px;max-width:calc(100vw - 24px);max-height:calc(100vh - 28px);overflow:hidden;border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.30);border:1px solid #cfe0f2;display:none}
 .pbj-pin-panel.open{display:block}
 .pbj-pin-head{background:#edf4ff;padding:18px 18px 12px;border-bottom:1px solid #dbe5f0;position:relative}
 .pbj-pin-close{position:absolute;right:12px;top:12px;width:30px;height:30px;border:none;border-radius:999px;background:#fff;color:#123a72;font-weight:950;box-shadow:0 8px 18px rgba(15,23,42,.12);cursor:pointer}
@@ -31,7 +31,7 @@
 .pbj-pin-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:#fff}
 .pbj-pin-tab{border:1px solid #dbe5f0;background:#fff;color:#123a72;border-radius:12px;padding:11px 10px;font-weight:950;font-size:12px;cursor:pointer;box-shadow:0 6px 16px rgba(15,23,42,.06)}
 .pbj-pin-tab.active{background:linear-gradient(135deg,#123a72,#0f766e);color:#fff;border-color:transparent}
-.pbj-pin-body{padding:0 12px 12px;max-height:calc(100vh - 190px);overflow:auto;background:#fff}
+.pbj-pin-body{padding:0 12px 12px;max-height:calc(100vh - 180px);overflow:auto;background:#fff}
 .pbj-pin-section{border:1px solid #dbe5f0;background:#fbfdff;border-radius:16px;padding:12px;margin-bottom:10px}
 .pbj-pin-section.hidden{display:none!important}
 .pbj-pin-section-title{font-size:12px;font-weight:950;color:#123a72;margin-bottom:8px}
@@ -39,14 +39,14 @@
 .pbj-pin-input{width:100%;border:1px solid #dbe5f0;border-radius:12px;padding:10px 12px;font-size:13px;outline:none;color:#102544;background:#fff}
 .pbj-pin-btn{border:none;border-radius:12px;padding:10px 14px;background:#123a72;color:#fff;font-size:12px;font-weight:950;cursor:pointer;white-space:nowrap}
 .pbj-pin-btn.light{background:#fff;color:#123a72;border:1px solid #dbe5f0;box-shadow:0 6px 14px rgba(15,23,42,.06)}
-.pbj-pin-provider-results{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow:auto;padding-right:4px}
+.pbj-pin-provider-results{display:flex;flex-direction:column;gap:8px;max-height:410px;overflow:auto;padding-right:4px}
 .pbj-pin-provider-card{background:#fff;border:1px solid #dbe5f0;border-radius:14px;padding:10px;box-shadow:0 4px 14px rgba(15,23,42,.05)}
 .pbj-pin-provider-name{font-size:12px;font-weight:950;color:#123a72;line-height:1.35;margin-bottom:4px}
 .pbj-pin-provider-package{font-size:12px;font-weight:800;color:#102544;line-height:1.35;margin-bottom:4px}
 .pbj-pin-provider-meta{font-size:11px;color:#64748b;font-weight:800;line-height:1.4;margin-bottom:8px}
 .pbj-pin-provider-value{display:inline-flex;padding:6px 9px;border-radius:999px;background:#ecfdf5;color:#0f766e;font-size:11px;font-weight:950}
 .pbj-pin-empty{font-size:12px;color:#64748b;font-weight:800;line-height:1.5;padding:8px 0}
-.pbj-pin-opd-list{display:flex;flex-direction:column;gap:6px;max-height:230px;overflow:auto}
+.pbj-pin-opd-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}
 .pbj-pin-opd-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid #dbe5f0;background:#fff;border-radius:12px;padding:9px 10px;cursor:pointer}
 .pbj-pin-opd-item.active{border-color:#93c5fd;background:#eff6ff}
 .pbj-pin-opd-name{font-size:11px;font-weight:950;color:#123a72;line-height:1.3;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -74,4 +74,18 @@
   .pbj-pin-mini{width:228px}
   .pbj-pin-body{max-height:calc(100vh - 176px)}
   .pbj-pin-provider-results{max-height:310px}
+}
+
+.pbj-pin-empty.danger{color:#b91c1c}
+.pbj-pin-provider-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pbj-pin-provider-links{display:flex;gap:6px;flex-wrap:wrap}
+.pbj-pin-linkbtn{display:inline-flex;text-decoration:none;border-radius:999px;padding:5px 8px;background:#eff6ff;color:#123a72;border:1px solid #dbe5f0;font-size:10px;font-weight:950}
+.pbj-pin-metric.accent-blue .pbj-pin-bar-fill{background:linear-gradient(90deg,#2563eb,#0f766e)}
+.pbj-pin-metric.accent-teal .pbj-pin-bar-fill{background:linear-gradient(90deg,#0f766e,#5eead4)}
+.pbj-pin-metric.accent-purple .pbj-pin-bar-fill{background:linear-gradient(90deg,#7c3aed,#a78bfa)}
+.pbj-pin-metric.accent-orange .pbj-pin-bar-fill{background:linear-gradient(90deg,#f59e0b,#f97316)}
+.pbj-pin-metric.accent-green .pbj-pin-bar-fill{background:linear-gradient(90deg,#16a34a,#86efac)}
+.pbj-pin-metric.accent-red .pbj-pin-bar-fill{background:linear-gradient(90deg,#ef4444,#fb7185)}
+@media(max-width:600px){
+  .pbj-pin-provider-results{max-height:390px}
 }
