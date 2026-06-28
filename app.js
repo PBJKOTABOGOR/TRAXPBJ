@@ -438,6 +438,11 @@ const DASHBOARD_SHEETS = {
     title: 'ALLPROG',
     spreadsheetId: '14i9ni_b0X_3D681j_GHNxap2nfJBmIoaOmy8KNCIHRc',
     gid: '693324486'
+  },
+  indexRapor: {
+    title: 'INDEX_RAPOT',
+    spreadsheetId: '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU',
+    sheet: 'INDEX_RAPOT'
   }
 };
 
@@ -459,6 +464,7 @@ const WARNING_MODAL_STATE = {
 };
 
 const DASHBOARD_CONTEXT_KEY = 'traxpbj_dashboard_context';
+const DASHBOARD_FOLLOWED_SATKER_KEY = 'traxpbj_followed_satker';
 
 function getDashboardContext() {
   try {
@@ -483,6 +489,42 @@ function persistDashboardContext() {
 
   window.__dashboardSelectedSatker = payload.selectedSatker;
   return payload;
+}
+
+
+function getFollowedSatkers() {
+  try {
+    const raw = localStorage.getItem(DASHBOARD_FOLLOWED_SATKER_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.map((item) => String(item || '').trim()).filter(Boolean) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveFollowedSatkers(list) {
+  const cleaned = Array.from(new Set((list || []).map((item) => String(item || '').trim()).filter(Boolean)));
+  try {
+    localStorage.setItem(DASHBOARD_FOLLOWED_SATKER_KEY, JSON.stringify(cleaned));
+  } catch (error) {
+    // ignore storage issues
+  }
+  return cleaned;
+}
+
+function isSatkerFollowed(name) {
+  const key = normalizeSatkerName(name);
+  return getFollowedSatkers().some((item) => normalizeSatkerName(item) === key);
+}
+
+function toggleFollowedSatker(name) {
+  const satkerName = String(name || '').trim();
+  if (!satkerName || isCityAggregateName(satkerName)) return getFollowedSatkers();
+  const current = getFollowedSatkers();
+  const key = normalizeSatkerName(satkerName);
+  const exists = current.some((item) => normalizeSatkerName(item) === key);
+  if (exists) return saveFollowedSatkers(current.filter((item) => normalizeSatkerName(item) !== key));
+  return saveFollowedSatkers(current.concat([satkerName]));
 }
 
 function escapeSelectorValue(value) {
@@ -707,7 +749,10 @@ function parseCsv(text) {
 }
 
 async function fetchSheetRows(config) {
-  const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq?tqx=out:csv&gid=${config.gid}&v=${Date.now()}`;
+  const sourceParam = config.gid
+    ? `gid=${encodeURIComponent(config.gid)}`
+    : `sheet=${encodeURIComponent(config.sheet || config.title || '')}`;
+  const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/gviz/tq?tqx=out:csv&${sourceParam}&v=${Date.now()}`;
   const response = await fetch(url, { cache: 'no-store' });
 
   if (!response.ok) {
@@ -1146,6 +1191,220 @@ function buildAllprogWarningSummary(rows) {
   return summary;
 }
 
+
+function getRaporMonthLabel(value) {
+  const map = {
+    '1': 'Januari', '01': 'Januari', 'januari': 'Januari',
+    '2': 'Februari', '02': 'Februari', 'februari': 'Februari',
+    '3': 'Maret', '03': 'Maret', 'maret': 'Maret',
+    '4': 'April', '04': 'April', 'april': 'April',
+    '5': 'Mei', '05': 'Mei', 'mei': 'Mei',
+    '6': 'Juni', '06': 'Juni', 'juni': 'Juni',
+    '7': 'Juli', '07': 'Juli', 'juli': 'Juli',
+    '8': 'Agustus', '08': 'Agustus', 'agustus': 'Agustus',
+    '9': 'September', '09': 'September', 'september': 'September',
+    '10': 'Oktober', 'oktober': 'Oktober',
+    '11': 'November', 'november': 'November',
+    '12': 'Desember', 'desember': 'Desember'
+  };
+  const key = String(value || '').trim().toLowerCase();
+  return map[key] || String(value || '-');
+}
+
+function getRaporTimeKey(row) {
+  const tahun = Number(row.tahun || 0);
+  const bulanRaw = String(row.bulan || '').trim().toLowerCase();
+  const monthMap = {
+    januari: 1, februari: 2, maret: 3, april: 4, mei: 5, juni: 6,
+    juli: 7, agustus: 8, september: 9, oktober: 10, november: 11, desember: 12
+  };
+  const bulan = Number(bulanRaw) || monthMap[bulanRaw] || 0;
+  const updatedAt = Date.parse(row.updated_at || row.qc_at || row.created_at || '') || 0;
+  return (tahun * 10000000000) + (bulan * 100000000) + updatedAt;
+}
+
+function mapRaporIndexRows(rows) {
+  return (rows || []).map((row) => ({
+    id_rapot: String(getField(row, ['id_rapot', 'ID Rapor']) || '').trim(),
+    tahun: String(getField(row, ['tahun', 'Tahun']) || '').trim(),
+    bulan: String(getField(row, ['bulan', 'Bulan']) || '').trim(),
+    kode_opd: String(getField(row, ['kode_opd', 'Kode OPD']) || '').trim(),
+    nama_opd: String(getField(row, ['nama_opd', 'Nama OPD']) || '').trim(),
+    input_by: String(getField(row, ['input_by', 'Input By', 'Penginput']) || '').trim(),
+    updated_at: String(getField(row, ['updated_at', 'Updated At']) || '').trim(),
+    created_at: String(getField(row, ['created_at', 'Created At']) || '').trim(),
+    status_qc: String(getField(row, ['status_qc', 'Status QC']) || '').trim(),
+    status_pimpinan: String(getField(row, ['status_pimpinan', 'Status Pimpinan']) || '').trim(),
+    qc_at: String(getField(row, ['qc_at', 'QC At']) || '').trim()
+  })).filter((row) => row.id_rapot);
+}
+
+function getLatestRaporRows(data, limit = 5) {
+  const followed = getFollowedSatkers();
+  const selectedName = data && data.selectedProfile ? data.selectedProfile.name : '';
+  const scopeNames = followed.length ? followed : (selectedName && !isCityAggregateName(selectedName) ? [selectedName] : []);
+  const scopeKeys = scopeNames.map(normalizeSatkerName);
+  const rows = (data && data.raporRows ? data.raporRows : []).filter((row) => {
+    if (!scopeKeys.length) return true;
+    return scopeKeys.includes(normalizeSatkerName(row.nama_opd));
+  });
+  return rows.sort((a, b) => getRaporTimeKey(b) - getRaporTimeKey(a)).slice(0, limit);
+}
+
+function renderLatestRaporRows(rows) {
+  if (!rows || !rows.length) {
+    return `<div class="follow-empty">Belum ada rapor terbaru untuk OPD yang dipantau.</div>`;
+  }
+  return rows.map((row) => `
+    <div class="latest-rapor-item">
+      <div class="latest-rapor-main">
+        <b>${escapeHtml(row.nama_opd || '-')}</b>
+        <span>${escapeHtml(getRaporMonthLabel(row.bulan))} ${escapeHtml(row.tahun || '-')} · ${escapeHtml(row.id_rapot || '-')}</span>
+      </div>
+      <div class="latest-rapor-actions">
+        <span class="latest-rapor-status latest-rapor-status--${normalizeStatusCss(row.status_qc)}">${escapeHtml(row.status_qc || '-')}</span>
+        <button type="button" class="follow-mini-button" data-quick="rapor-pbj">Buka Rapor</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function normalizeStatusCss(value) {
+  const key = String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  return key || 'empty';
+}
+
+function renderFollowedSatkerCard(data) {
+  const followed = getFollowedSatkers();
+  const latestRows = getLatestRaporRows(data, 5);
+  const selectedProfile = data.selectedProfile || data.cityProfile;
+  const followedHtml = followed.length
+    ? followed.map((name) => `<button type="button" class="follow-chip ${normalizeSatkerName(name) === normalizeSatkerName(selectedProfile.name) ? 'is-active' : ''}" data-follow-select="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join('')
+    : `<div class="follow-empty">Belum ada OPD dipin. Klik tombol pilih OPD untuk mulai memantau.</div>`;
+
+  return `
+    <section class="card follow-dashboard-card">
+      <div class="section-title-row follow-title-row">
+        <div>
+          <span class="section-kicker">OPD Dipantau</span>
+          <h3>Pin Satuan Kerja</h3>
+          <p class="section-subnote">Pilih OPD seperti fitur ikut tim. Statistik dashboard, warning, dan rapor terbaru bisa difokuskan ke OPD pilihan.</p>
+        </div>
+        <button class="lux-button lux-button--light follow-open-button" type="button" id="openSatkerFollowModal">Pilih OPD</button>
+      </div>
+      <div class="follow-dashboard-grid">
+        <div class="follow-pinned-box">
+          <div class="follow-box-label">Mengikuti</div>
+          <div class="follow-chip-wrap">${followedHtml}</div>
+        </div>
+        <div class="follow-latest-box">
+          <div class="follow-box-label">Rapor terbaru</div>
+          <div class="latest-rapor-list">${renderLatestRaporRows(latestRows)}</div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function openSatkerFollowModal() {
+  const data = DASHBOARD_STATE.data;
+  if (!data) return;
+  closeSatkerFollowModal();
+  const profiles = (data.itkpProfiles || []).filter((profile) => !isCityAggregateName(profile.name));
+  const followed = getFollowedSatkers();
+  const followedKeys = followed.map(normalizeSatkerName);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'satkerFollowOverlay';
+  overlay.className = 'satker-follow-overlay';
+  overlay.innerHTML = `
+    <div class="satker-follow-card" role="dialog" aria-modal="true">
+      <div class="satker-follow-head">
+        <h3>Pilih Satuan Kerja</h3>
+        <button type="button" class="satker-follow-close" id="satkerFollowClose">×</button>
+      </div>
+      <div class="satker-follow-info">
+        <div><b>Info terbaru OPD</b><span>Dapatkan fokus statistik ITKP, paket warning, dan rapor terbaru.</span></div>
+      </div>
+      <div class="satker-follow-search-wrap">
+        <input type="search" id="satkerFollowSearch" placeholder="Cari OPD / satuan kerja...">
+      </div>
+      <div class="satker-follow-grid" id="satkerFollowGrid">
+        ${profiles.map((profile) => {
+          const followedNow = followedKeys.includes(normalizeSatkerName(profile.name));
+          return `
+            <div class="satker-follow-item ${followedNow ? 'is-followed' : ''}" data-follow-card="${escapeHtml(profile.name)}">
+              <div class="satker-follow-icon">${escapeHtml(getSatkerInitials(profile.name))}</div>
+              <div class="satker-follow-name">${escapeHtml(profile.name)}</div>
+              <button type="button" class="satker-follow-toggle" data-follow-toggle="${escapeHtml(profile.name)}">${followedNow ? 'Mengikuti' : 'Ikuti'}</button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div class="satker-follow-bottom">
+        <button type="button" class="satker-follow-done" id="satkerFollowDone">SELESAI</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const refreshModalButtons = () => {
+    const currentKeys = getFollowedSatkers().map(normalizeSatkerName);
+    overlay.querySelectorAll('[data-follow-card]').forEach((card) => {
+      const name = card.getAttribute('data-follow-card') || '';
+      const active = currentKeys.includes(normalizeSatkerName(name));
+      card.classList.toggle('is-followed', active);
+      const btn = card.querySelector('[data-follow-toggle]');
+      if (btn) btn.textContent = active ? 'Mengikuti' : 'Ikuti';
+    });
+  };
+
+  overlay.querySelectorAll('[data-follow-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const satkerName = button.getAttribute('data-follow-toggle') || '';
+      toggleFollowedSatker(satkerName);
+      if (isSatkerFollowed(satkerName)) {
+        DASHBOARD_STATE.selectedItkpSatker = satkerName;
+        persistDashboardContext();
+      }
+      refreshModalButtons();
+    });
+  });
+
+  const search = overlay.querySelector('#satkerFollowSearch');
+  search?.addEventListener('input', () => {
+    const keyword = String(search.value || '').trim().toLowerCase();
+    overlay.querySelectorAll('[data-follow-card]').forEach((card) => {
+      const name = String(card.getAttribute('data-follow-card') || '').toLowerCase();
+      card.hidden = keyword ? !name.includes(keyword) : false;
+    });
+  });
+
+  overlay.querySelector('#satkerFollowClose')?.addEventListener('click', closeSatkerFollowModal);
+  overlay.querySelector('#satkerFollowDone')?.addEventListener('click', () => {
+    closeSatkerFollowModal();
+    if (DASHBOARD_STATE.data) {
+      renderDashboardReady(DASHBOARD_STATE.data);
+      bindDashboardEvents();
+      initScrollAnimation();
+    }
+  });
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) closeSatkerFollowModal();
+  });
+}
+
+function closeSatkerFollowModal() {
+  const overlay = document.getElementById('satkerFollowOverlay');
+  if (overlay) overlay.remove();
+}
+
+function getSatkerInitials(name) {
+  const words = String(name || '').replace(/[^a-zA-Z0-9\s]/g, ' ').trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return 'OPD';
+  return words.slice(0, 2).map((word) => word[0]).join('').toUpperCase();
+}
+
 function getWarningTypeTitle(type) {
   return ({
     selesai: 'Selesai',
@@ -1466,6 +1725,7 @@ function analyzeDashboardData(raw) {
   const planningRows = raw.perencanaan || [];
   const realRows = raw.realisasi || [];
   const allprogAllRows = raw.allprog || [];
+  const raporRows = mapRaporIndexRows(raw.indexRapor || []);
 
   const getSatker = (row) => getField(row, ['Satuan Kerja', 'Nama Satuan Kerja', 'nama_satker']);
   const getMetode = (row) => getField(row, ['Metode Pengadaan', 'mtd_pemilihan', 'Sumber Transaksi']);
@@ -1528,6 +1788,8 @@ function analyzeDashboardData(raw) {
     planningRows,
     realRows,
     allprogRaw: allprogAllRows,
+    raporRows,
+    indexRaporRaw: raw.indexRapor || [],
     totalOpd: itkpOpdRows.length,
     totalSubOpd: subOpdRows.length,
     scopeName: selectedProfile.name,
@@ -1566,15 +1828,16 @@ async function loadDashboardData(force = false) {
   DASHBOARD_STATE.error = null;
 
   try {
-    const [itkp, itkpSubOpd, perencanaan, realisasi, allprog] = await Promise.all([
+    const [itkp, itkpSubOpd, perencanaan, realisasi, allprog, indexRapor] = await Promise.all([
       fetchSheetRows(DASHBOARD_SHEETS.itkp),
       fetchSheetRows(DASHBOARD_SHEETS.itkpSubOpd),
       fetchSheetRows(DASHBOARD_SHEETS.perencanaan),
       fetchSheetRows(DASHBOARD_SHEETS.realisasi),
-      fetchSheetRows(DASHBOARD_SHEETS.allprog)
+      fetchSheetRows(DASHBOARD_SHEETS.allprog),
+      fetchSheetRows(DASHBOARD_SHEETS.indexRapor)
     ]);
 
-    DASHBOARD_STATE.data = analyzeDashboardData({ itkp, itkpSubOpd, perencanaan, realisasi, allprog });
+    DASHBOARD_STATE.data = analyzeDashboardData({ itkp, itkpSubOpd, perencanaan, realisasi, allprog, indexRapor });
     DASHBOARD_STATE.loadedAt = new Date();
     return DASHBOARD_STATE.data;
   } catch (error) {
@@ -1715,10 +1978,13 @@ function renderDashboardReady(data) {
 
       <div class="hero-actions">
         <button class="lux-button lux-button--light" type="button" id="refreshDashboardButton">Refresh Data</button>
+        <button class="lux-button lux-button--ghost" type="button" id="openSatkerFollowModalHero">Pilih OPD Dipantau</button>
         <button class="lux-button lux-button--ghost" type="button" data-quick="monitoring-sirup">Buka ITKP SiRUP</button>
         <button class="lux-button lux-button--ghost" type="button" data-quick="monitoring-perencanaan">Buka Monitoring Realisasi</button>
       </div>
     </section>
+
+    ${renderFollowedSatkerCard(data)}
 
     <section class="dashboard-grid dashboard-grid--main">
       <div class="card procurement-map-card">
@@ -1858,6 +2124,9 @@ function bindDashboardEvents() {
     });
   }
 
+  document.getElementById('openSatkerFollowModal')?.addEventListener('click', openSatkerFollowModal);
+  document.getElementById('openSatkerFollowModalHero')?.addEventListener('click', openSatkerFollowModal);
+
   const rerenderDashboardBySatker = (satkerName) => {
     DASHBOARD_STATE.selectedItkpSatker = satkerName;
     persistDashboardContext();
@@ -1870,13 +2139,18 @@ function bindDashboardEvents() {
         itkpSubOpd: DASHBOARD_STATE.data.itkpSubOpdRows,
         perencanaan: DASHBOARD_STATE.data.planningRows,
         realisasi: DASHBOARD_STATE.data.realRows,
-        allprog: DASHBOARD_STATE.data.allprogRaw
+        allprog: DASHBOARD_STATE.data.allprogRaw,
+        indexRapor: DASHBOARD_STATE.data.indexRaporRaw || []
       });
       renderDashboardReady(DASHBOARD_STATE.data);
       bindDashboardEvents();
       initScrollAnimation();
     }
   };
+
+  contentArea.querySelectorAll('[data-follow-select]').forEach((button) => {
+    button.addEventListener('click', () => rerenderDashboardBySatker(button.dataset.followSelect || 'PEMERINTAH KOTA BOGOR'));
+  });
 
   const satkerSearch = document.getElementById('itkpSatkerSearch');
   const satkerToggle = document.getElementById('itkpSatkerToggle');
