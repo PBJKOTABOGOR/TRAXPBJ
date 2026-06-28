@@ -1559,7 +1559,10 @@ function analyzeDashboardData(raw) {
 }
 
 async function loadDashboardData(force = false) {
-  if (DASHBOARD_STATE.data && !force) return DASHBOARD_STATE.data;
+  if (DASHBOARD_STATE.data && !force) {
+    window.PBJ_DASHBOARD_DATA = DASHBOARD_STATE.data;
+    return DASHBOARD_STATE.data;
+  }
   if (DASHBOARD_STATE.loading) return DASHBOARD_STATE.data;
 
   DASHBOARD_STATE.loading = true;
@@ -1575,6 +1578,7 @@ async function loadDashboardData(force = false) {
     ]);
 
     DASHBOARD_STATE.data = analyzeDashboardData({ itkp, itkpSubOpd, perencanaan, realisasi, allprog });
+    window.PBJ_DASHBOARD_DATA = DASHBOARD_STATE.data;
     DASHBOARD_STATE.loadedAt = new Date();
     return DASHBOARD_STATE.data;
   } catch (error) {
