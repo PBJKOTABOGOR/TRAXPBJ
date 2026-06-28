@@ -1,94 +1,253 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#123a72">
-  <meta name="description" content="Widget OPD Dipantau SIPPBJ Kota Bogor">
-  <title>Widget OPD Dipantau</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIPPBJ - Dashboard PBJ Kota Bogor</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  >
+
+
   <link rel="manifest" href="./manifest.json">
-  <link rel="icon" href="./favicon.png">
-  <link rel="apple-touch-icon" href="./icons/icon-180.png">
-  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" type="image/png" href="./favicon-widget.png">
+  <link rel="apple-touch-icon" href="./favicon-widget.png">
+  <link rel="stylesheet" href="./mobile-pin-widget.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="app-shell">
-    <section class="widget-card" id="widgetCard">
-      <header class="widget-head" id="dragHandle">
-        <div>
-          <div class="eyebrow">OPD Dipantau</div>
-          <h1 id="selectedOpdTitle">PEMERINTAH KOTA BOGOR</h1>
-          <span class="pill">Widget OPD Dipantau</span>
-        </div>
-        <button class="icon-btn" id="btnCloseTop" type="button" title="Tutup">×</button>
-      </header>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-block">
+        <div class="brand-left secret-trigger" id="secretTrigger" title="Klik 5x untuk akses internal">
+           <div class="brand-logo brand-logo-img">
+  <img src="assets/logo-sippbj.png" alt="SIPPBJ">
+</div>
 
-      <section class="hero-mini">
-        <div class="score-ring" id="scoreRing" style="--pct:0%">
-          <div class="ring-inner">
-            <small>ITKP OPD</small>
-            <strong id="scoreValue">0,00</strong>
-            <span>dari 30 poin</span>
+          <div class="brand-text">
+            <h1>SIPPBJ</h1>
+            <p>Dashboard Monitoring</p>
           </div>
         </div>
-        <div class="hero-copy">
-          <strong id="heroOpdName">Pilih OPD</strong>
-          <p id="heroDesc">Pilih OPD untuk memantau skor ITKP, rapor terbaru, dan pencarian penyedia.</p>
-          <button class="small-btn" id="btnNotify" type="button">Aktifkan Notifikasi</button>
-        </div>
-      </section>
 
-      <nav class="tabs" aria-label="Menu widget">
-        <button class="tab active" data-tab="opd" type="button">Cari / Ganti OPD</button>
-        <button class="tab" data-tab="search" type="button">🔎 Cari Penyedia</button>
-        <button class="tab" data-tab="itkp" type="button">Ringkasan ITKP</button>
-        <button class="tab" data-tab="rapor" type="button">Info Rapor</button>
+        <button
+          class="sidebar-toggle-button"
+          id="sidebarToggleButton"
+          type="button"
+          aria-label="Toggle sidebar"
+        >
+          ☰
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">MENU UTAMA</div>
+
+        <button class="nav-link active" type="button" data-page="dashboard">
+          <span class="nav-left">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Dashboard</span>
+          </span>
+        </button>
+
+        <div class="nav-group open" data-group="itkp">
+          <button class="nav-link nav-toggle" type="button" data-toggle-group="itkp">
+            <span class="nav-left">
+              <span class="nav-icon">📊</span>
+              <span class="nav-text">ITKP</span>
+            </span>
+            <span class="nav-caret">⌄</span>
+          </button>
+
+          <div class="submenu">
+            <button class="submenu-link" type="button" data-page="monitoring-sirup">SiRUP</button>
+            <button class="submenu-link" type="button" data-page="monitoring-ekatalog">eKatalog</button>
+            <button class="submenu-link" type="button" data-page="monitoring-etendering">eTendering</button>
+            <button class="submenu-link" type="button" data-page="monitoring-ekontrak">eKontrak</button>
+            <button class="submenu-link" type="button" data-page="monitoring-nontender">Non eTendering / Non ePurchasing</button>
+          </div>
+        </div>
+
+        <button class="nav-link" type="button" data-page="rapor-pbj">
+          <span class="nav-left">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">Rapor PBJ</span>
+          </span>
+        </button>
+
+        <div class="nav-group" data-group="realisasi">
+          <button class="nav-link nav-toggle" type="button" data-toggle-group="realisasi">
+            <span class="nav-left">
+              <span class="nav-icon">📦</span>
+              <span class="nav-text">Realisasi Paket</span>
+            </span>
+            <span class="nav-caret">⌄</span>
+          </button>
+
+          <div class="submenu">
+            <button class="submenu-link" type="button" data-page="monitoring-perencanaan">Monitoring Realisasi</button>
+            <button class="submenu-link" type="button" data-page="monitoring-konsolidasi">Konsolidasi</button>
+          </div>
+        </div>
+
+        <div class="nav-group" data-group="simulasi">
+          <button class="nav-link nav-toggle" type="button" data-toggle-group="simulasi">
+            <span class="nav-left">
+              <span class="nav-icon">🧪</span>
+              <span class="nav-text">Simulasi</span>
+            </span>
+            <span class="nav-caret">⌄</span>
+          </button>
+
+          <div class="submenu">
+            <button class="submenu-link" type="button" data-page="simulasi-timeline">Timeline Pengadaan</button>
+            <button class="submenu-link" type="button" data-page="simulasi-nontender">Pencatatan Non Tender</button>
+            <button class="submenu-link" type="button" data-page="simulasi-procurement-stacker">Mini Game</button>
+          </div>
+        </div>
+
+        <button class="nav-link" type="button" data-page="pemenang-pengadaan">
+  <span class="nav-left">
+    <span class="nav-icon">🏆</span>
+    <span class="nav-text">Pemenang Pengadaan</span>
+  </span>
+</button>
+
+        <div class="nav-group nav-group-internal" id="internalNavGroup" data-group="internal" hidden>
+          <button class="nav-link nav-toggle" type="button" data-toggle-group="internal">
+            <span class="nav-left">
+              <span class="nav-icon">🔒</span>
+              <span class="nav-text">Panel Internal</span>
+            </span>
+            <span class="nav-caret">⌄</span>
+          </button>
+
+          <div class="submenu">
+            <button class="submenu-link submenu-link-internal" type="button" data-page="rapor-pbj-input-internal">Input Rapor PBJ</button>
+            <button class="submenu-link submenu-link-internal" type="button" data-page="rapor-pbj-qc-internal">QC Rapor PBJ</button>
+          </div>
+        </div>
       </nav>
 
-      <section class="panel active" id="panel-opd">
-        <label class="field-label" for="opdSearch">Pilih OPD</label>
-        <input id="opdSearch" class="input" type="search" placeholder="Cari OPD...">
-        <div class="opd-list" id="opdList"></div>
-      </section>
-
-      <section class="panel" id="panel-search">
-        <div class="search-box">
-          <label class="field-label" for="providerKeyword">Pencarian Penyedia Pengadaan SPSE</label>
-          <div class="search-row">
-            <input id="providerKeyword" class="input" type="search" placeholder="Ketik minimal 2 karakter...">
-            <button id="btnProviderSearch" class="primary-btn" type="button">Cari</button>
-          </div>
-          <div class="hint" id="providerHint">Ketik minimal 2 karakter lalu tekan Cari.</div>
+      <a
+        class="sidebar-help-link"
+        href="https://wa.me/628151667956?text=Halo%20admin%20UKPBJ%20Kota%20Bogor%2C%20saya%20ingin%20bertanya%20terkait%20penggunaan%20portal."
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div class="sidebar-help">
+          <h3>Butuh Bantuan?</h3>
+          <p>Hubungi admin/helpdesk untuk informasi penggunaan portal SIPPBJ.</p>
+          <div class="help-button">Hubungi Helpdesk</div>
         </div>
-        <div class="provider-results" id="providerResults"></div>
-      </section>
+      </a>
+    </aside>
 
-      <section class="panel" id="panel-itkp">
-        <div class="section-head">
-          <h2>Ringkasan ITKP</h2>
-          <button id="btnMinimizeItkp" class="ghost-btn" type="button">Minimize</button>
+    <main class="content-area" id="contentArea"></main>
+  </div>
+  
+
+  <div class="secret-login-overlay" id="secretLoginOverlay" aria-hidden="true">
+    <div class="secret-login-modal">
+      <div class="secret-login-kicker">AKSES INTERNAL</div>
+      <h3>Panel Rapor PBJ</h3>
+      <p>Menu internal hanya untuk pegawai/operator yang sudah diberi akses.</p>
+
+      <form id="secretLoginForm" class="secret-login-form">
+        <label>Username</label>
+        <input type="text" id="secretUsername" autocomplete="username" placeholder="Masukkan username">
+
+        <label>Password</label>
+        <input type="password" id="secretPassword" autocomplete="current-password" placeholder="Masukkan password">
+
+        <div class="secret-login-actions">
+          <button type="submit" class="secret-login-submit">Masuk</button>
+          <button type="button" class="secret-login-cancel" id="secretLoginCancel">Batal</button>
         </div>
-        <div id="itkpSummary"></div>
-      </section>
+      </form>
 
-      <section class="panel" id="panel-rapor">
-        <div class="section-head"><h2>Info Rapor Terbaru</h2></div>
-        <div id="raporInfo" class="info-card">Memuat info rapor...</div>
-      </section>
+      <div class="secret-login-error" id="secretLoginError"></div>
+    </div>
+  </div>
 
-      <footer class="widget-foot">
-        <button id="btnInstall" class="ghost-btn" type="button" hidden>Install Widget</button>
-        <button id="btnRefresh" class="ghost-btn" type="button">Refresh Data</button>
-        <button id="btnCloseBottom" class="ghost-btn" type="button">Tutup</button>
-      </footer>
-    </section>
+  <div class="secret-login-toast" id="secretLoginToast">Mode internal aktif</div>
+  
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+<script>
+  window.PBJ_PIN_INDEX_RAPOT_ROWS = window.PBJ_PIN_INDEX_RAPOT_ROWS || [];
+  window.PBJ_PIN_CONFIG = {
+    defaultOpd: 'PEMERINTAH KOTA BOGOR',
+    scoreMax: 30,
+    refreshMs: 60000,
+    dataProvider: function(){
+      const data = window.PBJ_DASHBOARD_DATA || {};
+      const profiles = Array.isArray(data.itkpProfiles) ? data.itkpProfiles : [];
+      /* Widget pakai profile asli dari dashboard supaya detail ITKP sama persis
+         dengan tampilan utama: SiRUP pakai nilai/pagu, e-Purchasing pakai paket,
+         Non eTendering pakai realisasi/pagu, bukan cuma skor 9/10, 2/4, dst. */
+      return {
+        opdRows: profiles.length ? profiles : (window.itkpRows || window.ITKP_ROWS || window.dashboardRows || window.DASHBOARD_ROWS || window.PBJ_ITKP_ROWS || []),
+        raporRows: window.PBJ_PIN_INDEX_RAPOT_ROWS || window.raporRows || window.RAPOR_ROWS || window.indexRapotRows || window.INDEX_RAPOT_ROWS || window.PBJ_RAPOR_ROWS || [],
+        providerRows: window.providerRows || window.PROVIDER_ROWS || window.pemenangRows || window.PEMENANG_ROWS || window.allProviderRows || window.PBJ_PROVIDER_ROWS || []
+      };
+    }
+  };
 
-    <button class="mini-pin hidden" id="miniPin" type="button" title="Buka widget">
-      <span class="mini-score" id="miniScore">0,00</span>
-      <span><small>OPD Dipantau</small><b id="miniOpd">PEMERINTAH KOTA BOGOR</b></span>
-    </button>
-  </main>
-  <script src="./app.js"></script>
-  <script src="./pwa-register.js"></script>
+  (function(){
+    const SHEET_ID = '1ccDgtXNATxSYMZuDgd3polvRiTFNiFnjIGMP7b9qmrU';
+    const SHEET_NAME = 'INDEX_RAPOT';
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent(SHEET_NAME);
+
+    function parseCsv(text){
+      const rows = [];
+      let row = [], value = '', quote = false;
+      for (let i = 0; i < text.length; i++){
+        const ch = text[i], next = text[i + 1];
+        if (ch === '"' && quote && next === '"') { value += '"'; i++; continue; }
+        if (ch === '"') { quote = !quote; continue; }
+        if (ch === ',' && !quote) { row.push(value); value = ''; continue; }
+        if ((ch === '\n' || ch === '\r') && !quote) {
+          if (ch === '\r' && next === '\n') i++;
+          row.push(value);
+          if (row.some(function(c){ return String(c).trim() !== ''; })) rows.push(row);
+          row = []; value = '';
+          continue;
+        }
+        value += ch;
+      }
+      row.push(value);
+      if (row.some(function(c){ return String(c).trim() !== ''; })) rows.push(row);
+      return rows;
+    }
+
+    function loadIndexRapot(){
+      fetch(CSV_URL + '&v=' + Date.now(), { cache:'no-store' })
+        .then(function(res){ return res.ok ? res.text() : ''; })
+        .then(function(text){
+          if (!text || /<html|DOCTYPE html|googlevisualization/i.test(text.slice(0,300))) return;
+          const matrix = parseCsv(text);
+          const headers = matrix.shift() || [];
+          window.PBJ_PIN_INDEX_RAPOT_ROWS = matrix.map(function(cells){
+            const row = {};
+            headers.forEach(function(header, i){ row[String(header || '').trim()] = String(cells[i] || '').trim(); });
+            return row;
+          }).filter(function(row){ return Object.values(row).some(function(v){ return String(v).trim() !== ''; }); });
+          if (window.PBJ_PIN_WIDGET && typeof window.PBJ_PIN_WIDGET.refresh === 'function') window.PBJ_PIN_WIDGET.refresh();
+        })
+        .catch(function(){});
+    }
+
+    loadIndexRapot();
+    setInterval(loadIndexRapot, 60000);
+  })();
+</script>
+<script src="./mobile-pin-widget.js"></script>
+<script src="./pwa-register.js"></script>
+
 </body>
 </html>
