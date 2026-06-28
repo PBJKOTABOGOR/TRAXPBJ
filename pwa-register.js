@@ -1,9 +1,8 @@
 (function(){
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./service-worker.js').catch(function(err){
-        console.warn('Service worker gagal:', err);
-      });
+  if (!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./service-worker.js').catch(function(err){
+      console.warn('Service worker gagal register:', err);
     });
-  }
+  });
 })();
