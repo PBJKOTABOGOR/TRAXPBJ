@@ -11,8 +11,8 @@
   --pbj-pin-yellow:#f59e0b;
 }
 
-#pbj-pin-widget-root{position:fixed;right:72px;top:92px;z-index:999999;transition:left .18s ease, top .18s ease;font-family:Inter,"Segoe UI",Arial,sans-serif;color:#102544;touch-action:none}
-.pbj-pin-mini{width:310px;min-height:72px;position:relative;border-radius:999px;background:linear-gradient(135deg,#102544,#1f4f90 62%,#123a72);box-shadow:0 16px 42px rgba(15,23,42,.28);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;gap:12px;padding:10px 38px 10px 12px;cursor:grab;user-select:none;color:#fff;overflow:hidden}
+#pbj-pin-widget-root{position:fixed;right:18px;top:92px;z-index:999999;transition:left .18s ease, top .18s ease;font-family:Inter,"Segoe UI",Arial,sans-serif;color:#102544;touch-action:none}
+.pbj-pin-mini{width:330px;min-height:72px;position:relative;border-radius:999px;background:linear-gradient(135deg,#102544,#1f4f90 62%,#123a72);box-shadow:0 16px 42px rgba(15,23,42,.28);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;gap:12px;padding:10px 38px 10px 12px;cursor:grab;user-select:none;color:#fff;overflow:hidden}
 .pbj-pin-mini:active{cursor:grabbing}
 .pbj-pin-mini:hover{transform:translateY(-1px)}
 .pbj-pin-mini-score{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;position:relative;flex:0 0 auto;background:conic-gradient(var(--pbj-pin-yellow) var(--pbj-pin-deg,0deg),rgba(255,255,255,.22) 0deg);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
@@ -20,7 +20,7 @@
 .pbj-pin-mini-score span{position:relative;z-index:1;font-size:12px;font-weight:950;color:#fff}
 .pbj-pin-mini-text{min-width:0;line-height:1.2}
 .pbj-pin-mini-kicker{font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.70);white-space:nowrap}
-.pbj-pin-mini-opd{font-size:13px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;color:#fff}
+.pbj-pin-mini-opd{font-size:14px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:218px;color:#fff}
 
 .pbj-pin-panel{width:470px;max-width:calc(100vw - 24px);max-height:calc(100vh - 28px);overflow:hidden;border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.30);border:1px solid #cfe0f2;display:none}
 .pbj-pin-panel.open{display:block}
@@ -70,7 +70,7 @@
 .pbj-pin-minimize-btn{border:1px solid #dbe5f0;background:#fff;color:#123a72;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:950;cursor:pointer}
 
 @media(max-width:600px){
-  #pbj-pin-widget-root{right:14px;top:76px}
+  #pbj-pin-widget-root{right:10px;top:76px}
   .pbj-pin-panel{width:calc(100vw - 14px);border-radius:20px}
   .pbj-pin-mini{width:min(310px, calc(100vw - 28px))}
   .pbj-pin-body{max-height:calc(100vh - 176px)}
@@ -114,3 +114,10 @@
 .pbj-pin-mini-close:hover{background:#fff;transform:translateY(-1px)}
 .pbj-pin-mini-text{padding-right:2px}
 @media(max-width:600px){.pbj-pin-mini-close{right:8px;top:7px}.pbj-pin-mini-opd{max-width:190px}.pbj-pin-panel{max-width:calc(100vw - 14px)}}
+
+
+/* Revisi 28/06: widget pojok kanan, info rapor bisa diklik */
+.pbj-pin-rapor-link{display:block;width:100%;text-align:left;border:1px solid #dbe5f0;background:#fff;border-radius:14px;padding:10px 11px;cursor:pointer;box-shadow:0 5px 14px rgba(15,23,42,.05);font-family:inherit;color:inherit}
+.pbj-pin-rapor-link:hover{border-color:#93c5fd;background:#eff6ff}
+.pbj-pin-latest-open{margin-top:7px;font-size:11px;font-weight:950;color:#123a72;text-decoration:underline}
+@media(max-width:600px){.pbj-pin-mini{width:min(330px, calc(100vw - 20px))}.pbj-pin-mini-opd{max-width:205px}}
