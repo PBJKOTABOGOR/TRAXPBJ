@@ -2005,6 +2005,45 @@ function bindDashboardEvents() {
     }
   };
 
+  // Dipanggil dari mobile-pin-widget.js saat OPD diganti di widget.
+  // Sengaja tidak dipanggil dari tab pencarian penyedia, jadi search widget tidak mengubah dashboard.
+  window.PBJSelectDashboardOpd = function(satkerName) {
+    const name = String(satkerName || '').trim();
+    if (!name) return;
+    rerenderDashboardBySatker(name);
+  };
+
+  if (!window.__PBJ_PIN_OPD_CHANGE_BOUND__) {
+    window.__PBJ_PIN_OPD_CHANGE_BOUND__ = true;
+    window.addEventListener('pbj-pin-opd-changed', function(event) {
+      const name = event && event.detail ? event.detail.opd : '';
+      if (name) window.PBJSelectDashboardOpd(name);
+    });
+  }
+
+  window.PBJOpenLatestRapor = function(payload) {
+    const id = String((payload && (payload.id_rapot || payload.id_rapor || payload.id)) || '').trim();
+    const opd = String((payload && payload.opd) || DASHBOARD_STATE.selectedItkpSatker || '').trim();
+    try {
+      localStorage.setItem('pbj_rapor_direct_id', id);
+      localStorage.setItem('pbj_rapor_direct_opd', opd);
+      localStorage.setItem('pbj_rapor_focus_opd', opd);
+    } catch (error) {}
+
+    if (opd) {
+      DASHBOARD_STATE.selectedItkpSatker = opd;
+      persistDashboardContext();
+    }
+
+    loadPage('rapor-pbj').then(function(){
+      setTimeout(function(){
+        try {
+          window.dispatchEvent(new CustomEvent('pbj-open-rapor-id', { detail: { id_rapot: id, id_rapor: id, opd: opd } }));
+        } catch (error) {}
+      }, 350);
+    });
+  };
+
 
   /* Pin lama bawaan dashboard dinonaktifkan. Widget yang dipakai sekarang dari mobile-pin-widget.js */
 
