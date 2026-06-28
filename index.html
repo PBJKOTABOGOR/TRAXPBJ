@@ -14,8 +14,8 @@
 
 
   <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
+  <link rel="icon" type="image/png" href="./favicon-widget.png">
+  <link rel="apple-touch-icon" href="./favicon-widget.png">
   <link rel="stylesheet" href="./mobile-pin-widget.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -206,8 +206,9 @@
         };
       });
       return {
-        opdRows: opdRows,
-        raporRows: window.PBJ_PIN_INDEX_RAPOT_ROWS || []
+        opdRows: opdRows.length ? opdRows : (window.itkpRows || window.ITKP_ROWS || window.dashboardRows || window.DASHBOARD_ROWS || window.PBJ_ITKP_ROWS || []),
+        raporRows: window.PBJ_PIN_INDEX_RAPOT_ROWS || window.raporRows || window.RAPOR_ROWS || window.indexRapotRows || window.INDEX_RAPOT_ROWS || window.PBJ_RAPOR_ROWS || [],
+        providerRows: window.providerRows || window.PROVIDER_ROWS || window.pemenangRows || window.PEMENANG_ROWS || window.allProviderRows || window.PBJ_PROVIDER_ROWS || []
       };
     }
   };
