@@ -1,0 +1,384 @@
+/* =========================================================
+   PBJ PIN WIDGET - HP + DESKTOP
+   Tempel file ini setelah CSS utama dashboard.
+   Widget muncul di desktop dan HP.
+   ========================================================= */
+
+.pbj-pin-fab,
+.pbj-pin-panel,
+.pbj-pin-backdrop{
+  display:none;
+}
+
+  .pbj-pin-fab{
+    display:flex;
+    position:fixed;
+    top:14px;
+    right:14px;
+    z-index:9998;
+    width:184px;
+    max-width:calc(100vw - 28px);
+    min-height:58px;
+    align-items:center;
+    gap:9px;
+    padding:8px 10px;
+    border:1px solid rgba(255,255,255,.35);
+    border-radius:999px;
+    background:rgba(15,23,42,.88);
+    color:#fff;
+    box-shadow:0 12px 28px rgba(15,23,42,.28);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    cursor:pointer;
+    overflow:hidden;
+  }
+
+  .pbj-pin-fab-ring{
+    width:42px;
+    height:42px;
+    flex:0 0 auto;
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:conic-gradient(#f59e0b var(--pbj-score-deg, 0deg), #e5edf6 0deg);
+    position:relative;
+  }
+
+  .pbj-pin-fab-ring::before{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border-radius:999px;
+    background:#111827;
+  }
+
+  .pbj-pin-fab-score{
+    position:relative;
+    z-index:1;
+    font-weight:900;
+    font-size:11px;
+    line-height:1;
+    color:#fff;
+  }
+
+  .pbj-pin-fab-text{
+    min-width:0;
+    flex:1;
+    text-align:left;
+  }
+
+  .pbj-pin-fab-label{
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:#cbd5e1;
+    line-height:1.1;
+  }
+
+  .pbj-pin-fab-opd{
+    margin-top:2px;
+    font-size:10px;
+    font-weight:900;
+    line-height:1.25;
+    color:#fff;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .pbj-pin-badge{
+    position:absolute;
+    top:4px;
+    right:5px;
+    min-width:18px;
+    height:18px;
+    padding:0 5px;
+    border-radius:999px;
+    background:#ef4444;
+    color:#fff;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    font-weight:900;
+    border:2px solid rgba(15,23,42,.88);
+  }
+
+  .pbj-pin-badge.show{display:flex;}
+
+  .pbj-pin-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:9997;
+    background:rgba(15,23,42,.36);
+    backdrop-filter:blur(3px);
+    -webkit-backdrop-filter:blur(3px);
+  }
+
+  .pbj-pin-backdrop.show{display:block;}
+
+  .pbj-pin-panel{
+    position:fixed;
+    top:82px;
+    right:12px;
+    z-index:9999;
+    width:min(360px, calc(100vw - 24px));
+    max-height:calc(100vh - 100px);
+    overflow:auto;
+    border-radius:24px;
+    background:#ffffff;
+    border:1px solid #dbe5f0;
+    box-shadow:0 24px 70px rgba(15,23,42,.32);
+    color:#122033;
+  }
+
+  .pbj-pin-panel.show{display:block;}
+
+  .pbj-pin-panel-head{
+    padding:14px 14px 12px;
+    border-bottom:1px solid #e5edf6;
+    background:linear-gradient(135deg,#f8fbff,#edf4ff);
+    position:sticky;
+    top:0;
+    z-index:2;
+  }
+
+  .pbj-pin-title-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+
+  .pbj-pin-title{
+    font-size:12px;
+    font-weight:950;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:#123a72;
+  }
+
+  .pbj-pin-close{
+    width:32px;
+    height:32px;
+    border:none;
+    border-radius:999px;
+    background:#fff;
+    color:#123a72;
+    box-shadow:0 4px 12px rgba(15,23,42,.08);
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  .pbj-pin-selected{
+    margin-top:7px;
+    font-size:14px;
+    line-height:1.35;
+    font-weight:950;
+    color:#0f172a;
+  }
+
+  .pbj-pin-status-pill{
+    display:inline-flex;
+    margin-top:8px;
+    align-items:center;
+    gap:6px;
+    border-radius:999px;
+    padding:6px 10px;
+    background:#ecfdf5;
+    color:#0f766e;
+    border:1px solid #bbf7d0;
+    font-size:11px;
+    font-weight:900;
+  }
+
+  .pbj-pin-body{
+    padding:14px;
+  }
+
+  .pbj-pin-search{
+    width:100%;
+    border:1px solid #dbe5f0;
+    border-radius:999px;
+    padding:12px 14px;
+    font-size:13px;
+    outline:none;
+    margin-bottom:10px;
+  }
+
+  .pbj-pin-opd-list{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    max-height:180px;
+    overflow:auto;
+    padding-right:2px;
+  }
+
+  .pbj-pin-opd-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    border:1px solid #dbe5f0;
+    background:#f8fbff;
+    border-radius:14px;
+    padding:10px 11px;
+    cursor:pointer;
+  }
+
+  .pbj-pin-opd-item.active{
+    border-color:#93c5fd;
+    background:#eff6ff;
+  }
+
+  .pbj-pin-opd-name{
+    font-size:11px;
+    font-weight:900;
+    line-height:1.25;
+    color:#102544;
+  }
+
+  .pbj-pin-opd-score{
+    flex:0 0 auto;
+    font-size:11px;
+    font-weight:950;
+    color:#123a72;
+  }
+
+  .pbj-pin-score-card{
+    margin-top:14px;
+    border:1px solid #dbe5f0;
+    background:#fff;
+    border-radius:18px;
+    padding:14px;
+    display:grid;
+    grid-template-columns:94px minmax(0,1fr);
+    gap:14px;
+    align-items:center;
+  }
+
+  .pbj-pin-score-ring{
+    width:92px;
+    height:92px;
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:conic-gradient(#f59e0b var(--pbj-score-deg, 0deg), #e5edf6 0deg);
+    position:relative;
+  }
+
+  .pbj-pin-score-ring::before{
+    content:"";
+    position:absolute;
+    inset:10px;
+    border-radius:999px;
+    background:#fff;
+  }
+
+  .pbj-pin-score-inner{
+    position:relative;
+    z-index:1;
+    text-align:center;
+  }
+
+  .pbj-pin-score-label{
+    font-size:9px;
+    font-weight:900;
+    color:#64748b;
+    letter-spacing:.08em;
+  }
+
+  .pbj-pin-score-value{
+    font-size:24px;
+    font-weight:950;
+    color:#123a72;
+    line-height:1.1;
+  }
+
+  .pbj-pin-score-max{
+    font-size:9px;
+    font-weight:800;
+    color:#64748b;
+  }
+
+  .pbj-pin-note{
+    font-size:12px;
+    line-height:1.55;
+    color:#334155;
+    font-weight:700;
+  }
+
+  .pbj-pin-report-box{
+    margin-top:12px;
+    border:1px solid #dbe5f0;
+    border-radius:18px;
+    background:#f8fbff;
+    padding:12px;
+  }
+
+  .pbj-pin-report-title{
+    font-size:12px;
+    font-weight:950;
+    color:#102544;
+    margin-bottom:5px;
+  }
+
+  .pbj-pin-report-text{
+    font-size:12px;
+    line-height:1.55;
+    color:#334155;
+    font-weight:700;
+  }
+
+  .pbj-pin-bars{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .pbj-pin-bar-item{
+    border:1px solid #dbe5f0;
+    border-radius:14px;
+    background:#f8fbff;
+    padding:9px 10px;
+  }
+
+  .pbj-pin-bar-top{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    align-items:center;
+    margin-bottom:6px;
+  }
+
+  .pbj-pin-bar-name{
+    font-size:11px;
+    line-height:1.2;
+    font-weight:950;
+    color:#102544;
+  }
+
+  .pbj-pin-bar-score{
+    font-size:11px;
+    font-weight:950;
+    color:#0f766e;
+  }
+
+  .pbj-pin-bar-track{
+    height:7px;
+    background:#e5edf6;
+    border-radius:999px;
+    overflow:hidden;
+  }
+
+  .pbj-pin-bar-fill{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#2563eb,#0f766e);
+    width:0%;
+  }
