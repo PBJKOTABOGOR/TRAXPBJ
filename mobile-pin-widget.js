@@ -37,7 +37,8 @@
     defaultOpd: 'PEMERINTAH KOTA BOGOR',
     dashboardUrl: '',
     refreshMs: 60000,
-    dataProvider: null
+    dataProvider: null,
+    providerSearchPage: 'pemenang-pengadaan'
   }, window.PBJ_PIN_CONFIG || {});
 
   let state = {
@@ -276,6 +277,43 @@
     }
   }
 
+
+
+  function openProviderSearch(){
+    try { localStorage.setItem('PP_OPEN_TAB_ON_LOAD', 'provider-search'); } catch(e) {}
+    closePanel();
+    const route = String(window.PBJ_PIN_CONFIG.providerSearchPage || 'pemenang-pengadaan');
+    try {
+      if (typeof window.loadPage === 'function') {
+        window.loadPage(route);
+      } else {
+        const btn = document.querySelector('[data-page="' + route + '"]');
+        if (btn) btn.click();
+        else window.location.hash = route;
+      }
+      setTimeout(function(){
+        const tab = document.querySelector('[data-pp-tab="provider-search"]');
+        if (tab) tab.click();
+      }, 800);
+    } catch(e) {}
+  }
+
+  function isItkpCollapsed(){
+    try { return localStorage.getItem('PBJ_PIN_ITKP_COLLAPSED') === '1'; } catch(e) { return false; }
+  }
+
+  function setItkpCollapsed(value){
+    try { localStorage.setItem('PBJ_PIN_ITKP_COLLAPSED', value ? '1' : '0'); } catch(e) {}
+  }
+
+  function isOpdSearchOpen(){
+    try { return localStorage.getItem('PBJ_PIN_OPD_SEARCH_OPEN') === '1'; } catch(e) { return false; }
+  }
+
+  function setOpdSearchOpen(value){
+    try { localStorage.setItem('PBJ_PIN_OPD_SEARCH_OPEN', value ? '1' : '0'); } catch(e) {}
+  }
+
   function renderPanel(filterText){
     const panel = document.getElementById('pbjPinPanel');
     if (!panel) return;
@@ -284,12 +322,14 @@
     const rows = state.opdRows.filter(r => !filter || norm(r.nama).includes(filter) || norm(r.kode).includes(filter)).slice(0, 80);
     const latest = state.latestRapot;
     const max = Number(window.PBJ_PIN_CONFIG.scoreMax || 30);
+    const itkpCollapsed = isItkpCollapsed();
+    const opdSearchOpen = isOpdSearchOpen();
 
     panel.innerHTML = `
       <div class="pbj-pin-panel-head">
         <div class="pbj-pin-title-row">
           <div>
-            <div class="pbj-pin-title">Pilih OPD</div>
+            <div class="pbj-pin-title">OPD Dipantau</div>
             <div class="pbj-pin-selected">${esc(current.nama || '-')}</div>
             <div class="pbj-pin-status-pill">Widget OPD Dipantau</div>
           </div>
@@ -297,25 +337,19 @@
         </div>
       </div>
       <div class="pbj-pin-body">
-        <input class="pbj-pin-search" id="pbjPinSearch" placeholder="Cari OPD..." value="${esc(filterText || '')}">
-        <div class="pbj-pin-opd-list">
-          ${rows.map(r => `
-            <div class="pbj-pin-opd-item ${norm(r.nama) === norm(current.nama) ? 'active' : ''}" data-opd="${esc(r.nama)}">
-              <div class="pbj-pin-opd-name">${esc(r.nama)}</div>
-              <div class="pbj-pin-opd-score">${fmtScore(r.score)}</div>
-            </div>`).join('') || '<div class="pbj-pin-report-text">OPD tidak ditemukan.</div>'}
+        <div class="pbj-pin-action-row">
+          <button type="button" class="pbj-pin-action-btn" id="pbjPinOpenSearchBtn">🔎 Search Penyedia SPSE</button>
+          <button type="button" class="pbj-pin-action-btn secondary" id="pbjPinToggleOpdSearch">${opdSearchOpen ? 'Tutup Pilih OPD' : 'Cari / Ganti OPD'}</button>
         </div>
 
-        <div class="pbj-pin-score-card">
-          <div class="pbj-pin-score-ring" style="--pbj-score-deg:${scoreDeg(current.score)}deg">
-            <div class="pbj-pin-score-inner">
-              <div class="pbj-pin-score-label">ITKP OPD</div>
-              <div class="pbj-pin-score-value">${fmtScore(current.score)}</div>
-              <div class="pbj-pin-score-max">dari ${fmtInt(max)} poin</div>
-            </div>
-          </div>
-          <div class="pbj-pin-note">
-            Pilihan ini tersimpan di HP ini. Notifikasi rapor terbaru hanya menampilkan OPD yang dipilih.
+        <div class="pbj-pin-opd-search-wrap ${opdSearchOpen ? 'show' : ''}">
+          <input class="pbj-pin-search" id="pbjPinSearch" placeholder="Cari OPD..." value="${esc(filterText || '')}">
+          <div class="pbj-pin-opd-list">
+            ${rows.map(r => `
+              <div class="pbj-pin-opd-item ${norm(r.nama) === norm(current.nama) ? 'active' : ''}" data-opd="${esc(r.nama)}">
+                <div class="pbj-pin-opd-name">${esc(r.nama)}</div>
+                <div class="pbj-pin-opd-score">${fmtScore(r.score)}</div>
+              </div>`).join('') || '<div class="pbj-pin-report-text">OPD tidak ditemukan.</div>'}
           </div>
         </div>
 
@@ -326,20 +360,49 @@
           </div>
         </div>
 
-        <div class="pbj-pin-bars">
-          ${(current.indicators || []).map(ind => {
-            const pct = ind.max ? Math.max(0, Math.min(100, (toNum(ind.score) / toNum(ind.max)) * 100)) : 0;
-            return `<div class="pbj-pin-bar-item">
-              <div class="pbj-pin-bar-top"><div class="pbj-pin-bar-name">${esc(ind.name)}</div><div class="pbj-pin-bar-score">${fmtInt(ind.score)}/${fmtInt(ind.max)}</div></div>
-              <div class="pbj-pin-bar-track"><div class="pbj-pin-bar-fill" style="width:${pct}%"></div></div>
-            </div>`;
-          }).join('')}
+        <div class="pbj-pin-itkp-head">
+          <div>
+            <div class="pbj-pin-report-title">Ringkasan ITKP</div>
+            <div class="pbj-pin-report-text">Skor dan indikator OPD yang dipantau.</div>
+          </div>
+          <button type="button" class="pbj-pin-mini-btn" id="pbjPinToggleItkp">${itkpCollapsed ? 'Tampilkan' : 'Minimize'}</button>
+        </div>
+
+        <div class="pbj-pin-itkp-section ${itkpCollapsed ? 'collapsed' : ''}">
+          <div class="pbj-pin-score-card">
+            <div class="pbj-pin-score-ring" style="--pbj-score-deg:${scoreDeg(current.score)}deg">
+              <div class="pbj-pin-score-inner">
+                <div class="pbj-pin-score-label">ITKP OPD</div>
+                <div class="pbj-pin-score-value">${fmtScore(current.score)}</div>
+                <div class="pbj-pin-score-max">dari ${fmtInt(max)} poin</div>
+              </div>
+            </div>
+            <div class="pbj-pin-note">
+              Pilihan ini tersimpan di perangkat ini. Notifikasi rapor terbaru hanya menampilkan OPD yang dipilih.
+            </div>
+          </div>
+
+          <div class="pbj-pin-bars">
+            ${(current.indicators || []).map(ind => {
+              const pct = ind.max ? Math.max(0, Math.min(100, (toNum(ind.score) / toNum(ind.max)) * 100)) : 0;
+              return `<div class="pbj-pin-bar-item">
+                <div class="pbj-pin-bar-top"><div class="pbj-pin-bar-name">${esc(ind.name)}</div><div class="pbj-pin-bar-score">${fmtInt(ind.score)}/${fmtInt(ind.max)}</div></div>
+                <div class="pbj-pin-bar-track"><div class="pbj-pin-bar-fill" style="width:${pct}%"></div></div>
+              </div>`;
+            }).join('')}
+          </div>
         </div>
       </div>
     `;
 
     const closeBtn = document.getElementById('pbjPinCloseBtn');
     if (closeBtn) closeBtn.addEventListener('click', closePanel);
+    const providerBtn = document.getElementById('pbjPinOpenSearchBtn');
+    if (providerBtn) providerBtn.addEventListener('click', openProviderSearch);
+    const toggleOpd = document.getElementById('pbjPinToggleOpdSearch');
+    if (toggleOpd) toggleOpd.addEventListener('click', () => { setOpdSearchOpen(!opdSearchOpen); renderPanel(filterText || ''); });
+    const toggleItkp = document.getElementById('pbjPinToggleItkp');
+    if (toggleItkp) toggleItkp.addEventListener('click', () => { setItkpCollapsed(!itkpCollapsed); renderPanel(filterText || ''); });
     const search = document.getElementById('pbjPinSearch');
     if (search) search.addEventListener('input', () => renderPanel(search.value));
     panel.querySelectorAll('.pbj-pin-opd-item').forEach(item => {
