@@ -20,6 +20,15 @@
 (function(){
   'use strict';
 
+  /* FIX: cegah widget dobel kalau script kepasang/ter-cache lebih dari sekali */
+  if (window.__PBJ_PIN_WIDGET_BOOTED__) {
+    document.querySelectorAll('.pbj-pin-fab, .pbj-pin-panel, .pbj-pin-backdrop').forEach(function(el, idx){
+      if (idx > 2) el.remove();
+    });
+    return;
+  }
+  window.__PBJ_PIN_WIDGET_BOOTED__ = true;
+
   const STORAGE_KEY = 'PBJ_PIN_SELECTED_OPD';
   const STORAGE_LAST_RAPOR_KEY = 'PBJ_PIN_LAST_RAPOR_ID';
 
@@ -212,7 +221,19 @@
   }
 
   function ensureWidget(){
-    if (document.getElementById('pbjPinWidgetFab')) return;
+    const existingFab = document.querySelectorAll('#pbjPinWidgetFab, .pbj-pin-fab');
+    const existingPanel = document.querySelectorAll('#pbjPinPanel, .pbj-pin-panel');
+    const existingBackdrop = document.querySelectorAll('#pbjPinBackdrop, .pbj-pin-backdrop');
+
+    if (existingFab.length && existingPanel.length && existingBackdrop.length) {
+      existingFab.forEach(function(el, idx){ if (idx > 0) el.remove(); });
+      existingPanel.forEach(function(el, idx){ if (idx > 0) el.remove(); });
+      existingBackdrop.forEach(function(el, idx){ if (idx > 0) el.remove(); });
+      if (document.getElementById('pbjPinWidgetFab')) return;
+    }
+
+    document.querySelectorAll('.pbj-pin-fab, .pbj-pin-panel, .pbj-pin-backdrop').forEach(function(el){ el.remove(); });
+
     const fab = document.createElement('button');
     fab.type = 'button';
     fab.id = 'pbjPinWidgetFab';
@@ -364,7 +385,6 @@
   }
 
   function tick(){
-    if (!isMobile()) return;
     ensureWidget();
     refreshState();
     renderFab();
@@ -372,6 +392,7 @@
   }
 
   function init(){
+    document.querySelectorAll('.pbj-pin-fab, .pbj-pin-panel, .pbj-pin-backdrop').forEach(function(el){ el.remove(); });
     ensureWidget();
     tick();
     setInterval(tick, Number(window.PBJ_PIN_CONFIG.refreshMs || 60000));
