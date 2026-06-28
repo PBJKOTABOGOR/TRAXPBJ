@@ -11,8 +11,8 @@
   const CONFIG = Object.assign({
     defaultOpd: 'PEMERINTAH KOTA BOGOR',
     scoreMax: 30,
-    storageKey: 'pbj_pin_selected_opd',
-    positionKey: 'pbj_pin_widget_position_v1',
+    storageKey: 'pbj_pin_selected_opd_v2_pemkot_default',
+    positionKey: 'pbj_pin_widget_position_v2_right_edge',
     providerSpreadsheetId: '1DYsqMtvwhPn-IEA3te9fFukD_iMMDRqUNPamktuPz2U',
     providerSheets: ['PORTAL_PENYEDIA'],
     providerCacheKey: 'pbj_pin_provider_cache_v2',
@@ -27,7 +27,7 @@
   }, window.PBJ_PIN_CONFIG || {});
 
   const EDGE_LEFT = 12;
-  const EDGE_RIGHT = 18;
+  const EDGE_RIGHT = 4;
   const EDGE_TOP_DEFAULT = 92;
 
   const state = {
@@ -63,6 +63,7 @@
   }
   function fmt2(v){return new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}).format(num(v));}
   function fmt0(v){return new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(num(v));}
+  function scoreAccent(score){ return num(score) >= 25 ? '#16a34a' : '#f59e0b'; }
   function fmtMoney(v){
     const n = num(v);
     if (!n) return 'Rp 0';
@@ -404,6 +405,7 @@
     const opd = row ? getOpdName(row) : state.selectedOpd;
     const score = row ? getScore(row) : 0;
     const deg = Math.max(0, Math.min(360, (score / Number(CONFIG.scoreMax || 30))*360));
+    const accentColor = scoreAccent(score);
     const latest = getLatestRapor(opd);
 
     let providerHtml = `<div class="pbj-pin-empty">Ketik minimal 2 karakter lalu tekan Cari.</div>`;
@@ -421,7 +423,7 @@
     const latestHtml = latest ? `<button type="button" class="pbj-pin-rapor-link" id="pbj-pin-latest-rapor"><div class="pbj-pin-latest-title">${esc(pick(latest,['nama_opd','opd','Nama OPD'],opd))}</div><div class="pbj-pin-latest-text">Periode ${esc(pick(latest,['bulan','Bulan'],'-'))} ${esc(pick(latest,['tahun','Tahun'],'-'))}. Status QC: ${esc(pick(latest,['status_qc','Status QC'],'-'))}. ID: ${esc(getRaporId(latest) || '-')}</div><div class="pbj-pin-latest-open">Klik untuk buka rapor OPD ini</div></button>` : `<div class="pbj-pin-latest-text">Belum ada rapor terbaru untuk OPD ini.</div>`;
 
     root.innerHTML = `
-      <div class="pbj-pin-mini" style="--pbj-pin-deg:${deg}deg" title="Klik untuk buka/tutup detail. Geser untuk pindah posisi.">
+      <div class="pbj-pin-mini" style="--pbj-pin-deg:${deg}deg;--pbj-pin-accent:${accentColor}" title="Klik untuk buka/tutup detail. Geser untuk pindah posisi.">
         <button class="pbj-pin-mini-close" type="button" title="Tutup widget" aria-label="Tutup widget">×</button>
         <div class="pbj-pin-mini-score"><span>${esc(fmt2(score))}</span></div>
         <div class="pbj-pin-mini-text"><div class="pbj-pin-mini-kicker">OPD Dipantau</div><div class="pbj-pin-mini-opd">${esc(opd || '-')}</div></div>
@@ -433,7 +435,7 @@
           <div class="pbj-pin-section ${state.tab==='search'?'':'hidden'}" id="pbj-pin-provider-section"><div class="pbj-pin-section-title">Pencarian Penyedia Pengadaan SPSE</div><div class="pbj-pin-row"><input class="pbj-pin-input" id="pbj-pin-provider-q" value="${esc(state.q)}" placeholder="Cari nama penyedia / paket..."><button class="pbj-pin-btn" id="pbj-pin-provider-btn" type="button">Cari</button></div><div class="pbj-pin-provider-results">${providerHtml}</div></div>
           <div class="pbj-pin-section ${state.tab==='opd'?'':'hidden'}"><div class="pbj-pin-section-title">Pilih OPD</div><div class="pbj-pin-row"><input class="pbj-pin-input" id="pbj-pin-opd-filter" placeholder="Cari OPD..."><button class="pbj-pin-btn light" id="pbj-pin-opd-reset" type="button">Reset</button></div><div class="pbj-pin-opd-list">${opdListHtml}</div></div>
           <div class="pbj-pin-section ${state.tab==='search'?'hidden':''}" id="pbj-pin-latest-section"><div class="pbj-pin-section-title">Info Rapor Terbaru</div>${latestHtml}</div>
-          <div class="pbj-pin-section ${state.tab==='search'?'hidden':''} ${state.itkpMinimized?'pbj-pin-itkp-collapsed':''}" id="pbj-pin-itkp-section"><div class="pbj-pin-minimize-line"><div class="pbj-pin-section-title" style="margin:0">Ringkasan ITKP</div><button class="pbj-pin-minimize-btn" id="pbj-pin-itkp-toggle" type="button">${state.itkpMinimized?'Tampilkan':'Minimize'}</button></div><div class="pbj-pin-itkp-head"><div class="pbj-pin-circle" style="--pbj-pin-deg:${deg}deg"><div class="pbj-pin-circle-inner"><div class="pbj-pin-circle-kicker">ITKP OPD</div><div class="pbj-pin-circle-score">${esc(fmt2(score))}</div><div class="pbj-pin-circle-max">dari ${esc(CONFIG.scoreMax)} poin</div></div></div><div class="pbj-pin-latest-text">Skor dan indikator OPD yang dipantau.</div></div><div class="pbj-pin-metrics">${metrics || `<div class="pbj-pin-empty">Belum ada rincian ITKP.</div>`}</div></div>
+          <div class="pbj-pin-section ${state.tab==='search'?'hidden':''} ${state.itkpMinimized?'pbj-pin-itkp-collapsed':''}" id="pbj-pin-itkp-section"><div class="pbj-pin-minimize-line"><div class="pbj-pin-section-title" style="margin:0">Ringkasan ITKP</div><button class="pbj-pin-minimize-btn" id="pbj-pin-itkp-toggle" type="button">${state.itkpMinimized?'Tampilkan':'Minimize'}</button></div><div class="pbj-pin-itkp-head"><div class="pbj-pin-circle" style="--pbj-pin-deg:${deg}deg;--pbj-pin-accent:${accentColor}"><div class="pbj-pin-circle-inner"><div class="pbj-pin-circle-kicker">ITKP OPD</div><div class="pbj-pin-circle-score">${esc(fmt2(score))}</div><div class="pbj-pin-circle-max">dari ${esc(CONFIG.scoreMax)} poin</div></div></div><div class="pbj-pin-latest-text">Skor dan indikator OPD yang dipantau.</div></div><div class="pbj-pin-metrics">${metrics || `<div class="pbj-pin-empty">Belum ada rincian ITKP.</div>`}</div></div>
         </div>
       </div>`;
     applyPosition(root);
