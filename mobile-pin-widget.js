@@ -26,6 +26,10 @@
     }
   }, window.PBJ_PIN_CONFIG || {});
 
+  const EDGE_LEFT = 12;
+  const EDGE_RIGHT = 72;
+  const EDGE_TOP_DEFAULT = 92;
+
   const state = {
     selectedOpd: '',
     open: false,
@@ -37,7 +41,8 @@
     providerResults: [],
     providerLoading: false,
     providerSearched: false,
-    providerError: ''
+    providerError: '',
+    hidden: false
   };
 
   function esc(v){return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
@@ -305,7 +310,7 @@
   function snapToEdge(root, left, top, save){
     const size = getWidgetSize(root);
     const snapLeft = Number(left || 0) + (size.w / 2) < window.innerWidth / 2;
-    const finalLeft = snapLeft ? 8 : Math.max(8, window.innerWidth - size.w - 8);
+    const finalLeft = snapLeft ? EDGE_LEFT : Math.max(EDGE_LEFT, window.innerWidth - size.w - EDGE_RIGHT);
     const finalTop = clampTop(top, size.h);
     root.style.left = finalLeft + 'px';
     root.style.top = finalTop + 'px';
@@ -318,7 +323,7 @@
     const pos = getSavedPosition();
     const size = getWidgetSize(root);
     if (!pos || typeof pos.left !== 'number' || typeof pos.top !== 'number') {
-      snapToEdge(root, window.innerWidth - size.w - 8, 92, true);
+      snapToEdge(root, window.innerWidth - size.w - EDGE_RIGHT, EDGE_TOP_DEFAULT, true);
       return;
     }
     snapToEdge(root, pos.left, pos.top, false);
@@ -337,7 +342,7 @@
           const dx = Math.abs(ev.clientX - startX), dy = Math.abs(ev.clientY - startY);
           if (dx + dy > 3) state.dragging = true;
           const size = getWidgetSize(root);
-          const left = Math.min(Math.max(8, ev.clientX - offsetX), Math.max(8, window.innerWidth - size.w - 8));
+          const left = Math.min(Math.max(EDGE_LEFT, ev.clientX - offsetX), Math.max(EDGE_LEFT, window.innerWidth - size.w - EDGE_RIGHT));
           const top = clampTop(ev.clientY - offsetY, size.h);
           root.style.left = left + 'px';
           root.style.top = top + 'px';
@@ -359,6 +364,8 @@
   function render(){
     let root = document.getElementById('pbj-pin-widget-root');
     if (!root){ root = document.createElement('div'); root.id='pbj-pin-widget-root'; document.body.appendChild(root); }
+    if (state.hidden) { root.style.display = 'none'; return; }
+    root.style.display = '';
     const data = getData();
     const opdRows = Array.isArray(data.opdRows) ? data.opdRows : [];
     if (!state.selectedOpd){ state.selectedOpd = localStorage.getItem(CONFIG.storageKey) || CONFIG.defaultOpd; }
@@ -383,7 +390,8 @@
     const latestHtml = latest ? `<div class="pbj-pin-latest-title">${esc(pick(latest,['nama_opd','opd','Nama OPD'],opd))}</div><div class="pbj-pin-latest-text">Periode ${esc(pick(latest,['bulan','Bulan'],'-'))} ${esc(pick(latest,['tahun','Tahun'],'-'))}. Status QC: ${esc(pick(latest,['status_qc','Status QC'],'-'))}. ID: ${esc(pick(latest,['id_rapot','ID Rapor'],'-'))}</div>` : `<div class="pbj-pin-latest-text">Belum ada rapor terbaru untuk OPD ini.</div>`;
 
     root.innerHTML = `
-      <div class="pbj-pin-mini" style="--pbj-pin-deg:${deg}deg" title="Klik untuk buka widget. Geser untuk pindah posisi.">
+      <div class="pbj-pin-mini" style="--pbj-pin-deg:${deg}deg" title="Klik untuk buka/tutup detail. Geser untuk pindah posisi.">
+        <button class="pbj-pin-mini-close" type="button" title="Tutup widget" aria-label="Tutup widget">×</button>
         <div class="pbj-pin-mini-score"><span>${esc(fmt2(score))}</span></div>
         <div class="pbj-pin-mini-text"><div class="pbj-pin-mini-kicker">OPD Dipantau</div><div class="pbj-pin-mini-opd">${esc(opd || '-')}</div></div>
       </div>
@@ -402,7 +410,8 @@
     makeDraggable(root);
   }
   function bind(root){
-    root.querySelector('.pbj-pin-mini')?.addEventListener('click',()=>{ if (state.dragging) return; state.open=true;render();});
+    root.querySelector('.pbj-pin-mini')?.addEventListener('click',()=>{ if (state.dragging) return; state.open=!state.open;render();});
+    root.querySelector('.pbj-pin-mini-close')?.addEventListener('click',(e)=>{ e.preventDefault(); e.stopPropagation(); state.hidden=true; render(); });
     root.querySelector('.pbj-pin-close')?.addEventListener('click',()=>{state.open=false;render();});
     root.querySelectorAll('.pbj-pin-tab').forEach(btn=>btn.addEventListener('click',()=>{state.tab=btn.dataset.tab;render();}));
     root.querySelector('#pbj-pin-itkp-toggle')?.addEventListener('click',()=>{state.itkpMinimized=!state.itkpMinimized;render();});
@@ -428,6 +437,6 @@
   });
   function init(){ render(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-  window.PBJPinWidget = { refresh: render, open:function(){state.open=true;render();}, close:function(){state.open=false;render();}, search:function(q){state.open=true;state.tab='search';render();runProviderSearch(q || state.q || '');} };
+  window.PBJPinWidget = { refresh: render, open:function(){state.hidden=false;state.open=true;render();}, close:function(){state.open=false;render();}, hide:function(){state.hidden=true;render();}, show:function(){state.hidden=false;render();}, search:function(q){state.hidden=false;state.open=true;state.tab='search';render();runProviderSearch(q || state.q || '');} };
   window.PBJ_PIN_WIDGET = window.PBJPinWidget;
 })();
