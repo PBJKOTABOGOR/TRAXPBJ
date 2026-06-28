@@ -38,7 +38,11 @@
     dashboardUrl: '',
     refreshMs: 60000,
     dataProvider: null,
-    providerSearchPage: 'pemenang-pengadaan'
+    providerSearchPage: 'pemenang-pengadaan',
+    providerSpreadsheetId: '1DYsqMtvwhPn-IEA3te9fFukD_iMMDRqUNPamktuPz2U',
+    providerSheetName: 'PORTAL_PENYEDIA',
+    providerGid: '',
+    providerLimit: 8
   }, window.PBJ_PIN_CONFIG || {});
 
   let state = {
@@ -47,7 +51,14 @@
     opdRows:[],
     raporRows:[],
     latestRapot:null,
-    unreadCount:0
+    unreadCount:0,
+    providerSearchOpen:false,
+    providerQuery:'',
+    providerRows:[],
+    providerResults:[],
+    providerLoading:false,
+    providerLoaded:false,
+    providerMessage:'Ketik nama penyedia lalu tekan Cari.'
   };
 
   function isMobile(){
@@ -124,7 +135,8 @@
         const data = window.PBJ_PIN_CONFIG.dataProvider() || {};
         return {
           opdRows: Array.isArray(data.opdRows) ? data.opdRows : [],
-          raporRows: Array.isArray(data.raporRows) ? data.raporRows : []
+          raporRows: Array.isArray(data.raporRows) ? data.raporRows : [],
+          providerRows: Array.isArray(data.providerRows) ? data.providerRows : []
         };
       } catch(e) {}
     }
@@ -137,7 +149,10 @@
     ]);
 
     if (!opdRows.length) opdRows = fallbackCollectRowsFromDom();
-    return { opdRows, raporRows };
+    const providerRows = getGlobalRows([
+      'providerRows','PROVIDER_ROWS','pemenangRows','PEMENANG_ROWS','portalPenyediaRows','PORTAL_PENYEDIA_ROWS'
+    ]);
+    return { opdRows, raporRows, providerRows };
   }
 
   function normalizeOpdRow(row){
@@ -182,6 +197,10 @@
     const data = getData();
     state.opdRows = (data.opdRows || []).map(normalizeOpdRow).filter(r => r.nama);
     state.raporRows = (data.raporRows || []).map(normalizeRaporRow).filter(r => r.id || r.nama);
+    if (Array.isArray(data.providerRows) && data.providerRows.length) {
+      state.providerRows = data.providerRows.map(normalizeProviderRow).filter(r => r.namaPemenang || r.namaPaket);
+      state.providerLoaded = true;
+    }
 
     const saved = localStorage.getItem(STORAGE_KEY) || '';
     if (saved && state.opdRows.some(r => norm(r.nama) === norm(saved))) state.selectedOpd = saved;
@@ -279,23 +298,147 @@
 
 
 
-  function openProviderSearch(){
-    try { localStorage.setItem('PP_OPEN_TAB_ON_LOAD', 'provider-search'); } catch(e) {}
-    closePanel();
-    const route = String(window.PBJ_PIN_CONFIG.providerSearchPage || 'pemenang-pengadaan');
-    try {
-      if (typeof window.loadPage === 'function') {
-        window.loadPage(route);
-      } else {
-        const btn = document.querySelector('[data-page="' + route + '"]');
-        if (btn) btn.click();
-        else window.location.hash = route;
+  function parseCsv(text){
+    const rows=[]; let row=[], val='', q=false;
+    for(let i=0;i<text.length;i++){
+      const c=text[i], n=text[i+1];
+      if(c==='"' && q && n==='"'){ val+='"'; i++; continue; }
+      if(c==='"'){ q=!q; continue; }
+      if(c===',' && !q){ row.push(val); val=''; continue; }
+      if((c==='\n'||c==='\r') && !q){
+        if(c==='\r' && n==='\n') i++;
+        row.push(val);
+        if(row.some(x => String(x).trim() !== '')) rows.push(row);
+        row=[]; val=''; continue;
       }
-      setTimeout(function(){
-        const tab = document.querySelector('[data-pp-tab="provider-search"]');
-        if (tab) tab.click();
-      }, 800);
-    } catch(e) {}
+      val+=c;
+    }
+    row.push(val);
+    if(row.some(x => String(x).trim() !== '')) rows.push(row);
+    return rows;
+  }
+
+  function matrixToObjects(matrix){
+    const rows = (matrix || []).slice();
+    const headers = rows.shift() || [];
+    return rows.map(cols => {
+      const obj = {};
+      headers.forEach((h,i) => obj[String(h || '').trim()] = String(cols[i] || '').trim());
+      return obj;
+    });
+  }
+
+  function normalizeProviderRow(row){
+    return {
+      raw: row,
+      tahun: String(pick(row, ['TAHUN','Tahun','tahun'], '')).trim(),
+      kode: String(pick(row, ['KODE_PAKET','Kode Paket','kode_paket','Kode RUP','KODE RUP'], '')).trim(),
+      namaPaket: String(pick(row, ['NAMA_PAKET','Nama Paket','nama_paket'], '')).trim(),
+      instansi: String(pick(row, ['INSTANSI','Nama Instansi','instansi'], '')).trim(),
+      satker: String(pick(row, ['SATKER','Nama Satuan Kerja','satker'], '')).trim(),
+      lpse: String(pick(row, ['LPSE','Nama LPSE','lpse'], '')).trim(),
+      namaPemenang: String(pick(row, ['NAMA_PEMENANG','Nama Pemenang','PEMENANG','Nama Penyedia','nama_pemenang'], '')).trim(),
+      npwp: String(pick(row, ['NPWP','npwp'], '')).trim(),
+      nilai: toNum(pick(row, ['NILAI_KONTRAK','Nilai Kontrak','NILAI_NEGOSIASI','Nilai Negosiasi','HPS','PAGU','Nilai Paket'], 0)),
+      sumber: String(pick(row, ['SUMBER','Sumber','sumber'], '')).trim()
+    };
+  }
+
+  function fmtMoney(v){
+    const n = toNum(v);
+    if (!n) return '-';
+    if (n >= 1000000000000) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1000000000000) + ' T';
+    if (n >= 1000000000) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1000000000) + ' M';
+    if (n >= 1000000) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:1}).format(n/1000000) + ' Jt';
+    return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(n);
+  }
+
+  async function fetchProviderRows(){
+    if (state.providerLoaded && state.providerRows.length) return state.providerRows;
+    const data = getData();
+    if (Array.isArray(data.providerRows) && data.providerRows.length) {
+      state.providerRows = data.providerRows.map(normalizeProviderRow).filter(r => r.namaPemenang || r.namaPaket);
+      state.providerLoaded = true;
+      return state.providerRows;
+    }
+    const spreadsheetId = String(window.PBJ_PIN_CONFIG.providerSpreadsheetId || '').trim();
+    const sheetName = String(window.PBJ_PIN_CONFIG.providerSheetName || 'PORTAL_PENYEDIA').trim();
+    const gid = String(window.PBJ_PIN_CONFIG.providerGid || '').trim();
+    if (!spreadsheetId) throw new Error('Spreadsheet penyedia belum diset di PBJ_PIN_CONFIG.providerSpreadsheetId.');
+    const q = gid ? ('gid=' + encodeURIComponent(gid)) : ('sheet=' + encodeURIComponent(sheetName));
+    const url = 'https://docs.google.com/spreadsheets/d/' + encodeURIComponent(spreadsheetId) + '/gviz/tq?tqx=out:csv&' + q + '&v=' + Date.now();
+    const res = await fetch(url, { cache:'no-store' });
+    if (!res.ok) throw new Error('Data penyedia belum bisa dibuka.');
+    const text = await res.text();
+    if (/DOCTYPE html|<html/i.test(text.slice(0,300))) throw new Error('Sheet penyedia belum public / belum bisa dibaca.');
+    state.providerRows = matrixToObjects(parseCsv(text)).map(normalizeProviderRow).filter(r => r.namaPemenang || r.namaPaket);
+    state.providerLoaded = true;
+    return state.providerRows;
+  }
+
+  function searchProviderRows(query){
+    const term = norm(query);
+    if (!term || term.length < 2) return [];
+    const words = term.split(' ').filter(Boolean);
+    return (state.providerRows || []).filter(r => {
+      const hay = norm([r.namaPemenang,r.namaPaket,r.instansi,r.satker,r.lpse,r.kode,r.npwp,r.sumber].join(' '));
+      return words.every(w => hay.includes(w));
+    }).slice(0, Number(window.PBJ_PIN_CONFIG.providerLimit || 8));
+  }
+
+  function renderProviderResults(){
+    const box = document.getElementById('pbjPinProviderResults');
+    if (!box) return;
+    if (state.providerLoading) {
+      box.innerHTML = '<div class="pbj-pin-provider-empty">Mencari data penyedia...</div>';
+      return;
+    }
+    if (state.providerMessage && !state.providerResults.length) {
+      box.innerHTML = '<div class="pbj-pin-provider-empty">' + esc(state.providerMessage) + '</div>';
+      return;
+    }
+    if (!state.providerResults.length) {
+      box.innerHTML = '<div class="pbj-pin-provider-empty">Data tidak ditemukan.</div>';
+      return;
+    }
+    box.innerHTML = state.providerResults.map(r => `
+      <div class="pbj-pin-provider-item">
+        <div class="pbj-pin-provider-name">${esc(r.namaPemenang || '-')}</div>
+        <div class="pbj-pin-provider-pkg">${esc(r.namaPaket || '-')}</div>
+        <div class="pbj-pin-provider-meta">${esc(r.tahun || '-')} · ${esc(r.instansi || r.satker || '-')} · ${esc(r.sumber || '-')}</div>
+        <div class="pbj-pin-provider-value">${esc(fmtMoney(r.nilai))}</div>
+      </div>
+    `).join('');
+  }
+
+  async function runProviderSearch(query){
+    state.providerQuery = String(query || '').trim();
+    if (state.providerQuery.length < 2) {
+      state.providerResults = [];
+      state.providerMessage = 'Ketik minimal 2 karakter nama penyedia / paket.';
+      renderProviderResults();
+      return;
+    }
+    state.providerLoading = true;
+    state.providerMessage = '';
+    renderProviderResults();
+    try {
+      await fetchProviderRows();
+      state.providerResults = searchProviderRows(state.providerQuery);
+      state.providerMessage = state.providerResults.length ? '' : 'Data tidak ditemukan.';
+    } catch(err) {
+      state.providerResults = [];
+      state.providerMessage = (err && err.message) ? err.message : String(err);
+    } finally {
+      state.providerLoading = false;
+      renderProviderResults();
+    }
+  }
+
+  function toggleProviderSearch(){
+    state.providerSearchOpen = !state.providerSearchOpen;
+    renderPanel(document.getElementById('pbjPinSearch')?.value || '');
+    if (state.providerSearchOpen) setTimeout(() => document.getElementById('pbjPinProviderInput')?.focus(), 50);
   }
 
   function isItkpCollapsed(){
@@ -338,7 +481,7 @@
       </div>
       <div class="pbj-pin-body">
         <div class="pbj-pin-action-row">
-          <button type="button" class="pbj-pin-action-btn" id="pbjPinOpenSearchBtn">🔎 Search Penyedia SPSE</button>
+          <button type="button" class="pbj-pin-action-btn" id="pbjPinOpenSearchBtn">🔎 Cari Penyedia di Widget</button>
           <button type="button" class="pbj-pin-action-btn secondary" id="pbjPinToggleOpdSearch">${opdSearchOpen ? 'Tutup Pilih OPD' : 'Cari / Ganti OPD'}</button>
         </div>
 
@@ -351,6 +494,15 @@
                 <div class="pbj-pin-opd-score">${fmtScore(r.score)}</div>
               </div>`).join('') || '<div class="pbj-pin-report-text">OPD tidak ditemukan.</div>'}
           </div>
+        </div>
+
+        <div class="pbj-pin-provider-wrap ${state.providerSearchOpen ? 'show' : ''}">
+          <div class="pbj-pin-provider-title">Pencarian Penyedia Pengadaan SPSE</div>
+          <div class="pbj-pin-provider-search-row">
+            <input class="pbj-pin-provider-input" id="pbjPinProviderInput" placeholder="Cari PT / CV / nama paket..." value="${esc(state.providerQuery || '')}">
+            <button type="button" class="pbj-pin-provider-search-btn" id="pbjPinProviderSearchBtn">Cari</button>
+          </div>
+          <div id="pbjPinProviderResults" class="pbj-pin-provider-results"></div>
         </div>
 
         <div class="pbj-pin-report-box">
@@ -398,7 +550,12 @@
     const closeBtn = document.getElementById('pbjPinCloseBtn');
     if (closeBtn) closeBtn.addEventListener('click', closePanel);
     const providerBtn = document.getElementById('pbjPinOpenSearchBtn');
-    if (providerBtn) providerBtn.addEventListener('click', openProviderSearch);
+    if (providerBtn) providerBtn.addEventListener('click', toggleProviderSearch);
+    const providerInput = document.getElementById('pbjPinProviderInput');
+    const providerSearchBtn = document.getElementById('pbjPinProviderSearchBtn');
+    if (providerSearchBtn) providerSearchBtn.addEventListener('click', () => runProviderSearch(providerInput ? providerInput.value : ''));
+    if (providerInput) providerInput.addEventListener('keydown', e => { if (e.key === 'Enter') runProviderSearch(providerInput.value); });
+    renderProviderResults();
     const toggleOpd = document.getElementById('pbjPinToggleOpdSearch');
     if (toggleOpd) toggleOpd.addEventListener('click', () => { setOpdSearchOpen(!opdSearchOpen); renderPanel(filterText || ''); });
     const toggleItkp = document.getElementById('pbjPinToggleItkp');
