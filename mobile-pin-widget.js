@@ -1,6 +1,9 @@
 /* Floating OPD pin widget for SIPPBJ.
-   Requires optional window.PBJ_PIN_CONFIG.
-   This revision: when Search Penyedia tab is active, Info Rapor and Ringkasan ITKP are hidden. */
+   FIX:
+   - Search penyedia benar-benar jalan di dalam widget (fetch CSV PORTAL_PENYEDIA jika data global belum ada).
+   - Saat tab Cari Penyedia aktif, Info Rapor dan Ringkasan ITKP disembunyikan.
+   - Warna indikator ITKP dikembalikan per indikator.
+*/
 (function(){
   if (window.__PBJ_PIN_WIDGET_LOADED__) return;
   window.__PBJ_PIN_WIDGET_LOADED__ = true;
@@ -9,93 +12,249 @@
     defaultOpd: 'PEMERINTAH KOTA BOGOR',
     scoreMax: 30,
     storageKey: 'pbj_pin_selected_opd',
+    providerSpreadsheetId: '1DYsqMtvwhPn-IEA3te9fFukD_iMMDRqUNPamktuPz2U',
+    providerSheets: ['PORTAL_PENYEDIA'],
+    providerCacheKey: 'pbj_pin_provider_cache_v2',
+    providerCacheMs: 1000 * 60 * 20,
     dataProvider: function(){
       return {
-        opdRows: window.itkpRows || window.ITKP_ROWS || window.dashboardRows || window.DASHBOARD_ROWS || [],
-        raporRows: window.raporRows || window.RAPOR_ROWS || window.indexRapotRows || window.INDEX_RAPOT_ROWS || [],
-        providerRows: window.providerRows || window.PROVIDER_ROWS || window.pemenangRows || window.PEMENANG_ROWS || window.allProviderRows || []
+        opdRows: window.itkpRows || window.ITKP_ROWS || window.dashboardRows || window.DASHBOARD_ROWS || window.PBJ_ITKP_ROWS || [],
+        raporRows: window.raporRows || window.RAPOR_ROWS || window.indexRapotRows || window.INDEX_RAPOT_ROWS || window.PBJ_RAPOR_ROWS || [],
+        providerRows: window.providerRows || window.PROVIDER_ROWS || window.pemenangRows || window.PEMENANG_ROWS || window.allProviderRows || window.PBJ_PROVIDER_ROWS || []
       };
     }
   }, window.PBJ_PIN_CONFIG || {});
 
-  const state = { selectedOpd:'', open:false, tab:'search', itkpMinimized:false, q:'', providerResults:[] };
+  const state = {
+    selectedOpd: '',
+    open: false,
+    tab: 'search',
+    itkpMinimized: false,
+    q: '',
+    providerRows: [],
+    providerResults: [],
+    providerLoading: false,
+    providerSearched: false,
+    providerError: ''
+  };
 
   function esc(v){return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
   function norm(v){return String(v||'').toLowerCase().replace(/\s+/g,' ').trim();}
+  function compactNorm(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim();}
   function num(v){
     if (typeof v === 'number') return isNaN(v) ? 0 : v;
     let s = String(v ?? '').trim();
-    if (!s) return 0;
+    if (!s || s === '-') return 0;
     const hasComma = s.includes(','), hasDot = s.includes('.');
     s = s.replace(/Rp/gi,'').replace(/%/g,'').replace(/\s/g,'');
     if (hasComma && hasDot) s = s.replace(/\./g,'').replace(',', '.');
     else if (hasComma) s = s.replace(',', '.');
+    else if ((s.match(/\./g)||[]).length > 1) s = s.replace(/\./g,'');
     s = s.replace(/[^\d.-]/g,'');
     const n = Number(s);
     return isNaN(n) ? 0 : n;
   }
   function fmt2(v){return new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}).format(num(v));}
+  function fmt0(v){return new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(num(v));}
   function fmtMoney(v){
     const n = num(v);
+    if (!n) return 'Rp 0';
     if (n >= 1e12) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1e12) + ' T';
     if (n >= 1e9) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1e9) + ' M';
     if (n >= 1e6) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n/1e6) + ' Jt';
-    return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(n);
+    if (n >= 1e3) return 'Rp ' + new Intl.NumberFormat('id-ID',{maximumFractionDigits:1}).format(n/1e3) + ' Rb';
+    return 'Rp ' + fmt0(n);
   }
   function pick(row, keys, def){
     if (!row) return def;
     for (const k of keys){
       if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') return row[k];
-      const found = Object.keys(row).find(x => norm(x) === norm(k));
+      const want = compactNorm(k);
+      const found = Object.keys(row).find(x => compactNorm(x) === want);
       if (found && row[found] !== undefined && row[found] !== null && String(row[found]).trim() !== '') return row[found];
     }
+    const keyNorms = keys.map(compactNorm);
+    const loose = Object.keys(row).find(x => keyNorms.some(k => compactNorm(x).includes(k) || k.includes(compactNorm(x))));
+    if (loose && row[loose] !== undefined && row[loose] !== null && String(row[loose]).trim() !== '') return row[loose];
     return def;
   }
-  function getData(){
-    try { return CONFIG.dataProvider() || {}; }
-    catch(e){ return {}; }
+  function getData(){ try { return CONFIG.dataProvider() || {}; } catch(e){ return {}; } }
+  function getOpdName(row){return String(pick(row,['name','nama_opd','nama_satker','Satuan Kerja','Nama Satuan Kerja','satker','opd','Nama OPD','Satuan Kerja'],'')||'').trim();}
+  function getScore(row){
+    if (row && row.score !== undefined) return num(row.score);
+    return num(pick(row,[
+      'nilai_itkp','skor_itkp','score','itkp','Total Skor','SKOR ITKP',
+      'Nilai ITKP Indikator Pemanfaatan Sistem - skor maksimal 30 (point)',
+      'Nilai ITKP - Pemanfaatan Sistem - skor maksimal 30 (point)',
+      'Nilai ITKP Pemanfaatan Sistem - skor maksimal 30 (point)',
+      'Nilai ITKP Pemanfaatan Sistem','Nilai ITKP Indikator Pemanfaatan Sistem','Pemanfaatan Sistem - skor maksimal 30','Pemanfaatan Sistem'
+    ],0));
   }
-  function getOpdName(row){return String(pick(row,['nama_opd','nama_satker','satker','opd','Nama OPD','Satuan Kerja'],'')||'').trim();}
-  function getScore(row){return num(pick(row,['nilai_itkp','skor_itkp','score','itkp','Total Skor','SKOR ITKP'],0));}
   function getSelectedRow(){
     const data = getData();
     const rows = Array.isArray(data.opdRows) ? data.opdRows : [];
     const selected = norm(state.selectedOpd || CONFIG.defaultOpd);
-    return rows.find(r => norm(getOpdName(r)) === selected) || rows.find(r => norm(getOpdName(r)).includes(selected) || selected.includes(norm(getOpdName(r)))) || rows[0] || null;
+    return rows.find(r => norm(getOpdName(r)) === selected) || rows.find(r => {
+      const n = norm(getOpdName(r));
+      return n && (n.includes(selected) || selected.includes(n));
+    }) || rows[0] || null;
   }
   function getLatestRapor(opd){
     const data = getData();
     const rows = Array.isArray(data.raporRows) ? data.raporRows : [];
     const nOpd = norm(opd);
-    const list = rows.filter(r => norm(pick(r,['nama_opd','opd','Nama OPD'],'')).includes(nOpd) || nOpd.includes(norm(pick(r,['nama_opd','opd','Nama OPD'],''))));
+    const list = rows.filter(r => {
+      const n = norm(pick(r,['nama_opd','opd','Nama OPD'],''));
+      return n && (n.includes(nOpd) || nOpd.includes(n));
+    });
     list.sort((a,b)=> String(pick(b,['updated_at','created_at','tanggal','timestamp'],'')).localeCompare(String(pick(a,['updated_at','created_at','tanggal','timestamp'],''))));
     return list[0] || null;
   }
-  function metric(row, label, aKeys, bKeys, maxKeys){
-    const a = num(pick(row,aKeys,0));
-    const b = num(pick(row,bKeys,maxKeys ? pick(row,maxKeys,0) : 0));
-    const pct = b ? Math.min(100, (a/b)*100) : 0;
-    return `<div class="pbj-pin-metric"><div class="pbj-pin-metric-head"><span>${esc(label)}</span><span>${esc(new Intl.NumberFormat('id-ID').format(a))}/${esc(new Intl.NumberFormat('id-ID').format(b))}</span></div><div class="pbj-pin-bar"><div class="pbj-pin-bar-fill" style="width:${pct}%"></div></div></div>`;
+
+  function parseCsv(text){
+    const rows=[]; let row=[], val='', q=false;
+    for(let i=0;i<text.length;i++){
+      const c=text[i], n=text[i+1];
+      if(c==='"' && q && n==='"'){ val+='"'; i++; continue; }
+      if(c==='"'){ q=!q; continue; }
+      if(c===',' && !q){ row.push(val); val=''; continue; }
+      if((c==='\n'||c==='\r') && !q){ if(c==='\r'&&n==='\n') i++; row.push(val); if(row.some(x=>String(x).trim()!=='')) rows.push(row); row=[]; val=''; continue; }
+      val+=c;
+    }
+    row.push(val); if(row.some(x=>String(x).trim()!=='')) rows.push(row);
+    return rows;
   }
-  function getProviderName(row){return String(pick(row,['pemenang','nama_penyedia','penyedia','Nama Penyedia','Pemenang'],'-')||'-').trim();}
-  function getProviderPackage(row){return String(pick(row,['nama_paket','paket','Nama Paket'],'-')||'-').trim();}
-  function providerSearchRows(q){
+  function matrixToRows(matrix){
+    const header = (matrix.shift() || []).map(h => String(h||'').trim());
+    return matrix.map(cols => {
+      const r = {};
+      header.forEach((h,i)=>{ r[h] = String(cols[i] ?? '').trim(); });
+      return r;
+    }).filter(r => Object.values(r).some(v => String(v).trim() !== ''));
+  }
+  async function fetchProviderSheet(sheetName){
+    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(CONFIG.providerSpreadsheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&v=${Date.now()}`;
+    const res = await fetch(url, { cache:'no-store' });
+    if (!res.ok) throw new Error(`Gagal membaca ${sheetName}`);
+    const text = await res.text();
+    if (/DOCTYPE html|<html|googlevisualization/i.test(text.slice(0,300))) throw new Error(`Sheet ${sheetName} belum publik / belum bisa dibaca`);
+    return matrixToRows(parseCsv(text));
+  }
+  function loadProviderCache(){
+    try {
+      const raw = localStorage.getItem(CONFIG.providerCacheKey);
+      if (!raw) return [];
+      const obj = JSON.parse(raw);
+      if (!obj || !obj.time || Date.now() - obj.time > Number(CONFIG.providerCacheMs || 0)) return [];
+      return Array.isArray(obj.rows) ? obj.rows : [];
+    } catch(e){ return []; }
+  }
+  function saveProviderCache(rows){ try { localStorage.setItem(CONFIG.providerCacheKey, JSON.stringify({ time:Date.now(), rows: rows || [] })); } catch(e){} }
+  async function ensureProviderRows(){
     const data = getData();
-    const rows = Array.isArray(data.providerRows) ? data.providerRows : [];
+    const globalRows = Array.isArray(data.providerRows) ? data.providerRows : [];
+    if (globalRows.length) { state.providerRows = globalRows; return globalRows; }
+    if (state.providerRows.length) return state.providerRows;
+    const cached = loadProviderCache();
+    if (cached.length) { state.providerRows = cached; return cached; }
+    const sheets = Array.isArray(CONFIG.providerSheets) && CONFIG.providerSheets.length ? CONFIG.providerSheets : ['PORTAL_PENYEDIA'];
+    const all = [];
+    for (const s of sheets){
+      try { all.push(...await fetchProviderSheet(s)); } catch(e){ state.providerError = e.message || String(e); }
+    }
+    state.providerRows = all;
+    if (all.length) saveProviderCache(all);
+    return all;
+  }
+
+  function getProviderName(row){return String(pick(row,['NAMA_PEMENANG','Nama Pemenang','pemenang','nama_penyedia','penyedia','Nama Penyedia','Pemenang'],'-')||'-').trim();}
+  function getProviderPackage(row){return String(pick(row,['NAMA_PAKET','Nama Paket','nama_paket','paket','nama produk'],'-')||'-').trim();}
+  function getProviderMeta(row){
+    return [pick(row,['TAHUN','Tahun','tahun'],''), pick(row,['INSTANSI','Nama Instansi','K/L/PD','KL/PD','instansi','nama_opd','satker'],''), pick(row,['TAHAP_AKTIF','Tahap Aktif','Status Paket','status_paket','status'], '')].filter(Boolean).join(' · ');
+  }
+  function getProviderValue(row){return pick(row,['NILAI_KONTRAK','Nilai Kontrak','KONTRAK','kontrak','NILAI_PAGU','Nilai Pagu','PAGU','pagu','HPS','Nilai'],0);}
+  function getProviderUrl(row, type){
+    const map = {
+      pengumuman:['URL_PENGUMUMAN','url_pengumuman','Pengumuman'],
+      jadwal:['URL_JADWAL','url_jadwal','Jadwal'],
+      pemenang:['URL_PEMENANG','url_pemenang','Pemenang'],
+      kontrak:['URL_KONTRAK','url_kontrak','Kontrak']
+    };
+    return String(pick(row,map[type] || [],'') || '').trim();
+  }
+  async function runProviderSearch(q){
     const kw = norm(q);
-    if (kw.length < 2) return [];
-    return rows.filter(r => {
-      const hay = [getProviderName(r), getProviderPackage(r), pick(r,['instansi','nama_opd','satker','lpse','kategori','metode_pengadaan'],'')].join(' ');
-      return norm(hay).includes(kw);
-    }).slice(0, 30);
+    state.q = q;
+    state.providerSearched = true;
+    state.providerError = '';
+    if (kw.length < 2) { state.providerResults = []; return; }
+    state.providerLoading = true; render();
+    try {
+      const rows = await ensureProviderRows();
+      state.providerResults = rows.filter(r => {
+        const hay = [getProviderName(r), getProviderPackage(r), getProviderMeta(r), pick(r,['NPWP','npwp','KODE_PAKET','Kode Paket','kode'], '')].join(' ');
+        return norm(hay).includes(kw);
+      }).slice(0, 40);
+    } catch(e){
+      state.providerError = e.message || String(e);
+      state.providerResults = [];
+    } finally {
+      state.providerLoading = false; render();
+    }
+  }
+
+  function getDimensionValue(row, label){
+    const keys = {
+      'SiRUP': ['Nilai ITKP - skor maksimal 10 (point) (SIRUP)','SIRUP','sirup_score','sirup_nilai','sirup_terisi'],
+      'Toko Daring': ['Nilai ITKP - skor maksimal 1 (point) (Toko Daring)','Toko Daring','toko_daring_nilai','toko_score','toko_daring_terisi'],
+      'e-Purchasing': ['Nilai ITKP - skor maksimal 4 (point) (Epurchasing)','Epurchasing','ePurchasing','epurchasing_nilai','epurchasing_score','epurchasing_terisi'],
+      'e-Tendering': ['Nilai ITKP - skor maksimal 5 (point) (etendering)','eTendering','etendering_nilai','etendering_score','etendering_terisi'],
+      'e-Kontrak': ['Nilai ITKP - skor maksimal 5 (point) (ekontrak)','eKontrak','ekontrak_nilai','ekontrak_score','ekontrak_terisi'],
+      'Non eTendering / Non ePurchasing': ['Nilai ITKP - skor maksimal 5 (point) (Non etendering & Non ePurchasing)','Non etendering','Non ePurchasing','Non Tender','nonetendering_nilai','non_score','nonetendering_terisi']
+    };
+    return num(pick(row, keys[label] || [label], 0));
+  }
+  function getDimensions(row){
+    if (row && Array.isArray(row.dimensions) && row.dimensions.length) {
+      return row.dimensions.map(d => ({
+        label: d.name || d.label || '-',
+        value: num(d.value),
+        max: num(d.max || d.target || d.total || 0),
+        detail: d.detailText || '',
+        accent: d.accent || ''
+      }));
+    }
+    return [
+      {label:'SiRUP', value:getDimensionValue(row,'SiRUP'), max:10, accent:'blue'},
+      {label:'Toko Daring', value:getDimensionValue(row,'Toko Daring'), max:1, accent:'teal'},
+      {label:'e-Purchasing', value:getDimensionValue(row,'e-Purchasing'), max:4, accent:'purple'},
+      {label:'e-Tendering', value:getDimensionValue(row,'e-Tendering'), max:5, accent:'orange'},
+      {label:'e-Kontrak', value:getDimensionValue(row,'e-Kontrak'), max:5, accent:'green'},
+      {label:'Non eTendering / Non ePurchasing', value:getDimensionValue(row,'Non eTendering / Non ePurchasing'), max:5, accent:'red'}
+    ];
+  }
+  function metric(d){
+    const max = num(d.max);
+    const val = num(d.value);
+    const pct = max ? Math.max(0, Math.min(100, (val/max)*100)) : 0;
+    const right = d.detail ? esc(d.detail) : `${esc(fmt0(val))}/${esc(fmt0(max))}`;
+    return `<div class="pbj-pin-metric accent-${esc(d.accent || 'blue')}"><div class="pbj-pin-metric-head"><span>${esc(d.label)}</span><span>${right}</span></div><div class="pbj-pin-bar"><div class="pbj-pin-bar-fill" style="width:${pct}%"></div></div></div>`;
   }
   function renderProviderCard(row){
-    const name = getProviderName(row);
-    const paket = getProviderPackage(row);
-    const meta = [pick(row,['tahun','Tahun'],''), pick(row,['instansi','nama_opd','satker','Instansi'],''), pick(row,['status','status_paket','Status Paket'],'')].filter(Boolean).join(' · ');
-    const nilai = pick(row,['nilai','nilai_pagu','nilai_kontrak','kontrak','pagu','Nilai'],0);
-    return `<div class="pbj-pin-provider-card"><div class="pbj-pin-provider-name">${esc(name)}</div><div class="pbj-pin-provider-package">${esc(paket)}</div><div class="pbj-pin-provider-meta">${esc(meta || '-')}</div><span class="pbj-pin-provider-value">${esc(fmtMoney(nilai))}</span></div>`;
+    const urls = ['pengumuman','jadwal','pemenang','kontrak'].map(type => {
+      const u = getProviderUrl(row,type);
+      if (!u) return '';
+      const label = type === 'pengumuman' ? 'Pengumuman' : type.charAt(0).toUpperCase()+type.slice(1);
+      return `<a class="pbj-pin-linkbtn" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(label)}</a>`;
+    }).filter(Boolean).join('');
+    return `<div class="pbj-pin-provider-card">
+      <div class="pbj-pin-provider-name">${esc(getProviderName(row))}</div>
+      <div class="pbj-pin-provider-package">${esc(getProviderPackage(row))}</div>
+      <div class="pbj-pin-provider-meta">${esc(getProviderMeta(row) || '-')}</div>
+      <div class="pbj-pin-provider-bottom"><span class="pbj-pin-provider-value">${esc(fmtMoney(getProviderValue(row)))}</span>${urls ? `<div class="pbj-pin-provider-links">${urls}</div>` : ''}</div>
+    </div>`;
   }
+
   function render(){
     let root = document.getElementById('pbj-pin-widget-root');
     if (!root){ root = document.createElement('div'); root.id='pbj-pin-widget-root'; document.body.appendChild(root); }
@@ -107,19 +266,20 @@
     const score = row ? getScore(row) : 0;
     const deg = Math.max(0, Math.min(360, (score / Number(CONFIG.scoreMax || 30))*360));
     const latest = getLatestRapor(opd);
-    const providerHtml = state.providerResults.length ? state.providerResults.map(renderProviderCard).join('') : `<div class="pbj-pin-empty">Ketik minimal 2 karakter lalu tekan Cari.</div>`;
+
+    let providerHtml = `<div class="pbj-pin-empty">Ketik minimal 2 karakter lalu tekan Cari.</div>`;
+    if (state.providerLoading) providerHtml = `<div class="pbj-pin-empty">Sedang mencari data penyedia...</div>`;
+    else if (state.providerError) providerHtml = `<div class="pbj-pin-empty danger">${esc(state.providerError)}</div>`;
+    else if (state.providerSearched && state.q.trim().length >= 2 && !state.providerResults.length) providerHtml = `<div class="pbj-pin-empty">Data tidak ditemukan untuk kata kunci tersebut.</div>`;
+    else if (state.providerResults.length) providerHtml = state.providerResults.map(renderProviderCard).join('');
+
     const opdListHtml = opdRows.map(r => {
       const n = getOpdName(r); const s = getScore(r);
       return `<div class="pbj-pin-opd-item ${norm(n)===norm(opd)?'active':''}" data-opd="${esc(n)}"><div class="pbj-pin-opd-name">${esc(n)}</div><div class="pbj-pin-opd-score">${esc(fmt2(s))}</div></div>`;
     }).join('') || `<div class="pbj-pin-empty">Belum ada data OPD.</div>`;
-    const metrics = row ? [
-      metric(row,'SiRUP',['sirup_nilai','sirup_terisi','sirup_score'],['sirup_target','sirup_total','sirup_max']),
-      metric(row,'Toko Daring',['toko_daring_nilai','toko_daring_terisi','toko_score'],['toko_daring_target','toko_daring_total','toko_max']),
-      metric(row,'e-Purchasing',['epurchasing_nilai','epurchasing_terisi','epurchasing_score'],['epurchasing_target','epurchasing_total','epurchasing_max']),
-      metric(row,'e-Tendering',['etendering_nilai','etendering_terisi','etendering_score'],['etendering_target','etendering_total','etendering_max']),
-      metric(row,'e-Kontrak',['ekontrak_nilai','ekontrak_terisi','ekontrak_score'],['ekontrak_target','ekontrak_total','ekontrak_max']),
-      metric(row,'Non eTendering / Non ePurchasing',['nonetendering_nilai','nonetendering_terisi','non_score'],['nonetendering_target','nonetendering_total','non_max'])
-    ].join('') : '';
+
+    const metrics = row ? getDimensions(row).map(metric).join('') : '';
+    const latestHtml = latest ? `<div class="pbj-pin-latest-title">${esc(pick(latest,['nama_opd','opd','Nama OPD'],opd))}</div><div class="pbj-pin-latest-text">Periode ${esc(pick(latest,['bulan','Bulan'],'-'))} ${esc(pick(latest,['tahun','Tahun'],'-'))}. Status QC: ${esc(pick(latest,['status_qc','Status QC'],'-'))}. ID: ${esc(pick(latest,['id_rapot','ID Rapor'],'-'))}</div>` : `<div class="pbj-pin-latest-text">Belum ada rapor terbaru untuk OPD ini.</div>`;
 
     root.innerHTML = `
       <div class="pbj-pin-mini" style="--pbj-pin-deg:${deg}deg" title="Klik untuk buka widget">
@@ -132,7 +292,7 @@
         <div class="pbj-pin-body">
           <div class="pbj-pin-section ${state.tab==='search'?'':'hidden'}" id="pbj-pin-provider-section"><div class="pbj-pin-section-title">Pencarian Penyedia Pengadaan SPSE</div><div class="pbj-pin-row"><input class="pbj-pin-input" id="pbj-pin-provider-q" value="${esc(state.q)}" placeholder="Cari nama penyedia / paket..."><button class="pbj-pin-btn" id="pbj-pin-provider-btn" type="button">Cari</button></div><div class="pbj-pin-provider-results">${providerHtml}</div></div>
           <div class="pbj-pin-section ${state.tab==='opd'?'':'hidden'}"><div class="pbj-pin-section-title">Pilih OPD</div><div class="pbj-pin-row"><input class="pbj-pin-input" id="pbj-pin-opd-filter" placeholder="Cari OPD..."><button class="pbj-pin-btn light" id="pbj-pin-opd-reset" type="button">Reset</button></div><div class="pbj-pin-opd-list">${opdListHtml}</div></div>
-          <div class="pbj-pin-section ${state.tab==='search'?'hidden':''}" id="pbj-pin-latest-section"><div class="pbj-pin-section-title">Info Rapor Terbaru</div>${latest ? `<div class="pbj-pin-latest-title">Rapor ${esc(pick(latest,['nama_opd','opd'],'OPD'))}</div><div class="pbj-pin-latest-text">Periode ${esc(pick(latest,['bulan','Bulan'],'-'))} ${esc(pick(latest,['tahun','Tahun'],'-'))}. Status QC: <b>${esc(pick(latest,['status_qc','Status QC'],'-'))}</b>. ID: ${esc(pick(latest,['id_rapot','ID Rapot'],'-'))}</div>` : `<div class="pbj-pin-empty">Belum ada rapor terbaru untuk OPD ini.</div>`}</div>
+          <div class="pbj-pin-section ${state.tab==='search'?'hidden':''}" id="pbj-pin-latest-section"><div class="pbj-pin-section-title">Info Rapor Terbaru</div>${latestHtml}</div>
           <div class="pbj-pin-section ${state.tab==='search'?'hidden':''} ${state.itkpMinimized?'pbj-pin-itkp-collapsed':''}" id="pbj-pin-itkp-section"><div class="pbj-pin-minimize-line"><div class="pbj-pin-section-title" style="margin:0">Ringkasan ITKP</div><button class="pbj-pin-minimize-btn" id="pbj-pin-itkp-toggle" type="button">${state.itkpMinimized?'Tampilkan':'Minimize'}</button></div><div class="pbj-pin-itkp-head"><div class="pbj-pin-circle" style="--pbj-pin-deg:${deg}deg"><div class="pbj-pin-circle-inner"><div class="pbj-pin-circle-kicker">ITKP OPD</div><div class="pbj-pin-circle-score">${esc(fmt2(score))}</div><div class="pbj-pin-circle-max">dari ${esc(CONFIG.scoreMax)} poin</div></div></div><div class="pbj-pin-latest-text">Skor dan indikator OPD yang dipantau.</div></div><div class="pbj-pin-metrics">${metrics || `<div class="pbj-pin-empty">Belum ada rincian ITKP.</div>`}</div></div>
         </div>
       </div>`;
@@ -144,7 +304,7 @@
     root.querySelectorAll('.pbj-pin-tab').forEach(btn=>btn.addEventListener('click',()=>{state.tab=btn.dataset.tab;render();}));
     root.querySelector('#pbj-pin-itkp-toggle')?.addEventListener('click',()=>{state.itkpMinimized=!state.itkpMinimized;render();});
     const providerQ = root.querySelector('#pbj-pin-provider-q');
-    const search = ()=>{ state.q = providerQ ? providerQ.value : ''; state.providerResults = providerSearchRows(state.q); render(); };
+    const search = ()=> runProviderSearch(providerQ ? providerQ.value : '');
     root.querySelector('#pbj-pin-provider-btn')?.addEventListener('click', search);
     providerQ?.addEventListener('keydown', e=>{ if(e.key==='Enter') search(); });
     root.querySelectorAll('.pbj-pin-opd-item').forEach(el=>el.addEventListener('click',()=>{state.selectedOpd=el.dataset.opd||CONFIG.defaultOpd;localStorage.setItem(CONFIG.storageKey,state.selectedOpd);state.tab='opd';render();try{window.dispatchEvent(new CustomEvent('pbj-pin-opd-changed',{detail:{opd:state.selectedOpd}}));}catch(e){}}));
@@ -157,5 +317,5 @@
   }
   function init(){ render(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-  window.PBJPinWidget = { refresh: render, open:function(){state.open=true;render();}, close:function(){state.open=false;render();} };
+  window.PBJPinWidget = { refresh: render, open:function(){state.open=true;render();}, close:function(){state.open=false;render();}, search:function(q){state.open=true;state.tab='search';render();runProviderSearch(q || state.q || '');} };
 })();
