@@ -2,7 +2,7 @@
    FIX terbaru:
    - Detail ITKP widget mengikuti dimensi asli dashboard (nilai/pagu dan paket), bukan angka skor mentah saja.
    - Search penyedia diberi badge jenis paket: Tender / Non Tender / e-Katalog.
-   - Widget bisa digeser kiri-kanan-atas-bawah; posisi, OPD, dan status pin tersimpan di browser.
+   - Widget bisa digeser kiri-kanan-atas-bawah; setelah dilepas otomatis menempel ke sisi kiri/kanan.
 */
 (function(){
   if (window.__PBJ_PIN_WIDGET_LOADED__) return;
@@ -13,7 +13,6 @@
     scoreMax: 30,
     storageKey: 'pbj_pin_selected_opd',
     positionKey: 'pbj_pin_widget_position_v1',
-    pinKey: 'pbj_pin_widget_pinned_v1',
     providerSpreadsheetId: '1DYsqMtvwhPn-IEA3te9fFukD_iMMDRqUNPamktuPz2U',
     providerSheets: ['PORTAL_PENYEDIA'],
     providerCacheKey: 'pbj_pin_provider_cache_v2',
@@ -30,7 +29,6 @@
   const state = {
     selectedOpd: '',
     open: false,
-    pinned: true,
     dragging: false,
     tab: 'search',
     itkpMinimized: false,
@@ -294,14 +292,36 @@
     try { return JSON.parse(localStorage.getItem(CONFIG.positionKey) || 'null') || null; } catch(e){ return null; }
   }
   function savePosition(pos){ try { localStorage.setItem(CONFIG.positionKey, JSON.stringify(pos || {})); } catch(e){} }
+  function getWidgetSize(root){
+    const panel = root.querySelector('.pbj-pin-panel.open');
+    const mini = root.querySelector('.pbj-pin-mini');
+    const target = panel || mini || root;
+    const rect = target.getBoundingClientRect();
+    return { w: rect.width || root.offsetWidth || 260, h: rect.height || root.offsetHeight || 60 };
+  }
+  function clampTop(top, h){
+    return Math.min(Math.max(8, Number(top || 8)), Math.max(8, window.innerHeight - h - 8));
+  }
+  function snapToEdge(root, left, top, save){
+    const size = getWidgetSize(root);
+    const snapLeft = Number(left || 0) + (size.w / 2) < window.innerWidth / 2;
+    const finalLeft = snapLeft ? 8 : Math.max(8, window.innerWidth - size.w - 8);
+    const finalTop = clampTop(top, size.h);
+    root.style.left = finalLeft + 'px';
+    root.style.top = finalTop + 'px';
+    root.style.right = 'auto';
+    root.classList.toggle('pbj-pin-left', snapLeft);
+    root.classList.toggle('pbj-pin-right', !snapLeft);
+    if (save) savePosition({ left: finalLeft, top: finalTop });
+  }
   function applyPosition(root){
     const pos = getSavedPosition();
-    if (!pos || typeof pos.left !== 'number' || typeof pos.top !== 'number') return;
-    const maxLeft = Math.max(6, window.innerWidth - Math.min(root.offsetWidth || 260, window.innerWidth) - 6);
-    const maxTop = Math.max(6, window.innerHeight - 72);
-    root.style.left = Math.min(Math.max(6, pos.left), maxLeft) + 'px';
-    root.style.top = Math.min(Math.max(6, pos.top), maxTop) + 'px';
-    root.style.right = 'auto';
+    const size = getWidgetSize(root);
+    if (!pos || typeof pos.left !== 'number' || typeof pos.top !== 'number') {
+      snapToEdge(root, window.innerWidth - size.w - 8, 92, true);
+      return;
+    }
+    snapToEdge(root, pos.left, pos.top, false);
   }
   function makeDraggable(root){
     const handles = [root.querySelector('.pbj-pin-mini'), root.querySelector('.pbj-pin-head')].filter(Boolean);
@@ -316,17 +336,18 @@
         function move(ev){
           const dx = Math.abs(ev.clientX - startX), dy = Math.abs(ev.clientY - startY);
           if (dx + dy > 3) state.dragging = true;
-          const w = root.offsetWidth || rect.width || 260;
-          const h = root.offsetHeight || rect.height || 60;
-          const left = Math.min(Math.max(6, ev.clientX - offsetX), Math.max(6, window.innerWidth - w - 6));
-          const top = Math.min(Math.max(6, ev.clientY - offsetY), Math.max(6, window.innerHeight - h - 6));
-          root.style.left = left + 'px'; root.style.top = top + 'px'; root.style.right = 'auto';
+          const size = getWidgetSize(root);
+          const left = Math.min(Math.max(8, ev.clientX - offsetX), Math.max(8, window.innerWidth - size.w - 8));
+          const top = clampTop(ev.clientY - offsetY, size.h);
+          root.style.left = left + 'px';
+          root.style.top = top + 'px';
+          root.style.right = 'auto';
         }
         function up(){
           document.removeEventListener('pointermove', move);
           document.removeEventListener('pointerup', up);
           const r = root.getBoundingClientRect();
-          savePosition({ left: r.left, top: r.top });
+          snapToEdge(root, r.left, r.top, true);
           setTimeout(()=>{ state.dragging = false; }, 0);
         }
         document.addEventListener('pointermove', move);
@@ -341,7 +362,6 @@
     const data = getData();
     const opdRows = Array.isArray(data.opdRows) ? data.opdRows : [];
     if (!state.selectedOpd){ state.selectedOpd = localStorage.getItem(CONFIG.storageKey) || CONFIG.defaultOpd; }
-    state.pinned = localStorage.getItem(CONFIG.pinKey) !== '0';
     const row = getSelectedRow();
     const opd = row ? getOpdName(row) : state.selectedOpd;
     const score = row ? getScore(row) : 0;
@@ -368,7 +388,7 @@
         <div class="pbj-pin-mini-text"><div class="pbj-pin-mini-kicker">OPD Dipantau</div><div class="pbj-pin-mini-opd">${esc(opd || '-')}</div></div>
       </div>
       <div class="pbj-pin-panel ${state.open ? 'open':''}">
-        <div class="pbj-pin-head"><button class="pbj-pin-close" type="button" title="Tutup panel">×</button><button class="pbj-pin-pinbtn ${state.pinned?'active':''}" type="button" title="Pin widget">${state.pinned?'📌':'📍'}</button><div class="pbj-pin-title-small">OPD Dipantau</div><div class="pbj-pin-title">${esc(opd || '-')}</div><div class="pbj-pin-tag">Widget OPD Dipantau</div></div>
+        <div class="pbj-pin-head"><button class="pbj-pin-close" type="button" title="Tutup panel">×</button><div class="pbj-pin-title-small">OPD Dipantau</div><div class="pbj-pin-title">${esc(opd || '-')}</div><div class="pbj-pin-tag">Widget OPD Dipantau</div></div>
         <div class="pbj-pin-tabs"><button class="pbj-pin-tab ${state.tab==='search'?'active':''}" data-tab="search">🔎 Cari Penyedia di Widget</button><button class="pbj-pin-tab ${state.tab==='opd'?'active':''}" data-tab="opd">Cari / Ganti OPD</button></div>
         <div class="pbj-pin-body">
           <div class="pbj-pin-section ${state.tab==='search'?'':'hidden'}" id="pbj-pin-provider-section"><div class="pbj-pin-section-title">Pencarian Penyedia Pengadaan SPSE</div><div class="pbj-pin-row"><input class="pbj-pin-input" id="pbj-pin-provider-q" value="${esc(state.q)}" placeholder="Cari nama penyedia / paket..."><button class="pbj-pin-btn" id="pbj-pin-provider-btn" type="button">Cari</button></div><div class="pbj-pin-provider-results">${providerHtml}</div></div>
@@ -384,7 +404,6 @@
   function bind(root){
     root.querySelector('.pbj-pin-mini')?.addEventListener('click',()=>{ if (state.dragging) return; state.open=true;render();});
     root.querySelector('.pbj-pin-close')?.addEventListener('click',()=>{state.open=false;render();});
-    root.querySelector('.pbj-pin-pinbtn')?.addEventListener('click',()=>{state.pinned=!state.pinned;localStorage.setItem(CONFIG.pinKey, state.pinned ? '1' : '0');render();});
     root.querySelectorAll('.pbj-pin-tab').forEach(btn=>btn.addEventListener('click',()=>{state.tab=btn.dataset.tab;render();}));
     root.querySelector('#pbj-pin-itkp-toggle')?.addEventListener('click',()=>{state.itkpMinimized=!state.itkpMinimized;render();});
     const providerQ = root.querySelector('#pbj-pin-provider-q');
@@ -399,6 +418,14 @@
     });
     root.querySelector('#pbj-pin-opd-reset')?.addEventListener('click',()=>{state.selectedOpd=CONFIG.defaultOpd;localStorage.setItem(CONFIG.storageKey,state.selectedOpd);render();});
   }
+  let resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){
+      const root = document.getElementById('pbj-pin-widget-root');
+      if (root) { const r = root.getBoundingClientRect(); snapToEdge(root, r.left, r.top, true); }
+    }, 120);
+  });
   function init(){ render(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
   window.PBJPinWidget = { refresh: render, open:function(){state.open=true;render();}, close:function(){state.open=false;render();}, search:function(q){state.open=true;state.tab='search';render();runProviderSearch(q || state.q || '');} };
