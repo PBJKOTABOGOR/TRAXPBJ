@@ -27,7 +27,7 @@
   }, window.PBJ_PIN_CONFIG || {});
 
   const EDGE_LEFT = 12;
-  const EDGE_RIGHT = 72;
+  const EDGE_RIGHT = 18;
   const EDGE_TOP_DEFAULT = 92;
 
   const state = {
@@ -116,6 +116,37 @@
     });
     list.sort((a,b)=> String(pick(b,['updated_at','created_at','tanggal','timestamp'],'')).localeCompare(String(pick(a,['updated_at','created_at','tanggal','timestamp'],''))));
     return list[0] || null;
+  }
+  function getRaporId(row){ return String(pick(row,['id_rapot','ID Rapot','id_rapor','ID Rapor','id'], '') || '').trim(); }
+  function openLatestRapor(row, opd){
+    const id = getRaporId(row);
+    try {
+      if (typeof window.PBJOpenLatestRapor === 'function') {
+        window.PBJOpenLatestRapor({ id_rapot:id, id_rapor:id, opd:opd || state.selectedOpd, row:row || null });
+        state.open = false;
+        render();
+        return;
+      }
+    } catch(e){}
+    try {
+      localStorage.setItem('pbj_rapor_direct_id', id || '');
+      localStorage.setItem('pbj_rapor_direct_opd', opd || state.selectedOpd || CONFIG.defaultOpd);
+    } catch(e){}
+    const url = new URL(window.location.href);
+    url.searchParams.set('page','rapor-pbj');
+    if (id) url.searchParams.set('id_rapot', id);
+    window.location.href = url.toString();
+  }
+  function syncDashboardOpd(opd){
+    const name = String(opd || '').trim();
+    if (!name) return;
+    try {
+      if (typeof window.PBJSelectDashboardOpd === 'function') {
+        window.PBJSelectDashboardOpd(name);
+      } else {
+        window.dispatchEvent(new CustomEvent('pbj-pin-opd-changed', { detail:{ opd:name } }));
+      }
+    } catch(e){}
   }
 
   function parseCsv(text){
@@ -387,7 +418,7 @@
     }).join('') || `<div class="pbj-pin-empty">Belum ada data OPD.</div>`;
 
     const metrics = row ? getDimensions(row).map(metric).join('') : '';
-    const latestHtml = latest ? `<div class="pbj-pin-latest-title">${esc(pick(latest,['nama_opd','opd','Nama OPD'],opd))}</div><div class="pbj-pin-latest-text">Periode ${esc(pick(latest,['bulan','Bulan'],'-'))} ${esc(pick(latest,['tahun','Tahun'],'-'))}. Status QC: ${esc(pick(latest,['status_qc','Status QC'],'-'))}. ID: ${esc(pick(latest,['id_rapot','ID Rapor'],'-'))}</div>` : `<div class="pbj-pin-latest-text">Belum ada rapor terbaru untuk OPD ini.</div>`;
+    const latestHtml = latest ? `<button type="button" class="pbj-pin-rapor-link" id="pbj-pin-latest-rapor"><div class="pbj-pin-latest-title">${esc(pick(latest,['nama_opd','opd','Nama OPD'],opd))}</div><div class="pbj-pin-latest-text">Periode ${esc(pick(latest,['bulan','Bulan'],'-'))} ${esc(pick(latest,['tahun','Tahun'],'-'))}. Status QC: ${esc(pick(latest,['status_qc','Status QC'],'-'))}. ID: ${esc(getRaporId(latest) || '-')}</div><div class="pbj-pin-latest-open">Klik untuk buka rapor OPD ini</div></button>` : `<div class="pbj-pin-latest-text">Belum ada rapor terbaru untuk OPD ini.</div>`;
 
     root.innerHTML = `
       <div class="pbj-pin-mini" style="--pbj-pin-deg:${deg}deg" title="Klik untuk buka/tutup detail. Geser untuk pindah posisi.">
@@ -413,19 +444,20 @@
     root.querySelector('.pbj-pin-mini')?.addEventListener('click',()=>{ if (state.dragging) return; state.open=!state.open;render();});
     root.querySelector('.pbj-pin-mini-close')?.addEventListener('click',(e)=>{ e.preventDefault(); e.stopPropagation(); state.hidden=true; render(); });
     root.querySelector('.pbj-pin-close')?.addEventListener('click',()=>{state.open=false;render();});
+    root.querySelector('#pbj-pin-latest-rapor')?.addEventListener('click',(e)=>{ e.preventDefault(); e.stopPropagation(); openLatestRapor(getLatestRapor(state.selectedOpd), state.selectedOpd); });
     root.querySelectorAll('.pbj-pin-tab').forEach(btn=>btn.addEventListener('click',()=>{state.tab=btn.dataset.tab;render();}));
     root.querySelector('#pbj-pin-itkp-toggle')?.addEventListener('click',()=>{state.itkpMinimized=!state.itkpMinimized;render();});
     const providerQ = root.querySelector('#pbj-pin-provider-q');
     const search = ()=> runProviderSearch(providerQ ? providerQ.value : '');
     root.querySelector('#pbj-pin-provider-btn')?.addEventListener('click', search);
     providerQ?.addEventListener('keydown', e=>{ if(e.key==='Enter') search(); });
-    root.querySelectorAll('.pbj-pin-opd-item').forEach(el=>el.addEventListener('click',()=>{state.selectedOpd=el.dataset.opd||CONFIG.defaultOpd;localStorage.setItem(CONFIG.storageKey,state.selectedOpd);state.tab='opd';render();try{window.dispatchEvent(new CustomEvent('pbj-pin-opd-changed',{detail:{opd:state.selectedOpd}}));}catch(e){}}));
+    root.querySelectorAll('.pbj-pin-opd-item').forEach(el=>el.addEventListener('click',()=>{state.selectedOpd=el.dataset.opd||CONFIG.defaultOpd;localStorage.setItem(CONFIG.storageKey,state.selectedOpd);state.tab='opd';render();syncDashboardOpd(state.selectedOpd);}));
     const opdFilter = root.querySelector('#pbj-pin-opd-filter');
     opdFilter?.addEventListener('input',()=>{
       const kw = norm(opdFilter.value);
       root.querySelectorAll('.pbj-pin-opd-item').forEach(item=>{item.style.display = !kw || norm(item.dataset.opd).includes(kw) ? '' : 'none';});
     });
-    root.querySelector('#pbj-pin-opd-reset')?.addEventListener('click',()=>{state.selectedOpd=CONFIG.defaultOpd;localStorage.setItem(CONFIG.storageKey,state.selectedOpd);render();});
+    root.querySelector('#pbj-pin-opd-reset')?.addEventListener('click',()=>{state.selectedOpd=CONFIG.defaultOpd;localStorage.setItem(CONFIG.storageKey,state.selectedOpd);render();syncDashboardOpd(state.selectedOpd);});
   }
   let resizeTimer = null;
   window.addEventListener('resize', function(){
